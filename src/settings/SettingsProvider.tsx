@@ -49,6 +49,7 @@ export function SettingsProvider({
         'preferences',
       );
       const value = row ? parseSettings(JSON.parse(row.value)) : { ...DEFAULT_SETTINGS };
+      if (!active) return;
       const normalized = JSON.stringify(value);
       if (row && row.value !== normalized) {
         await withWriteLock(() =>

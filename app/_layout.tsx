@@ -16,6 +16,7 @@ import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-
 import { migrateDatabase } from '../src/db/migrations';
 import { SettingsProvider } from '../src/settings/SettingsProvider';
 import { initializeMedia } from '../src/media';
+import { AppLoadingScreen } from '../src/components/AppLoadingScreen';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 const queryClient = new QueryClient({
@@ -33,7 +34,7 @@ async function initializeDatabase(db: SQLiteDatabase) {
   await initializeMedia(db);
 }
 
-function Navigation() {
+function Navigation({ onReady }: { onReady: () => void }) {
   const { colors, mode, reducedMotion } = useAppTheme();
   useEffect(() => {
     void SystemUI.setBackgroundColorAsync(colors.surface);
@@ -52,12 +53,7 @@ function Navigation() {
         },
       }}
     >
-      <View
-        className="flex-1 bg-theme-surface"
-        onLayout={() => {
-          void SplashScreen.hideAsync();
-        }}
-      >
+      <View className="flex-1 bg-theme-surface" onLayout={onReady}>
         <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
         <Stack
           screenOptions={{
@@ -75,6 +71,13 @@ function Navigation() {
 export default function RootLayout() {
   const [error, setError] = useState<Error | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const [navigationReady, setNavigationReady] = useState(false);
+  const [imagesReady, setImagesReady] = useState(false);
+  const onNavigationReady = useCallback(() => setNavigationReady(true), []);
+  const onImagesReady = useCallback(() => setImagesReady(true), []);
+  useEffect(() => {
+    if (imagesReady) void SplashScreen.hideAsync().catch(() => undefined);
+  }, [imagesReady]);
   const onError = useCallback((value: Error) => setError(value), []);
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) =>
@@ -85,54 +88,61 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        {error ? (
-          <SafeAreaView
-            style={{
-              flex: 1,
-              padding: 28,
-              justifyContent: 'center',
-              gap: 18,
-              backgroundColor: themeColors('blue', 'light').accentLight,
-            }}
-            onLayout={() => {
-              void SplashScreen.hideAsync();
-            }}
-          >
-            <NativeText style={{ fontSize: 20 }}>앱을 준비하지 못했어요</NativeText>
-            <NativeText>{error.message}</NativeText>
-            <NativeText>기존 기록은 삭제하지 않았습니다. 다시 시도해주세요.</NativeText>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                setError(null);
-                setAttempt((value) => value + 1);
-              }}
+        <View className="flex-1 bg-white">
+          {error ? (
+            <SafeAreaView
               style={{
-                padding: 16,
-                backgroundColor: themeColors('blue', 'light').accent,
-                borderRadius: 16,
+                flex: 1,
+                padding: 28,
+                justifyContent: 'center',
+                gap: 18,
+                backgroundColor: themeColors('blue', 'light').accentLight,
+              }}
+              onLayout={() => {
+                void SplashScreen.hideAsync();
               }}
             >
-              <NativeText>다시 시도</NativeText>
-            </Pressable>
-          </SafeAreaView>
-        ) : (
-          <SQLiteProvider
-            key={attempt}
-            databaseName="took.db"
-            options={databaseOptions}
-            onInit={initializeDatabase}
-            onError={onError}
-          >
-            <SettingsProvider onError={onError}>
-              <AppThemeProvider>
-                <GestureHandlerRootView style={{ flex: 1 }}>
-                  <Navigation />
-                </GestureHandlerRootView>
-              </AppThemeProvider>
-            </SettingsProvider>
-          </SQLiteProvider>
-        )}
+              <NativeText style={{ fontSize: 20 }}>앱을 준비하지 못했어요</NativeText>
+              <NativeText>{error.message}</NativeText>
+              <NativeText>기존 기록은 삭제하지 않았습니다. 다시 시도해주세요.</NativeText>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => {
+                  setNavigationReady(false);
+                  setImagesReady(false);
+                  setError(null);
+                  setAttempt((value) => value + 1);
+                }}
+                style={{
+                  padding: 16,
+                  backgroundColor: themeColors('blue', 'light').accent,
+                  borderRadius: 16,
+                }}
+              >
+                <NativeText>다시 시도</NativeText>
+              </Pressable>
+            </SafeAreaView>
+          ) : (
+            <SQLiteProvider
+              key={attempt}
+              databaseName="took.db"
+              options={databaseOptions}
+              onInit={initializeDatabase}
+              onError={onError}
+            >
+              <SettingsProvider onError={onError}>
+                <AppThemeProvider>
+                  <GestureHandlerRootView style={{ flex: 1 }}>
+                    <Navigation onReady={onNavigationReady} />
+                  </GestureHandlerRootView>
+                </AppThemeProvider>
+              </SettingsProvider>
+            </SQLiteProvider>
+          )}
+          {!error && (!navigationReady || !imagesReady) && (
+            <AppLoadingScreen onReady={onImagesReady} />
+          )}
+        </View>
       </QueryClientProvider>
     </SafeAreaProvider>
   );
