@@ -27,7 +27,7 @@ export function BottomSheetModal({
   scrollFade = false,
   contentKey,
   presentation = 'modal',
-  rightAction,
+  menuAction,
   dismissOnBack = true,
   onBeforeClose,
   footer,
@@ -44,7 +44,7 @@ export function BottomSheetModal({
   scrollFade?: boolean;
   contentKey?: string | number;
   presentation?: 'modal' | 'screen';
-  rightAction?: ReactNode;
+  menuAction?: ReactNode;
   dismissOnBack?: boolean;
   onBeforeClose?: () => boolean;
   footer?: ReactNode;
@@ -122,7 +122,7 @@ export function BottomSheetModal({
                 <BottomSheetHeader
                   title={title}
                   titleIcon={titleIcon}
-                  rightAction={rightAction}
+                  menuAction={menuAction}
                   onClose={() => closeSheet()}
                 />
                 <BottomSheetScrollViewport

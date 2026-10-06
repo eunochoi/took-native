@@ -39,7 +39,7 @@ export default function HabitDetail() {
       <BottomSheetPage
         backRoute="/habit"
         title={habit?.name ?? '습관 정보'}
-        rightAction={
+        menuAction={
           habit ? <HabitMenu habit={habit} onDeleted={() => router.replace('/habit')} /> : undefined
         }
       >

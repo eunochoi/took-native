@@ -32,7 +32,7 @@ export default function DiaryDetail() {
       title={title}
       scrollFade
       contentKey={id}
-      rightAction={
+      menuAction={
         diary ? (
           <DiaryMenu diary={diary} today={today} onDeleted={() => router.replace('/diary')} />
         ) : undefined

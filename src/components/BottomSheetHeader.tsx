@@ -7,37 +7,39 @@ import { Text } from './Text';
 export function BottomSheetHeader({
   title,
   titleIcon,
-  rightAction,
+  menuAction,
   onClose,
 }: {
   title: string;
   titleIcon?: ReactNode;
-  rightAction?: ReactNode;
+  menuAction?: ReactNode;
   onClose: () => void;
 }) {
   const { colors, iconSizes } = useAppTheme();
   return (
-                  <View className="shrink-0 items-center ">
-                    {rightAction && <View className="absolute right-0 top-0 z-10">{rightAction}</View>}
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="닫기"
-                      onPress={() => onClose()}
-                      className="h-9 w-9 items-center justify-center rounded-full"
-                      hitSlop={4}
-                    >
-                      <AppIcon name="chevron-down" size={iconSizes.lg} color={colors.accent} />
-                    </Pressable>
-                    <View className="self-stretch flex-row items-center justify-center gap-2 mx-5 ">
-                      {titleIcon}
-                      <Text
-                        accessibilityRole="header"
-                        className="shrink text-center text-xl font-semibold tracking-tight pb-2 mb-4 "
-                      >
-                        {title}
-                      </Text>
-                    </View>
-                  </View>
-
+    <View className="shrink-0 items-center ">
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="닫기"
+        onPress={() => onClose()}
+        className="h-9 w-9 items-center justify-center rounded-full"
+        hitSlop={4}
+      >
+        <AppIcon name="chevron-down" size={iconSizes.lg} color={colors.accent} />
+      </Pressable>
+      <View className="self-stretch flex-row items-center gap-2 pb-2 mb-4">
+        {menuAction && <View className="w-11 shrink-0" />}
+        <View className="flex-1 min-w-0 flex-row items-center justify-center gap-2">
+          {titleIcon}
+          <Text
+            accessibilityRole="header"
+            className="shrink text-center text-lg font-semibold tracking-tight"
+          >
+            {title}
+          </Text>
+        </View>
+        {menuAction && <View className="-mr-2 w-11 shrink-0 items-center">{menuAction}</View>}
+      </View>
+    </View>
   );
 }

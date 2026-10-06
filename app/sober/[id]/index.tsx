@@ -121,7 +121,7 @@ export default function SoberDetail() {
         }}
         title={sober.name}
         backRoute="/sober"
-        rightAction={
+        menuAction={
           <SoberMenu
             sober={sober}
             disabled={mutation.isPending}
