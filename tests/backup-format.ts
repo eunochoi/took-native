@@ -57,7 +57,7 @@ export function readArchive(archive: Uint8Array) {
       return true;
     },
   });
-  if (!files['manifest.json'] || !files['took.db']) throw new Error('Took 백업 파일이 아닙니다.');
+  if (!files['manifest.json'] || !files['took.db']) throw new Error('took 백업 파일이 아닙니다.');
   const manifest = JSON.parse(strFromU8(files['manifest.json'])) as BackupManifest;
   if (
     manifest.format !== 'took-backup' ||

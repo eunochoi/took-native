@@ -25,7 +25,7 @@ class TookBackupSharingModule : Module() {
         val file = File(requireNotNull(uri.path)).canonicalFile
         require(file.path.startsWith(context.cacheDir.canonicalPath + File.separator) &&
           file.name.matches(Regex("took-backup-[a-zA-Z0-9-]+\\.zip")) && file.isFile) {
-          "Only Took cache backups can be shared"
+          "Only took cache backups can be shared"
         }
         uris.add(FileProvider.getUriForFile(context, context.packageName + ".SharingFileProvider", file))
       }
@@ -33,13 +33,13 @@ class TookBackupSharingModule : Module() {
         type = "application/zip"
         putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        clipData = ClipData.newUri(context.contentResolver, "Took backup", uris.first()).apply {
+        clipData = ClipData.newUri(context.contentResolver, "took backup", uris.first()).apply {
           for (uri in uris.drop(1)) addItem(ClipData.Item(uri))
         }
       }
       pending = promise
       try {
-        appContext.throwingActivity.startActivityForResult(Intent.createChooser(intent, "전체 Took 백업 공유"), 7412)
+        appContext.throwingActivity.startActivityForResult(Intent.createChooser(intent, "전체 took 백업 공유"), 7412)
       } catch (error: Exception) { pending = null; throw error }
     }
     OnActivityResult { _, (requestCode) ->

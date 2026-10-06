@@ -147,7 +147,7 @@ export async function extractBackupArchive(
     }
     unzip.push(new Uint8Array(), true);
     if (pending.size || !entries['manifest.json'])
-      throw new Error('불완전한 Took 백업 파일입니다.');
+      throw new Error('불완전한 took 백업 파일입니다.');
     const manifestBytes = new Uint8Array(manifestSize);
     let offset = 0;
     for (const bytes of manifestChunks) {
@@ -183,7 +183,7 @@ export async function extractBackupArchive(
         (set.index === 1 ? !entries['took.db'] : !!entries['took.db'])
       )
         throw new Error('분할 백업 정보나 파일 크기가 올바르지 않습니다.');
-    } else if (manifest.set || !entries['took.db']) throw new Error('Took 백업 파일이 아닙니다.');
+    } else if (manifest.set || !entries['took.db']) throw new Error('took 백업 파일이 아닙니다.');
     if (Object.keys(manifest.files).length !== Object.keys(entries).length - 1)
       throw new Error('백업 파일 목록이 일치하지 않습니다.');
     for (const [name, meta] of Object.entries(entries)) {

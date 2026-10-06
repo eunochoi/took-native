@@ -46,7 +46,7 @@ export async function readBackupDatabase(
     schema.filter((item) => item.type === 'table').length !== allowed.length ||
     schema.some((item) => item.type === 'table' && !allowed.includes(item.name))
   )
-    throw new Error('Took DB 구조와 일치하지 않습니다.');
+    throw new Error('took DB 구조와 일치하지 않습니다.');
   if ((await db.getAllAsync('PRAGMA foreign_key_check')).length)
     throw new Error('백업 기록의 연결이 손상되었습니다.');
   const diaries = await db.getAllAsync<Diary>(
