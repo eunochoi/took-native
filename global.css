@@ -1,0 +1,5 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Root sizing is generated from src/theme/tokens.json by the Tailwind plugin. */

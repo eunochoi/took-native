@@ -1,0 +1,66 @@
+{
+  "expo": {
+    "name": "Took",
+    "slug": "took-native",
+    "version": "2.1.0",
+    "scheme": "took-local",
+    "orientation": "portrait",
+    "platforms": ["android"],
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "android": {
+      "package": "com.everstamp",
+      "allowBackup": false,
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ],
+      "versionCode": 15
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#f0f7ff",
+          "image": "./assets/icon.png",
+          "imageWidth": 120
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "일기에 추가할 사진을 선택합니다.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
+      "expo-asset",
+      "expo-sharing",
+      [
+        "expo-status-bar",
+        {
+          "style": "dark"
+        }
+      ]
+    ],
+    "updates": {
+      "enabled": false
+    },
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b859b201-9bc7-42a0-889b-9b48bae5da45"
+      }
+    }
+  }
+}
