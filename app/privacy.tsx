@@ -13,7 +13,7 @@ export default function Privacy() {
             <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
               {section.title}
             </Text>
-            <Text className={BODY_DESCRIPTION_CLASS_NAME}>
+            <Text className={`px-2 ${BODY_DESCRIPTION_CLASS_NAME}`}>
               {section.text}
             </Text>
           </View>
