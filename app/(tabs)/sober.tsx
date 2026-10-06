@@ -1,0 +1,198 @@
+import { PAGE_CLASS_NAME, EMPTY_STATE_CLASS_NAME } from '../../src/theme/classes';
+import { EmptyState } from '../../src/components/EmptyState';
+
+import { ColorView } from '../../src/components/ColorTransition';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter, useScrollToTop } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useMemo, useRef, useState } from 'react';
+import { FlatList, Pressable, View } from 'react-native';
+import { AlertModal, type AlertContent } from '../../src/components/AlertModal';
+import { AppIcon } from '../../src/components/AppIcon';
+import { RecordSortPicker } from '../../src/components/RecordSortPicker';
+import { Toolbar } from '../../src/components/Toolbar';
+import { ToolbarSortButton } from '../../src/components/ToolbarSortButton';
+import { ToolbarAddButton } from '../../src/components/ToolbarAddButton';
+import { ScrollEdgeFade } from '../../src/components/ScrollEdgeFade';
+import { TabBottomSpacer } from '../../src/components/TabBottomSpacer';
+import { Text } from '../../src/components/Text';
+import { sortSobers } from '../../src/db/sober';
+import type { Sober } from '../../src/db/types';
+import { MAX_SOBER_COUNT } from '../../src/domain/limits';
+import { useCurrentMinute } from '../../src/hooks/useCurrentMinute';
+import { useScrollFade } from '../../src/hooks/useScrollFade';
+import { soberQueries } from '../../src/queries';
+import { SoberBox } from '../../src/screens/sober/SoberBox';
+import { SoberTopSection } from '../../src/screens/sober/SoberTopSection';
+import { useSettings } from '../../src/settings/SettingsProvider';
+import { useAppTheme } from '../../src/theme/AppThemeProvider';
+
+type Row = { kind: 'state' } | { kind: 'sober'; sober: Sober };
+export default function SoberList() {
+  const db = useSQLiteContext();
+  const { colors, rem: appRem } = useAppTheme();
+  const router = useRouter();
+  const list = useQuery(soberQueries.list(db));
+  const restarts = useQuery(soberQueries.restarts(db));
+  const { settings, updateSettings } = useSettings();
+  const [sortOpen, setSortOpen] = useState(false);
+  const [alert, setAlert] = useState<AlertContent | null>(null);
+  const now = useCurrentMinute();
+  const fade = useScrollFade();
+  const scroll = useRef<FlatList<Row>>(null);
+  useScrollToTop(scroll);
+  const sorted = sortSobers(list.data ?? [], settings);
+  const grouped = useMemo(() => {
+    const result = new Map<number, NonNullable<typeof restarts.data>>();
+    for (const item of restarts.data ?? []) {
+      const rows = result.get(item.sober_id) ?? [];
+      rows.push(item);
+      result.set(item.sober_id, rows);
+    }
+    return result;
+  }, [restarts.data]);
+  const ready = !!list.data && !!restarts.data;
+  const failed = list.isError || restarts.isError;
+  const disabledAdd = !ready || failed || sorted.length >= MAX_SOBER_COUNT;
+  const rows: Row[] =
+    ready && sorted.length
+      ? sorted.map((sober): Row => ({ kind: 'sober', sober }))
+      : [{ kind: 'state' }];
+  const change = (patch: Parameters<typeof updateSettings>[0]) =>
+    void updateSettings(patch)
+      .then(() => scroll.current?.scrollToOffset({ offset: 0, animated: true }))
+      .catch((error: Error) =>
+        setAlert({ title: '설정을 저장하지 못했어요', message: error.message }),
+      );
+  return (
+    <ColorView className={PAGE_CLASS_NAME}>
+      <FlatList
+        ref={scroll}
+        data={rows}
+        keyExtractor={(item) => (item.kind === 'sober' ? String(item.sober.id) : item.kind)}
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        removeClippedSubviews={false}
+        onScroll={fade.onScroll}
+        onLayout={fade.onLayout}
+        onContentSizeChange={fade.onContentSizeChange}
+        scrollEventThrottle={16}
+        contentContainerClassName="grow"
+        ListHeaderComponent={
+          <SoberTopSection>
+            <Toolbar>
+              <ToolbarSortButton
+                sort={settings.soberSort}
+                priorityFirst={settings.soberPriorityFirst}
+                ascendingLabel="오래된순"
+                accessibilityLabel="절제 항목 정렬"
+                onPress={() => setSortOpen(true)}
+              />
+              <ToolbarAddButton disabled={disabledAdd} onPress={() => router.push('/sober/new')} />
+            </Toolbar>
+          </SoberTopSection>
+        }
+        renderItem={({ item, index }) => {
+          if (item.kind === 'sober')
+            return (
+              <View
+                className={index === 0 ? 'pt-8' : undefined}
+                style={{ paddingHorizontal: '5%' }}
+              >
+                <View
+                  className={`border-theme-border/60 ${index === 0 ? 'border-t-0' : 'border-t'}`}
+                >
+                  <SoberBox
+                    sober={item.sober}
+                    restarts={grouped.get(item.sober.id) ?? []}
+                    now={now}
+                    isFirst={index === 0}
+                  />
+                </View>
+              </View>
+            );
+          return (
+            <View className="pt-8">
+              {failed || !ready ? (
+                <View
+                  className={
+                    failed ? 'min-h-64 items-center justify-center gap-3' : EMPTY_STATE_CLASS_NAME
+                  }
+                >
+                  {failed ? (
+                    <>
+                      <Text className="text-theme-text-secondary">
+                        절제 목록을 불러오지 못했어요.
+                      </Text>
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() => {
+                          void list.refetch();
+                          void restarts.refetch();
+                        }}
+                      >
+                        <Text className="text-theme-accent">다시 시도</Text>
+                      </Pressable>
+                    </>
+                  ) : (
+                    <Text className="text-theme-text-secondary">기록을 불러오는 중이에요.</Text>
+                  )}
+                </View>
+              ) : (
+                <EmptyState
+                  icon={<AppIcon name="sober" size={appRem * 1.875} color={colors.accent} />}
+                  title="아직 만든 절제가 없어요."
+                  description="줄이고 싶은 것 하나부터 정하고, 매일의 변화를 쌓아보세요."
+                />
+              )}
+            </View>
+          );
+        }}
+        ListFooterComponent={
+          <>
+            {ready && sorted.length > 0 && failed ? (
+              <View className="py-4 items-center gap-2">
+                <Text accessibilityRole="alert" className="text-sm text-theme-text-secondary">
+                  절제 목록을 불러오지 못했어요.
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => {
+                    void list.refetch();
+                    void restarts.refetch();
+                  }}
+                >
+                  <Text className="text-theme-accent">다시 시도</Text>
+                </Pressable>
+              </View>
+            ) : null}
+            <TabBottomSpacer />
+          </>
+        }
+      />
+      <ScrollEdgeFade edge="top" visible={fade.topVisible} />
+      <ScrollEdgeFade edge="bottom" visible={fade.bottomVisible} />
+
+      {sortOpen && (
+        <RecordSortPicker
+          title="절제 정렬"
+          sort={settings.soberSort}
+          priorityFirst={settings.soberPriorityFirst}
+          ascendingLabel="오래된순"
+          onClose={() => setSortOpen(false)}
+          onApply={(sort, priorityFirst) => {
+            setSortOpen(false);
+            if (sort === 'CUSTOM') return;
+            change({ soberSort: sort, soberPriorityFirst: priorityFirst });
+          }}
+        />
+      )}
+      <AlertModal
+        visible={alert !== null}
+        title={alert?.title ?? ''}
+        message={alert?.message}
+        onConfirm={() => setAlert(null)}
+      />
+    </ColorView>
+  );
+}
