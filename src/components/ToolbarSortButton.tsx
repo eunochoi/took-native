@@ -1,9 +1,4 @@
 import { useAppTheme } from '../theme/AppThemeProvider';
-import {
-  TOOLBAR_BUTTON_CLASS_NAME,
-  TOOLBAR_BUTTON_TEXT_CLASS_NAME,
-  TOOLBAR_BUTTON_COLOR_CLASS_NAME,
-} from '../theme/classes';
 import { AppIcon } from './AppIcon';
 import { GesturePressable } from './GesturePressable';
 import { StarIcon } from './StarIcon';
@@ -30,16 +25,16 @@ export function ToolbarSortButton({
       accessibilityRole="button"
       accessibilityLabel={`${accessibilityLabel}, ${label}${showPriority ? ' · 중요도 우선' : ''}`}
       onPress={onPress}
-      className={TOOLBAR_BUTTON_CLASS_NAME}
+      className="h-11 shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65"
     >
-      <AppIcon name="sort" size={appRem * 1.2} className={TOOLBAR_BUTTON_COLOR_CLASS_NAME} />
-      <Text numberOfLines={1} className={TOOLBAR_BUTTON_TEXT_CLASS_NAME}>
+      <AppIcon name="sort" size={appRem * 1.2} className="text-theme-accent" />
+      <Text numberOfLines={1} className="text-sm leading-snug text-theme-text-secondary">
         {label}
       </Text>
       {showPriority && (
         <>
-          <Text className={`text-sm ${TOOLBAR_BUTTON_COLOR_CLASS_NAME}`}>·</Text>
-          <StarIcon size={appRem * 1.1} className={TOOLBAR_BUTTON_COLOR_CLASS_NAME} />
+          <Text className="text-sm text-theme-accent">·</Text>
+          <StarIcon size={appRem * 1.1} className="text-theme-accent" />
         </>
       )}
     </GesturePressable>

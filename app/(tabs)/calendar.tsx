@@ -15,7 +15,7 @@ import { CalendarTopSection } from '../../src/screens/calendar/CalendarTopSectio
 import { DayInfo } from '../../src/screens/calendar/DayInfo';
 import { DiaryHabitMonthCalendar } from '../../src/screens/calendar/DiaryHabitMonthCalendar';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
-import { PAGE_CLASS_NAME, RECORD_SURFACE_CLASS_NAME } from '../../src/theme/classes';
+import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 
 export default function CalendarScreen() {
   const today = useToday();
@@ -39,10 +39,7 @@ export default function CalendarScreen() {
     <ColorView className={PAGE_CLASS_NAME}>
       <CalendarTopSection>
         <Toolbar>
-          <View
-            className={`h-11 max-w-full flex-row items-center gap-3 rounded-full ${RECORD_SURFACE_CLASS_NAME} pl-3.5 pr-4`}
-          >
-            <View className="min-w-0 shrink flex-row items-center gap-1.5">
+            <View className="h-11 min-w-0 shrink flex-row items-center gap-1.5 px-3.5">
               <View className="h-5 shrink-0 items-center justify-center">
                 <AppIcon
                   name="diary"
@@ -66,8 +63,7 @@ export default function CalendarScreen() {
                 개
               </Text>
             </View>
-            <View className="h-4 w-px bg-theme-accent/20" />
-            <View className="min-w-0 shrink flex-row items-center gap-1.5">
+            <View className="h-11 min-w-0 shrink flex-row items-center gap-1.5 px-3.5">
               <View className="h-5 shrink-0 items-center justify-center">
                 <AppIcon
                   name="habit"
@@ -91,7 +87,6 @@ export default function CalendarScreen() {
                 번
               </Text>
             </View>
-          </View>
         </Toolbar>
       </CalendarTopSection>
       <View

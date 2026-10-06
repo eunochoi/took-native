@@ -1,10 +1,5 @@
 import { EMOTIONS } from '../domain/constants';
 import { useAppTheme } from '../theme/AppThemeProvider';
-import {
-  TOOLBAR_BUTTON_CLASS_NAME,
-  TOOLBAR_BUTTON_COLOR_CLASS_NAME,
-  TOOLBAR_BUTTON_TEXT_CLASS_NAME,
-} from '../theme/classes';
 import { AppIcon } from './AppIcon';
 import { GesturePressable } from './GesturePressable';
 import { Text } from './Text';
@@ -21,7 +16,7 @@ export function ToolbarFilterButton({
   onPress: () => void;
 }) {
   const { rem: appRem } = useAppTheme();
-  const isShortYear = (!!month || !!emotion);
+  const isShortYear = !!month || !!emotion;
   const label =
     [
       year === null ? null : `${isShortYear ? year % 100 : year}년${month ? ` ${month}월` : ''}`,
@@ -34,13 +29,13 @@ export function ToolbarFilterButton({
       accessibilityRole="button"
       accessibilityLabel={`일기 필터, ${label}`}
       onPress={onPress}
-      className={`${TOOLBAR_BUTTON_CLASS_NAME} min-w-0 shrink`}
+      className="h-11 min-w-0 shrink flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65"
     >
-      <AppIcon name="filter-list" size={appRem * 1.2} className={TOOLBAR_BUTTON_COLOR_CLASS_NAME} />
+      <AppIcon name="filter-list" size={appRem * 1.2} className="text-theme-accent" />
       <Text
         numberOfLines={1}
         ellipsizeMode="tail"
-        className={`${TOOLBAR_BUTTON_TEXT_CLASS_NAME} min-w-0 shrink`}
+        className="min-w-0 shrink text-sm leading-snug text-theme-text-secondary"
       >
         {label}
       </Text>

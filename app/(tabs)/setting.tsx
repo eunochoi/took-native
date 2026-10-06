@@ -3,7 +3,6 @@ import { useRouter, useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, View } from 'react-native';
-import { twMerge } from 'tailwind-merge';
 import {
   chooseBackup,
   discardBackupSelection,
@@ -27,12 +26,7 @@ import { SettingsTopSection } from '../../src/screens/settings/SettingsTopSectio
 import type { Settings } from '../../src/settings/model';
 import { useSettings } from '../../src/settings/SettingsProvider';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
-import {
-  PAGE_CLASS_NAME,
-  TOOLBAR_BUTTON_CLASS_NAME,
-  TOOLBAR_BUTTON_COLOR_CLASS_NAME,
-  TOOLBAR_BUTTON_TEXT_CLASS_NAME,
-} from '../../src/theme/classes';
+import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 
 export default function SettingsScreen() {
   const [alert, setAlert] = useState<AlertContent | null>(null);
@@ -192,31 +186,19 @@ export default function SettingsScreen() {
                   Alert.alert('앱 소개를 열지 못했어요', '다시 시도해주세요.'),
                 );
               }}
-              className={`${TOOLBAR_BUTTON_CLASS_NAME} ${disabled ? 'opacity-40' : 'opacity-100'}`}
+              className={`h-11 shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
             >
-              <AppIcon
-                name="info-outline"
-                size={appRem * 1.2}
-                className={TOOLBAR_BUTTON_COLOR_CLASS_NAME}
-              />
-              <Text className={TOOLBAR_BUTTON_TEXT_CLASS_NAME}>앱 소개</Text>
+              <AppIcon name="info-outline" size={appRem * 1.2} className="text-theme-accent" />
+              <Text className="text-sm leading-snug text-theme-text-secondary">앱 소개</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ disabled }}
               disabled={disabled}
               onPress={() => router.push('/privacy')}
-              className={twMerge(
-                TOOLBAR_BUTTON_CLASS_NAME,
-                'pr-4',
-                disabled ? 'opacity-40' : 'opacity-100',
-              )}
+              className={`h-11 shrink-0 flex-row items-center justify-center px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
             >
-              <AppIcon
-                name="privacy-tip"
-                size={appRem * 1.2}
-                className={TOOLBAR_BUTTON_COLOR_CLASS_NAME}
-              />
+              <AppIcon name="privacy-tip" size={appRem * 1.2} className="text-theme-accent" />
             </Pressable>
           </Toolbar>
         </SettingsTopSection>
