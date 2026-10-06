@@ -1,0 +1,4 @@
+{
+  "platforms": ["android"],
+  "android": { "modules": ["took.backup.sharing.TookBackupSharingModule"] }
+}
