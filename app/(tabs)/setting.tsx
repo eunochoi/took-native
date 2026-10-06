@@ -1,16 +1,9 @@
-import { twMerge } from 'tailwind-merge';
-import {
-  PAGE_CLASS_NAME,
-  TOOLBAR_BUTTON_CLASS_NAME,
-  TOOLBAR_BUTTON_COLOR_CLASS_NAME,
-  TOOLBAR_BUTTON_TEXT_CLASS_NAME,
-} from '../../src/theme/classes';
-import { ColorView } from '../../src/components/ColorTransition';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter, useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, View } from 'react-native';
+import { twMerge } from 'tailwind-merge';
 import {
   chooseBackup,
   discardBackupSelection,
@@ -19,6 +12,7 @@ import {
 } from '../../src/backup';
 import { AlertModal, type AlertContent } from '../../src/components/AlertModal';
 import { AppIcon } from '../../src/components/AppIcon';
+import { ColorView } from '../../src/components/ColorTransition';
 import { ConfirmModal } from '../../src/components/ConfirmModal';
 import { ScrollEdgeFade } from '../../src/components/ScrollEdgeFade';
 import { TabBottomSpacer } from '../../src/components/TabBottomSpacer';
@@ -33,6 +27,12 @@ import { SettingsTopSection } from '../../src/screens/settings/SettingsTopSectio
 import type { Settings } from '../../src/settings/model';
 import { useSettings } from '../../src/settings/SettingsProvider';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
+import {
+  PAGE_CLASS_NAME,
+  TOOLBAR_BUTTON_CLASS_NAME,
+  TOOLBAR_BUTTON_COLOR_CLASS_NAME,
+  TOOLBAR_BUTTON_TEXT_CLASS_NAME,
+} from '../../src/theme/classes';
 
 export default function SettingsScreen() {
   const [alert, setAlert] = useState<AlertContent | null>(null);
