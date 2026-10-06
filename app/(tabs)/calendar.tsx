@@ -5,12 +5,12 @@ import { useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
-import { AppIcon } from '../../src/components/AppIcon';
 import { BottomSheetModal } from '../../src/components/BottomSheetModal';
 import { ColorView } from '../../src/components/ColorTransition';
-import { Text } from '../../src/components/Text';
 import { Toolbar } from '../../src/components/Toolbar';
 import { diaryQueries, habitQueries, useToday } from '../../src/queries';
+import { CalendarDiaryCount } from '../../src/screens/calendar/CalendarDiaryCount';
+import { CalendarHabitCompletionCount } from '../../src/screens/calendar/CalendarHabitCompletionCount';
 import { CalendarTopSection } from '../../src/screens/calendar/CalendarTopSection';
 import { DayInfo } from '../../src/screens/calendar/DayInfo';
 import { DiaryHabitMonthCalendar } from '../../src/screens/calendar/DiaryHabitMonthCalendar';
@@ -20,7 +20,7 @@ import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 export default function CalendarScreen() {
   const today = useToday();
   const db = useSQLiteContext();
-  const { tabContentBottom, iconSizes } = useAppTheme();
+  const { tabContentBottom } = useAppTheme();
   const { height } = useWindowDimensions();
   const [selected, setSelected] = useState(today);
   const [month, setMonth] = useState(today.slice(0, 7));
@@ -39,54 +39,8 @@ export default function CalendarScreen() {
     <ColorView className={PAGE_CLASS_NAME}>
       <CalendarTopSection>
         <Toolbar>
-            <View className="h-11 min-w-0 shrink flex-row items-center gap-1.5 px-3.5">
-              <View className="h-5 shrink-0 items-center justify-center">
-                <AppIcon
-                  name="diary"
-                  size={iconSizes.md}
-                  className="text-theme-accent -mb-0.5"
-                  style={{ includeFontPadding: false, lineHeight: iconSizes.sm }}
-                />
-              </View>
-              <Text
-                numberOfLines={1}
-                className="shrink text-sm leading-5 text-theme-text-secondary"
-                style={{ includeFontPadding: false }}
-              >
-                마음{' '}
-                <Text
-                  className="text-sm leading-5 font-semibold text-theme-accent-deep"
-                  style={{ includeFontPadding: false }}
-                >
-                  {diaries.data?.length ?? '0'}
-                </Text>
-                개
-              </Text>
-            </View>
-            <View className="h-11 min-w-0 shrink flex-row items-center gap-1.5 px-3.5">
-              <View className="h-5 shrink-0 items-center justify-center">
-                <AppIcon
-                  name="habit"
-                  size={iconSizes.md}
-                  className="text-theme-accent -mb-0.5"
-                  style={{ includeFontPadding: false, lineHeight: iconSizes.sm }}
-                />
-              </View>
-              <Text
-                numberOfLines={1}
-                className="shrink text-sm leading-5 text-theme-text-secondary"
-                style={{ includeFontPadding: false }}
-              >
-                실천{' '}
-                <Text
-                  className="text-sm leading-5 font-semibold text-theme-accent-deep"
-                  style={{ includeFontPadding: false }}
-                >
-                  {completions.data?.length ?? '0'}
-                </Text>
-                번
-              </Text>
-            </View>
+          <CalendarDiaryCount count={diaries.data?.length ?? 0} />
+          <CalendarHabitCompletionCount count={completions.data?.length ?? 0} />
         </Toolbar>
       </CalendarTopSection>
       <View
