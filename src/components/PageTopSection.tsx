@@ -3,22 +3,11 @@ import { Image, View, type ImageSourcePropType } from 'react-native';
 import { BODY_DESCRIPTION_CLASS_NAME, TOP_SECTION_BORDER_CLASS_NAME } from '../theme/classes';
 import { AppIcon } from './AppIcon';
 
-import { useAppTheme } from '../theme/AppThemeProvider';
 import { ColorView } from './ColorTransition';
 import { Text } from './Text';
 
-// Static left bearings from the font glyphs and the timer SVG viewBox.
-const TITLE_ICON_LEFT_INSETS: Partial<Record<ComponentProps<typeof AppIcon>['name'], number>> = {
-  calendar: 0.125,
-  diary: 81 / 512,
-  habit: 0.125,
-  sober: 0.125,
-  settings: 45 / 512,
-};
-
 export function PageTopSection({
   title,
-  icon,
   description,
   image,
   imageLabel,
@@ -35,19 +24,11 @@ export function PageTopSection({
   imageClassName?: string;
   children?: ReactNode;
 }) {
-  const { rem: appRem, colors } = useAppTheme();
-  const iconSize = appRem * 3.7;
   return (
     <ColorView
       className={`relative h-[180px] shrink-0 bg-theme-accent-light ${TOP_SECTION_BORDER_CLASS_NAME}`}
     >
       <View className="z-10 flex-row items-center gap-2 px-[5%] pt-[6%]">
-        <View
-          className="shrink-0"
-          style={{ marginLeft: -iconSize * (TITLE_ICON_LEFT_INSETS[icon] ?? 0) + appRem * 0.25 }}
-        >
-          <AppIcon name={icon} size={iconSize} color={colors.accent} accessible={false} />
-        </View>
         <View className="min-w-0 flex-1 gap-1">
           <Text
             accessibilityRole="header"
