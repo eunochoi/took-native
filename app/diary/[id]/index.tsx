@@ -44,10 +44,10 @@ export default function DiaryDetail() {
           <>
             <View className="gap-6">
               <View className="flex-row items-center gap-5">
-                <EmotionImage emotion={diary.emotion} size={appRem * 5} />
+                <EmotionImage emotion={diary.emotion} size={appRem * 3.5} />
                 <View>
-                  <Text className="text-sm text-theme-accent-text">오늘의 마음</Text>
-                  <Text className="mt-1 text-2xl font-medium">
+                  <Text className="text-sm font-bold text-theme-accent">오늘의 마음</Text>
+                  <Text className="mt-1 font-bold text-xl font-medium text-theme-text-primary">
                     {EMOTIONS[diary.emotion]?.name ?? EMOTIONS[9].name}
                   </Text>
                 </View>
