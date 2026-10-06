@@ -1,0 +1,20 @@
+export const DIARY_TEXT_MAX_LENGTH = 500;
+export const DIARY_IMAGE_MAX_COUNT = 5;
+export const MAX_HABIT_COUNT = 20;
+export const HABIT_NAME_MAX_LENGTH = 10;
+export const PAGE_SIZE = 5;
+export const IMAGE_SOURCE_MAX_BYTES = 5 * 1024 * 1024;
+export const IMAGE_MAX_EDGE = 2048;
+export const IMAGE_JPEG_QUALITY = 0.82;
+export const MAX_BACKUP_BYTES = 1024 * 1024 * 1024;
+export const MAX_BACKUP_FILES = 20000;
+export const MAX_BACKUP_PART_BYTES = 512 * 1024 * 1024;
+export const BACKUP_CHUNK_BYTES = 256 * 1024;
+export const MAX_DATABASE_BYTES = 64 * 1024 * 1024;
+export const MAX_MANIFEST_BYTES = 4 * 1024 * 1024;
+
+export const MAX_SOBER_COUNT = 20;
+export const SOBER_NAME_MAX_LENGTH = 30;
+export const SOBER_DESCRIPTION_MAX_LENGTH = 500;
+export const SOBER_MEMO_MAX_LENGTH = 500;
+export const SOBER_MAX_GOAL_DAYS = 36500;
