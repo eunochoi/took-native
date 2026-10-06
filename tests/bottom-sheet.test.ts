@@ -8,7 +8,7 @@ import tokens from '../src/theme/tokens.json';
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
 
-// Execute the actual component with deterministic React hooks and preset completion callbacks.
+// Execute the actual component and motion hook with controlled gesture events and animation completion.
 function harness(
   initialVisible = true,
   reducedMotion = false,
@@ -43,111 +43,193 @@ function harness(
       });
     }
   };
+  const animations: any[] = [];
+  const scrollCommands: number[] = [];
+  function shared(initial: any) {
+    const index = cursor++;
+    if (slots[index]) return slots[index];
+    let value = initial;
+    const cell: any = {
+      animation: undefined,
+      get value() {
+        return value;
+      },
+      set value(next: any) {
+        if (next?.kind) {
+          const animation = { ...next, cell, from: value };
+          cell.animation = animation;
+          animations.push(animation);
+        } else {
+          cell.animation = undefined;
+          value = next;
+        }
+      },
+    };
+    return (slots[index] = cell);
+  }
+  const animate = (kind: string) => (target: number, config: any, callback?: Function) => ({
+    kind,
+    target,
+    config,
+    callback,
+  });
+  const complete = (animation: any, finished = true) => {
+    if (animation.cell.animation === animation) {
+      animation.cell.animation = undefined;
+      if (finished) animation.cell.value = animation.target;
+    }
+    animation.callback?.(finished);
+  };
   const preset = (name: string) => ({
     name,
-    duration(value: number) {
-      return { ...this, milliseconds: value };
+    duration(milliseconds: number) {
+      return { ...this, milliseconds };
     },
-    reduceMotion(value: string) {
-      return { ...this, reduced: value };
+    reduceMotion(reduced: string) {
+      return { ...this, reduced };
     },
-    withCallback(callback: (finished: boolean) => void) {
+    withCallback(callback: Function) {
       return { ...this, callback };
     },
   });
+  const gesture = (kind: string) => {
+    const instance: any = { kind, handlers: {}, config: {} };
+    for (const name of [
+      'onTouchesDown',
+      'onTouchesMove',
+      'onTouchesUp',
+      'onStart',
+      'onUpdate',
+      'onEnd',
+      'onFinalize',
+    ])
+      instance[name] = (fn: Function) => {
+        instance.handlers[name] = fn;
+        return instance;
+      };
+    for (const name of [
+      'manualActivation',
+      'maxPointers',
+      'shouldCancelWhenOutside',
+      'requireExternalGestureToFail',
+    ])
+      instance[name] = (value: any) => {
+        instance.config[name] = value;
+        return instance;
+      };
+    return instance;
+  };
   const exports: any = {};
   const jsx = (type: unknown, props: any, key?: string) => ({ type, props, key });
-  runInNewContext(
-    ts.transpileModule(
-      readFileSync(new URL('../src/components/BottomSheetModal.tsx', import.meta.url), 'utf8'),
-      {
-        compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
-      },
-    ).outputText,
-    {
-      exports,
-      requestAnimationFrame: (fn: () => void) => {
-        frames.push(fn);
-        return frames.length;
-      },
-      cancelAnimationFrame: () => {},
-      require: (name: string) => {
-        if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
-        if (name === 'react')
-          return {
-            useRef: (value: any) => {
-              const i = cursor++;
-              return slots[i] ?? (slots[i] = { current: value });
-            },
-            useState: (value: any) => {
-              const i = cursor++;
-              if (!(i in slots)) slots[i] = value;
-              return [
-                slots[i],
-                (next: any) => {
-                  if (!Object.is(slots[i], next)) {
-                    slots[i] = next;
-                    dirty = true;
-                  }
-                },
-              ];
-            },
-            useMemo: memo,
-            useCallback: (fn: any, deps: unknown[]) => memo(() => fn, deps),
-            useEffect: effect,
-            useLayoutEffect: effect,
-          };
-        if (name.endsWith('useScrollFade'))
-          return {
-            useScrollFade: () => ({
-              topVisible: true,
-              bottomVisible: true,
-              onScroll: () => {},
-              onLayout: () => {},
-              onContentSizeChange: () => {},
-              onScrollOffset: memo(() => () => {}, []),
-            }),
-          };
-        if (name.endsWith('ScrollEdgeFade')) return { ScrollEdgeFade: 'ScrollEdgeFade' };
-        if (name.includes('tokens.json')) return { __esModule: true, default: tokens };
-        if (name.includes('AppThemeProvider'))
-          return {
-            useAppTheme: () => ({ colors: {}, rem: 15, reducedMotion, iconSizes: { md: 20 } }),
-          };
-        if (name === 'react-native-safe-area-context')
-          return { useSafeAreaInsets: () => ({ top: 24, bottom: 30, left: 0, right: 0 }) };
-        if (name === 'react-native')
-          return {
-            Modal: 'Modal',
-            KeyboardAvoidingView: 'KeyboardAvoidingView',
-            View: 'View',
-            ScrollView: 'ScrollView',
-            Pressable: 'Pressable',
-            useWindowDimensions: () => ({ height: 800 }),
-            Keyboard: { dismiss: () => {}, addListener: () => ({ remove: () => {} }) },
-            AccessibilityInfo: { announceForAccessibility: () => {} },
-          };
-        if (name === 'react-native-reanimated')
-          return {
-            __esModule: true,
-            default: { View: 'AnimatedView' },
-            ReduceMotion: { Always: 'always', System: 'system' },
-            FadeIn: preset('FadeIn'),
-            FadeOut: preset('FadeOut'),
-            SlideInDown: preset('SlideInDown'),
-            SlideOutDown: preset('SlideOutDown'),
-          };
-        if (name === 'react-native-worklets')
-          return { scheduleOnRN: (fn: any, ...args: any[]) => fn(...args) };
-        return {
-          ColorView: 'ColorView',
-          ColorPressable: 'ColorPressable',
-          Text: 'Text',
-          AppIcon: 'AppIcon',
-        };
-      },
+  const context: any = {
+    exports,
+    requestAnimationFrame: (fn: () => void) => {
+      frames.push(fn);
+      return frames.length;
     },
-  );
+    cancelAnimationFrame: () => {},
+    require: (name: string) => {
+      if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
+      if (name === 'react')
+        return {
+          useRef: (value: any) => {
+            const i = cursor++;
+            return slots[i] ?? (slots[i] = { current: value });
+          },
+          useState: (value: any) => {
+            const i = cursor++;
+            if (!(i in slots)) slots[i] = value;
+            return [
+              slots[i],
+              (next: any) => {
+                if (!Object.is(slots[i], next)) {
+                  slots[i] = next;
+                  dirty = true;
+                }
+              },
+            ];
+          },
+          useMemo: memo,
+          useCallback: (fn: any, deps: unknown[]) => memo(() => fn, deps),
+          useEffect: effect,
+          useLayoutEffect: effect,
+        };
+      if (name.endsWith('useScrollFade'))
+        return {
+          useScrollFade: () => ({
+            topVisible: true,
+            bottomVisible: true,
+            onScroll: () => {},
+            onLayout: () => {},
+            onContentSizeChange: () => {},
+            onScrollOffset: memo(() => () => {}, []),
+          }),
+        };
+      if (name.endsWith('ScrollEdgeFade')) return { ScrollEdgeFade: 'ScrollEdgeFade' };
+      if (name.includes('tokens.json')) return { __esModule: true, default: tokens };
+      if (name.includes('AppThemeProvider'))
+        return {
+          useAppTheme: () => ({ colors: {}, rem: 15, reducedMotion, iconSizes: { md: 20 } }),
+        };
+      if (name === 'react-native-safe-area-context')
+        return { useSafeAreaInsets: () => ({ top: 24, bottom: 30, left: 0, right: 0 }) };
+      if (name === 'react-native')
+        return {
+          Modal: 'Modal',
+          KeyboardAvoidingView: 'KeyboardAvoidingView',
+          View: 'View',
+          ScrollView: 'ScrollView',
+          Pressable: 'Pressable',
+          useWindowDimensions: () => ({ height: 800 }),
+          Keyboard: { dismiss: () => {}, addListener: () => ({ remove: () => {} }) },
+          AccessibilityInfo: { announceForAccessibility: () => {} },
+        };
+      if (name === 'react-native-gesture-handler')
+        return {
+          GestureDetector: 'GestureDetector',
+          GestureHandlerRootView: 'GestureHandlerRootView',
+          Gesture: { Pan: () => gesture('pan'), Native: () => gesture('native') },
+        };
+      if (name.endsWith('AnimatedScrollView')) return { AnimatedScrollView: 'ScrollView' };
+      if (name.endsWith('useBottomSheetMotion')) return hookExports;
+      if (name === 'react-native-reanimated')
+        return {
+          __esModule: true,
+          default: { View: 'AnimatedView' },
+          ReduceMotion: { Always: 'always', System: 'system' },
+          FadeIn: preset('FadeIn'),
+          SlideInDown: preset('SlideInDown'),
+          useSharedValue: shared,
+          useAnimatedRef: () => memo(() => ({}), []),
+          useAnimatedStyle: (fn: Function) => ({ current: fn }),
+          useAnimatedScrollHandler: (handlers: any) => handlers.onScroll,
+          scrollTo: (_ref: any, _x: number, y: number) => scrollCommands.push(y),
+          cancelAnimation: (cell: any) => {
+            cell.animation = undefined;
+          },
+          withTiming: animate('timing'),
+          withSpring: animate('spring'),
+        };
+      if (name === 'react-native-worklets')
+        return { scheduleOnRN: (fn: any, ...args: any[]) => fn(...args) };
+      return {
+        ColorView: 'ColorView',
+        ColorPressable: 'ColorPressable',
+        Text: 'Text',
+        AppIcon: 'AppIcon',
+      };
+    },
+  };
+  const hookExports: any = {};
+  const compile = (path: string) =>
+    ts.transpileModule(readFileSync(new URL(path, import.meta.url), 'utf8'), {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+    }).outputText;
+  runInNewContext(compile('../src/hooks/useBottomSheetMotion.ts'), {
+    ...context,
+    exports: hookExports,
+  });
+  runInNewContext(compile('../src/components/BottomSheetModal.tsx'), context);
   function render() {
     do {
       dirty = false;
@@ -179,6 +261,22 @@ function harness(
       if (match) return match;
     }
   }
+  let gestureState = 'began';
+  const pan = () => find(tree, (node) => node.props?.gesture?.kind === 'pan').props.gesture;
+  const manager = {
+    activate: () => {
+      gestureState = 'active';
+      pan().handlers.onStart();
+    },
+    fail: () => {
+      gestureState = 'failed';
+      pan().handlers.onFinalize();
+    },
+  };
+  const touchEvent = (x: number, y: number) => ({
+    numberOfTouches: 1,
+    allTouches: [{ absoluteX: x, absoluteY: y }],
+  });
   render();
   return {
     render,
@@ -196,6 +294,59 @@ function harness(
       tree.props.onShow();
       render();
     },
+    layout(value = 400) {
+      this.sheet().props.children.props.onLayout({ nativeEvent: { layout: { height: value } } });
+    },
+    completeOpen() {
+      this.layout();
+      this.completeAnimation();
+      this.completeEnter();
+    },
+    completeEnter() {
+      this.sheet().props.entering.callback(true);
+    },
+    latestAnimation() {
+      return animations.at(-1);
+    },
+    completeAnimation(finished = true) {
+      complete(animations.at(-1), finished);
+      render();
+    },
+    complete,
+    offset(y: number) {
+      this.scroll().props.onScroll({ contentOffset: { y } });
+    },
+    begin(x = 0, y = 0) {
+      gestureState = 'began';
+      pan().handlers.onTouchesDown(touchEvent(x, y), manager);
+    },
+    move(x: number, y: number) {
+      if (gestureState === 'failed') return;
+      pan().handlers.onTouchesMove(touchEvent(x, y), manager);
+      if (gestureState === 'active') pan().handlers.onUpdate({ absoluteX: x, absoluteY: y });
+    },
+    end(success = true) {
+      if (gestureState === 'failed') return;
+      pan().handlers.onTouchesUp({}, manager);
+      if (gestureState === 'active') pan().handlers.onEnd({}, success);
+      pan().handlers.onFinalize();
+      render();
+    },
+    get gestureState() {
+      return gestureState;
+    },
+    get scrollCommands() {
+      return scrollCommands;
+    },
+    get pan() {
+      return pan();
+    },
+    get native() {
+      return find(tree, (node) => node.props?.gesture?.kind === 'native').props.gesture;
+    },
+    get y() {
+      return this.sheet().props.style.current().transform[0].translateY;
+    },
     close(action?: () => void) {
       return close(action);
     },
@@ -203,7 +354,7 @@ function harness(
       return find(tree, (node) => node.type === 'ScrollView');
     },
     sheet() {
-      return find(tree, (node) => node.props?.entering?.name === 'SlideInDown');
+      return find(tree, (node) => node.key?.startsWith('sheet-'));
     },
     flushFrames() {
       frames.splice(0).forEach((fn) => fn());
@@ -214,13 +365,14 @@ function harness(
   };
 }
 
-test('sheet waits for native onShow and keeps its window until exit finishes; actions run once afterward', () => {
+test('sheet waits for onShow, retains its body through close, and dispatches accepted work exactly once', () => {
   const h = harness();
   assert.equal(h.sheet(), undefined);
   assert.equal(h.tree.props.animationType, 'none');
   h.show();
-  const sheet = h.sheet();
-  assert.equal(sheet.props.entering.milliseconds, tokens.motion.pickerOpen);
+  h.layout();
+  assert.equal(h.sheet().props.entering.milliseconds, tokens.motion.pickerOpen);
+  h.completeEnter();
   let actions = 0;
   assert.equal(
     h.close(() => actions++),
@@ -231,34 +383,36 @@ test('sheet waits for native onShow and keeps its window until exit finishes; ac
     false,
   );
   h.render();
-  assert.equal(h.sheet(), undefined);
+  assert.ok(h.sheet());
+  assert.equal(h.sheet().props.pointerEvents, 'none');
+  assert.equal(h.latestAnimation().config.duration, tokens.motion.pickerClose);
+  const exit = h.latestAnimation();
   assert.equal(h.tree.props.visible, true);
   assert.equal(h.closes, 0);
-  sheet.props.exiting.callback(true);
-  h.render();
+  h.completeAnimation();
   assert.equal(h.tree.props.visible, false);
   assert.equal(h.closes, 1);
   assert.equal(actions, 0);
   h.flushFrames();
   assert.equal(actions, 1);
-  sheet.props.exiting.callback(true);
+  h.complete(exit);
   h.flushFrames();
   assert.equal(actions, 1);
   h.setVisible(false);
   assert.equal(h.closes, 1);
 });
 
-test('rapid reopen ignores the old exit and its deferred action', () => {
+test('rapid reopen ignores the previous close and its deferred action', () => {
   const h = harness();
   h.show();
-  const oldSheet = h.sheet();
+  h.completeOpen();
   let actions = 0;
   h.close(() => actions++);
-  h.render();
+  const oldExit = h.latestAnimation();
   h.setVisible(false);
   h.setVisible(true);
   assert.ok(h.sheet());
-  oldSheet.props.exiting.callback(true);
+  h.complete(oldExit);
   h.render();
   h.flushFrames();
   assert.equal(h.tree.props.visible, true);
@@ -266,7 +420,7 @@ test('rapid reopen ignores the old exit and its deferred action', () => {
   assert.equal(actions, 0);
 });
 
-test('hidden mount does not close; closing before onShow completes without waiting for missing children', () => {
+test('hidden mount does not close; closing before onShow needs no missing animation', () => {
   const h = harness(false);
   assert.equal(h.closes, 0);
   h.setVisible(true);
@@ -275,54 +429,50 @@ test('hidden mount does not close; closing before onShow completes without waiti
   assert.equal(h.closes, 1);
 });
 
-test('reduced motion uses presets without motion; interrupted exit never dispatches an action', () => {
+test('reduced motion applies to open and close; interrupted close never dispatches an action', () => {
   const h = harness(true, true);
   h.show();
-  const sheet = h.sheet();
-  assert.equal(sheet.props.entering.reduced, 'always');
-  assert.equal(sheet.props.exiting.reduced, 'always');
+  h.layout();
+  assert.equal(h.sheet().props.entering.reduced, 'always');
+  h.completeEnter();
   let actions = 0;
   h.close(() => actions++);
-  h.render();
-  sheet.props.exiting.callback(false);
-  h.render();
+  assert.equal(h.latestAnimation().config.reduceMotion, 'always');
+  h.completeAnimation(false);
   h.flushFrames();
   assert.equal(h.tree.props.visible, false);
   assert.equal(actions, 0);
 });
 
-test('unmounted sheet and a reopen before the queued action cannot dispatch stale work', () => {
+test('unmount and reopen prevent stale close work from running', () => {
   const h = harness();
   h.show();
-  const sheet = h.sheet();
+  h.completeOpen();
   let actions = 0;
   h.close(() => actions++);
-  h.render();
-  sheet.props.exiting.callback(true);
+  h.completeAnimation();
   h.setVisible(false);
   h.setVisible(true);
   h.flushFrames();
   assert.equal(actions, 0);
   const next = harness();
   next.show();
-  const nextSheet = next.sheet();
+  next.completeOpen();
   next.close(() => actions++);
-  next.render();
   next.unmount();
-  nextSheet.props.exiting.callback(true);
+  next.completeAnimation();
   next.flushFrames();
   assert.equal(next.closes, 0);
   assert.equal(actions, 0);
 });
 
-test('an accepted action survives the normal picker unmount caused by onClose', () => {
+test('accepted work survives the normal picker unmount caused by onClose', () => {
   const h = harness();
   h.show();
-  const sheet = h.sheet();
+  h.completeOpen();
   let actions = 0;
   h.close(() => actions++);
-  h.render();
-  sheet.props.exiting.callback(true);
+  h.completeAnimation();
   h.unmount();
   h.flushFrames();
   assert.equal(h.closes, 1);
@@ -341,7 +491,7 @@ test('record sheets can constrain height without changing other picker defaults'
 test('sheet delegates keyboard avoidance to its native container without measured padding or forced scrolling', () => {
   const h = harness();
   h.show();
-  const viewport = h.tree.props.children;
+  const viewport = h.tree.props.children.props.children;
   const surface = h.sheet().props.children;
   const scroll = h.scroll();
   assert.equal(viewport.type, 'KeyboardAvoidingView');
@@ -353,7 +503,7 @@ test('sheet delegates keyboard avoidance to its native container without measure
   assert(surface.props.className.includes('shrink'));
   assert.equal(surface.props.style.paddingBottom, undefined);
   assert.equal(surface.props.style.maxHeight, 800 * 0.85);
-  assert.equal(scroll.props.ref, undefined);
+  assert.ok(scroll.props.ref);
   assert.equal(scroll.props.contentContainerStyle.paddingBottom, 60);
   assert.equal(scroll.props.keyboardShouldPersistTaps, 'handled');
   assert.equal(scroll.props.keyboardDismissMode, 'none');
@@ -394,4 +544,144 @@ test('day info uses automatic height with a bounded viewport and scopes surface 
   other.show();
   assert.equal(other.sheet().props.children.props.style.height, undefined);
   assert.equal(other.sheet().props.children.props.children[1].props.children[1], false);
+});
+
+test('a touch begun below the top stays a scroll even when it reaches zero; the next touch can drag', () => {
+  const h = harness();
+  h.show();
+  h.completeOpen();
+  h.offset(120);
+  h.begin();
+  assert.equal(h.gestureState, 'failed');
+  h.offset(0);
+  h.move(0, 160);
+  assert.equal(h.y, 0);
+  assert.equal(h.closes, 0);
+  h.end();
+  h.begin();
+  h.move(0, 60);
+  assert.equal(h.gestureState, 'active');
+  assert.equal(h.y, 60);
+  assert.deepEqual(h.scrollCommands, [0]);
+  assert.equal(h.native.config.requireExternalGestureToFail, h.pan);
+  assert.equal(h.scroll().props.bounces, false);
+  assert.equal(h.scroll().props.overScrollMode, 'never');
+  h.end();
+  assert.equal(h.latestAnimation().kind, 'spring');
+  h.completeAnimation();
+  assert.equal(h.y, 0);
+  assert.equal(h.closes, 0);
+});
+
+test('upward and horizontal touches remain scrolls; a stationary tap never becomes a sheet drag', () => {
+  const h = harness();
+  h.show();
+  h.completeOpen();
+  h.begin();
+  h.move(0, -20);
+  assert.equal(h.gestureState, 'failed');
+  h.begin();
+  h.move(30, 10);
+  assert.equal(h.gestureState, 'failed');
+  h.begin();
+  h.move(2, 3);
+  assert.equal(h.gestureState, 'began');
+  h.end();
+  assert.equal(h.gestureState, 'failed');
+  assert.equal(h.y, 0);
+  assert.equal(h.closes, 0);
+  assert.deepEqual(h.scrollCommands, []);
+});
+
+test('release distance decides dismissal; passing the line and dragging back restores the sheet', () => {
+  const h = harness();
+  h.show();
+  h.completeOpen();
+  h.begin();
+  h.move(0, 140);
+  h.move(0, 60);
+  h.end();
+  assert.equal(h.latestAnimation().kind, 'spring');
+  h.completeAnimation();
+  assert.equal(h.y, 0);
+  assert.equal(h.closes, 0);
+  h.begin();
+  h.move(0, 100); // 25 percent of the measured 400-point sheet.
+  h.end();
+  assert.equal(h.latestAnimation().kind, 'timing');
+  assert.equal(h.latestAnimation().from, 100);
+  assert(h.latestAnimation().target >= 400);
+  assert.equal(h.closes, 0);
+  assert.equal(h.sheet().props.pointerEvents, 'none');
+  let applied = 0;
+  assert.equal(
+    h.close(() => applied++),
+    false,
+  );
+  h.completeAnimation();
+  h.flushFrames();
+  assert.equal(h.tree.props.visible, false);
+  assert.equal(h.closes, 1);
+  assert.equal(applied, 0);
+});
+
+test('OS cancellation past the threshold restores instead of dismissing', () => {
+  const h = harness(true, true);
+  h.show();
+  h.completeOpen();
+  h.begin();
+  h.move(0, 160);
+  h.end(false);
+  assert.equal(h.latestAnimation().kind, 'spring');
+  assert.equal(h.latestAnimation().config.reduceMotion, 'always');
+  h.completeAnimation();
+  assert.equal(h.y, 0);
+  assert.equal(h.closes, 0);
+});
+
+test('short sheets use their actual height rather than the maximum allowed height', () => {
+  const h = harness(true, false, 720);
+  h.show();
+  h.layout(200);
+  h.completeEnter();
+  h.begin();
+  h.move(0, 55);
+  h.end();
+  assert.equal(h.latestAnimation().kind, 'timing');
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
+});
+
+test('Android back while a touch is undecided cannot interrupt the accepted close', () => {
+  const h = harness();
+  h.show();
+  h.completeOpen();
+  h.begin();
+  h.tree.props.onRequestClose();
+  h.move(0, 140);
+  assert.equal(h.gestureState, 'failed');
+  assert.equal(h.latestAnimation().kind, 'timing');
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
+  assert.equal(h.tree.props.visible, false);
+});
+
+test('opening never waits for a sheet layout event and closing has a safe unmeasured distance', () => {
+  const h = harness();
+  h.show();
+  assert.ok(h.sheet());
+  assert.equal(h.sheet().props.entering.name, 'SlideInDown');
+  assert.equal(h.y, 0);
+  // The backdrop fades through one shared opacity without waiting for sheet measurement.
+  const viewport = h.tree.props.children.props.children;
+  assert.equal(viewport.props.children[0].props.entering, undefined);
+  assert.equal(viewport.props.children[0].props.style.current().opacity, 0);
+  assert.equal(h.latestAnimation().target, 1);
+  h.completeAnimation();
+  assert.equal(viewport.props.children[0].props.style.current().opacity, 1);
+  h.completeEnter();
+  assert.equal(h.close(), true);
+  assert(h.latestAnimation().target >= 800);
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
 });

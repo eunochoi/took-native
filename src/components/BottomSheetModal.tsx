@@ -1,34 +1,20 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import {
   AccessibilityInfo,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
   Pressable,
-  ScrollView,
   View,
   useWindowDimensions,
 } from 'react-native';
-import Animated, {
-  FadeIn,
-  FadeOut,
-  ReduceMotion,
-  SlideInDown,
-  SlideOutDown,
-} from 'react-native-reanimated';
+import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { scheduleOnRN } from 'react-native-worklets';
+import { useBottomSheetMotion } from '../hooks/useBottomSheetMotion';
 import { useScrollFade } from '../hooks/useScrollFade';
 import { useAppTheme } from '../theme/AppThemeProvider';
-import tokens from '../theme/tokens.json';
+import { AnimatedScrollView } from './AnimatedScrollView';
 import { AppIcon } from './AppIcon';
 import { ScrollEdgeFade } from './ScrollEdgeFade';
 import { Text } from './Text';
@@ -65,6 +51,7 @@ export function BottomSheetModal({
   const sheetHeight = Math.max(0, Math.min(maxHeight ?? height * 0.85, height - insets.top));
   const [present, setPresent] = useState(visible);
   const [bodyVisible, setBodyVisible] = useState(false);
+  const [closingBody, setClosingBody] = useState(false);
   const [session, setSession] = useState(0);
   const generation = useRef(0);
   const shown = useRef(false);
@@ -89,6 +76,8 @@ export function BottomSheetModal({
     shown.current = false;
     active.current = false;
     closing.current = false;
+    bodyMounted.current = false;
+    setBodyVisible(false);
     setPresent(false);
     onCloseRef.current();
     if (action)
@@ -97,27 +86,45 @@ export function BottomSheetModal({
         if (generation.current === closingSession) action();
       });
   }, []);
+  const dismissRef = useRef<(session: number) => void>(() => {});
+  const dismiss = useCallback((currentSession: number) => dismissRef.current(currentSession), []);
+  const motion = useBottomSheetMotion({
+    rem: appRem,
+    reducedMotion: reduceMotion,
+    scrollFade,
+    contentKey,
+    openingSession: session,
+    onScrollOffset,
+    onDismiss: dismiss,
+    onClosed: finishClose,
+  });
+  const motionRef = useRef(motion);
+  motionRef.current = motion;
   const closePicker: ClosePicker = useCallback(
     (afterClose) => {
       if (!active.current || closing.current) return false;
       closing.current = true;
       afterCloseRef.current = afterClose;
-      const hadBody = bodyMounted.current;
-      bodyMounted.current = false;
-      setBodyVisible(false);
+      setClosingBody(true);
       // A window closed before onShow has no animated children to wait for.
-      if (!hadBody) finishClose(generation.current, true);
+      if (!bodyMounted.current) finishClose(generation.current, true);
+      else motionRef.current.animateClose(generation.current);
       return true;
     },
     [finishClose],
   );
+  dismissRef.current = (currentSession) => {
+    if (currentSession === generation.current) closePicker();
+  };
   useLayoutEffect(() => {
     if (visible) {
       active.current = true;
       onScrollOffset(0);
       const nextSession = ++generation.current;
       closing.current = false;
+      setClosingBody(false);
       afterCloseRef.current = undefined;
+      motionRef.current.prepareOpen(nextSession, height);
       setSession(nextSession);
       setPresent(true);
       bodyMounted.current = shown.current;
@@ -126,20 +133,10 @@ export function BottomSheetModal({
       closePicker();
     }
   }, [visible, closePicker, onScrollOffset]);
-  const motion = useMemo(() => {
-    const reduced = reduceMotion ? ReduceMotion.Always : ReduceMotion.System;
-    return {
-      backdropEnter: FadeIn.duration(tokens.motion.fade).reduceMotion(reduced),
-      backdropExit: FadeOut.duration(tokens.motion.fade).reduceMotion(reduced),
-      sheetEnter: SlideInDown.duration(tokens.motion.pickerOpen).reduceMotion(reduced),
-      sheetExit: SlideOutDown.duration(tokens.motion.pickerClose)
-        .reduceMotion(reduced)
-        .withCallback((finished) => {
-          'worklet';
-          scheduleOnRN(finishClose, session, finished);
-        }),
-    };
-  }, [reduceMotion, session, finishClose]);
+  useLayoutEffect(() => {
+    // Start after the backdrop mounts at opacity zero. Its opacity has a single animated owner.
+    if (bodyVisible && !closing.current) motionRef.current.animateBackdropOpen();
+  }, [bodyVisible, session]);
   return (
     <Modal
       visible={present}
@@ -157,101 +154,111 @@ export function BottomSheetModal({
         setBodyVisible(true);
       }}
     >
-      <KeyboardAvoidingView
-        behavior="padding"
-        className="flex-1 justify-end"
-        style={{
-          paddingLeft: insets.left,
-          paddingRight: insets.right,
-        }}
-      >
-        {bodyVisible && (
-          <Animated.View
-            key={`backdrop-${session}`}
-            entering={motion.backdropEnter}
-            exiting={motion.backdropExit}
-            className="absolute inset-0"
-          >
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="닫기"
-              onPress={() => closePicker()}
-              className="absolute inset-0 bg-theme-overlay/25"
-            />
-          </Animated.View>
-        )}
-        {bodyVisible && (
-          <Animated.View
-            key={`sheet-${session}`}
-            entering={motion.sheetEnter}
-            exiting={motion.sheetExit}
-            collapsable={false}
-            className="w-full shrink"
-          >
-            <View
-              accessibilityViewIsModal
-              className="w-full shrink rounded-t-3xl bg-theme-surface px-[5%] pt-2 shadow-xl"
-              style={{
-                maxHeight: sheetHeight,
-                height: fixedHeight ? sheetHeight : undefined,
-              }}
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          behavior="padding"
+          className="flex-1 justify-end"
+          style={{
+            paddingLeft: insets.left,
+            paddingRight: insets.right,
+          }}
+        >
+          {bodyVisible && (
+            <Animated.View
+              key={`backdrop-${session}`}
+              style={motion.backdropStyle}
+              className="absolute inset-0"
             >
-              <View className="shrink-0 items-center ">
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="닫기"
-                  onPress={() => closePicker()}
-                  className="h-9 w-9 items-center justify-center rounded-full"
-                  hitSlop={4}
-                >
-                  <AppIcon name="chevron-down" size={iconSizes.lg} color={colors.accent} />
-                </Pressable>
-                <View className="self-stretch flex-row items-center justify-center gap-2 mx-5 ">
-                  {titleIcon}
-                  <Text
-                    accessibilityRole="header"
-                    className="shrink text-center text-xl font-semibold tracking-tight pb-2 mb-4 "
-                  >
-                    {title}
-                  </Text>
-                </View>
-              </View>
-              <View className={`${fixedHeight ? 'flex-1' : 'shrink'} min-h-0 overflow-hidden`}>
-                <ScrollView
-                  key={contentKey}
-                  onLayout={fade.onLayout}
-                  onContentSizeChange={fade.onContentSizeChange}
-                  onScroll={scrollFade ? fade.onScroll : undefined}
-                  scrollEventThrottle={16}
-                  contentContainerStyle={{
-                    paddingBottom: appRem * 2 + insets.bottom,
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="닫기"
+                onPress={() => closePicker()}
+                className="absolute inset-0 bg-theme-overlay/25"
+              />
+            </Animated.View>
+          )}
+          {bodyVisible && (
+            <GestureDetector gesture={motion.panGesture}>
+              <Animated.View
+                key={`sheet-${session}`}
+                entering={motion.sheetEnter}
+                style={motion.sheetStyle}
+                pointerEvents={closingBody ? 'none' : 'auto'}
+                collapsable={false}
+                className="w-full shrink"
+              >
+                <View
+                  onLayout={motion.onSheetLayout}
+                  accessibilityViewIsModal
+                  className="w-full shrink rounded-t-3xl bg-theme-surface px-[5%] pt-2 shadow-xl"
+                  style={{
+                    maxHeight: sheetHeight,
+                    height: fixedHeight ? sheetHeight : undefined,
                   }}
-                  showsVerticalScrollIndicator={false}
-                  showsHorizontalScrollIndicator={false}
-                  className={`${fixedHeight ? 'flex-1' : 'shrink'} min-h-0`}
-                  contentContainerClassName="gap-6"
-                  nestedScrollEnabled
-                  keyboardShouldPersistTaps="handled"
-                  keyboardDismissMode="none"
                 >
-                  {typeof children === 'function' ? children(closePicker) : children}
-                </ScrollView>
-                {scrollFade && (
-                  <>
-                    <ScrollEdgeFade edge="top" tone="surface" visible={fade.topVisible} />
-                    <ScrollEdgeFade
-                      edge="bottom"
-                      tone="surface"
-                      visible={fade.bottomVisible}
-                      includeBottomInset={false}
-                    />
-                  </>
-                )}
-              </View>
-            </View>
-          </Animated.View>
-        )}
-      </KeyboardAvoidingView>
+                  <View className="shrink-0 items-center ">
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="닫기"
+                      onPress={() => closePicker()}
+                      className="h-9 w-9 items-center justify-center rounded-full"
+                      hitSlop={4}
+                    >
+                      <AppIcon name="chevron-down" size={iconSizes.lg} color={colors.accent} />
+                    </Pressable>
+                    <View className="self-stretch flex-row items-center justify-center gap-2 mx-5 ">
+                      {titleIcon}
+                      <Text
+                        accessibilityRole="header"
+                        className="shrink text-center text-xl font-semibold tracking-tight pb-2 mb-4 "
+                      >
+                        {title}
+                      </Text>
+                    </View>
+                  </View>
+                  <View className={`${fixedHeight ? 'flex-1' : 'shrink'} min-h-0 overflow-hidden`}>
+                    <GestureDetector gesture={motion.scrollGesture}>
+                      <AnimatedScrollView
+                        ref={motion.scrollRef}
+                        key={contentKey}
+                        onLayout={fade.onLayout}
+                        onContentSizeChange={fade.onContentSizeChange}
+                        onScroll={motion.onScroll}
+                        scrollEventThrottle={16}
+                        contentContainerStyle={{
+                          paddingBottom: appRem * 2 + insets.bottom,
+                        }}
+                        showsVerticalScrollIndicator={false}
+                        showsHorizontalScrollIndicator={false}
+                        className={`${fixedHeight ? 'flex-1' : 'shrink'} min-h-0`}
+                        contentContainerClassName="gap-6"
+                        nestedScrollEnabled
+                        bounces={false}
+                        overScrollMode="never"
+                        keyboardShouldPersistTaps="handled"
+                        keyboardDismissMode="none"
+                      >
+                        {typeof children === 'function' ? children(closePicker) : children}
+                      </AnimatedScrollView>
+                    </GestureDetector>
+                    {scrollFade && (
+                      <>
+                        <ScrollEdgeFade edge="top" tone="surface" visible={fade.topVisible} />
+                        <ScrollEdgeFade
+                          edge="bottom"
+                          tone="surface"
+                          visible={fade.bottomVisible}
+                          includeBottomInset={false}
+                        />
+                      </>
+                    )}
+                  </View>
+                </View>
+              </Animated.View>
+            </GestureDetector>
+          )}
+        </KeyboardAvoidingView>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
