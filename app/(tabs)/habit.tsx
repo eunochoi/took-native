@@ -98,7 +98,7 @@ export default function HabitList() {
     <EmptyState
       icon={<AppIcon name="habit" size={appRem * 1.875} color={colors.accent} />}
       title="아직 만든 습관이 없어요."
-      description="작은 목표 하나부터 만들고, 매일의 변화를 쌓아보세요."
+      description="작은 목표 하나부터 만들어 보아요."
     />
   );
   return (
