@@ -72,7 +72,7 @@ export default function DiaryDetail() {
                   ))}
                 </View>
               )}
-              <Text selectable className="p-2 text-base leading-[1.9]">{diary.text}</Text>
+              <Text className="p-2 text-base leading-[1.9]">{diary.text}</Text>
             </View>
             {diary.images.length > 0 && (
               <View>
