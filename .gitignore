@@ -18,6 +18,11 @@ credentials.json
 *.jks
 *.keystore
 
+.apk
+.zip
+*.zip
+*.apk
+
 /Archive.zip
 /Archive 2.zip
 
