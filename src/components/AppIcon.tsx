@@ -29,6 +29,7 @@ const APP_ICONS = {
   'lock-outline': { family: 'material', name: 'lock-outline' },
   'restart-alt': { family: 'material', name: 'restart-alt' },
   'info-outline': { family: 'material', name: 'info-outline' },
+  info: { family: 'material', name: 'info' },
   'privacy-tip': { family: 'material', name: 'privacy-tip' },
   'low-priority': { family: 'material', name: 'low-priority' },
   'emoji-events': { family: 'material', name: 'emoji-events' },
