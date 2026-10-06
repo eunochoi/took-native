@@ -130,7 +130,9 @@ function harness(
     return instance;
   };
   const exports: any = {};
-  const jsx = (type: unknown, props: any, key?: string) => ({ type, props, key });
+  const jsx = (type: unknown, props: any, key?: string) =>
+    typeof type === 'function' ? type(props) : { type, props, key };
+  const sheetModules: Record<string, any> = {};
   const context: any = {
     exports,
     requestAnimationFrame: (fn: () => void) => {
@@ -139,6 +141,8 @@ function harness(
     },
     cancelAnimationFrame: () => {},
     require: (name: string) => {
+      const sheetModule = sheetModules[name.split('/').at(-1)!];
+      if (sheetModule) return sheetModule;
       if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
       if (name === 'react')
         return {
@@ -249,6 +253,20 @@ function harness(
     ...context,
     exports: hookExports,
   });
+  for (const path of [
+    '../src/hooks/useBottomSheetLifecycle.ts',
+    '../src/components/BottomSheetHeader.tsx',
+    '../src/components/BottomSheetScrollViewport.tsx',
+  ]) {
+    const moduleExports = {};
+    runInNewContext(compile(path), { ...context, exports: moduleExports });
+    sheetModules[
+      path
+        .split('/')
+        .at(-1)!
+        .replace(/\.tsx?$/, '')
+    ] = moduleExports;
+  }
   runInNewContext(compile('../src/components/BottomSheetModal.tsx'), context);
   function render() {
     do {

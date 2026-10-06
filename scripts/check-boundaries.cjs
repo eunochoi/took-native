@@ -33,7 +33,15 @@ const privacy = fs.readFileSync(path.join(root, 'app/privacy.tsx'), 'utf8');
 assert(privacy.includes('<BottomSheetPage') && privacy.includes('<Text'));
 const sheetPage = fs.readFileSync(path.join(root, 'src/components/BottomSheetPage.tsx'), 'utf8');
 const sheetModal = fs.readFileSync(path.join(root, 'src/components/BottomSheetModal.tsx'), 'utf8');
-assert(sheetPage.includes('<BottomSheetModal') && sheetModal.includes('<AnimatedScrollView'));
+const sheetViewport = fs.readFileSync(
+  path.join(root, 'src/components/BottomSheetScrollViewport.tsx'),
+  'utf8',
+);
+assert(
+  sheetPage.includes('<BottomSheetModal') &&
+    sheetModal.includes('<BottomSheetScrollViewport') &&
+    sheetViewport.includes('<AnimatedScrollView'),
+);
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 assert(!pkg.dependencies['react-native-webview']);
 assert(!pkg.dependencies['next']);
