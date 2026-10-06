@@ -26,6 +26,20 @@ const queryClient = new QueryClient({
   },
 });
 export const unstable_settings = { initialRouteName: '(tabs)' };
+const sheetRoutes = [
+  'diary/new',
+  'diary/[id]/index',
+  'diary/[id]/edit',
+  'habit/new',
+  'habit/[id]/index',
+  'habit/[id]/edit',
+  'habit/order',
+  'sober/new',
+  'sober/[id]/index',
+  'sober/[id]/edit',
+  'privacy',
+  'image',
+];
 
 // Fast Refresh can overlap the old connection's cleanup with the new setup.
 const databaseOptions: SQLiteOpenOptions = { useNewConnection: __DEV__ };
@@ -63,6 +77,18 @@ function Navigation({ onReady }: { onReady: () => void }) {
           }}
         >
           <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
+          {sheetRoutes.map((name) => (
+            <Stack.Screen
+              key={name}
+              name={name}
+              options={{
+                presentation: 'transparentModal',
+                animation: 'none',
+                gestureEnabled: false,
+                contentStyle: { backgroundColor: 'transparent' },
+              }}
+            />
+          ))}
         </Stack>
       </View>
     </ThemeProvider>

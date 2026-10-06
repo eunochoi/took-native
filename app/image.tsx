@@ -1,23 +1,24 @@
-import { Image, View } from 'react-native';
+import { Image, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { RecordHeader } from '../src/components/RecordHeader';
+import { BottomSheetPage } from '../src/components/BottomSheetPage';
 import { mediaUri, validFileName } from '../src/media';
 import { Text } from '../src/components/Text';
 export default function ImageScreen() {
+  const { height } = useWindowDimensions();
   const { file } = useLocalSearchParams<{ file: string }>();
   return (
-    <View className="flex-1 bg-theme-surface">
-      <RecordHeader backRoute="/" title="사진" />
+    <BottomSheetPage backRoute="/" title="사진" scrollFade={false}>
       {file && validFileName(file) ? (
         <Image
           source={{ uri: mediaUri(file) }}
           resizeMode="contain"
-          className="flex-1 w-full"
+          className="w-full"
+          style={{ height: height * 0.65 }}
           accessibilityLabel="일기 첨부 사진"
         />
       ) : (
         <Text>사진을 찾을 수 없습니다.</Text>
       )}
-    </View>
+    </BottomSheetPage>
   );
 }

@@ -1,16 +1,14 @@
 import { useMemo, useState } from 'react';
 import { AlertModal, type AlertContent } from '../../../src/components/AlertModal';
 import { useAppTheme } from '../../../src/theme/AppThemeProvider';
-import { useScrollFade } from '../../../src/hooks/useScrollFade';
-import { ScrollEdgeFade } from '../../../src/components/ScrollEdgeFade';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { habitQueries, useRecordMutation, useToday } from '../../../src/queries';
 import { setHabitCompletion } from '../../../src/db/habit';
-import { RecordHeader } from '../../../src/components/RecordHeader';
+import { BottomSheetPage } from '../../../src/components/BottomSheetPage';
 import { HabitMenu } from '../../../src/screens/habit/HabitMenu';
 import { HabitStars } from '../../../src/screens/habit/HabitStars';
 import { HabitStatistics } from '../../../src/screens/habit/HabitStatistics';
@@ -21,7 +19,6 @@ import { QueryState } from '../../../src/components/QueryState';
 export default function HabitDetail() {
   const [alert, setAlert] = useState<AlertContent | null>(null);
   const { rem: appRem } = useAppTheme();
-  const fade = useScrollFade();
   const { id } = useLocalSearchParams<{ id: string }>();
   const db = useSQLiteContext();
   const router = useRouter();
@@ -38,25 +35,15 @@ export default function HabitDetail() {
   );
   const habit = query.data;
   return (
-    <View className="flex-1 bg-theme-surface">
-      <RecordHeader
+    <>
+      <BottomSheetPage
         backRoute="/habit"
         title={habit?.name ?? '습관 정보'}
         rightAction={
           habit ? <HabitMenu habit={habit} onDeleted={() => router.replace('/habit')} /> : undefined
         }
-      />
-      <View className="flex-1">
-        <ScrollView
-          onScroll={fade.onScroll}
-          onLayout={fade.onLayout}
-          onContentSizeChange={fade.onContentSizeChange}
-          scrollEventThrottle={16}
-          showsVerticalScrollIndicator={false}
-          showsHorizontalScrollIndicator={false}
-          contentContainerClassName="gap-12 pt-6 pb-screen-content-bottom"
-          contentContainerStyle={{ paddingHorizontal: '5%' }}
-        >
+      >
+        <View className="gap-12 pt-6">
           <QueryState query={query} />
           <QueryState query={records} />
           {habit ? (
@@ -87,21 +74,14 @@ export default function HabitDetail() {
           ) : !query.isPending && !query.error ? (
             <Text>습관을 찾을 수 없습니다.</Text>
           ) : null}
-        </ScrollView>
-        <ScrollEdgeFade edge="top" visible={fade.topVisible} tone="surface" />
-        <ScrollEdgeFade
-          edge="bottom"
-          visible={fade.bottomVisible}
-          tone="surface"
-          includeBottomInset={false}
-        />
-      </View>
+        </View>
+      </BottomSheetPage>
       <AlertModal
         visible={alert !== null}
         title={alert?.title ?? ''}
         message={alert?.message}
         onConfirm={() => setAlert(null)}
       />
-    </View>
+    </>
   );
 }

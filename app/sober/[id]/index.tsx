@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { usePreventRemove } from 'expo-router/react-navigation';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo, useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { AlertModal, type AlertContent } from '../../../src/components/AlertModal';
 import { AppIcon } from '../../../src/components/AppIcon';
 import { BottomSheetModal } from '../../../src/components/BottomSheetModal';
@@ -13,8 +13,7 @@ import { Button } from '../../../src/components/Button';
 import { ConfirmModal } from '../../../src/components/ConfirmModal';
 import { PickerAction } from '../../../src/components/PickerAction';
 import { QueryState } from '../../../src/components/QueryState';
-import { RecordHeader } from '../../../src/components/RecordHeader';
-import { ScrollEdgeFade } from '../../../src/components/ScrollEdgeFade';
+import { BottomSheetPage } from '../../../src/components/BottomSheetPage';
 import { Text } from '../../../src/components/Text';
 import { deleteSoberRestart, saveSoberRestart } from '../../../src/db/sober';
 import type { SoberRestart } from '../../../src/db/types';
@@ -25,7 +24,6 @@ import {
   type SoberRestartInput,
 } from '../../../src/domain/sober';
 import { useCurrentMinute } from '../../../src/hooks/useCurrentMinute';
-import { useScrollFade } from '../../../src/hooks/useScrollFade';
 import { soberQueries, useRecordMutation } from '../../../src/queries';
 import { CalendarDay } from '../../../src/screens/calendar/CalendarDay';
 import { MonthCalendar } from '../../../src/screens/calendar/MonthCalendar';
@@ -49,7 +47,6 @@ export default function SoberDetail() {
   const soberId = Number(id);
   const db = useSQLiteContext();
   const router = useRouter();
-  const fade = useScrollFade();
   const { rem: appRem } = useAppTheme();
   const now = useCurrentMinute();
   const today = format(new Date(now), 'yyyy-MM-dd');
@@ -98,14 +95,13 @@ export default function SoberDetail() {
   const sober = query.data;
   if (!sober || restarts.isPending || query.error || restarts.error)
     return (
-      <View className="flex-1 bg-theme-surface">
-        <RecordHeader title="절제 항목 정보" backRoute="/sober" />
+      <BottomSheetPage title="절제 항목 정보" backRoute="/sober">
         <QueryState query={query} />
         <QueryState query={restarts} />
         {!query.isPending && !query.error && !sober && (
           <Text className="p-6">절제 항목을 찾을 수 없어요.</Text>
         )}
-      </View>
+      </BottomSheetPage>
     );
   const summary = getSoberSummary(sober, restarts.data ?? [], now);
   const firstDate = format(parseISO(sober.initial_started_at), 'yyyy-MM-dd');
@@ -116,8 +112,13 @@ export default function SoberDetail() {
     setOverlay({ kind: 'restart', value: timestamp.toISOString(), memo: '' });
   };
   return (
-    <View className="flex-1 bg-theme-surface">
-      <RecordHeader
+    <>
+      <BottomSheetPage
+        onBeforeClose={() => {
+          if (!mutation.isPending) return true;
+          setAlert({ title: '잠시만 기다려주세요', message: '다시 시작 기록을 저장하고 있어요.' });
+          return false;
+        }}
         title={sober.name}
         backRoute="/sober"
         rightAction={
@@ -127,20 +128,8 @@ export default function SoberDetail() {
             onDeleted={() => router.replace('/sober')}
           />
         }
-      />
-      <View className="flex-1">
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          showsHorizontalScrollIndicator={false}
-          onScroll={fade.onScroll}
-          onLayout={fade.onLayout}
-          onContentSizeChange={fade.onContentSizeChange}
-          scrollEventThrottle={16}
-          contentContainerClassName="gap-12 pt-6 pb-screen-content-bottom"
-          contentContainerStyle={{
-            paddingHorizontal: '5%',
-          }}
-        >
+      >
+        <View className="gap-12 pt-6">
           <View className="gap-5 items-center">
             <SoberGauge
               progress={summary.progress}
@@ -185,7 +174,7 @@ export default function SoberDetail() {
               ))}
             </View>
             <Button
-              labelWeight='normal'
+              labelWeight="normal"
               className="w-full"
               disabled={mutation.isPending}
               label={`${restarts.data?.length ? restarts.data?.length + 1 : 1}번째 다시 시작 진행`}
@@ -236,15 +225,8 @@ export default function SoberDetail() {
             />
           </View>
           <SoberLongRecords records={summary.longRecords} />
-        </ScrollView>
-        <ScrollEdgeFade edge="top" visible={fade.topVisible} tone="surface" />
-        <ScrollEdgeFade
-          edge="bottom"
-          visible={fade.bottomVisible}
-          tone="surface"
-          includeBottomInset={false}
-        />
-      </View>
+        </View>
+      </BottomSheetPage>
       <BottomSheetModal
         visible={overlay?.kind === 'day'}
         title={format(parseISO(selected), 'M월 d일 EEEE', { locale: ko })}
@@ -342,6 +324,6 @@ export default function SoberDetail() {
         message={alert?.message}
         onConfirm={() => setAlert(null)}
       />
-    </View>
+    </>
   );
 }

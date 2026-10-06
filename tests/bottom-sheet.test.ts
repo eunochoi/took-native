@@ -13,7 +13,15 @@ function harness(
   initialVisible = true,
   reducedMotion = false,
   maxHeight?: number,
-  options: { scrollFade?: boolean; fixedHeight?: boolean } = {},
+  options: {
+    scrollFade?: boolean;
+    fixedHeight?: boolean;
+    presentation?: 'modal' | 'screen';
+    dismissOnBack?: boolean;
+    onBeforeClose?: () => boolean;
+    scrollEnabled?: boolean;
+    footer?: unknown;
+  } = {},
 ) {
   const slots: any[] = [];
   let cursor = 0;
@@ -24,6 +32,7 @@ function harness(
   let closes = 0;
   let visible = initialVisible;
   let tree: any;
+  let hardwareBack: (() => boolean) | undefined;
   const depsEqual = (a?: unknown[], b?: unknown[]) =>
     a && b && a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
   const memo = (factory: () => any, deps: unknown[]) => {
@@ -108,6 +117,7 @@ function harness(
         return instance;
       };
     for (const name of [
+      'enabled',
       'manualActivation',
       'maxPointers',
       'shouldCancelWhenOutside',
@@ -183,6 +193,16 @@ function harness(
           useWindowDimensions: () => ({ height: 800 }),
           Keyboard: { dismiss: () => {}, addListener: () => ({ remove: () => {} }) },
           AccessibilityInfo: { announceForAccessibility: () => {} },
+          BackHandler: {
+            addEventListener: (_name: string, callback: () => boolean) => {
+              hardwareBack = callback;
+              return {
+                remove: () => {
+                  hardwareBack = undefined;
+                },
+              };
+            },
+          },
         };
       if (name === 'react-native-gesture-handler')
         return {
@@ -280,6 +300,9 @@ function harness(
   render();
   return {
     render,
+    back() {
+      return hardwareBack?.();
+    },
     get tree() {
       return tree;
     },
@@ -684,4 +707,77 @@ test('opening never waits for a sheet layout event and closing has a safe unmeas
   assert(h.latestAnimation().target >= 800);
   h.completeAnimation();
   assert.equal(h.closes, 1);
+});
+
+test('route sheets mount without a Modal onShow and keep one touch owned by the scroll viewport', () => {
+  const h = harness(true, false, 720, { presentation: 'screen', fixedHeight: true });
+  assert.equal(h.tree.type, 'GestureHandlerRootView');
+  assert.ok(h.sheet());
+  h.completeOpen();
+  h.offset(120);
+  h.begin();
+  h.offset(0);
+  h.move(0, 150);
+  h.end();
+  assert.equal(h.y, 0);
+  assert.equal(h.closes, 0);
+  h.begin();
+  h.move(0, 150);
+  h.end();
+  assert.equal(h.closes, 0);
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
+  assert.equal(h.tree, null);
+});
+
+test('route sheet Android back waits for its close animation and inactive routes do not handle back', () => {
+  const h = harness(true, false, 720, { presentation: 'screen' });
+  h.completeOpen();
+  assert.equal(h.back(), true);
+  assert.equal(h.closes, 0);
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
+  const inactive = harness(true, false, 720, { presentation: 'screen', dismissOnBack: false });
+  assert.equal(inactive.back(), undefined);
+});
+
+test('busy route dismissal restores the sheet instead of hiding the guarded page', () => {
+  let busy = true;
+  let blocked = 0;
+  const h = harness(true, false, 720, {
+    presentation: 'screen',
+    onBeforeClose: () => {
+      if (!busy) return true;
+      blocked++;
+      return false;
+    },
+  });
+  h.completeOpen();
+  h.begin();
+  h.move(0, 150);
+  h.end();
+  assert.equal(blocked, 1);
+  assert.equal(h.latestAnimation().kind, 'spring');
+  h.completeAnimation();
+  assert.equal(h.y, 0);
+  assert.equal(h.closes, 0);
+  assert.ok(h.sheet());
+  busy = false;
+  assert.equal(h.back(), true);
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
+});
+
+test('form drag lock disables the sheet pan and the footer stays outside the scroll viewport', () => {
+  const h = harness(true, false, 720, {
+    presentation: 'screen',
+    scrollEnabled: false,
+    footer: 'save',
+  });
+  assert.equal(h.pan.config.enabled, false);
+  assert.equal(h.scroll().props.scrollEnabled, false);
+  const footer = h.sheet().props.children.props.children.at(-1);
+  assert.equal(footer.props.children, 'save');
+  assert.equal(footer.props.style.paddingBottom, 30);
+  assert.equal(h.scroll().props.contentContainerStyle.paddingBottom, 30);
 });

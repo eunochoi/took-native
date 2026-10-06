@@ -30,7 +30,7 @@ const jsx = (type: unknown, props: any) => ({ type, props });
 function nodes(tree: any): any[] {
   if (!tree || typeof tree !== 'object') return [];
   if (Array.isArray(tree)) return tree.flatMap(nodes);
-  return [tree, ...nodes(tree.props?.children)];
+  return [tree, ...nodes(tree.props?.children), ...nodes(tree.props?.footer)];
 }
 function renderer(path: string, states: any[], saved: any[] = []) {
   let cursor = 0;
@@ -138,8 +138,15 @@ test('habit grid saves the returned ID order and prevents saving during a drag',
     [null, [3, 1, 2], false, false, false, false],
     saved,
   );
-  const grid = nodes(render('default')).find((node) => node.type === 'Grid');
+  const initialTree = render('default');
+  const grid = nodes(initialTree).find((node) => node.type === 'Grid');
+  const sheet = nodes(initialTree).find((node) => node.type === 'BottomSheetPage');
+  assert.equal(sheet.props.scrollRef, grid.props.scrollableRef);
   grid.props.onDragStart();
+  assert.equal(
+    nodes(render('default')).find((node) => node.type === 'BottomSheetPage').props.scrollEnabled,
+    false,
+  );
   const saveButton = (tree: any) =>
     nodes(tree).find(
       (node) => node.type === 'FormSubmitButton' && node.props.label === '순서 저장하기',

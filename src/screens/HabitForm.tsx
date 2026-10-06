@@ -13,7 +13,7 @@ import { HabitIcon } from '../components/HabitIcon';
 import { IconColorPicker } from '../components/IconColorPicker';
 import { QueryState } from '../components/QueryState';
 import { RecordFormLayout } from '../components/RecordFormLayout';
-import { RecordHeader } from '../components/RecordHeader';
+import { BottomSheetPage } from '../components/BottomSheetPage';
 import { Text } from '../components/Text';
 import { saveHabit } from '../db/habit';
 import {
@@ -72,15 +72,23 @@ export function HabitForm({ id }: { id?: number }) {
   const colorLabel = iconColor === 'theme' ? '기본 테마색' : HABIT_ICON_COLORS[iconColor].label;
   if (id !== undefined && (query.isPending || query.error || !query.data || !loaded.current))
     return (
-      <View className="flex-1 bg-theme-surface">
-        <RecordHeader backRoute="/habit" title={title} />
+      <BottomSheetPage backRoute="/habit" title={title}>
         <QueryState query={query} />
         {!query.isPending && !query.error && <Text className="p-6">습관을 찾을 수 없습니다.</Text>}
-      </View>
+      </BottomSheetPage>
     );
   return (
     <RecordFormLayout
-      header={<RecordHeader backRoute="/habit" title={title} />}
+      title={title}
+      backRoute="/habit"
+      onBeforeClose={() => {
+        if (!mutation.isPending) return true;
+        setAlert({
+          title: '잠시만 기다려주세요',
+          message: '저장이 진행 중입니다. 완료될 때까지 기다려주세요.',
+        });
+        return false;
+      }}
       footer={
         <FormSubmitButton
           loading={mutation.isPending}

@@ -28,6 +28,8 @@ export function useBottomSheetMotion({
   onScrollOffset,
   onDismiss,
   onClosed,
+  scrollEnabled = true,
+  externalScrollRef,
 }: {
   rem: number;
   reducedMotion: boolean;
@@ -37,8 +39,11 @@ export function useBottomSheetMotion({
   onScrollOffset: (offset: number) => void;
   onDismiss: (session: number) => void;
   onClosed: (session: number, finished: boolean) => void;
+  scrollEnabled?: boolean;
+  externalScrollRef?: ReturnType<typeof useAnimatedRef<ScrollView>>;
 }) {
-  const scrollRef = useAnimatedRef<ScrollView>();
+  const ownScrollRef = useAnimatedRef<ScrollView>();
+  const scrollRef = externalScrollRef ?? ownScrollRef;
   const scrollY = useSharedValue(0);
   const sheetY = useSharedValue(0);
   const measuredHeight = useSharedValue(0);
@@ -128,6 +133,19 @@ export function useBottomSheetMotion({
     [scrollFade, onScrollOffset],
   );
 
+  const restoreAfterBlockedClose = useCallback(() => {
+    phase.value = 'returning';
+    const returningSession = session.value;
+    sheetY.value = withSpring(
+      0,
+      { damping: 24, stiffness: 240, overshootClamping: true, reduceMotion: motionPolicy },
+      (finished) => {
+        if (finished && session.value === returningSession && phase.value === 'returning')
+          phase.value = 'idle';
+      },
+    );
+  }, [phase, session, sheetY, motionPolicy]);
+
   const { panGesture, scrollGesture } = useMemo(() => {
     const restore = () => {
       'worklet';
@@ -143,6 +161,7 @@ export function useBottomSheetMotion({
       );
     };
     const pan = Gesture.Pan()
+      .enabled(scrollEnabled)
       .manualActivation(true)
       .maxPointers(1)
       .shouldCancelWhenOutside(false)
@@ -227,6 +246,7 @@ export function useBottomSheetMotion({
     rem,
     motionPolicy,
     onDismiss,
+    scrollEnabled,
   ]);
 
   const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: sheetY.value }] }));
@@ -241,6 +261,7 @@ export function useBottomSheetMotion({
     prepareOpen,
     animateBackdropOpen,
     animateClose,
+    restoreAfterBlockedClose,
     onSheetLayout,
     panGesture,
     scrollGesture,

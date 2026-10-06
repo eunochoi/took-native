@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import {
   AccessibilityInfo,
+  BackHandler,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
   Pressable,
   View,
   useWindowDimensions,
+  type ScrollView,
 } from 'react-native';
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated from 'react-native-reanimated';
+import Animated, { type AnimatedRef } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomSheetMotion } from '../hooks/useBottomSheetMotion';
 import { useScrollFade } from '../hooks/useScrollFade';
@@ -30,6 +32,13 @@ export function BottomSheetModal({
   fixedHeight = false,
   scrollFade = false,
   contentKey,
+  presentation = 'modal',
+  rightAction,
+  dismissOnBack = true,
+  onBeforeClose,
+  footer,
+  scrollEnabled = true,
+  scrollRef,
 }: {
   visible: boolean;
   title: string;
@@ -40,6 +49,13 @@ export function BottomSheetModal({
   fixedHeight?: boolean;
   scrollFade?: boolean;
   contentKey?: string | number;
+  presentation?: 'modal' | 'screen';
+  rightAction?: ReactNode;
+  dismissOnBack?: boolean;
+  onBeforeClose?: () => boolean;
+  footer?: ReactNode;
+  scrollEnabled?: boolean;
+  scrollRef?: AnimatedRef<ScrollView>;
 }) {
   const { colors, rem: appRem, reducedMotion: reduceMotion, iconSizes } = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -62,6 +78,8 @@ export function BottomSheetModal({
   const afterCloseRef = useRef<(() => void) | undefined>(undefined);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const beforeCloseRef = useRef(onBeforeClose);
+  beforeCloseRef.current = onBeforeClose;
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -86,7 +104,7 @@ export function BottomSheetModal({
         if (generation.current === closingSession) action();
       });
   }, []);
-  const dismissRef = useRef<(session: number) => void>(() => {});
+  const dismissRef = useRef<(session: number) => void>(() => { });
   const dismiss = useCallback((currentSession: number) => dismissRef.current(currentSession), []);
   const motion = useBottomSheetMotion({
     rem: appRem,
@@ -97,12 +115,18 @@ export function BottomSheetModal({
     onScrollOffset,
     onDismiss: dismiss,
     onClosed: finishClose,
+    scrollEnabled,
+    externalScrollRef: scrollRef,
   });
   const motionRef = useRef(motion);
   motionRef.current = motion;
   const closePicker: ClosePicker = useCallback(
     (afterClose) => {
       if (!active.current || closing.current) return false;
+      if (beforeCloseRef.current?.() === false) {
+        motionRef.current.restoreAfterBlockedClose();
+        return false;
+      }
       closing.current = true;
       afterCloseRef.current = afterClose;
       setClosingBody(true);
@@ -127,76 +151,70 @@ export function BottomSheetModal({
       motionRef.current.prepareOpen(nextSession, height);
       setSession(nextSession);
       setPresent(true);
+      if (presentation === 'screen') shown.current = true;
       bodyMounted.current = shown.current;
       setBodyVisible(shown.current);
     } else {
       closePicker();
     }
-  }, [visible, closePicker, onScrollOffset]);
+  }, [visible, closePicker, onScrollOffset, presentation]);
+  useEffect(() => {
+    if (presentation !== 'screen' || !visible || !dismissOnBack) return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      closePicker();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [presentation, visible, dismissOnBack, closePicker]);
   useLayoutEffect(() => {
     // Start after the backdrop mounts at opacity zero. Its opacity has a single animated owner.
     if (bodyVisible && !closing.current) motionRef.current.animateBackdropOpen();
   }, [bodyVisible, session]);
-  return (
-    <Modal
-      visible={present}
-      transparent
-      animationType="none"
-      statusBarTranslucent
-      navigationBarTranslucent
-      onRequestClose={() => closePicker()}
-      onShow={() => {
-        Keyboard.dismiss();
-        AccessibilityInfo.announceForAccessibility(title);
-        if (!active.current || closing.current) return;
-        shown.current = true;
-        bodyMounted.current = true;
-        setBodyVisible(true);
-      }}
-    >
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <KeyboardAvoidingView
-          behavior="padding"
-          className="flex-1 justify-end"
-          style={{
-            paddingLeft: insets.left,
-            paddingRight: insets.right,
-          }}
-        >
-          {bodyVisible && (
+  const content = (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        behavior="padding"
+        className="flex-1 justify-end"
+        style={{
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
+        }}
+      >
+        {bodyVisible && (
+          <Animated.View
+            key={`backdrop-${session}`}
+            style={motion.backdropStyle}
+            className="absolute inset-0"
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="닫기"
+              onPress={() => closePicker()}
+              className="absolute inset-0 bg-theme-overlay/25"
+            />
+          </Animated.View>
+        )}
+        {bodyVisible && (
+          <GestureDetector gesture={motion.panGesture}>
             <Animated.View
-              key={`backdrop-${session}`}
-              style={motion.backdropStyle}
-              className="absolute inset-0"
+              key={`sheet-${session}`}
+              entering={motion.sheetEnter}
+              style={motion.sheetStyle}
+              pointerEvents={closingBody ? 'none' : 'auto'}
+              collapsable={false}
+              className="w-full shrink"
             >
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="닫기"
-                onPress={() => closePicker()}
-                className="absolute inset-0 bg-theme-overlay/25"
-              />
-            </Animated.View>
-          )}
-          {bodyVisible && (
-            <GestureDetector gesture={motion.panGesture}>
-              <Animated.View
-                key={`sheet-${session}`}
-                entering={motion.sheetEnter}
-                style={motion.sheetStyle}
-                pointerEvents={closingBody ? 'none' : 'auto'}
-                collapsable={false}
-                className="w-full shrink"
+              <View
+                onLayout={motion.onSheetLayout}
+                accessibilityViewIsModal
+                className="w-full shrink rounded-t-3xl bg-theme-surface px-[5%] pt-2 shadow-xl"
+                style={{
+                  maxHeight: sheetHeight,
+                  height: fixedHeight ? sheetHeight : undefined,
+                }}
               >
-                <View
-                  onLayout={motion.onSheetLayout}
-                  accessibilityViewIsModal
-                  className="w-full shrink rounded-t-3xl bg-theme-surface px-[5%] pt-2 shadow-xl"
-                  style={{
-                    maxHeight: sheetHeight,
-                    height: fixedHeight ? sheetHeight : undefined,
-                  }}
-                >
                   <View className="shrink-0 items-center ">
+                    {rightAction && <View className="absolute right-0 top-0 z-10">{rightAction}</View>}
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel="닫기"
@@ -216,49 +234,75 @@ export function BottomSheetModal({
                       </Text>
                     </View>
                   </View>
-                  <View className={`${fixedHeight ? 'flex-1' : 'shrink'} min-h-0 overflow-hidden`}>
-                    <GestureDetector gesture={motion.scrollGesture}>
-                      <AnimatedScrollView
-                        ref={motion.scrollRef}
-                        key={contentKey}
-                        onLayout={fade.onLayout}
-                        onContentSizeChange={fade.onContentSizeChange}
-                        onScroll={motion.onScroll}
-                        scrollEventThrottle={16}
-                        contentContainerStyle={{
-                          paddingBottom: appRem * 2 + insets.bottom,
-                        }}
-                        showsVerticalScrollIndicator={false}
-                        showsHorizontalScrollIndicator={false}
-                        className={`${fixedHeight ? 'flex-1' : 'shrink'} min-h-0`}
-                        contentContainerClassName="gap-6"
-                        nestedScrollEnabled
-                        bounces={false}
-                        overScrollMode="never"
-                        keyboardShouldPersistTaps="handled"
-                        keyboardDismissMode="none"
-                      >
-                        {typeof children === 'function' ? children(closePicker) : children}
-                      </AnimatedScrollView>
-                    </GestureDetector>
-                    {scrollFade && (
-                      <>
-                        <ScrollEdgeFade edge="top" tone="surface" visible={fade.topVisible} />
-                        <ScrollEdgeFade
-                          edge="bottom"
-                          tone="surface"
-                          visible={fade.bottomVisible}
-                          includeBottomInset={false}
-                        />
-                      </>
-                    )}
-                  </View>
+                <View className={`${fixedHeight ? 'flex-1' : 'shrink'} min-h-0 overflow-hidden`}>
+                  <GestureDetector gesture={motion.scrollGesture}>
+                    <AnimatedScrollView
+                      ref={motion.scrollRef}
+                      key={contentKey}
+                      scrollEnabled={scrollEnabled}
+                      onLayout={fade.onLayout}
+                      onContentSizeChange={fade.onContentSizeChange}
+                      onScroll={motion.onScroll}
+                      scrollEventThrottle={16}
+                      contentContainerStyle={{
+                        paddingBottom: appRem * 2 + (footer ? 0 : insets.bottom),
+                      }}
+                      showsVerticalScrollIndicator={false}
+                      showsHorizontalScrollIndicator={false}
+                      className={`${fixedHeight ? 'flex-1' : 'shrink'} min-h-0`}
+                      contentContainerClassName="gap-6"
+                      nestedScrollEnabled
+                      bounces={false}
+                      overScrollMode="never"
+                      keyboardShouldPersistTaps="handled"
+                      keyboardDismissMode="none"
+                    >
+                      {typeof children === 'function' ? children(closePicker) : children}
+                    </AnimatedScrollView>
+                  </GestureDetector>
+                  {scrollFade && (
+                    <>
+                      <ScrollEdgeFade edge="top" tone="surface" visible={fade.topVisible} />
+                      <ScrollEdgeFade
+                        edge="bottom"
+                        tone="surface"
+                        visible={fade.bottomVisible}
+                        includeBottomInset={false}
+                      />
+                    </>
+                  )}
                 </View>
-              </Animated.View>
-            </GestureDetector>
-          )}
-        </KeyboardAvoidingView>
-      </GestureHandlerRootView>
+                {footer && (
+                  <View className="mt-3 mb-4" style={{ paddingBottom: insets.bottom }}>
+                    {footer}
+                  </View>
+                )}
+              </View>
+            </Animated.View>
+          </GestureDetector>
+        )}
+      </KeyboardAvoidingView>
+    </GestureHandlerRootView>
+  );
+  if (presentation === 'screen') return present ? content : null;
+  return (
+    <Modal
+      visible={present}
+      transparent
+      animationType="none"
+      statusBarTranslucent
+      navigationBarTranslucent
+      onRequestClose={() => closePicker()}
+      onShow={() => {
+        Keyboard.dismiss();
+        AccessibilityInfo.announceForAccessibility(title);
+        if (!active.current || closing.current) return;
+        shown.current = true;
+        bodyMounted.current = true;
+        setBodyVisible(true);
+      }}
+    >
+      {content}
     </Modal>
   );
 }

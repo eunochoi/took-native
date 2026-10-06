@@ -13,7 +13,7 @@ import { Button } from '../components/Button';
 import { FormPickerRow } from '../components/FormPickerRow';
 import { IconColorPicker } from '../components/IconColorPicker';
 import { QueryState } from '../components/QueryState';
-import { RecordHeader } from '../components/RecordHeader';
+import { BottomSheetPage } from '../components/BottomSheetPage';
 import { SoberIcon } from '../components/SoberIcon';
 import { Text } from '../components/Text';
 import { saveSober } from '../db/sober';
@@ -68,17 +68,25 @@ export function SoberForm({ id }: { id?: number }) {
   const title = id ? '절제 항목 수정' : '절제 항목 추가';
   if (id !== undefined && (query.isPending || query.error || !query.data || !loaded))
     return (
-      <View className="flex-1 bg-theme-surface">
-        <RecordHeader title={title} backRoute="/sober" />
+      <BottomSheetPage backRoute="/sober" title={title}>
         <QueryState query={query} />
         {!query.isPending && !query.error && (
           <Text className="p-6">절제 항목을 찾을 수 없어요.</Text>
         )}
-      </View>
+      </BottomSheetPage>
     );
   return (
     <RecordFormLayout
-      header={<RecordHeader title={title} backRoute="/sober" />}
+      title={title}
+      backRoute="/sober"
+      onBeforeClose={() => {
+        if (!mutation.isPending) return true;
+        setAlert({
+          title: '잠시만 기다려주세요',
+          message: '저장이 진행 중입니다. 완료될 때까지 기다려주세요.',
+        });
+        return false;
+      }}
       footer={
         <>
           {mutation.isPending && <ActivityIndicator color={colors.accent} />}

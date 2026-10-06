@@ -26,7 +26,7 @@ import { usePreventRemove } from 'expo-router/react-navigation';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { AppIcon } from '../components/AppIcon';
-import { RecordHeader } from '../components/RecordHeader';
+import { BottomSheetPage } from '../components/BottomSheetPage';
 import { DiaryEmotionPicker } from './diary/DiaryEmotionPicker';
 import { DiaryFormImages } from './diary/DiaryFormImages';
 import { Text } from '../components/Text';
@@ -110,34 +110,26 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
   const title = format(parseISO(date), 'yyyy. M. d. EEEE', { locale: ko });
   if (id !== undefined && (query.isPending || query.error || !query.data))
     return (
-      <View className="flex-1 bg-theme-surface">
-        <RecordHeader backRoute="/diary" title="일기 수정" />
+      <BottomSheetPage backRoute="/diary" title="일기 수정">
         <QueryState query={query} />
         {!query.isPending && !query.error && <Text className="p-6">일기를 찾을 수 없습니다.</Text>}
-      </View>
+      </BottomSheetPage>
     );
   return (
     <RecordFormLayout
       scrollEnabled={!dragging}
-      header={
-        <RecordHeader
-          backRoute="/diary"
-          title={title}
-          onBack={() => {
-            if (busy) {
-              setAlert({
-                title: '잠시만 기다려주세요',
-                message: mutation.isPending
-                  ? '저장이 진행 중입니다. 완료될 때까지 기다려주세요.'
-                  : '사진을 준비하고 있습니다.',
-              });
-              return;
-            }
-            if (router.canGoBack()) router.back();
-            else router.replace('/diary');
-          }}
-        />
-      }
+      title={title}
+      backRoute="/diary"
+      onBeforeClose={() => {
+        if (!busy) return true;
+        setAlert({
+          title: '잠시만 기다려주세요',
+          message: mutation.isPending
+            ? '저장이 진행 중입니다. 완료될 때까지 기다려주세요.'
+            : '사진을 준비하고 있습니다.',
+        });
+        return false;
+      }}
       footer={
         <FormSubmitButton
           loading={mutation.isPending}

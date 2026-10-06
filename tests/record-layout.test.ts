@@ -42,69 +42,59 @@ function load(file: string, modules: Record<string, any> = {}) {
   return exports;
 }
 
-test('form layout delegates keyboard avoidance to the native container and preserves fade events / drag lock', () => {
-  const events: unknown[] = [];
-  const fade = {
-    topVisible: true,
-    bottomVisible: false,
-    onScroll: () => events.push('scroll'),
-    onLayout: (event: unknown) => events.push(['fade-layout', event]),
-    onContentSizeChange: (width: number, height: number) =>
-      events.push(['fade-size', width, height]),
-  };
+test('form sheets retain footer, overlays and the dismissal guard while locking image drag scrolling', () => {
+  const guard = () => false;
   const { RecordFormLayout } = load('../src/components/RecordFormLayout.tsx', {
-    '../hooks/useScrollFade': { useScrollFade: () => fade },
+    './BottomSheetPage': { BottomSheetPage: 'BottomSheetPage' },
   });
   const tree = RecordFormLayout({
-    header: 'header',
+    title: '일기 작성',
+    backRoute: '/diary',
+    onBeforeClose: guard,
     footer: 'save',
     overlays: 'picker',
     children: 'fields',
     scrollEnabled: false,
   });
-  const [header, viewport, footer, overlays] = tree.props.children;
-  const [scroll, top, bottom] = viewport.props.children;
-  assert.equal(header, 'header');
+  const [sheet, overlays] = tree.props.children;
+  assert.equal(sheet.type, 'BottomSheetPage');
+  assert.equal(sheet.props.title, '일기 작성');
+  assert.equal(sheet.props.backRoute, '/diary');
+  assert.equal(sheet.props.onBeforeClose, guard);
+  assert.equal(sheet.props.footer, 'save');
+  assert.equal(sheet.props.scrollEnabled, false);
+  assert.equal(sheet.props.children.props.children, 'fields');
   assert.equal(overlays, 'picker');
-  assert.equal(tree.type, 'KeyboardAvoidingView');
-  assert.equal(tree.props.behavior, 'padding');
-  assert.equal(viewport.props.ref, undefined);
-  assert.equal(scroll.props.ref, undefined);
-  assert.equal(scroll.props.scrollEnabled, false);
-  assert.equal(scroll.props.contentContainerStyle, undefined);
-  assert.equal(scroll.props.children, 'fields');
-  assert.equal(footer.props.children, 'save');
-  assert.equal(footer.props.style.paddingBottom, 24);
-  assert.equal(top.props.visible, true);
-  assert.equal(bottom.props.visible, false);
-  assert.equal(bottom.props.includeBottomInset, false);
-  const event = { nativeEvent: { layout: { height: 200 } } };
-  scroll.props.onLayout(event);
-  scroll.props.onContentSizeChange(300, 800);
-  scroll.props.onScroll();
-  assert.deepEqual(events, [['fade-layout', event], ['fade-size', 300, 800], 'scroll']);
 });
 
-test('form layout enables scrolling by default and retains native keyboard dismissal', () => {
-  let updates = 0;
-  const { RecordFormLayout } = load('../src/components/RecordFormLayout.tsx', {
-    '../hooks/useScrollFade': {
-      useScrollFade: () => ({
-        onLayout: () => updates++,
-        onContentSizeChange: () => updates++,
-        onScroll: () => {},
+test('route sheet closing uses history or the fallback and only focused routes intercept Android back', () => {
+  const calls: string[] = [];
+  let hasHistory = true;
+  let focused = true;
+  const { BottomSheetPage } = load('../src/components/BottomSheetPage.tsx', {
+    './BottomSheetModal': { BottomSheetModal: 'BottomSheetModal' },
+    'expo-router': {
+      useRouter: () => ({
+        canGoBack: () => hasHistory,
+        back: () => calls.push('back'),
+        replace: (route: string) => calls.push(route),
       }),
     },
+    'expo-router/react-navigation': { useIsFocused: () => focused },
+    'react-native': { useWindowDimensions: () => ({ height: 800 }) },
   });
-  const tree = RecordFormLayout({});
-  assert.equal(tree.type, 'KeyboardAvoidingView');
-  const scroll = tree.props.children[1].props.children[0];
-  assert.equal(scroll.props.scrollEnabled, true);
-  assert.equal(scroll.props.keyboardShouldPersistTaps, 'handled');
-  assert.equal(scroll.props.keyboardDismissMode, 'none');
-  scroll.props.onLayout({});
-  scroll.props.onContentSizeChange(300, 200);
-  assert.equal(updates, 2);
+  const page = BottomSheetPage({ title: '습관', backRoute: '/habit', children: 'body' });
+  assert.equal(page.props.presentation, 'screen');
+  assert.equal(page.props.dismissOnBack, true);
+  assert.equal(page.props.maxHeight, 720);
+  assert.equal(page.props.children, 'body');
+  assert.deepEqual(calls, []);
+  page.props.onClose();
+  hasHistory = false;
+  page.props.onClose();
+  assert.deepEqual(calls, ['back', '/habit']);
+  focused = false;
+  assert.equal(BottomSheetPage({ backRoute: '/habit' }).props.dismissOnBack, false);
 });
 
 test('shared header respects custom back guards, history and per-screen fallback routes', () => {
