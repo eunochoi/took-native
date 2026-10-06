@@ -178,6 +178,16 @@ export default function SettingsScreen() {
         <SettingsTopSection>
           <Toolbar>
             <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled }}
+              disabled={disabled}
+              onPress={() => router.push('/privacy')}
+              className={`h-11 shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
+            >
+              <AppIcon name="privacy-tip" size={appRem * 1.2} className="text-theme-accent" />
+              <Text className="text-sm leading-snug text-theme-text-secondary">Privacy Policy</Text>
+            </Pressable>
+            <Pressable
               accessibilityRole="link"
               accessibilityState={{ disabled }}
               disabled={disabled}
@@ -190,15 +200,6 @@ export default function SettingsScreen() {
             >
               <AppIcon name="info-outline" size={appRem * 1.2} className="text-theme-accent" />
               <Text className="text-sm leading-snug text-theme-text-secondary">앱 소개</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled }}
-              disabled={disabled}
-              onPress={() => router.push('/privacy')}
-              className={`h-11 shrink-0 flex-row items-center justify-center px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
-            >
-              <AppIcon name="privacy-tip" size={appRem * 1.2} className="text-theme-accent" />
             </Pressable>
           </Toolbar>
         </SettingsTopSection>
