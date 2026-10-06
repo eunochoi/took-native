@@ -11,8 +11,8 @@ import { getSoberSummary, SOBER_DAY_MS } from '../../domain/sober';
 import { useCurrentMinute } from '../../hooks/useCurrentMinute';
 import { diaryQueries, habitQueries, soberQueries } from '../../queries';
 import { useSettings } from '../../settings/SettingsProvider';
-import { RECORD_SURFACE_CLASS_NAME } from '../../theme/classes';
 import { useAppTheme } from '../../theme/AppThemeProvider';
+import { RECORD_SURFACE_CLASS_NAME } from '../../theme/classes';
 
 const recordCardClass = `${RECORD_SURFACE_CLASS_NAME} flex-row items-center gap-3 min-h-12 p-3.5 rounded-2xl active:opacity-70`;
 const recordIconContainerClass = 'h-10 w-10 shrink-0 items-center justify-center';
@@ -63,7 +63,7 @@ export function TodayRecordSection({ today }: { today: string }) {
         >
           <View className={recordContentClass}>
             <Text numberOfLines={1} className={recordTitleClass} style={recordTextStyle}>
-              오늘의 마음
+              오늘의 일기
             </Text>
             {diary.isPending ? (
               <View

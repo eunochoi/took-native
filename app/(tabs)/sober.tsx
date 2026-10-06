@@ -1,7 +1,6 @@
-import { PAGE_CLASS_NAME, EMPTY_STATE_CLASS_NAME } from '../../src/theme/classes';
 import { EmptyState } from '../../src/components/EmptyState';
+import { EMPTY_STATE_CLASS_NAME, PAGE_CLASS_NAME } from '../../src/theme/classes';
 
-import { ColorView } from '../../src/components/ColorTransition';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -9,13 +8,14 @@ import { useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import { AlertModal, type AlertContent } from '../../src/components/AlertModal';
 import { AppIcon } from '../../src/components/AppIcon';
+import { ColorView } from '../../src/components/ColorTransition';
 import { RecordSortPicker } from '../../src/components/RecordSortPicker';
-import { Toolbar } from '../../src/components/Toolbar';
-import { ToolbarSortButton } from '../../src/components/ToolbarSortButton';
-import { ToolbarAddButton } from '../../src/components/ToolbarAddButton';
 import { ScrollEdgeFade } from '../../src/components/ScrollEdgeFade';
 import { TabBottomSpacer } from '../../src/components/TabBottomSpacer';
 import { Text } from '../../src/components/Text';
+import { Toolbar } from '../../src/components/Toolbar';
+import { ToolbarAddButton } from '../../src/components/ToolbarAddButton';
+import { ToolbarSortButton } from '../../src/components/ToolbarSortButton';
 import { sortSobers } from '../../src/db/sober';
 import type { Sober } from '../../src/db/types';
 import { MAX_SOBER_COUNT } from '../../src/domain/limits';
@@ -142,7 +142,7 @@ export default function SoberList() {
                 <EmptyState
                   icon={<AppIcon name="sober" size={appRem * 1.875} color={colors.accent} />}
                   title="아직 만든 절제가 없어요."
-                  description="줄이고 싶은 것 하나부터 정하고, 매일의 변화를 쌓아보세요."
+                  description="줄이고 싶은 행동 하나부터 시작해요."
                 />
               )}
             </View>
