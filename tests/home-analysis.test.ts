@@ -4,7 +4,12 @@ import { createRequire } from 'node:module';
 import { runInNewContext } from 'node:vm';
 import test from 'node:test';
 import { EMOTIONS } from '../src/domain/constants';
-import { formatSoberDuration, getSoberSummary, SOBER_DAY_MS } from '../src/domain/sober';
+import {
+  formatSoberDuration,
+  getSoberStreaks,
+  getSoberSummary,
+  SOBER_DAY_MS,
+} from '../src/domain/sober';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
@@ -43,7 +48,7 @@ function render(
         if (dependency.endsWith('useCurrentMinute'))
           return { useCurrentMinute: () => Date.parse('2026-10-05T12:00:00.000Z') };
         if (dependency.endsWith('domain/sober'))
-          return { formatSoberDuration, getSoberSummary, SOBER_DAY_MS };
+          return { formatSoberDuration, getSoberStreaks, getSoberSummary, SOBER_DAY_MS };
         if (dependency === 'date-fns') return require('date-fns');
         if (dependency.endsWith('db/sober')) return { sortSobers: (items: unknown[]) => items };
         if (dependency === 'expo-sqlite') return { useSQLiteContext: () => ({}) };
@@ -231,7 +236,7 @@ test('habit retains Top 3 selection without annual summaries or the full list', 
   assert(!text(tree).includes('습관별 완료 기록'));
 });
 
-test('sober rankings use the current streak in both directions, including restarts outside the selected year', () => {
+test('sober rankings compare past and current streaks in both directions across all years', () => {
   const sobers = Array.from({ length: 5 }, (_, index) => ({
     id: index + 1,
     name: `절제 ${index + 1}`,
@@ -259,18 +264,20 @@ test('sober rankings use the current streak in both directions, including restar
   assert.equal(rows.length, 3);
   rows[0].props.onPress();
   rows[2].props.onPress();
-  assert.deepEqual(routes, ['/sober/3', '/sober/5']);
-  assert(text(tree).includes('진행 중 5개'));
+  assert.deepEqual(routes, ['/sober/1', '/sober/4']);
+  assert(text(tree).includes('전체 거리두기 항목 5개'));
   assert.deepEqual(
-    Array.from(rows, (row: any) => row.key),
-    [3, 4, 5],
+    Array.from(rows, (row: any) => Number(row.key.split(':')[0])),
+    [1, 3, 4],
   );
   assert(rows[0].props.className.includes('border-b'));
   assert(!rows[2].props.className.includes('border-b'));
   const bottom = render('SoberAnalysis', { sobers, restarts }, 'bottom');
   assert.deepEqual(
-    Array.from(bottom.props.children[2].props.children, (row: any) => row.key),
-    [1, 2, 5],
+    Array.from(bottom.props.children[2].props.children, (row: any) =>
+      Number(row.key.split(':')[0]),
+    ),
+    [1, 2, 2],
   );
   const originalOrder = sobers.map((item) => item.id);
   const tied = sobers.map((item) => ({
@@ -281,7 +288,7 @@ test('sober rankings use the current streak in both directions, including restar
     const tieRows = render('SoberAnalysis', { sobers: tied, restarts: [] }, selection).props
       .children[2].props.children;
     assert.deepEqual(
-      Array.from(tieRows, (row: any) => row.key),
+      Array.from(tieRows, (row: any) => Number(row.key.split(':')[0])),
       [1, 2, 3],
     );
   }
@@ -295,7 +302,7 @@ test('sober rankings use the current streak in both directions, including restar
   assert(!shortRows[1].props.className.includes('border-b'));
   assert(
     text(render('SoberAnalysis', { sobers: [], restarts: [] })).includes(
-      '아직 만든 절제가 없어요.',
+      '아직 거리두기 기록이 없어요.',
     ),
   );
 });

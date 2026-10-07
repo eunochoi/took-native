@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { URL } from 'node:url';
 import { runInNewContext } from 'node:vm';
 import test from 'node:test';
-import type { Habit } from '../src/db/types';
+import type { Habit, Sober, SoberRestart } from '../src/db/types';
 import type { SoberStreak } from '../src/domain/sober';
 
 const require = createRequire(import.meta.url);
@@ -64,6 +64,10 @@ function section(path: string, name: string, initialProps: Record<string, unknow
         if (dependency === 'expo-router') return { useRouter: () => ({ push: () => undefined }) };
         if (dependency.endsWith('AppThemeProvider'))
           return { useAppTheme: () => ({ colors: {}, rem: 15, iconSizes: {} }) };
+        if (dependency.endsWith('hooks/useCurrentMinute'))
+          return { useCurrentMinute: () => Date.parse('2024-01-11T00:00:00Z') };
+        if (dependency.endsWith('/UnderlineTab')) return { UnderlineTab: 'UnderlineTab' };
+        if (dependency.endsWith('/AnalysisHeader')) return { AnalysisHeader: 'AnalysisHeader' };
         if (dependency.endsWith('/MonthCalendar')) return { MonthCalendar: 'MonthCalendar' };
         if (dependency.endsWith('/CalendarDay')) return { CalendarDay: 'CalendarDay' };
         if (dependency.includes('/components/')) return { Text: 'Text', AppIcon: 'AppIcon' };
@@ -136,6 +140,85 @@ const expandButton = (nodes: any[]) =>
     (node) =>
       node.type === 'Pressable' && typeof node.props.accessibilityState?.expanded === 'boolean',
   );
+
+test('sober analysis ranks individual past and current streaks across items', () => {
+  const start = '2024-01-01T00:00:00Z';
+  const sober: Sober = {
+    id: 1,
+    name: '커피',
+    description: null,
+    icon_key: 'coffee',
+    icon_color: 'theme',
+    is_priority: 0,
+    initial_started_at: start,
+    goal_mode: 'AUTO',
+    goal_days: null,
+    created_at: start,
+    updated_at: start,
+  };
+  const restarts: SoberRestart[] = [8, 4].map((day, index) => ({
+    id: index + 1,
+    sober_id: 1,
+    restarted_at: `2024-01-${String(day).padStart(2, '0')}T00:00:00Z`,
+    memo: null,
+    created_at: start,
+    updated_at: start,
+  }));
+  const ui = section('src/screens/home/SoberAnalysis.tsx', 'SoberAnalysis', {
+    sobers: [sober, { ...sober, id: 2, name: '야식', initial_started_at: '2024-01-09T00:00:00Z' }],
+    restarts,
+  });
+  const durations = (nodes: any[]) =>
+    nodes
+      .filter((node) => node.type === 'Text' && /^\d+일 \d+시간 \d+분$/.test(node.props.children))
+      .map((node) => node.props.children);
+  const longest = ui.render();
+  assert.deepEqual(durations(longest.nodes), ['4일 0시간 0분', '3일 0시간 0분', '3일 0시간 0분']);
+  assert.equal(
+    longest.nodes.filter((node) => node.type === 'Text' && node.props.children === '커피').length,
+    3,
+  );
+  const header = longest.nodes.find((node) => node.type === 'AnalysisHeader');
+  assert.equal(header.props.children.join(''), '전체 거리두기 항목 2개');
+  const timeRows = longest.nodes
+    .filter((node) => node.type === 'Text' && Array.isArray(node.props.children))
+    .map((node) => node.props.children.join(''));
+  assert.equal(timeRows.filter((text) => text.startsWith('시작 시간 : ')).length, 3);
+  assert.equal(timeRows.filter((text) => text.startsWith('종료 시간 : ')).length, 3);
+  assert(
+    longest.nodes.some(
+      (node) =>
+        node.type === 'Text' &&
+        node.props.children === '진행 중' &&
+        node.props.className === 'text-sm text-theme-accent',
+    ),
+  );
+  longest.nodes
+    .find((node) => node.type === 'UnderlineTab' && node.props.children === '짧게 유지한 순')
+    .props.onPress();
+  const shortest = ui.render();
+  assert.deepEqual(durations(shortest.nodes), ['2일 0시간 0분', '3일 0시간 0분', '3일 0시간 0분']);
+  assert.equal(
+    shortest.nodes.filter(
+      (node) =>
+        node.type === 'Text' &&
+        Array.isArray(node.props.children) &&
+        node.props.children[0] === '종료 시간 :' &&
+        node.props.children.some(
+          (child: any) =>
+            child?.props?.children === '진행 중' &&
+            child.props.className === 'text-sm text-theme-accent',
+        ),
+    ).length,
+    2,
+  );
+  const empty = ui.render({ sobers: [], restarts: [] });
+  assert(
+    empty.nodes.some(
+      (node) => node.type === 'Text' && node.props.children === '아직 거리두기 기록이 없어요.',
+    ),
+  );
+});
 
 test('long records show five rows when collapsed and at most twenty when expanded', () => {
   const ui = section('src/screens/sober/SoberLongRecords.tsx', 'SoberLongRecords', { records });
