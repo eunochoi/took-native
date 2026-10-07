@@ -34,3 +34,14 @@ index 9eeca53b6681034ee8b2b32fed6b0cbb895d48ef..7254b6e2a3c652bd023c585dbfecf494
          style={{ height, width }}
        />
        {preview.clickableAreas.map((area, index) => (
+diff --git a/android/src/main/java/com/reactnativeandroidwidget/RNWidgetProvider.java b/android/src/main/java/com/reactnativeandroidwidget/RNWidgetProvider.java
+--- a/android/src/main/java/com/reactnativeandroidwidget/RNWidgetProvider.java
++++ b/android/src/main/java/com/reactnativeandroidwidget/RNWidgetProvider.java
+@@ -132,6 +132,7 @@
+     private void openUri(Context context, String uri) {
+         try {
+             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
++            intent.setPackage(context.getPackageName());
+             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+             context.startActivity(intent);
+         } catch (Exception e) {

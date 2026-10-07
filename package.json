@@ -11,6 +11,7 @@
     "start": "EXPO_NO_TELEMETRY=1 expo start",
     "start:usb": "adb reverse tcp:8081 tcp:8081 && EXPO_NO_TELEMETRY=1 expo start --localhost --android --port 8081",
     "android": "EXPO_NO_TELEMETRY=1 expo run:android",
+    "android:dev": "EXPO_NO_TELEMETRY=1 expo run:android --variant debug --app-id com.everstamp.dev",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "check:boundaries": "node scripts/check-boundaries.cjs"
