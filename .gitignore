@@ -28,6 +28,7 @@ credentials.json
 
 # Local Expo module build outputs
 /modules/*/android/build/
+.gradle/
 
 # Local documentation
 /README.local.md
