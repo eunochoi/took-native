@@ -6,10 +6,10 @@ import { useRouter, useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo, useRef, useState } from 'react';
 import { FlatList, View } from 'react-native';
-import { QueryError } from '../../src/components/QueryError';
 import { AlertModal, type AlertContent } from '../../src/components/AlertModal';
 import { AppIcon } from '../../src/components/AppIcon';
 import { ColorView } from '../../src/components/ColorTransition';
+import { QueryError } from '../../src/components/QueryError';
 import { RecordSortPicker } from '../../src/components/RecordSortPicker';
 import { ScrollEdgeFade } from '../../src/components/ScrollEdgeFade';
 import { TabBottomSpacer } from '../../src/components/TabBottomSpacer';
@@ -85,7 +85,7 @@ export default function SoberList() {
               <ToolbarSortButton
                 sort={settings.soberSort}
                 priorityFirst={settings.soberPriorityFirst}
-                ascendingLabel="오래된순"
+                ascendingLabel="과거순"
                 accessibilityLabel="거리두기 항목 정렬"
                 onPress={() => setSortOpen(true)}
               />
@@ -161,7 +161,7 @@ export default function SoberList() {
           title="거리두기 정렬"
           sort={settings.soberSort}
           priorityFirst={settings.soberPriorityFirst}
-          ascendingLabel="오래된순"
+          ascendingLabel="과거순"
           onClose={() => setSortOpen(false)}
           onApply={(sort, priorityFirst) => {
             setSortOpen(false);
