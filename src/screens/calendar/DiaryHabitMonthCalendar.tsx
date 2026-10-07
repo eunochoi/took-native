@@ -2,15 +2,27 @@ import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo } from 'react';
 import { Pressable, View } from 'react-native';
+import { Text } from '../../components/Text';
 import { EmotionImage } from '../../components/EmotionImage';
 import { OrganicBadge } from '../../components/OrganicBadge';
-import { Text } from '../../components/Text';
 import { EMOTIONS } from '../../domain/constants';
 import { diaryQueries, habitQueries } from '../../queries';
 import { CalendarDay } from './CalendarDay';
-import { MonthCalendar } from './MonthCalendar';
+import { CalendarGrid } from './CalendarGrid';
+import { calendarDays } from '../../domain/calendar';
+import { useMonthSwipe } from '../../hooks/useMonthSwipe';
+import { CalendarMonthHeader } from './CalendarMonthHeader';
 
-export function DiaryHabitMonthCalendar(props: Parameters<typeof MonthCalendar>[0]) {
+export function DiaryHabitMonthCalendar(props: {
+  month: string;
+  today: string;
+  selected: string;
+  onMonthChange: (month: string) => void;
+  onSelect: (date: string) => void;
+  fillHeight?: boolean;
+}) {
+  const days = useMemo(() => calendarDays(props.month), [props.month]);
+  const swipe = useMonthSwipe(props.month, props.onMonthChange);
   const db = useSQLiteContext();
   const diaries = useQuery(diaryQueries.month(db, props.month));
   const completions = useQuery(
@@ -44,19 +56,37 @@ export function DiaryHabitMonthCalendar(props: Parameters<typeof MonthCalendar>[
           </Pressable>
         </View>
       )}
-      <MonthCalendar
-        {...props}
-        renderDay={(day) => {
-          const diary = day.outside ? undefined : diaryByDate.get(day.date);
-          const count = day.outside ? 0 : (counts.get(day.date) ?? 0);
+      <CalendarMonthHeader
+        month={props.month}
+        today={props.today}
+        onMonthChange={props.onMonthChange}
+        onToday={() => props.onSelect(props.today)}
+      />
+      <CalendarGrid
+        fillHeight={props.fillHeight}
+        {...swipe.panHandlers}
+        accessibilityLabel={`${props.month} 월간 달력`}
+      >
+        {days.map((date) => {
+          const outside = date.slice(0, 7) !== props.month;
+          const diary = outside ? undefined : diaryByDate.get(date);
+          const count = outside ? 0 : (counts.get(date) ?? 0);
           const hasDecoration = diary !== undefined || count > 0;
           const rotation = -10 + ((diary ? new Date(diary.created_at).getTime() % 10 : 0) * 20) / 9;
           return (
             <CalendarDay
-              {...day}
-              selected={false}
+              key={date}
+              date={date}
+              month={props.month}
+              today={props.today}
+              selected={props.selected}
+              fillHeight={props.fillHeight}
+              showSelectedIndicator={false}
+              disabled={date > props.today}
+              dimmed={date > props.today}
+              onSelect={props.onSelect}
               label={[
-                day.date,
+                date,
                 diary ? `일기 있음, ${EMOTIONS[diary.emotion]?.name}` : '',
                 count ? `습관 ${count}개 완료` : '',
               ]
@@ -87,8 +117,8 @@ export function DiaryHabitMonthCalendar(props: Parameters<typeof MonthCalendar>[
               ) : undefined}
             </CalendarDay>
           );
-        }}
-      />
+        })}
+      </CalendarGrid>
     </View>
   );
 }

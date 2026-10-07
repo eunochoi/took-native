@@ -26,8 +26,7 @@ export function DayInfoHabitSection({
   const { colors, iconSizes } = useAppTheme();
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
-  const future = date > today;
-  const editable = date >= shiftDate(today, -3) && !future;
+  const editable = date >= shiftDate(today, -3) && date <= today;
   const done = habits.filter((habit) => habit.completed).length;
   const renderHabit = (habit: Habit & { completed: boolean }) => {
     const habitColor = resolveIconColor(habit.icon_color, colors.accent);
@@ -91,13 +90,7 @@ export function DayInfoHabitSection({
           ))}
       </View>
       <View className="px-2 py-3">
-        {future ? (
-          <View className="h-56 items-center justify-center">
-            <Text className="text-center text-sm leading-relaxed text-theme-text-tertiary">
-              미래 날짜에는 습관을 기록할 수 없어요.
-            </Text>
-          </View>
-        ) : habits.length ? (
+        {habits.length ? (
           <View className="min-h-56 gap-2">
             {!editable && (
               <Text className="mb-2 text-sm leading-relaxed text-theme-accent">
@@ -114,7 +107,7 @@ export function DayInfoHabitSection({
           </View>
         )}
         <View className="h-9 mt-2 items-center justify-center">
-          {!future && habits.length > HABIT_PREVIEW_COUNT && (
+          {habits.length > HABIT_PREVIEW_COUNT && (
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ expanded }}

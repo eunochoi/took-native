@@ -40,7 +40,7 @@ function render(mode: 'start' | 'restart', memo?: string) {
           FormPickerRow: 'FormPickerRow',
           Text: 'Text',
           Button: 'Button',
-          MonthCalendar: 'MonthCalendar',
+          DatePickerCalendar: 'DatePickerCalendar',
         };
       },
     },
@@ -69,7 +69,7 @@ test('restart mode shows memo and collapsed date selector even when memo data is
   assert.ok(nodes.find((node) => node.props.accessibilityLabel === '다시 시작 메모'));
   assert.ok(nodes.find((node) => node.props.accessibilityLabel === '다시 시작 시간 선택'));
   assert.equal(
-    nodes.some((node) => node.type === 'MonthCalendar'),
+    nodes.some((node) => node.type === 'DatePickerCalendar'),
     false,
   );
   assert.ok(nodes.find((node) => node.type === 'Button' && node.props.label === '기록 저장하기'));
@@ -77,7 +77,7 @@ test('restart mode shows memo and collapsed date selector even when memo data is
 
 test('start mode shows calendar and no memo UI even if memo data is present', () => {
   const nodes = render('start', 'ignored');
-  assert.ok(nodes.find((node) => node.type === 'MonthCalendar'));
+  assert.ok(nodes.find((node) => node.type === 'DatePickerCalendar'));
   assert.equal(
     nodes.some((node) => node.props.accessibilityLabel === '다시 시작 메모'),
     false,

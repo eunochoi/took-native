@@ -7,7 +7,7 @@ import { FormPickerRow } from '../../components/FormPickerRow';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { Text } from '../../components/Text';
 import { Button } from '../../components/Button';
-import { MonthCalendar } from '../calendar/MonthCalendar';
+import { DatePickerCalendar } from '../calendar/DatePickerCalendar';
 import { soberDateTimeDraft, parseSoberDateTime } from '../../domain/sober';
 import { SOBER_MEMO_MAX_LENGTH } from '../../domain/limits';
 import { useCurrentMinute } from '../../hooks/useCurrentMinute';
@@ -68,15 +68,12 @@ export function SoberDateTimePicker({
           )}
           {dateExpanded && (
             <View className="gap-5">
-              <MonthCalendar
-                headingWeight="normal"
+              <DatePickerCalendar
                 month={month}
                 selected={draft.date}
                 today={today}
                 onMonthChange={setMonth}
-                canSelect={(date) =>
-                  date <= today && (!minTime || date >= format(new Date(minTime), 'yyyy-MM-dd'))
-                }
+                minDate={minTime ? format(new Date(minTime), 'yyyy-MM-dd') : undefined}
                 onSelect={(date) => {
                   setDraft({ ...draft, date });
                   setMonth(date.slice(0, 7));

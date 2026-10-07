@@ -10,7 +10,7 @@ import { DayInfo } from '../../src/screens/calendar/DayInfo';
 export default function CalendarDayInfo() {
   const { date } = useLocalSearchParams<{ date: string }>();
   const today = useToday();
-  const selected = isDate(date) ? date : today;
+  const selected = isDate(date) && date <= today ? date : today;
   return (
     <BottomSheetPage
       backRoute="/calendar"

@@ -68,7 +68,12 @@ function section(path: string, name: string, initialProps: Record<string, unknow
           return { useCurrentMinute: () => Date.parse('2024-01-11T00:00:00Z') };
         if (dependency.endsWith('/UnderlineTab')) return { UnderlineTab: 'UnderlineTab' };
         if (dependency.endsWith('/AnalysisHeader')) return { AnalysisHeader: 'AnalysisHeader' };
-        if (dependency.endsWith('/MonthCalendar')) return { MonthCalendar: 'MonthCalendar' };
+        if (dependency.endsWith('/HabitMonthCalendar'))
+          return { HabitMonthCalendar: 'HabitMonthCalendar' };
+        if (dependency.endsWith('/CalendarGrid')) return { CalendarGrid: 'CalendarGrid' };
+        if (dependency.endsWith('domain/calendar')) return localRequire(dependency);
+        if (dependency.endsWith('/CalendarMonthHeader'))
+          return { CalendarMonthHeader: 'CalendarMonthHeader' };
         if (dependency.endsWith('/CalendarDay')) return { CalendarDay: 'CalendarDay' };
         if (dependency.includes('/components/')) return { Text: 'Text', AppIcon: 'AppIcon' };
         if (dependency.endsWith('domain/habitStats')) {
@@ -366,15 +371,6 @@ test('day habits retain the recent-four-day lock and empty state for dates witho
         typeof node.props.children === 'string' && node.props.children.includes('습관이 없어요'),
     ),
   );
-  const future = ui.render({ date: '2024-03-11' });
-  assert.equal(
-    future.nodes.filter((node) => node.props.accessibilityRole === 'checkbox').length,
-    0,
-  );
-  assert.equal(expandButton(future.nodes), undefined);
-  assert(
-    future.nodes.some((node) => node.props.children === '미래 날짜에는 습관을 기록할 수 없어요.'),
-  );
 });
 
 test('habit statistics reuse calculations for unrelated updates and refresh only the changed period', () => {
@@ -397,7 +393,7 @@ test('habit statistics reuse calculations for unrelated updates and refresh only
   ui.render();
   assert.deepEqual(ui.calls, { month: 1, year: 2, calendar: 0 });
   ui.render()
-    .nodes.find((node) => node.type === 'MonthCalendar')
+    .nodes.find((node) => node.type === 'HabitMonthCalendar')
     .props.onMonthChange('2024-02');
   ui.render();
   assert.deepEqual(ui.calls, { month: 2, year: 2, calendar: 0 });
@@ -413,20 +409,39 @@ test('habit statistics reflect replacement records and the same checkbox toggle 
     unavailable: false,
     onToggle: (...args: unknown[]) => toggles.push(args),
   });
-  const calendar = ui.render().nodes.find((node) => node.type === 'MonthCalendar');
-  assert.equal(calendar.props.canSelect('2024-03-10'), true);
-  assert.equal(calendar.props.canSelect('2024-03-06'), false);
-  calendar.props.onSelect('2024-03-10');
-  assert.deepEqual(toggles, [['2024-03-10', true]]);
-  const filled = ui
-    .render({ dates: ['2024-03-10'] })
-    .nodes.find((node) => node.type === 'MonthCalendar');
-  filled.props.onSelect('2024-03-10');
-  assert.deepEqual(toggles[1], ['2024-03-10', false]);
-  assert.equal(
-    filled.props.renderDay({ date: '2024-03-10', outside: false }).props.label,
-    '2024-03-10, 완료 기록 있음',
+  const calendar = ui.render().nodes.find((node) => node.type === 'HabitMonthCalendar');
+  const monthUi = section(
+    'src/screens/habit/HabitMonthCalendar.tsx',
+    'HabitMonthCalendar',
+    calendar.props,
   );
+  const dayProps = (nodes: any[], date: string) =>
+    nodes.find((node) => node.type === 'CalendarDay' && node.props.date === date).props;
+  const dateCell = section('src/screens/calendar/CalendarDay.tsx', 'CalendarDay', {});
+  const press = (props: Record<string, unknown>) => dateCell.render(props).result.props.onPress();
+  const currentNodes = monthUi.render().nodes;
+  const current = dayProps(currentNodes, '2024-03-10');
+  assert.equal(current.disabled, false);
+  const locked = dayProps(currentNodes, '2024-03-06');
+  assert.equal(locked.disabled, true);
+  press(locked);
+  assert.deepEqual(toggles, []);
+  press(current);
+  assert.deepEqual(toggles, [['2024-03-10', true]]);
+  const updatedProps = ui
+    .render({ dates: ['2024-03-10'] })
+    .nodes.find((node) => node.type === 'HabitMonthCalendar').props;
+  const checked = dayProps(monthUi.render(updatedProps).nodes, '2024-03-10');
+  press(checked);
+  assert.deepEqual(toggles[1], ['2024-03-10', false]);
+  assert.equal(checked.label, '2024-03-10, 완료 기록 있음');
+  const future = dayProps(monthUi.render().nodes, '2024-03-11');
+  press(future);
+  assert.equal(future.disabled, true);
+  assert.equal(toggles.length, 2);
+  const busy = dayProps(monthUi.render({ disabled: true }).nodes, '2024-03-10');
+  press(busy);
+  assert.equal(toggles.length, 2);
   assert.deepEqual(ui.calls, { month: 2, year: 2, calendar: 0 });
   ui.render({ today: '2024-03-11' });
   assert.deepEqual(ui.calls, { month: 3, year: 2, calendar: 0 });

@@ -28,6 +28,7 @@ function load(path: string, states: unknown[], date = '2026-09-30') {
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react')
           return {
+            Children: { toArray: (children: unknown) => [children].flat() },
             useCallback: (fn: Function) => fn,
             useRef: (value: unknown) => {
               const index = cursor++;
@@ -61,6 +62,7 @@ function load(path: string, states: unknown[], date = '2026-09-30') {
           return {
             useSafeAreaInsets: () => ({ top: 24, bottom: 20 }),
           };
+        if (name === 'tailwind-merge') return require(name);
         if (name === 'date-fns' || name === 'date-fns/locale') return require(name);
         if (name.endsWith('AppThemeProvider'))
           return {
@@ -142,31 +144,62 @@ test('day info diary menu waits for only its own close before pushing the edit f
 
 for (const month of ['2021-02', '2026-10', '2026-03']) {
   test(`calendar shares the available height across ${calendarDays(month).length / 7} rows`, () => {
-    const render = load('src/screens/calendar/MonthCalendar.tsx', [350, 300]);
+    const render = load('src/screens/calendar/CalendarGrid.tsx', []);
+    const dayRender = load('src/screens/calendar/CalendarDay.tsx', []);
     const props = {
-      month,
-      selected: `${month}-01`,
-      today: '2026-10-05',
-      onMonthChange: () => {},
-      onSelect: () => {},
       fillHeight: true,
+      children: calendarDays(month).map((date) =>
+        jsx('CalendarDay', {
+          date,
+          month,
+          today: '2026-10-05',
+          fillHeight: true,
+          onSelect: () => {},
+        }),
+      ),
     };
-    const tree = render('MonthCalendar', props);
-    const grid = tree.props.children.at(-1).props.children[1];
-    const rows = grid.props.children;
+    const tree = render('CalendarGrid', props);
+    const rows = tree.props.children[1].props.children;
     assert.equal(rows.length, calendarDays(month).length / 7);
     assert(rows.every((row: any) => row.props.className.includes('flex-1')));
-    const cells = rows.flatMap((row: any) => row.props.children);
+    const cells = rows
+      .flatMap((row: any) => row.props.children)
+      .map((node: any) => dayRender('CalendarDay', node.props));
     assert(cells.every((cell: any) => !cell.props.className.includes('aspect')));
     assert(cells.every((cell: any) => cell.props.className.includes('flex-1')));
     assert(!nodes(tree).some((node) => node.props.onLayout));
-    assert(cells.every((cell: any) => cell.props.children.props.width === undefined));
-    const fixed = render('MonthCalendar', { ...props, fillHeight: false });
-    const fixedGrid = fixed.props.children.at(-1).props.children[1];
-    assert(
-      fixedGrid.props.children.every((row: any) =>
-        row.props.children.every((cell: any) => cell.props.className.includes('aspect-[1/1.25]')),
-      ),
-    );
+    assert(cells.every((cell: any) => cell.props.width === undefined));
+    const fixed = dayRender('CalendarDay', { ...props.children[0].props, fillHeight: false });
+    assert(fixed.props.className.includes('aspect-[1/1.25]'));
   });
 }
+
+test('month header preserves month limits and switches months without changing records', () => {
+  const render = load('src/screens/calendar/CalendarMonthHeader.tsx', []);
+  const changed: string[] = [];
+  const props = {
+    month: '2026-09',
+    today: '2026-10-07',
+    title: '월별 기록',
+    onMonthChange: (month: string) => changed.push(month),
+  };
+  const header = render('CalendarMonthHeader', props);
+  nodes(header)
+    .find((node) => node.props.accessibilityLabel === '다음 달')
+    .props.onPress();
+  nodes(header)
+    .find((node) => node.props.accessibilityLabel?.includes('이번 달로 이동'))
+    .props.onPress();
+  assert.deepEqual(changed, ['2026-10', '2026-10']);
+  const first = nodes(render('CalendarMonthHeader', { ...props, month: '1900-01' })).find(
+    (node) => node.props.accessibilityLabel === '이전 달',
+  );
+  assert.equal(first.props.disabled, true);
+  first.props.onPress();
+  const last = nodes(render('CalendarMonthHeader', { ...props, month: '2100-12' })).find(
+    (node) => node.props.accessibilityLabel === '다음 달',
+  );
+  assert.equal(last.props.disabled, true);
+  last.props.onPress();
+  assert.equal(changed.length, 2);
+});

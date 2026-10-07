@@ -25,8 +25,7 @@ import {
 } from '../../../src/domain/sober';
 import { useCurrentMinute } from '../../../src/hooks/useCurrentMinute';
 import { soberQueries, useRecordMutation } from '../../../src/queries';
-import { CalendarDay } from '../../../src/screens/calendar/CalendarDay';
-import { MonthCalendar } from '../../../src/screens/calendar/MonthCalendar';
+import { SoberMonthCalendar } from '../../../src/screens/sober/SoberMonthCalendar';
 import { SoberDateTimePicker } from '../../../src/screens/sober/SoberDateTimePicker';
 import { SoberDayInfo } from '../../../src/screens/sober/SoberDayInfo';
 import { SoberGauge } from '../../../src/screens/sober/SoberGauge';
@@ -189,41 +188,19 @@ export default function SoberDetail() {
               <Text className={BODY_DESCRIPTION_CLASS_NAME}>{sober.description}</Text>
             </View>
           )}
-          <View className="gap-4">
-            <MonthCalendar
-              headerTitle="거리두기 기록"
-              month={month}
-              selected={selected}
-              today={today}
-              canSelect={(date) => date >= firstDate && date <= today}
-              onMonthChange={setMonth}
-              onSelect={(date) => {
-                setSelected(date);
-                setMonth(date.slice(0, 7));
-                setOverlay({ kind: 'day' });
-              }}
-              renderDay={(day) => {
-                const count = day.outside ? 0 : (grouped.get(day.date)?.length ?? 0);
-                return (
-                  <CalendarDay
-                    {...day}
-                    showSelectedIndicator={false}
-                    label={[day.date, count ? `다시 시작 ${count}회` : '']
-                      .filter(Boolean)
-                      .join(', ')}
-                  >
-                    {count > 0 ? (
-                      <View className="w-3/5 aspect-square items-center justify-center rounded-full bg-theme-accent">
-                        <Text className="text-xs font-semibold text-theme-text-on-accent">
-                          {count}
-                        </Text>
-                      </View>
-                    ) : undefined}
-                  </CalendarDay>
-                );
-              }}
-            />
-          </View>
+          <SoberMonthCalendar
+            month={month}
+            selected={selected}
+            today={today}
+            firstDate={firstDate}
+            recordsByDate={grouped}
+            onMonthChange={setMonth}
+            onSelect={(date) => {
+              setSelected(date);
+              setMonth(date.slice(0, 7));
+              setOverlay({ kind: 'day' });
+            }}
+          />
           <SoberLongRecords records={summary.longRecords} />
         </View>
       </BottomSheetPage>

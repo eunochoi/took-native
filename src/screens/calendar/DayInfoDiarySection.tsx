@@ -79,40 +79,27 @@ export function DayInfoDiarySection({
           </View>
         ) : (
           <View className="h-full items-center justify-center px-2">
-            {date > today ? (
-              <>
-                <Text className="text-center text-sm leading-relaxed text-theme-text-tertiary">
-                  아직 기록할 수 없는 날짜예요.
-                </Text>
-                <Text className="text-center text-sm leading-relaxed text-theme-text-tertiary">
-                  미래의 이야기는 조금 기다렸다가 적어주세요.
-                </Text>
-              </>
-            ) : (
-              <>
-                <Text className="mt-1 text-sm text-theme-text-tertiary">
-                  아직 작성한 일기가 없어요.
-                </Text>
-                <Text className="mt-1 text-sm text-theme-text-tertiary">
-                  하루의 이야기를 간단히 툭 남겨보세요.
-                </Text>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => {
-                    router.push({ pathname: '/diary/new', params: { date } });
-                  }}
-                  className="mt-6 flex-row min-h-9 items-center gap-1.5 rounded-full bg-theme-accent px-4"
-                >
-                  <AppIcon name="add" size={appRem * 1.125} color={colors.textOnAccent} />
-                  <Text
-                    className="text-xs leading-none text-theme-text-on-accent"
-                    style={{ includeFontPadding: false, textAlignVertical: 'center' }}
-                  >
-                    일기 쓰기
-                  </Text>
-                </Pressable>
-              </>
-            )}
+            <Text className="mt-1 text-sm text-theme-text-tertiary">
+              아직 작성한 일기가 없어요.
+            </Text>
+            <Text className="mt-1 text-sm text-theme-text-tertiary">
+              하루의 이야기를 간단히 툭 남겨보세요.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                router.push({ pathname: '/diary/new', params: { date } });
+              }}
+              className="mt-6 flex-row min-h-9 items-center gap-1.5 rounded-full bg-theme-accent px-4"
+            >
+              <AppIcon name="add" size={appRem * 1.125} color={colors.textOnAccent} />
+              <Text
+                className="text-xs leading-none text-theme-text-on-accent"
+                style={{ includeFontPadding: false, textAlignVertical: 'center' }}
+              >
+                일기 쓰기
+              </Text>
+            </Pressable>
           </View>
         )}
       </View>

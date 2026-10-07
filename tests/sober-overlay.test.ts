@@ -99,7 +99,7 @@ function scenario() {
 
 test('sober detail opens the next overlay only after its current sheet closes', () => {
   const ui = scenario();
-  const calendar = ui.render().find((node) => node.type === 'MonthCalendar');
+  const calendar = ui.render().find((node) => node.type === 'SoberMonthCalendar');
   calendar.props.onSelect('2026-10-04');
   let nodes = ui.render();
   const day = nodes.find((node) => node.type === 'BottomSheetModal' && node.props.visible);
@@ -141,7 +141,7 @@ test('sober detail opens the next overlay only after its current sheet closes', 
 test('sober delete retains its selected record and cancellation leaves every overlay closed', () => {
   const ui = scenario();
   ui.render()
-    .find((node) => node.type === 'MonthCalendar')
+    .find((node) => node.type === 'SoberMonthCalendar')
     .props.onSelect('2026-10-04');
   const day = ui.render().find((node) => node.type === 'BottomSheetModal' && node.props.visible);
   let next: (() => void) | undefined;
