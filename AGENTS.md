@@ -1,3 +1,130 @@
+# 작업 원칙
+
+## 0. 반드시 Plan Mode부터 시작
+
+어떤 작업이든 바로 구현하지 마.
+항상 아래 순서로 진행해.
+
+1. 현재 구조 분석
+2. 요구사항 분석
+3. 작업 계획 수립
+4. 영향 범위 분석
+5. 위험 요소 식별
+6. 수정 예정 파일 목록 작성
+7. 사용자 승인 요청
+
+이 단계에서는 절대 코드를 수정하지 않는다.
+
+반드시 아래 형식으로 먼저 보고한다.
+
+### 작업 목표
+
+(요약)
+
+### 현재 구조 분석
+
+(분석 결과)
+
+### 작업 계획
+
+1.
+2.
+3.
+
+### 수정 예정 파일
+
+- file1
+- file2
+
+### 위험 요소
+
+- 위험 요소
+
+### 예상 결과
+
+(요약)
+
+사용자가 "진행", "승인", "시작", "구현해" 등의 명시적 승인을 하기 전까지는 어떠한 코드도 수정하지 않는다.
+
+---
+
+## 구현 단계
+
+사용자가 승인한 이후에만 구현을 시작한다.
+
+구현 시에는:
+
+- 최소 변경 원칙 적용
+- 기존 아키텍처 존중
+- 기존 네이밍 규칙 유지
+- 기존 코드 스타일 유지
+
+를 따른다.
+
+---
+
+## 구현 완료 후
+
+반드시 아래 내용을 보고한다.
+
+### 변경 내용
+
+### 수정 파일 목록
+
+### 새로 추가된 함수
+
+### 제거된 코드
+
+### 테스트 결과
+
+### 추가 개선 제안
+
+---
+
+## 코드 스타일 규칙
+- 세미콜론 생략하지 않는다.
+- 함수를 불필요하게 잘게 분리하지 않는다.
+- 한 번만 사용되는 단순 로직은 인라인 유지한다.
+- 의미 있는 추상화만 허용한다.
+- 파일을 위아래로 계속 이동해야 하는 과도한 helper 함수 생성 금지.
+- 기존 프로젝트 스타일을 우선한다.
+
+---
+
+## 애매한 경우
+
+확신이 90% 미만이면 구현하지 말고 질문한다.
+
+추측으로 구현하지 않는다.
+
+먼저 분석하고 질문한다.
+
+## md 파일 생성
+
+설명을 요구하는 md 파일 생성시 took/md 폴더에 md파일을 생성한다.
+
+## Git Commit Rules (Strict Enforcement)
+Whenever I ask you to commit changes, you must always adhere to the following rules based on my personal code style:
+
+1. Atomic Commits Over File-Based Commits:
+   - Do NOT commit a file as a whole chunk if it contains multiple distinct changes.
+   - Analyze the `git diff` at a granular hunk/line level.
+   - Separate and group modifications by their logical purpose or feature (e.g., separating a bug fix from a style change within the same file).
+
+2. Maintain Build Integrity:
+   - Each individual commit must represent a complete, working state.
+   - Never split changes in a way that breaks compiling, building, or tests for that specific commit.
+
+3. Standardized Commit Messages:
+   - Use the 'Conventional Commits' specification for every commit message (e.g., `feat:`, `fix:`, `refactor:`, `style:`, `docs:`).
+   - Write clear, concise imperative summary lines (e.g., `fix: resolve login button bypass bug`).
+
+4. Review Before Execution:
+   - Always present your proposed staging/commit plan to me first.
+   - Proceed with the sequential commits only after I review and explicitly approve your plan.
+
+---
+
 # Took Native 스타일 작성 원칙
 
 - 프로젝트의 화면 및 컴포넌트 스타일은 NativeWind `className`을 기본으로 작성한다.
