@@ -70,7 +70,8 @@
               "targetCellHeight": 2,
               "resizeMode": "horizontal|vertical",
               "widgetFeatures": "reconfigurable",
-              "updatePeriodMillis": 1800000
+              "updatePeriodMillis": 1800000,
+              "previewImage": "./assets/widgets/sober-preview.png"
             }
           ]
         }

@@ -30,6 +30,32 @@ module.exports = function withSamsungSoberWidget(config) {
       const resources = path.join(mod.modRequest.platformProjectRoot, 'app/src/main/res');
       await fs.mkdir(path.join(resources, 'values'), { recursive: true });
       await fs.mkdir(path.join(resources, 'xml'), { recursive: true });
+      await fs.mkdir(path.join(resources, 'layout'), { recursive: true });
+      await fs.writeFile(
+        path.join(resources, 'layout/took_sober_preview.xml'),
+        `<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+  <ImageView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:src="@drawable/sober_preview"
+    android:scaleType="fitCenter" />
+</FrameLayout>
+`,
+      );
+      const providerPath = path.join(resources, 'xml/widgetprovider_sober.xml');
+      const provider = await fs.readFile(providerPath, 'utf8');
+      await fs.writeFile(
+        providerPath,
+        provider
+          .replace(/\s+android:previewLayout="[^"]*"/g, '')
+          .replace(
+            '<appwidget-provider',
+            '<appwidget-provider\n    android:previewLayout="@layout/took_sober_preview"',
+          ),
+      );
       await fs.writeFile(
         path.join(resources, 'values/took_samsung_widget_attrs.xml'),
         `<?xml version="1.0" encoding="utf-8"?>
@@ -50,7 +76,7 @@ module.exports = function withSamsungSoberWidget(config) {
   app:targetHost="home"
   app:widgetSize="medium"
   app:featuredWidget="medium"
-  app:initialLayoutMedium="@layout/rn_widget"
+  app:initialLayoutMedium="@layout/took_sober_preview"
   app:configure="${mod.android.package}.WidgetConfigurationActivity"
   app:allowMultipleSizes="false" />
 `,
