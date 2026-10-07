@@ -7,6 +7,7 @@ import {
   getSoberStreaks,
   getLongestSoberStreak,
   getLongSoberStreaks,
+  getSoberSummary,
   getSoberProgress,
   formatSoberDuration,
   parseSoberDateTime,
@@ -89,7 +90,7 @@ test('out-of-order insertion, time edits and deletion rebuild all durations with
     [11 * day, 3 * day, 6 * day],
   );
 });
-test('long records exclude shorter intervals, include current >=3d, and sort duration DESC', () => {
+test('ranked records include every interval and sort duration DESC', () => {
   const streaks = getSoberStreaks(
     sober,
     [restart(1, 2 * day), restart(2, 5 * day), restart(3, 12 * day)],
@@ -98,9 +99,12 @@ test('long records exclude shorter intervals, include current >=3d, and sort dur
   const long = getLongSoberStreaks(streaks);
   assert.deepEqual(
     long.map((item) => item.duration),
-    [7 * day, 6 * day, 3 * day],
+    [7 * day, 6 * day, 3 * day, 2 * day],
   );
   assert.equal(long[1].current, true);
+  const short = getSoberSummary(sober, [restart(1, day / 2)], origin + day / 2);
+  assert.deepEqual(short.longRecords.map((item) => item.duration), [day / 2, 0]);
+  assert.equal(short.longRecords[1].current, true);
   assert.equal(getLongestSoberStreak(getSoberStreaks(sober, [], origin + 40 * day)), 40 * day);
 });
 test('multiple restarts at the same instant are retained and durations stay nonnegative', () => {

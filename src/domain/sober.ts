@@ -148,7 +148,7 @@ export function getLongestSoberStreak(streaks: SoberStreak[]) {
 }
 export function getLongSoberStreaks(streaks: SoberStreak[]) {
   return streaks
-    .filter((item) => item.duration >= 3 * SOBER_DAY_MS)
+    .slice()
     .sort((a, b) => b.duration - a.duration || Date.parse(a.start) - Date.parse(b.start));
 }
 export function getAutoSoberGoal(duration: number) {

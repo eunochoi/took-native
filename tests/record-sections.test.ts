@@ -107,7 +107,7 @@ function section(path: string, name: string, initialProps: Record<string, unknow
   };
 }
 
-const records: SoberStreak[] = Array.from({ length: 8 }, (_, index) => ({
+const records: SoberStreak[] = Array.from({ length: 25 }, (_, index) => ({
   start: `2024-01-${String(index + 1).padStart(2, '0')}T00:00:00Z`,
   end: `2024-02-${String(index + 1).padStart(2, '0')}T00:00:00Z`,
   current: false,
@@ -137,7 +137,7 @@ const expandButton = (nodes: any[]) =>
       node.type === 'Pressable' && typeof node.props.accessibilityState?.expanded === 'boolean',
   );
 
-test('long records mount only five rows when collapsed and preserve ordering through expand/collapse', () => {
+test('long records show five rows when collapsed and at most twenty when expanded', () => {
   const ui = section('src/screens/sober/SoberLongRecords.tsx', 'SoberLongRecords', { records });
   const collapsed = ui.render();
   assert.equal(rows(collapsed.nodes).length, 5);
@@ -146,16 +146,26 @@ test('long records mount only five rows when collapsed and preserve ordering thr
   const expanded = ui.render();
   assert.deepEqual(
     rows(expanded.nodes).map((node) => node.key),
-    records.map((item) => `${item.start}:${item.end}`),
+    records.slice(0, 20).map((item) => `${item.start}:${item.end}`),
   );
   assert.equal(expandButton(expanded.nodes).props.accessibilityState.expanded, true);
   expandButton(expanded.nodes).props.onPress();
   assert.equal(rows(ui.render().nodes).length, 5);
 });
 
-test('long records omit the whole section when empty and the toggle at five rows', () => {
+test('ranked records keep the heading and description without an empty message or toggle', () => {
   const ui = section('src/screens/sober/SoberLongRecords.tsx', 'SoberLongRecords', { records: [] });
-  assert.equal(ui.render().result, null);
+  const empty = ui.render();
+  for (const text of ['거리두기 기록', '오래 유지한 순으로 최대 20개의 기록을 보여드려요.']) {
+    assert(empty.nodes.some((node) => node.type === 'Text' && node.props.children === text));
+  }
+  assert.equal(rows(empty.nodes).length, 0);
+  assert(
+    !empty.nodes.some(
+      (node) => node.type === 'Text' && String(node.props.children).includes('없어요'),
+    ),
+  );
+  assert.equal(expandButton(empty.nodes), undefined);
   const exact = ui.render({ records: records.slice(0, 5) });
   assert.equal(rows(exact.nodes).length, 5);
   assert.equal(expandButton(exact.nodes), undefined);
