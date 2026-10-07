@@ -65,5 +65,10 @@
     "tailwindcss": "^3.4.19",
     "tsx": "^4.23.15",
     "typescript": "~6.0.3"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "react-native-android-widget@0.22.1": "patches/react-native-android-widget@0.22.1.patch"
+    }
   }
 }

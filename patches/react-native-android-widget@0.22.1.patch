@@ -1,0 +1,36 @@
+diff --git a/lib/commonjs/api/WidgetPreview.js b/lib/commonjs/api/WidgetPreview.js
+index 60759ab72ec43c6d9dfb892b8f2eeca896153776..65614a83ad627e99eb6718ad8812fb3edb61dd18 100644
+--- a/lib/commonjs/api/WidgetPreview.js
++++ b/lib/commonjs/api/WidgetPreview.js
+@@ -123,6 +123,7 @@ function Preview(_ref3) {
+     source: {
+       uri: `data:image/png;base64,${preview.base64Image}`
+     },
++    fadeDuration: 0,
+     style: {
+       height,
+       width
+diff --git a/lib/module/api/WidgetPreview.js b/lib/module/api/WidgetPreview.js
+index b0bd451b66b285fc3d138251507d64cbb00c96a7..303d41cde6356a8801b2f4461e385623d23f3083 100644
+--- a/lib/module/api/WidgetPreview.js
++++ b/lib/module/api/WidgetPreview.js
+@@ -114,6 +114,7 @@ function Preview(_ref3) {
+     source: {
+       uri: `data:image/png;base64,${preview.base64Image}`
+     },
++    fadeDuration: 0,
+     style: {
+       height,
+       width
+diff --git a/src/api/WidgetPreview.tsx b/src/api/WidgetPreview.tsx
+index 9eeca53b6681034ee8b2b32fed6b0cbb895d48ef..7254b6e2a3c652bd023c585dbfecf494d39475cb 100644
+--- a/src/api/WidgetPreview.tsx
++++ b/src/api/WidgetPreview.tsx
+@@ -167,6 +167,7 @@ function Preview({
+     <View style={{ height, width, position: 'relative' }}>
+       <Image
+         source={{ uri: `data:image/png;base64,${preview.base64Image}` }}
++        fadeDuration={0}
+         style={{ height, width }}
+       />
+       {preview.clickableAreas.map((area, index) => (
