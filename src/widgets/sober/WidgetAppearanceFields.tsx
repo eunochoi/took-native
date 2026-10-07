@@ -1,6 +1,6 @@
 import { Pressable, View } from 'react-native';
-import { Text } from '../../components/Text';
 import { PickerOption } from '../../components/PickerOption';
+import { Text } from '../../components/Text';
 import { ACCENT_KEYS, ACCENT_LABELS } from '../../theme/accents';
 import { ACCENT_PALETTES } from '../../theme/colors';
 import type { SoberWidgetSettings } from './model';
@@ -40,9 +40,6 @@ export function WidgetAppearanceFields({
             </Pressable>
           ))}
         </View>
-        <Text className="px-2 text-base text-theme-text-secondary">
-          {widgetSettings ? ACCENT_LABELS[widgetSettings.accent] : '색상을 선택해주세요.'}
-        </Text>
       </View>
       <View className="gap-3">
         <Text className="text-xl font-semibold">배경</Text>
