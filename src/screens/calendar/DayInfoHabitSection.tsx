@@ -42,7 +42,7 @@ export function DayInfoHabitSection({
           accessibilityState={{ checked: habit.completed, disabled }}
           disabled={disabled}
           onPress={() => onToggle(habit.id, !habit.completed)}
-          className="min-h-9 flex-1 flex-row items-center gap-2.5 rounded-lg"
+          className={`min-h-9 flex-1 flex-row items-center gap-2.5 rounded-lg ${!editable ? 'opacity-60' : 'opacity-100'}`}
         >
           <View
             className="h-5 w-5 shrink-0 items-center justify-center rounded-md border-[1.5px] bg-theme-surface"
@@ -78,18 +78,17 @@ export function DayInfoHabitSection({
         <Text accessibilityRole="header" className="text-base font-semibold">
           습관 목록
         </Text>
-        {editable ? (
-          <Text className="text-sm text-theme-accent">
-            {done}/{habits.length} 완료
-          </Text>
-        ) : (
-          <View className="flex-row items-center gap-1">
-            <AppIcon name="lock-outline" size={iconSizes.sm} color={colors.tertiary} />
-            <Text className="text-xs text-theme-text-tertiary">
-              {future ? '기록 전' : `${done}개 완료`}
+        {habits.length > 0 &&
+          (editable ? (
+            <Text className="text-sm text-theme-accent">
+              {done}/{habits.length} 완료
             </Text>
-          </View>
-        )}
+          ) : (
+            <View className="flex-row items-center gap-1">
+              <AppIcon name="lock-outline" size={iconSizes.sm} color={colors.tertiary} />
+              <Text className="text-xs text-theme-text-tertiary">{done}개 완료</Text>
+            </View>
+          ))}
       </View>
       <View className="px-2 py-3">
         {future ? (
@@ -100,12 +99,17 @@ export function DayInfoHabitSection({
           </View>
         ) : habits.length ? (
           <View className="min-h-56 gap-2">
+            {!editable && (
+              <Text className="mb-2 text-sm leading-relaxed text-theme-accent">
+                습관 체크는 오늘부터 3일 전까지 변경할 수 있어요.
+              </Text>
+            )}
             {(expanded ? habits : habits.slice(0, HABIT_PREVIEW_COUNT)).map(renderHabit)}
           </View>
         ) : (
           <View className="h-56 items-center justify-center">
             <Text className="text-center text-sm leading-relaxed text-theme-text-tertiary">
-              이 날짜의 습관 기록이 없어요.
+              이날은 등록된 습관 항목이 없어요.
             </Text>
           </View>
         )}

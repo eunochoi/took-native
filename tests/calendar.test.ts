@@ -57,13 +57,23 @@ test('editable DayInfo includes eligible habits, respects creation dates and sor
   );
 });
 
-test('locked dates show only independent completed habits and future dates show none', () => {
+test('locked dates preserve checked and unchecked eligible habits while future dates show none', () => {
   const habits = [habit(1, '2026-09-01'), habit(2, '2026-09-01'), habit(3, '2026-10-03')];
   const records = [completion(1, '2026-09-29'), completion(2, '2026-09-30')];
   assert.deepEqual(
     dayHabits(habits, records, '2026-09-29', '2026-10-03').map((row) => [row.id, row.completed]),
-    [[1, true]],
+    [
+      [1, true],
+      [2, false],
+    ],
   );
-  assert.deepEqual(dayHabits(habits, records, '2026-09-28', '2026-10-03'), []);
+  assert.deepEqual(
+    dayHabits(habits, records, '2026-09-28', '2026-10-03').map((row) => [row.id, row.completed]),
+    [
+      [1, false],
+      [2, false],
+    ],
+  );
+  assert.deepEqual(dayHabits(habits, records, '2026-08-31', '2026-10-03'), []);
   assert.deepEqual(dayHabits(habits, records, '2026-10-04', '2026-10-03'), []);
 });

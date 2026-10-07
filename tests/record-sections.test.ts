@@ -294,7 +294,7 @@ test('day habits preview five rows, expand in order and retain totals and comple
   assert.equal(expandButton(ui.render({ habits: habits.slice(0, 5) }).nodes), undefined);
 });
 
-test('day habits retain the recent-four-day lock and future empty state', () => {
+test('day habits retain the recent-four-day lock and empty state for dates without habits', () => {
   const ui = section('src/screens/calendar/DayInfoHabitSection.tsx', 'DayInfoHabitSection', {
     habits,
     date: '2024-03-06',
@@ -302,17 +302,69 @@ test('day habits retain the recent-four-day lock and future empty state', () => 
     pendingId: null,
     onToggle: () => undefined,
   });
+  const locked = ui.render();
+  const lockedCheckboxes = locked.nodes.filter(
+    (node) => node.props.accessibilityRole === 'checkbox',
+  );
+  assert.equal(lockedCheckboxes.length, 5);
   assert(
-    ui
-      .render()
-      .nodes.filter((node) => node.props.accessibilityRole === 'checkbox')
-      .every((node) => node.props.disabled),
+    lockedCheckboxes.every(
+      (node) => node.props.disabled && node.props.className.includes('opacity-60'),
+    ),
+  );
+  assert.deepEqual(
+    lockedCheckboxes.map((node) => node.props.accessibilityState.checked),
+    [true, true, true, true, false],
+  );
+  const lockMessage = '습관 체크는 오늘부터 3일 전까지 변경할 수 있어요.';
+  assert(locked.nodes.some((node) => node.props.children === lockMessage));
+  assert(
+    locked.nodes
+      .filter((node) => node.props.accessibilityLabel?.endsWith('습관 정보 보기'))
+      .every((node) => !node.props.disabled && !node.props.className.includes('opacity-60')),
   );
   const editable = ui.render({ date: '2024-03-07' });
   assert(
     editable.nodes
       .filter((node) => node.props.accessibilityRole === 'checkbox')
-      .every((node) => !node.props.disabled),
+      .every((node) => !node.props.disabled && node.props.className.includes('opacity-100')),
+  );
+  assert(!editable.nodes.some((node) => node.props.children === lockMessage));
+  const empty = ui.render({ date: '2024-03-06', habits: [] });
+  assert.equal(empty.nodes.filter((node) => node.props.accessibilityRole === 'checkbox').length, 0);
+  assert.equal(expandButton(empty.nodes), undefined);
+  assert(!empty.nodes.some((node) => node.props.children === lockMessage));
+  assert(empty.nodes.some((node) => node.props.children === '이날은 등록된 습관 항목이 없어요.'));
+  assert(
+    !empty.nodes.some((node) => node.type === 'AppIcon' && node.props.name === 'lock-outline'),
+  );
+  const recentEmpty = ui.render({ date: '2024-03-10', habits: [] });
+  assert(
+    recentEmpty.nodes.some((node) => node.props.children === '이날은 등록된 습관 항목이 없어요.'),
+  );
+  assert(
+    !recentEmpty.nodes.some(
+      (node) =>
+        node.type === 'Text' &&
+        Array.isArray(node.props.children) &&
+        node.props.children.includes(' 완료'),
+    ),
+  );
+  const unchecked = ui.render({ habits: habits.map((habit) => ({ ...habit, completed: false })) });
+  assert.equal(
+    unchecked.nodes.filter((node) => node.props.accessibilityRole === 'checkbox').length,
+    5,
+  );
+  assert(
+    unchecked.nodes.some(
+      (node) => JSON.stringify(node.props.children) === JSON.stringify([0, '/', 6, ' 완료']),
+    ),
+  );
+  assert(
+    !unchecked.nodes.some(
+      (node) =>
+        typeof node.props.children === 'string' && node.props.children.includes('습관이 없어요'),
+    ),
   );
   const future = ui.render({ date: '2024-03-11' });
   assert.equal(
