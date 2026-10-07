@@ -16,14 +16,12 @@ export function DayInfoHabitSection({
   today,
   pendingId,
   onToggle,
-  onNavigate,
 }: {
   habits: (Habit & { completed: boolean })[];
   date: string;
   today: string;
   pendingId: number | null;
   onToggle: (id: number, checked: boolean) => void;
-  onNavigate?: (action: () => void) => void;
 }) {
   const { colors, iconSizes } = useAppTheme();
   const router = useRouter();
@@ -65,9 +63,7 @@ export function DayInfoHabitSection({
           accessibilityRole="button"
           accessibilityLabel={`${habit.name} 습관 정보 보기`}
           onPress={() => {
-            const action = () => router.push(`/habit/${habit.id}`);
-            if (onNavigate) onNavigate(action);
-            else action();
+            router.push(`/habit/${habit.id}`);
           }}
           className="h-6 w-6 items-center justify-center"
         >

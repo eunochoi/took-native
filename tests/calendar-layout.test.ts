@@ -13,9 +13,9 @@ function nodes(node: any): any[] {
   if (Array.isArray(node)) return node.flatMap(nodes);
   return [node, ...nodes(node.props?.children)];
 }
-function load(path: string, states: unknown[]) {
+function load(path: string, states: unknown[], date = '2026-09-30') {
   let cursor = 0;
-  let focusCleanup: (() => void) | undefined;
+  const navigations: any[] = [];
   const exports: Record<string, Function> = {};
   runInNewContext(
     ts.transpileModule(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'), {
@@ -47,9 +47,8 @@ function load(path: string, states: unknown[]) {
           };
         if (name === 'expo-router')
           return {
-            useFocusEffect: (effect: () => () => void) => {
-              focusCleanup ??= effect();
-            },
+            useRouter: () => ({ push: (href: unknown) => navigations.push(href) }),
+            useLocalSearchParams: () => ({ date }),
           };
         if (name === 'expo-sqlite') return { useSQLiteContext: () => ({}) };
         if (name === '@tanstack/react-query') return { useQuery: () => ({ data: [] }) };
@@ -70,10 +69,12 @@ function load(path: string, states: unknown[]) {
         if (name.endsWith('/queries'))
           return {
             useToday: () => '2026-10-05',
+            useRecordMutation: () => ({ isPending: false }),
             diaryQueries: { month: () => ({}) },
             habitQueries: { completions: () => ({}) },
           };
         if (name.endsWith('domain/calendar')) return { calendarDays };
+        if (name.endsWith('domain/date')) return require('../src/domain/date');
         if (name.endsWith('useMonthSwipe'))
           return {
             useMonthSwipe: () => ({ panHandlers: {}, changeMonth: () => {} }),
@@ -89,49 +90,54 @@ function load(path: string, states: unknown[]) {
       cursor = 0;
       return exports[name](props);
     },
-    { blur: () => focusCleanup?.() },
+    { navigations },
   );
 }
 
-test('calendar opens a fixed-height date sheet immediately and closes before navigating', () => {
+test('calendar pushes the selected date sheet while preserving the selected month and cell', () => {
   const render = load('app/(tabs)/calendar.tsx', []);
-  let tree = render('default');
+  const tree = render('default');
   assert(!nodes(tree).some((node) => String(node.type).includes('ScrollView')));
   assert.equal(tree.props.children[1].props.style.paddingBottom, 104.5);
-  assert.equal(tree.props.children[2].props.visible, false);
   tree.props.children[1].props.children.props.onSelect('2026-09-30');
-  tree = render('default');
-  const sheet = tree.props.children[2];
-  assert.equal(sheet.props.visible, true);
-  assert.equal(sheet.props.fixedHeight, true);
-  assert.equal(sheet.props.maxHeight, 810);
-  assert.equal(sheet.props.contentKey, '2026-09-30');
-  assert.equal(sheet.props.title, '9월 30일 수요일');
-  let afterClose: (() => void) | undefined;
-  const info = sheet.props.children((action: () => void) => {
-    afterClose = action;
-  }).props.children;
-  assert.equal(info.props.date, '2026-09-30');
-  let navigated = false;
-  info.props.onNavigate(() => {
-    navigated = true;
-  });
-  assert.equal(navigated, false);
-  afterClose!();
-  assert.equal(navigated, true);
-  sheet.props.onClose();
-  assert.equal(render('default').props.children[2].props.visible, false);
+  assert.equal(render.navigations[0].pathname, '/calendar/[date]');
+  assert.equal(render.navigations[0].params.date, '2026-09-30');
+  const calendar = render('default').props.children[1].props.children;
+  assert.equal(calendar.props.selected, '2026-09-30');
+  assert.equal(calendar.props.month, '2026-09');
 });
 
-test('new selections reset the sheet content and leaving the page closes it', () => {
-  const render = load('app/(tabs)/calendar.tsx', []);
-  render('default').props.children[1].props.children.props.onSelect('2026-10-04');
-  render('default').props.children[1].props.children.props.onSelect('2026-10-03');
-  const sheet = render('default').props.children[2];
-  assert.equal(sheet.props.contentKey, '2026-10-03');
-  assert.equal(sheet.props.children(() => {}).props.children.key, '2026-10-03');
-  render.blur();
-  assert.equal(render('default').props.children[2].props.visible, false);
+test('date route keeps day info in the stack without closing it before opening another page', () => {
+  const render = load('app/calendar/[date].tsx', []);
+  const page = render('default');
+  assert.equal(page.type, 'BottomSheetPage');
+  assert.equal(page.props.backRoute, '/calendar');
+  assert.equal(page.props.contentKey, '2026-09-30');
+  assert.equal(page.props.title, '9월 30일 수요일');
+  const info = page.props.children.props.children;
+  assert.equal(info.props.date, '2026-09-30');
+  assert.equal(info.key, '2026-09-30');
+  assert.equal(info.props.onNavigate, undefined);
+});
+
+test('day info diary menu waits for only its own close before pushing the edit form', () => {
+  const render = load('src/screens/diary/DiaryMenu.tsx', []);
+  const props = { diary: { id: 42, date: '2026-10-04' }, today: '2026-10-05' };
+  const menu = nodes(render('DiaryMenu', props)).find((node) => node.type === 'RecordMenuButton');
+  menu.props.onPress();
+  const sheet = nodes(render('DiaryMenu', props)).find((node) => node.type === 'BottomSheetModal');
+  assert.equal(sheet.props.visible, true);
+  let afterClose: (() => void) | undefined;
+  const body = sheet.props.children((action: () => void) => {
+    afterClose = action;
+  });
+  const edit = nodes(body).find((node) => node.props.title === '일기 수정하기');
+  edit.props.onPress();
+  assert.equal(render.navigations.length, 0);
+  assert(afterClose);
+  sheet.props.onClose();
+  afterClose();
+  assert.equal(render.navigations[0], '/diary/42/edit');
 });
 
 for (const month of ['2021-02', '2026-10', '2026-03']) {

@@ -12,15 +12,7 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 import { DayInfoDiarySection } from './DayInfoDiarySection';
 import { DayInfoHabitSection } from './DayInfoHabitSection';
 
-export function DayInfo({
-  date,
-  today,
-  onNavigate,
-}: {
-  date: string;
-  today: string;
-  onNavigate?: (action: () => void) => void;
-}) {
+export function DayInfo({ date, today }: { date: string; today: string }) {
   const [alert, setAlert] = useState<AlertContent | null>(null);
   const { colors } = useAppTheme();
   const { settings } = useSettings();
@@ -72,14 +64,12 @@ export function DayInfo({
             key={`diary-${date}`}
             date={date}
             today={today}
-            onNavigate={onNavigate}
             diary={diary.data ?? null}
           />
           <DayInfoHabitSection
             key={`habit-${date}`}
             date={date}
             today={today}
-            onNavigate={onNavigate}
             habits={rows}
             pendingId={mutation.isPending ? mutation.variables.id : null}
             onToggle={(id, checked) => {

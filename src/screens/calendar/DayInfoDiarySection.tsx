@@ -14,12 +14,10 @@ export function DayInfoDiarySection({
   date,
   today,
   diary,
-  onNavigate,
 }: {
   date: string;
   today: string;
   diary: DiaryDetail | null;
-  onNavigate?: (action: () => void) => void;
 }) {
   const { colors, rem: appRem } = useAppTheme();
   const router = useRouter();
@@ -30,9 +28,7 @@ export function DayInfoDiarySection({
   const emotion = diary ? EMOTIONS[diary.emotion] : undefined;
   const open = () => {
     if (!diary) return;
-    const action = () => router.push(`/diary/${diary.id}`);
-    if (onNavigate) onNavigate(action);
-    else action();
+    router.push(`/diary/${diary.id}`);
   };
   return (
     <View
@@ -53,7 +49,7 @@ export function DayInfoDiarySection({
             )}
           </Text>
         </View>
-        {diary && <DiaryMenu diary={diary} today={today} onNavigate={onNavigate} />}
+        {diary && <DiaryMenu diary={diary} today={today} />}
       </View>
       <View className="flex-1 min-h-0 py-3 px-2">
         {diary ? (
@@ -103,9 +99,7 @@ export function DayInfoDiarySection({
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => {
-                    const action = () => router.push({ pathname: '/diary/new', params: { date } });
-                    if (onNavigate) onNavigate(action);
-                    else action();
+                    router.push({ pathname: '/diary/new', params: { date } });
                   }}
                   className="mt-6 flex-row min-h-9 items-center gap-1.5 rounded-full bg-theme-accent px-4"
                 >

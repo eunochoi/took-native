@@ -28,6 +28,7 @@ const queryClient = new QueryClient({
 });
 export const unstable_settings = { initialRouteName: '(tabs)' };
 const sheetRoutes = [
+  'calendar/[date]',
   'diary/new',
   'diary/[id]/index',
   'diary/[id]/edit',

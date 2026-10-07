@@ -17,12 +17,10 @@ export function DiaryMenu({
   diary,
   today,
   onDeleted,
-  onNavigate,
 }: {
   diary: Diary;
   today: string;
   onDeleted?: () => void;
-  onNavigate?: (action: () => void) => void;
 }) {
   const [alert, setAlert] = useState<AlertContent | null>(null);
   const db = useSQLiteContext();
@@ -59,9 +57,7 @@ export function DiaryMenu({
               disabled={diary.date > today}
               onPress={() =>
                 closePicker(() => {
-                  const action = () => router.push(`/diary/${diary.id}/edit`);
-                  if (onNavigate) onNavigate(action);
-                  else action();
+                  router.push(`/diary/${diary.id}/edit`);
                 })
               }
             />
