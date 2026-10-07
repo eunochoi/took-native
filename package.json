@@ -55,6 +55,7 @@
     "tailwind-merge": "2.6.0"
   },
   "devDependencies": {
+    "@babel/plugin-transform-react-jsx": "^7.29.7",
     "@types/node": "^22.20.5",
     "@types/react": "~19.2.0",
     "@types/sql.js": "^1.4.11",
