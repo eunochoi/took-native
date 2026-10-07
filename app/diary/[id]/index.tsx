@@ -34,7 +34,7 @@ export default function DiaryDetail() {
       contentKey={id}
       menuAction={
         diary ? (
-          <DiaryMenu diary={diary} today={today} onDeleted={() => router.replace('/diary')} />
+          <DiaryMenu diary={diary} today={today} onDeleted={() => router.dismissTo('/diary')} />
         ) : undefined
       }
     >

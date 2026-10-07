@@ -11,7 +11,6 @@ import { DIARY_TEXT_MAX_LENGTH, DIARY_IMAGE_MAX_COUNT } from '../domain/limits';
 import { useAppTheme } from '../theme/AppThemeProvider';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, View, TextInput } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useQuery } from '@tanstack/react-query';
 import { diaryQueries, useRecordMutation, useToday } from '../queries';
@@ -39,7 +38,6 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
   const [alert, setAlert] = useState<AlertContent | null>(null);
   const { colors, rem: appRem, iconSizes } = useAppTheme();
   const db = useSQLiteContext();
-  const router = useRouter();
   const today = useToday();
   const query = useQuery({ ...diaryQueries.byId(db, id ?? 0), enabled: id !== undefined });
   const [date, setDate] = useState(
@@ -50,7 +48,7 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
   const [images, setImages] = useState<DraftImage[]>([]);
   const [picker, setPicker] = useState<'emotion' | null>(null);
   const [picking, setPicking] = useState(false);
-  const [savedId, setSavedId] = useState<number | null>(null);
+  const [saved, setSaved] = useState(false);
   const drafts = useRef<DraftImage[]>([]);
   const mounted = useRef(true);
   const [draftEmotion, setDraftEmotion] = useState<number | null>(null);
@@ -83,7 +81,7 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
       return saveDiaryImages(db, { id, date, emotion, text }, images);
     },
     'diary',
-    (diaryId) => setSavedId(diaryId),
+    () => setSaved(true),
     (error) => setAlert({ title: '처리하지 못했어요', message: error.message }),
   );
   const busy = mutation.isPending || picking;
@@ -95,10 +93,6 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
         : '사진을 준비하고 있습니다.',
     }),
   );
-  useEffect(() => {
-    // Navigate after the mutation releases the save/back guard.
-    if (savedId !== null && !mutation.isPending) router.replace(`/diary/${savedId}`);
-  }, [savedId, mutation.isPending, router]);
   const onReorder = useCallback((from: number, to: number) => {
     setImages((previous) => {
       const next = [...previous];
@@ -110,13 +104,18 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
   const title = format(parseISO(date), 'yyyy. M. d. EEEE', { locale: ko });
   if (id !== undefined && (query.isPending || query.error || !query.data))
     return (
-      <BottomSheetPage backRoute="/diary" title="일기 수정">
+      <BottomSheetPage
+        closeRequested={saved && !mutation.isPending}
+        backRoute="/diary"
+        title="일기 수정"
+      >
         <QueryState query={query} />
         {!query.isPending && !query.error && <Text className="p-6">일기를 찾을 수 없습니다.</Text>}
       </BottomSheetPage>
     );
   return (
     <RecordFormLayout
+      closeRequested={saved && !mutation.isPending}
       scrollEnabled={!dragging}
       title={title}
       backRoute="/diary"

@@ -4,7 +4,6 @@ import { RecordFormLayout } from '../components/RecordFormLayout';
 import { usePreventRemove } from 'expo-router/react-navigation';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
-import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Switch, TextInput, View } from 'react-native';
@@ -28,7 +27,6 @@ import { SoberIconPicker } from './sober/SoberIconPicker';
 
 export function SoberForm({ id }: { id?: number }) {
   const db = useSQLiteContext();
-  const router = useRouter();
   const { colors, rem: appRem } = useAppTheme();
   const query = useQuery({ ...soberQueries.byId(db, id ?? 0), enabled: id !== undefined });
   const [draft, setDraft] = useState<SoberInput>(() => ({
@@ -45,7 +43,7 @@ export function SoberForm({ id }: { id?: number }) {
   const [loaded, setLoaded] = useState(false);
   const [picker, setPicker] = useState<'goal' | 'date' | 'icon' | 'color' | null>(null);
   const [alert, setAlert] = useState<AlertContent | null>(null);
-  const [savedId, setSavedId] = useState<number | null>(null);
+  const [saved, setSaved] = useState(false);
   const saving = useRef(false);
   useEffect(() => {
     if (query.data && !loaded) {
@@ -56,19 +54,20 @@ export function SoberForm({ id }: { id?: number }) {
   const mutation = useRecordMutation(
     () => saveSober(db, draft),
     'sober',
-    setSavedId,
+    () => setSaved(true),
     (error) => setAlert({ title: '저장하지 못했어요', message: error.message }),
   );
   usePreventRemove(mutation.isPending, () =>
     setAlert({ title: '잠시만 기다려주세요', message: '절제 항목을 저장하고 있어요.' }),
   );
-  useEffect(() => {
-    if (savedId !== null && !mutation.isPending) router.replace(`/sober/${savedId}`);
-  }, [savedId, mutation.isPending, router]);
   const title = id ? '절제 항목 수정' : '절제 항목 추가';
   if (id !== undefined && (query.isPending || query.error || !query.data || !loaded))
     return (
-      <BottomSheetPage backRoute="/sober" title={title}>
+      <BottomSheetPage
+        closeRequested={saved && !mutation.isPending}
+        backRoute="/sober"
+        title={title}
+      >
         <QueryState query={query} />
         {!query.isPending && !query.error && (
           <Text className="p-6">절제 항목을 찾을 수 없어요.</Text>
@@ -77,6 +76,7 @@ export function SoberForm({ id }: { id?: number }) {
     );
   return (
     <RecordFormLayout
+      closeRequested={saved && !mutation.isPending}
       title={title}
       backRoute="/sober"
       onBeforeClose={() => {

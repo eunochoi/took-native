@@ -125,7 +125,7 @@ export default function SoberDetail() {
           <SoberMenu
             sober={sober}
             disabled={mutation.isPending}
-            onDeleted={() => router.replace('/sober')}
+            onDeleted={() => router.dismissTo('/sober')}
           />
         }
       >

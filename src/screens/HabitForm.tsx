@@ -2,7 +2,6 @@ import { SECTION_TITLE_CLASS_NAME, FORM_TEXT_INPUT_CLASS_NAME } from '../theme/c
 import { FormSubmitButton } from '../components/FormSubmitButton';
 import { CharacterCount } from '../components/CharacterCount';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
 import { usePreventRemove } from 'expo-router/react-navigation';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
@@ -34,14 +33,13 @@ export function HabitForm({ id }: { id?: number }) {
   const [alert, setAlert] = useState<AlertContent | null>(null);
   const { colors, rem: appRem } = useAppTheme();
   const db = useSQLiteContext();
-  const router = useRouter();
   const query = useQuery({ ...habitQueries.byId(db, id ?? 0), enabled: id !== undefined });
   const [name, setName] = useState('');
   const [priority, setPriority] = useState(0);
   const [icon, setIcon] = useState<HabitIconKey>('goal');
   const [iconColor, setIconColor] = useState<HabitIconColorKey>(DEFAULT_HABIT_ICON_COLOR);
   const [picker, setPicker] = useState<'priority' | 'icon' | 'color' | null>(null);
-  const [savedId, setSavedId] = useState<number | null>(null);
+  const [saved, setSaved] = useState(false);
   const loaded = useRef(false);
   useEffect(() => {
     if (query.data && !loaded.current) {
@@ -55,7 +53,7 @@ export function HabitForm({ id }: { id?: number }) {
   const mutation = useRecordMutation(
     () => saveHabit(db, { id, name, priority, icon_key: icon, icon_color: iconColor }),
     'habit',
-    setSavedId,
+    () => setSaved(true),
     (error) => setAlert({ title: '처리하지 못했어요', message: error.message }),
   );
   usePreventRemove(mutation.isPending, () =>
@@ -64,21 +62,23 @@ export function HabitForm({ id }: { id?: number }) {
       message: '저장이 진행 중입니다. 완료될 때까지 기다려주세요.',
     }),
   );
-  useEffect(() => {
-    if (savedId !== null && !mutation.isPending) router.replace(`/habit/${savedId}`);
-  }, [savedId, mutation.isPending, router]);
   const title = id ? '습관 항목 수정' : '습관 항목 추가';
   const iconLabel = HABIT_ICON_OPTIONS.find((option) => option.key === icon)?.label ?? '아이콘';
   const colorLabel = iconColor === 'theme' ? '기본 테마색' : HABIT_ICON_COLORS[iconColor].label;
   if (id !== undefined && (query.isPending || query.error || !query.data || !loaded.current))
     return (
-      <BottomSheetPage backRoute="/habit" title={title}>
+      <BottomSheetPage
+        closeRequested={saved && !mutation.isPending}
+        backRoute="/habit"
+        title={title}
+      >
         <QueryState query={query} />
         {!query.isPending && !query.error && <Text className="p-6">습관을 찾을 수 없습니다.</Text>}
       </BottomSheetPage>
     );
   return (
     <RecordFormLayout
+      closeRequested={saved && !mutation.isPending}
       title={title}
       backRoute="/habit"
       onBeforeClose={() => {

@@ -7,6 +7,7 @@ export function RecordFormLayout({
   title,
   backRoute,
   onBeforeClose,
+  closeRequested = false,
   footer,
   overlays,
   children,
@@ -15,6 +16,7 @@ export function RecordFormLayout({
   title: string;
   backRoute: Href;
   onBeforeClose?: () => boolean;
+  closeRequested?: boolean;
   footer: ReactNode;
   overlays?: ReactNode;
   children: ReactNode;
@@ -26,6 +28,7 @@ export function RecordFormLayout({
         title={title}
         backRoute={backRoute}
         onBeforeClose={onBeforeClose}
+        closeRequested={closeRequested}
         footer={footer}
         scrollEnabled={scrollEnabled}
       >

@@ -51,6 +51,7 @@ test('form sheets retain footer, overlays and the dismissal guard while locking 
     title: '일기 작성',
     backRoute: '/diary',
     onBeforeClose: guard,
+    closeRequested: true,
     footer: 'save',
     overlays: 'picker',
     children: 'fields',
@@ -61,6 +62,7 @@ test('form sheets retain footer, overlays and the dismissal guard while locking 
   assert.equal(sheet.props.title, '일기 작성');
   assert.equal(sheet.props.backRoute, '/diary');
   assert.equal(sheet.props.onBeforeClose, guard);
+  assert.equal(sheet.props.closeRequested, true);
   assert.equal(sheet.props.footer, 'save');
   assert.equal(sheet.props.scrollEnabled, false);
   assert.equal(sheet.props.children.props.children, 'fields');

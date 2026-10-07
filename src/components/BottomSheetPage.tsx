@@ -9,17 +9,23 @@ type Props = Omit<
   'visible' | 'presentation' | 'dismissOnBack' | 'onClose' | 'maxHeight' | 'fixedHeight'
 > & {
   backRoute: Href;
+  closeRequested?: boolean;
 };
 
 // Navigation owns the page lifetime; the shared sheet owns its dismissal animation.
-export function BottomSheetPage({ backRoute, scrollFade = true, ...props }: Props) {
+export function BottomSheetPage({
+  backRoute,
+  closeRequested = false,
+  scrollFade = true,
+  ...props
+}: Props) {
   const router = useRouter();
   const focused = useIsFocused();
   const { height } = useWindowDimensions();
   return (
     <BottomSheetModal
       {...props}
-      visible
+      visible={!closeRequested}
       presentation="screen"
       dismissOnBack={focused}
       maxHeight={height * 0.9}

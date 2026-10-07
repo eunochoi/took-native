@@ -40,7 +40,9 @@ export default function HabitDetail() {
         backRoute="/habit"
         title={habit?.name ?? '습관 정보'}
         menuAction={
-          habit ? <HabitMenu habit={habit} onDeleted={() => router.replace('/habit')} /> : undefined
+          habit ? (
+            <HabitMenu habit={habit} onDeleted={() => router.dismissTo('/habit')} />
+          ) : undefined
         }
       >
         <View className="gap-12 pt-6">

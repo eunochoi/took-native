@@ -799,3 +799,14 @@ test('form drag lock disables the sheet pan and the footer stays outside the scr
   assert.equal(footer.props.style.paddingBottom, 30);
   assert.equal(h.scroll().props.contentContainerStyle.paddingBottom, 30);
 });
+
+test('saved route sheet remains mounted until the controlled closing animation completes', () => {
+  const h = harness(true, false, 720, { presentation: 'screen' });
+  h.completeOpen();
+  h.setVisible(false);
+  assert.equal(h.closes, 0);
+  assert.ok(h.sheet());
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
+  assert.equal(h.tree, null);
+});
