@@ -95,11 +95,11 @@ export default function SoberDetail() {
   const sober = query.data;
   if (!sober || restarts.isPending || query.error || restarts.error)
     return (
-      <BottomSheetPage title="절제 항목 정보" backRoute="/sober">
+      <BottomSheetPage title="거리두기 정보" backRoute="/sober">
         <QueryState query={query} />
         <QueryState query={restarts} />
         {!query.isPending && !query.error && !sober && (
-          <Text className="p-6">절제 항목을 찾을 수 없어요.</Text>
+          <Text className="p-6">거리두기 항목을 찾을 수 없어요.</Text>
         )}
       </BottomSheetPage>
     );
@@ -154,7 +154,7 @@ export default function SoberDetail() {
                   },
                   {
                     icon: 'play-circle-outline',
-                    label: '최초 시작',
+                    label: '최초 시작일',
                     value: format(parseISO(sober.initial_started_at), 'yy년 M월 d일'),
                   },
                 ] as const
@@ -177,7 +177,7 @@ export default function SoberDetail() {
               labelWeight="normal"
               className="w-full"
               disabled={mutation.isPending}
-              label={`${restarts.data?.length ? restarts.data?.length + 1 : 1}번째 다시 시작 진행`}
+              label="다시 시작하기"
               onPress={() => newRecord(today)}
             />
           </View>
@@ -191,7 +191,7 @@ export default function SoberDetail() {
           )}
           <View className="gap-4">
             <MonthCalendar
-              headerTitle="절제 기록"
+              headerTitle="거리두기 기록"
               month={month}
               selected={selected}
               today={today}
@@ -246,15 +246,15 @@ export default function SoberDetail() {
       {picker && (
         <SoberDateTimePicker
           mode="restart"
-          title={picker.id ? '다시 시작 기록 수정' : '다시 시작 기록할까요?'}
+          title={picker.id ? '다시 시작 기록 수정' : '다시 거리를 둘까요?'}
           description={
             picker.id
               ? undefined
               : format(parseISO(picker.value), 'yyyy-MM-dd') === today
-                ? '지금의 절제를 마무리하고 새로운 기록을 시작해요.'
-                : '다시 시작한 시각과 당시의 마음을 기록해요.'
+                ? '선택한 시각부터 거리를 둔 시간을 새로 세어요.'
+                : '다시 거리를 두기 시작한 시각과 그때의 마음을 남겨요.'
           }
-          confirmLabel={picker.id ? '수정한 기록 저장하기' : '다시 시작 기록'}
+          confirmLabel={picker.id ? '수정한 기록 저장하기' : '다시 시작 기록하기'}
           value={picker.value}
           memo={picker.memo}
           minTime={sober.initial_started_at}

@@ -20,7 +20,7 @@ export default function Home() {
             쌓인 기록을 함께 살펴볼까요?
           </Text>
           <Text className="text-base text-theme-text-secondary">
-            일기, 습관, 절제의 변화를 한곳에서 파악헤요.
+            일기, 습관, 거리두기의 변화를 한곳에서 살펴봐요.
           </Text>
           <Pressable
             accessibilityRole="button"

@@ -85,7 +85,7 @@ export default function SoberList() {
                 sort={settings.soberSort}
                 priorityFirst={settings.soberPriorityFirst}
                 ascendingLabel="오래된순"
-                accessibilityLabel="절제 항목 정렬"
+                accessibilityLabel="거리두기 항목 정렬"
                 onPress={() => setSortOpen(true)}
               />
               <ToolbarAddButton disabled={disabledAdd} onPress={() => router.push('/sober/new')} />
@@ -122,7 +122,7 @@ export default function SoberList() {
                   {failed ? (
                     <>
                       <Text className="text-theme-text-secondary">
-                        절제 목록을 불러오지 못했어요.
+                        거리두기 목록을 불러오지 못했어요.
                       </Text>
                       <Pressable
                         accessibilityRole="button"
@@ -141,8 +141,8 @@ export default function SoberList() {
               ) : (
                 <EmptyState
                   icon={<AppIcon name="sober" size={appRem * 1.875} color={colors.accent} />}
-                  title="아직 만든 절제가 없어요."
-                  description="줄이고 싶은 행동 하나부터 시작해요."
+                  title="아직 시작한 거리두기가 없어요."
+                  description="잠시 거리를 두고 싶은 것을 추가해보세요."
                 />
               )}
             </View>
@@ -153,7 +153,7 @@ export default function SoberList() {
             {ready && sorted.length > 0 && failed ? (
               <View className="py-4 items-center gap-2">
                 <Text accessibilityRole="alert" className="text-sm text-theme-text-secondary">
-                  절제 목록을 불러오지 못했어요.
+                  거리두기 목록을 불러오지 못했어요.
                 </Text>
                 <Pressable
                   accessibilityRole="button"
@@ -175,7 +175,7 @@ export default function SoberList() {
 
       {sortOpen && (
         <RecordSortPicker
-          title="절제 정렬"
+          title="거리두기 정렬"
           sort={settings.soberSort}
           priorityFirst={settings.soberPriorityFirst}
           ascendingLabel="오래된순"

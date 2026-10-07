@@ -139,14 +139,14 @@ export function TodayRecordSection({ today }: { today: string }) {
             </Text>
           ) : null}
           {soberPending ? (
-            <View accessibilityLabel="절제 확인 중" className={recordLoadingClass} />
+            <View accessibilityLabel="거리두기 확인 중" className={recordLoadingClass} />
           ) : (
             <Text className={recordStatusClass} style={recordTextStyle}>
               {soberError
                 ? '기록을 불러오지 못했어요.'
                 : soberDays !== null
-                  ? `지금 ${soberDays}일째 이어가고 있어요.`
-                  : '새로운 절제를 시작해 보세요.'}
+                  ? `거리를 두고 지낸 지 ${soberDays}일째예요.`
+                  : '잠시 거리두기를 시작해보세요.'}
             </Text>
           )}
         </View>

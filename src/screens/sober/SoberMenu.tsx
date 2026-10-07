@@ -52,7 +52,7 @@ export function SoberMenu({
             <PickerAction
               icon="delete-outline"
               title="삭제하기"
-              description="항목과 모든 다시 시작 기록을 삭제해요."
+              description="거리두기 항목과 모든 다시 시작 기록을 삭제해요."
               danger
               onPress={() => close(() => setConfirm(true))}
             />
@@ -62,8 +62,8 @@ export function SoberMenu({
       <ConfirmModal
         visible={confirm}
         danger
-        title="정말 삭제하시겠어요?"
-        message={`'${sober.name}'와 모든 다시 시작 기록이 삭제됩니다. 삭제한 뒤에는 되돌릴 수 없어요.`}
+        title="이 거리두기를 삭제할까요?"
+        message={`‘${sober.name}’의 거리두기와 모든 다시 시작 기록이 삭제돼요. 삭제한 뒤에는 되돌릴 수 없어요.`}
         confirmLabel="삭제하기"
         onCancel={() => setConfirm(false)}
         onConfirm={() => {

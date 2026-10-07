@@ -43,7 +43,7 @@ export function SoberWidget({
   const label =
     sober && summary
       ? `${sober.name}, ${formatSoberDuration(summary.duration)}, 목표 ${formatSoberGoal(summary.goalDays)}, ${summary.progress.toFixed(1)}%`
-      : '절제 타이머를 선택해주세요';
+      : '표시할 거리두기를 선택해주세요.';
   const textStyle = { color: text, fontFamily: 'TmoneyRoundWindRegular', fontSize: 12 * scale };
   const boldStyle = {
     ...textStyle,
@@ -107,7 +107,7 @@ export function SoberWidget({
           )}
         </FlexWidget>
         <TextWidget
-          text={sober?.name ?? '절제 타이머'}
+          text={sober ? sober.name : '거리두기'}
           maxLines={1}
           truncate="END"
           style={{ color: text, textAlign: 'center', fontSize: 16 * scale, width: trackWidth }}
@@ -154,8 +154,8 @@ export function SoberWidget({
         <TextWidget
           text={
             settings
-              ? '항목이 없어요. 위젯 설정에서 다시 선택해주세요.'
-              : '위젯 설정에서 항목을 선택해주세요.'
+              ? '선택한 거리두기 항목이 없어요. 위젯 설정에서 다시 선택해주세요.'
+              : '위젯 설정에서 거리두기를 선택해주세요.'
           }
           style={{ ...textStyle, textAlign: 'center' }}
         />

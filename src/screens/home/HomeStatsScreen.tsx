@@ -48,7 +48,7 @@ export function HomeStatsScreen({
       content: habit.data ? <HabitAnalysis stats={habit.data} year={year} /> : null,
     },
     {
-      label: '절제',
+      label: '거리두기',
       queries: [sobers, restarts],
       content:
         sobers.data && restarts.data ? (
@@ -115,7 +115,7 @@ export function HomeStatsScreen({
                 <AppIcon name="info-outline" size={appRem} color={colors.accent} />
               </View>
               <Text className="flex-1 text-sm leading-5 text-theme-accent">
-                일기의 연속·역대 최고 기록과 절제의 현재·역대 최고 기록은 선택 연도와 관계없이 전체
+                일기의 연속·역대 최고 기록과 거리두기의 현재·역대 최고 기록은 선택 연도와 관계없이 전체
                 기간 기준이에요.
               </Text>
             </View>

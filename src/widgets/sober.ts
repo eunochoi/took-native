@@ -22,6 +22,6 @@ export function refreshSoberWidgets() {
       );
     })
     .catch((error: unknown) => {
-      if (__DEV__) console.warn('절제 타이머 위젯을 갱신하지 못했어요.', error);
+      if (__DEV__) console.warn('거리두기 타이머 위젯을 갱신하지 못했어요.', error);
     });
 }

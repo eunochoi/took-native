@@ -267,7 +267,7 @@ export default function SettingsScreen() {
         danger
         visible={pendingRestore !== null}
         title="백업으로 복원할까요?"
-        message="현재 일기·습관·절제 기록·사진·앱 설정이 백업 내용으로 덮어써져요. 현재 데이터를 유지하려면 복원 전에 먼저 백업해주세요."
+        message="현재 일기·습관·거리두기 기록·사진·앱 설정이 백업 내용으로 덮어써져요. 현재 데이터를 유지하려면 복원 전에 먼저 백업해주세요."
         confirmLabel="복원"
         onCancel={cancelRestore}
         onConfirm={() => void restoreSelected()}

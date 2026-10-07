@@ -63,8 +63,8 @@
           "widgets": [
             {
               "name": "Sober",
-              "label": "took 절제 타이머",
-              "description": "선택한 절제 타이머의 경과 시간과 목표를 확인해요.",
+              "label": "took 거리두기 타이머",
+              "description": "선택한 거리두기의 경과 시간과 목표를 확인해요.",
               "minWidth": "110dp",
               "minHeight": "110dp",
               "targetCellWidth": 2,

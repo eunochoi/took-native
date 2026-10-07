@@ -38,7 +38,7 @@ export function SoberBox({
         <SoberIcon name={sober.icon_key} colorKey={sober.icon_color} />
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${sober.name} 절제 항목 정보`}
+          accessibilityLabel={`${sober.name} 거리두기 정보`}
           onPress={() => router.push(`/sober/${sober.id}`)}
           className="min-h-11 min-w-0 flex-1 flex-row items-center gap-2"
         >
@@ -74,7 +74,7 @@ export function SoberBox({
         </View>
         <Text className="text-sm text-theme-text-secondary">
           목표 {formatSoberGoal(goalDays)} · {format(parseISO(start), 'yyyy. M. d')}
-          부터
+          시작
         </Text>
       </Pressable>
     </View>

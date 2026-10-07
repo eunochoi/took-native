@@ -36,12 +36,12 @@ export function saveSober(db: SQLiteDatabase, input: SoberInput, now = Date.now(
   return withWriteLock(async () => {
     validateSober(input, now);
     if (input.id !== undefined && (!Number.isSafeInteger(input.id) || input.id <= 0))
-      throw new Error('절제 항목을 확인해주세요.');
+      throw new Error('거리두기 항목을 확인해주세요.');
     let id = input.id ?? 0;
     await db.withTransactionAsync(async () => {
       const name = input.name.trim();
       if (await db.getFirstAsync('SELECT id FROM sobers WHERE name = ? AND id != ?', name, id))
-        throw new Error('같은 이름의 절제가 있어요.');
+        throw new Error('같은 이름의 거리두기 항목이 있어요.');
       const timestamp = new Date(now).toISOString();
       const values = [
         name,
@@ -67,13 +67,13 @@ export function saveSober(db: SQLiteDatabase, input: SoberInput, now = Date.now(
           ...values,
           id,
         );
-        if (!result.changes) throw new Error('절제 항목을 찾을 수 없어요.');
+        if (!result.changes) throw new Error('거리두기 항목을 찾을 수 없어요.');
       } else {
         const count = (await db.getFirstAsync<{ count: number }>(
           'SELECT count(*) AS count FROM sobers',
         ))!.count;
         if (count >= MAX_SOBER_COUNT)
-          throw new Error(`절제는 최대 ${MAX_SOBER_COUNT}개까지 만들 수 있어요.`);
+          throw new Error(`거리두기는 최대 ${MAX_SOBER_COUNT}개까지 추가할 수 있어요.`);
         id = (
           await db.runAsync(
             'INSERT INTO sobers (name, description, icon_key, icon_color, is_priority, initial_started_at, goal_mode, goal_days, updated_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -95,7 +95,7 @@ export function saveSoberRestart(db: SQLiteDatabase, input: SoberRestartInput, n
     let id = input.id ?? 0;
     await db.withTransactionAsync(async () => {
       const sober = await getSoberById(db, input.sober_id);
-      if (!sober) throw new Error('절제 항목을 찾을 수 없어요.');
+      if (!sober) throw new Error('거리두기 항목을 찾을 수 없어요.');
       validateSoberRestart(input, sober.initial_started_at, now);
       const timestamp = new Date(now).toISOString();
       if (id) {

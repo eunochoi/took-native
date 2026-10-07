@@ -124,7 +124,7 @@ function ConfigurationContent({
   return (
     <SafeAreaView className="flex-1 bg-theme-background">
       <ScrollView contentContainerClassName="px-[5%] py-6 gap-8">
-        <Text className="text-2xl font-bold">절제 타이머</Text>
+        <Text className="text-2xl font-bold">거리두기 설정</Text>
         <View className="items-center justify-center rounded-2xl bg-theme-surface-muted p-6">
           <WidgetPreview width={180} height={180} renderWidget={preview} showBorder={false} />
         </View>
@@ -133,9 +133,9 @@ function ConfigurationContent({
         ) : (
           <>
             <View className="gap-3">
-              <Text className="text-xl font-semibold">표시할 타이머</Text>
+              <Text className="text-xl font-semibold">표시할 거리두기</Text>
               <Button
-                label={sober?.name ?? '절제 타이머가 없어요'}
+                label={sober?.name ?? '아직 시작한 거리두기가 없어요'}
                 subtle
                 outline
                 disabled={!records.length || saving}
@@ -143,7 +143,7 @@ function ConfigurationContent({
               />
               {!records.length && (
                 <Text className="px-2 text-base text-theme-text-secondary">
-                  앱에서 절제 타이머를 먼저 만들어주세요.
+                  앱에서 거리두기를 먼저 추가해주세요.
                 </Text>
               )}
             </View>
@@ -175,7 +175,7 @@ function ConfigurationContent({
           onPress={() => void save()}
         />
       </View>
-      <BottomSheetModal visible={picker} title="표시할 절제 타이머" onClose={() => setPicker(false)}>
+      <BottomSheetModal visible={picker} title="표시할 거리두기" onClose={() => setPicker(false)}>
         {(close) => (
           <View className="gap-3">
             {records.map((item) => (

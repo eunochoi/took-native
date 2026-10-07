@@ -63,13 +63,13 @@ export function SoberDayInfo({
       ) : (
         <View className="items-center gap-3 py-8">
           <AppIcon name="description" size={iconSizes.lg} color={colors.accent} />
-          <Text className="text-center text-base">이 날의 다시 시작 기록이 없어요.</Text>
+          <Text className="text-center text-base">이날은 다시 시작한 기록이 없어요.</Text>
           <Text className="text-center text-sm text-theme-text-tertiary">
             {canAdd
               ? date === format(new Date(), 'yyyy-MM-dd')
-                ? '오늘도 절제를 이어가고 있어요.'
-                : '절제를 이어가고 있던 날이에요.'
-              : '절제를 시작하기 전이에요.'}
+                ? '오늘도 잠시 거리를 두고 있어요.'
+                : '거리를 두고 지낸 날이에요.'
+              : '거리두기를 시작하기 전이에요.'}
           </Text>
         </View>
       )}

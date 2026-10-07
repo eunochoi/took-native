@@ -58,9 +58,9 @@ export function SoberForm({ id }: { id?: number }) {
     (error) => setAlert({ title: '저장하지 못했어요', message: error.message }),
   );
   usePreventRemove(mutation.isPending, () =>
-    setAlert({ title: '잠시만 기다려주세요', message: '절제 항목을 저장하고 있어요.' }),
+    setAlert({ title: '잠시만 기다려주세요', message: '거리두기 항목을 저장하고 있어요.' }),
   );
-  const title = id ? '절제 항목 수정' : '절제 항목 추가';
+  const title = id ? '거리두기 수정' : '거리두기 추가';
   if (id !== undefined && (query.isPending || query.error || !query.data || !loaded))
     return (
       <BottomSheetPage
@@ -70,7 +70,7 @@ export function SoberForm({ id }: { id?: number }) {
       >
         <QueryState query={query} />
         {!query.isPending && !query.error && (
-          <Text className="p-6">절제 항목을 찾을 수 없어요.</Text>
+          <Text className="p-6">거리두기 항목을 찾을 수 없어요.</Text>
         )}
       </BottomSheetPage>
     );
@@ -95,8 +95,8 @@ export function SoberForm({ id }: { id?: number }) {
               mutation.isPending
                 ? '저장 중...'
                 : id
-                  ? '수정한 절제 항목 저장하기'
-                  : '절제 항목 저장하기'
+                  ? '변경사항 저장하기'
+                  : '저장하기'
             }
             disabled={!draft.name.trim() || mutation.isPending}
             onPress={() => {
@@ -125,7 +125,7 @@ export function SoberForm({ id }: { id?: number }) {
           {picker === 'date' && (
             <SoberDateTimePicker
               mode="start"
-              title="언제부터 절제를 시작했나요?"
+              title="언제부터 거리를 두기 시작했나요?"
               value={draft.initial_started_at}
               onClose={() => setPicker(null)}
               onApply={(initial_started_at) => setDraft({ ...draft, initial_started_at })}
@@ -168,16 +168,16 @@ export function SoberForm({ id }: { id?: number }) {
       </View>
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-          이름
+          거리를 두고 싶은 것
         </Text>
         <View className="gap-3 px-2">
           <TextInput
-            accessibilityLabel="절제 항목 이름"
+            accessibilityLabel="거리두기 항목 이름"
             value={draft.name}
             onChangeText={(name) => setDraft({ ...draft, name })}
             editable={!mutation.isPending}
             maxLength={SOBER_NAME_MAX_LENGTH}
-            placeholder="야식 끊기"
+            placeholder="예: 야식, 쇼츠, 커피"
             placeholderTextColor={colors.textTertiary}
             className={`min-h-12 ${FORM_TEXT_INPUT_CLASS_NAME}`}
           />
@@ -224,7 +224,7 @@ export function SoberForm({ id }: { id?: number }) {
       </View>
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-          목표 설정
+          거리두기 목표
         </Text>
         <FormPickerRow
           label={draft.goal_mode === 'AUTO' ? '자동 목표' : formatSoberGoal(draft.goal_days!)}
@@ -258,7 +258,7 @@ export function SoberForm({ id }: { id?: number }) {
             multiline
             scrollEnabled
             textAlignVertical="top"
-            placeholder="밤 10시 이후로는 먹지 않기."
+            placeholder="밤에는 속을 편하게 하기"
             placeholderTextColor={colors.textTertiary}
             className={`h-28 ${FORM_TEXT_INPUT_CLASS_NAME}`}
           />

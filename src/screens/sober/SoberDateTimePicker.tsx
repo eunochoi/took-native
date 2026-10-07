@@ -122,7 +122,7 @@ export function SoberDateTimePicker({
                 scrollEnabled
                 maxLength={SOBER_MEMO_MAX_LENGTH}
                 textAlignVertical="top"
-                placeholder="어떤 이유로 다시 시작하나요? 지금의 마음을 남겨보세요."
+                placeholder="다시 거리를 두고 싶은 이유나 지금의 마음을 남겨보세요."
                 placeholderTextColor={colors.textTertiary}
                 className="h-28 rounded-2xl bg-transparent border border-theme-border p-4 text-base text-theme-text-primary font-normal"
               />

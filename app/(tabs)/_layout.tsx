@@ -57,7 +57,7 @@ export default function TabLayout() {
       <Tabs.Screen name="calendar" options={{ title: '월간 기록' }} />
       <Tabs.Screen name="diary" options={{ title: '일기 목록' }} />
       <Tabs.Screen name="habit" options={{ title: '습관 만들기' }} />
-      <Tabs.Screen name="sober" options={{ title: '절제' }} />
+      <Tabs.Screen name="sober" options={{ title: '거리두기' }} />
       <Tabs.Screen name="setting" options={{ title: '설정' }} />
     </Tabs>
   );

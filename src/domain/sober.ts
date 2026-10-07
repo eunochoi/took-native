@@ -89,7 +89,7 @@ export function validateSober(input: SoberInput, now: number) {
     ![0, 1].includes(input.is_priority) ||
     !['AUTO', 'MANUAL'].includes(input.goal_mode)
   )
-    throw new Error('절제 설정을 확인해주세요.');
+    throw new Error('거리두기 설정을 확인해주세요.');
   if (
     input.goal_mode === 'MANUAL'
       ? !Number.isSafeInteger(input.goal_days) ||
@@ -106,7 +106,7 @@ export function validateSoberRestart(
   now: number,
 ) {
   if (!Number.isSafeInteger(input.sober_id) || input.sober_id <= 0)
-    throw new Error('절제 항목을 확인해주세요.');
+    throw new Error('거리두기 항목을 확인해주세요.');
   assertSoberDatetime(input.restarted_at, now);
   if (Date.parse(input.restarted_at) < Date.parse(initialStartedAt))
     throw new Error('최초 시작 시각 이후에 기록해주세요.');

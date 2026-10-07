@@ -168,7 +168,7 @@ test('today sober card uses the latest restart and opens the selected record', (
   assert(soberName);
   assert.equal(soberName.props.numberOfLines, 1);
   assert.equal(soberName.props.ellipsizeMode, 'tail');
-  assert(text(card).includes('지금 2일째 이어가고 있어요.'));
+  assert(text(card).includes('거리를 두고 지낸 지 2일째예요.'));
   card.props.onPress();
   assert.deepEqual(routes, ['/sober/7']);
   const reset = render('TodayRecordSection', { today: '2026-10-05' }, undefined, {
@@ -177,7 +177,7 @@ test('today sober card uses the latest restart and opens the selected record', (
       restarts: { data: [{ id: 2, restarted_at: '2026-10-05T11:00:00.000Z' }] },
     },
   });
-  assert(text(reset).includes('지금 1일째 이어가고 있어요.'));
+  assert(text(reset).includes('거리를 두고 지낸 지 1일째예요.'));
   const failed = render('TodayRecordSection', { today: '2026-10-05' }, undefined, {
     results: { ...results, restarts: { isError: true } },
   });

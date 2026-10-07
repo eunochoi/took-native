@@ -160,11 +160,11 @@ export function validateBackupRecords(records: BackupRecords, files: Record<stri
     new Set(records.sobers.map((item) => item.name.trim())).size !== records.sobers.length ||
     new Set(records.soberRestarts.map((item) => item.id)).size !== records.soberRestarts.length
   )
-    throw new Error('절제 기록이 중복되거나 너무 많습니다.');
+    throw new Error('거리두기 기록이 중복되거나 너무 많아요.');
   const now = Date.now();
   for (const item of records.sobers) {
     if (!validId(item.id) || !validTime(item.created_at) || !validTime(item.updated_at))
-      throw new Error('절제 기록이 손상되었습니다.');
+      throw new Error('거리두기 기록이 손상됐어요.');
     validateSober(item, now);
   }
   for (const item of records.soberRestarts) {

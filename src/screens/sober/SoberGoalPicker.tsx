@@ -26,14 +26,14 @@ export function SoberGoalPicker({
   const valid =
     /^\d+$/.test(draftDays) && Number(draftDays) >= 1 && Number(draftDays) <= SOBER_MAX_GOAL_DAYS;
   return (
-    <BottomSheetModal visible title="어떤 목표로 이어갈까요?" onClose={onClose}>
+    <BottomSheetModal visible title="얼마 동안 거리를 두고 싶나요?" onClose={onClose}>
       {(close) => (
         <View className="gap-5">
           <View className="gap-3">
             <PickerAction
               icon="auto-awesome"
               title="자동 목표"
-              description="기록이 이어질수록 다음 목표가 자동으로 설정돼요."
+              description="거리를 두는 시간이 늘어나면 다음 목표가 자동으로 설정돼요."
               note={`* ${SOBER_GOALS.map(formatSoberGoal).join(' → ')}`}
               selected={selection === 'AUTO'}
               onPress={() => setSelection('AUTO')}
@@ -41,7 +41,7 @@ export function SoberGoalPicker({
             <PickerAction
               icon="flag"
               title="기간 선택"
-              description="나에게 맞는 목표 기간을 선택해요."
+              description="거리를 두고 싶은 기간을 선택해요."
               selected={selection === 'PERIOD'}
               onPress={() => {
                 if (!SOBER_GOALS.some((value) => value === Number(draftDays))) setDays('7');
@@ -52,7 +52,7 @@ export function SoberGoalPicker({
               icon="edit"
               title="직접 입력"
               selected={selection === 'CUSTOM'}
-              description="목표를 일 단위로 입력해요."
+              description="거리를 두고 싶은 기간을 일 단위로 입력해요."
               onPress={() => setSelection('CUSTOM')}
             />
           </View>
@@ -103,7 +103,7 @@ export function SoberGoalPicker({
           )}
           <Button
             labelWeight="normal"
-            label="목표 선택 완료"
+            label="이 목표로 설정하기"
             disabled={selection !== 'AUTO' && !valid}
             onPress={() =>
               close(() =>

@@ -11,7 +11,7 @@ const items = [
   { name: 'calendar', label: '월간 기록', icon: 'calendar' },
   { name: 'diary', label: '일기 목록', icon: 'diary' },
   { name: 'habit', label: '습관 만들기', icon: 'habit' },
-  { name: 'sober', label: '절제', icon: 'sober' },
+  { name: 'sober', label: '거리두기', icon: 'sober' },
 ] as const;
 
 export function BottomNav({
