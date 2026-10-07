@@ -3,6 +3,7 @@ import { useRouter, useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, View } from 'react-native';
+import { refreshSoberWidgets } from '../../src/widgets/sober';
 import {
   chooseBackup,
   discardBackupSelection,
@@ -143,6 +144,7 @@ export default function SettingsScreen() {
       if (!mounted.current) return;
       await restoreBackup(db, uris);
       restored = true;
+      refreshSoberWidgets();
       await Promise.all([reloadSettings(), client.resetQueries()]);
       if (mounted.current)
         setAlert({ title: '복원 완료', message: '백업의 기록과 설정을 불러왔어요.' });

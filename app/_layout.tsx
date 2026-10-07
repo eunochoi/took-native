@@ -17,6 +17,7 @@ import { migrateDatabase } from '../src/db/migrations';
 import { SettingsProvider } from '../src/settings/SettingsProvider';
 import { initializeMedia } from '../src/media';
 import { AppLoadingScreen } from '../src/components/AppLoadingScreen';
+import { refreshSoberWidgets } from '../src/widgets/sober';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 const queryClient = new QueryClient({
@@ -50,6 +51,13 @@ async function initializeDatabase(db: SQLiteDatabase) {
 
 function Navigation({ onReady }: { onReady: () => void }) {
   const { colors, mode, reducedMotion } = useAppTheme();
+  useEffect(() => {
+    refreshSoberWidgets();
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refreshSoberWidgets();
+    });
+    return () => subscription.remove();
+  }, []);
   useEffect(() => {
     void SystemUI.setBackgroundColorAsync(colors.surface);
   }, [colors.surface]);

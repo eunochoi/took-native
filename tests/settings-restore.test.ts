@@ -42,6 +42,8 @@ function harness() {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/widgets/sober'))
+          return { refreshSoberWidgets: () => events.push('widget') };
         if (name === 'tailwind-merge') return require('tailwind-merge');
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react')
@@ -208,7 +210,7 @@ test('confirmation consumes selection once, restores then refreshes; stale cance
   finish!();
   await tick();
   h.render();
-  assert.deepEqual(h.events, ['cancel', 'restore', 'reload', 'reset']);
+  assert.deepEqual(h.events, ['cancel', 'restore', 'widget', 'reload', 'reset']);
   assert.deepEqual(h.discarded, [['cache/a.zip']]);
   assert.equal(h.alert().title, '복원 완료');
   assert.equal(h.backup().activity, null);
@@ -314,6 +316,6 @@ test('an in-flight restore keeps its files through unmount and refreshes shared 
   assert.deepEqual(h.discarded, []);
   finish!();
   await tick();
-  assert.deepEqual(h.events, ['cancel', 'restore', 'reload', 'reset']);
+  assert.deepEqual(h.events, ['cancel', 'restore', 'widget', 'reload', 'reset']);
   assert.deepEqual(h.discarded, [['cache/a.zip']]);
 });

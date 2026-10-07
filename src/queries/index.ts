@@ -15,6 +15,7 @@ import { getAvailableYears, getDiaryStats, getHabitStats } from '../db/stats';
 import type { Diary, DiaryFilters } from '../db/types';
 import { PAGE_SIZE } from '../domain/constants';
 import { todayString } from '../domain/date';
+import { refreshSoberWidgets } from '../widgets/sober';
 
 export const diaryQueries = {
   list: (db: SQLiteDatabase, filters: DiaryFilters) =>
@@ -143,6 +144,7 @@ export function useRecordMutation<T, V>(
   return useMutation({
     mutationFn,
     onSuccess: async (data) => {
+      if (scope === 'sober') refreshSoberWidgets();
       await Promise.all(
         recordMutationKeys[scope].map((queryKey) => client.invalidateQueries({ queryKey })),
       );

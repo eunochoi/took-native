@@ -48,6 +48,32 @@
         {
           "style": "dark"
         }
+      ],
+      "./plugins/withSamsungSoberWidget.cjs",
+      [
+        "react-native-android-widget",
+        {
+          "fonts": [
+            "./assets/fonts/TmoneyRoundWindRegular.otf",
+            "./assets/fonts/TmoneyRoundWindExtraBold.otf",
+            "./node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf",
+            "./node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf"
+          ],
+          "widgets": [
+            {
+              "name": "Sober",
+              "label": "took 절제 타이머",
+              "description": "선택한 절제 타이머의 경과 시간과 목표를 확인해요.",
+              "minWidth": "110dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "widgetFeatures": "reconfigurable",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
       ]
     ],
     "updates": {

@@ -30,6 +30,8 @@ function loadQueries(client: query.QueryClient, overrides: Record<string, unknow
           useMutation: (options: unknown) => options,
         };
       if (name === 'react' || name === 'react-native') return overrides[name] ?? {};
+      if (name === '../widgets/sober')
+        return overrides[name] ?? { refreshSoberWidgets: () => undefined };
       return overrides[name] ?? require(name);
     },
     ...(overrides.globals as object),
@@ -87,7 +89,10 @@ for (const [scope, affected] of Object.entries({
     const client = new query.QueryClient({
       defaultOptions: { queries: { staleTime: Infinity, retry: false } },
     });
-    const module = loadQueries(client);
+    let widgetRefreshes = 0;
+    const module = loadQueries(client, {
+      '../widgets/sober': { refreshSoberWidgets: () => widgetRefreshes++ },
+    });
     const entries = cacheEntries(module);
     const calls: Record<string, number> = {};
     const unsubscribe: (() => void)[] = [];
@@ -123,6 +128,7 @@ for (const [scope, affected] of Object.entries({
       );
       assert.equal(await new query.MutationObserver(client, options).mutate(undefined), 42);
       assert(succeeded);
+      assert.equal(widgetRefreshes, scope === 'sober' ? 1 : 0);
       for (const name of Object.keys(entries))
         assert.equal(calls[name], affected.includes(name) ? 1 : 0, name);
       assert.equal(client.getQueryState(inactive)?.isInvalidated, scope === 'sober');
