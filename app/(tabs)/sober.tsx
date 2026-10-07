@@ -5,7 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter, useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, View } from 'react-native';
+import { QueryError } from '../../src/components/QueryError';
 import { AlertModal, type AlertContent } from '../../src/components/AlertModal';
 import { AppIcon } from '../../src/components/AppIcon';
 import { ColorView } from '../../src/components/ColorTransition';
@@ -113,30 +114,18 @@ export default function SoberList() {
             );
           return (
             <View className="pt-8">
-              {failed || !ready ? (
-                <View
-                  className={
-                    failed ? 'min-h-64 items-center justify-center gap-3' : EMPTY_STATE_CLASS_NAME
-                  }
-                >
-                  {failed ? (
-                    <>
-                      <Text className="text-theme-text-secondary">
-                        거리두기 목록을 불러오지 못했어요.
-                      </Text>
-                      <Pressable
-                        accessibilityRole="button"
-                        onPress={() => {
-                          void list.refetch();
-                          void restarts.refetch();
-                        }}
-                      >
-                        <Text className="text-theme-accent">다시 시도</Text>
-                      </Pressable>
-                    </>
-                  ) : (
-                    <Text className="text-theme-text-secondary">기록을 불러오는 중이에요.</Text>
-                  )}
+              {failed ? (
+                <QueryError
+                  className="min-h-64"
+                  message="거리두기 목록을 불러오지 못했어요."
+                  onRetry={() => {
+                    void list.refetch();
+                    void restarts.refetch();
+                  }}
+                />
+              ) : !ready ? (
+                <View className={EMPTY_STATE_CLASS_NAME}>
+                  <Text className="text-theme-text-secondary">기록을 불러오는 중이에요.</Text>
                 </View>
               ) : (
                 <EmptyState
@@ -151,20 +140,14 @@ export default function SoberList() {
         ListFooterComponent={
           <>
             {ready && sorted.length > 0 && failed ? (
-              <View className="py-4 items-center gap-2">
-                <Text accessibilityRole="alert" className="text-sm text-theme-text-secondary">
-                  거리두기 목록을 불러오지 못했어요.
-                </Text>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => {
-                    void list.refetch();
-                    void restarts.refetch();
-                  }}
-                >
-                  <Text className="text-theme-accent">다시 시도</Text>
-                </Pressable>
-              </View>
+              <QueryError
+                className="py-4"
+                message="거리두기 목록을 불러오지 못했어요."
+                onRetry={() => {
+                  void list.refetch();
+                  void restarts.refetch();
+                }}
+              />
             ) : null}
             <TabBottomSpacer />
           </>

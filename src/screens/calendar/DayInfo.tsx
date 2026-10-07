@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import { QueryError } from '../../components/QueryError';
 import { AlertModal, type AlertContent } from '../../components/AlertModal';
-import { Text } from '../../components/Text';
 import { setHabitCompletion, sortHabits } from '../../db/habit';
 import { dayHabits } from '../../domain/calendar';
 import { diaryQueries, habitQueries, useRecordMutation } from '../../queries';
@@ -36,21 +36,15 @@ export function DayInfo({ date, today }: { date: string; today: string }) {
   return (
     <View className="gap-3">
       {error ? (
-        <View className="min-h-32 items-center justify-center gap-3">
-          <Text accessibilityRole="alert" className="text-sm text-theme-text-secondary">
-            기록을 불러오지 못했어요.
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => {
-              void diary.refetch();
-              void habits.refetch();
-              void completions.refetch();
-            }}
-          >
-            <Text className="text-sm text-theme-accent">다시 시도</Text>
-          </Pressable>
-        </View>
+        <QueryError
+          className="min-h-32"
+          message="기록을 불러오지 못했어요."
+          onRetry={() => {
+            void diary.refetch();
+            void habits.refetch();
+            void completions.refetch();
+          }}
+        />
       ) : pending ? (
         <View className="min-h-32 items-center justify-center">
           <ActivityIndicator

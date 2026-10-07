@@ -1,32 +1,26 @@
 import { ActivityIndicator, View } from 'react-native';
-import { Text } from './Text';
-import { Button } from './Button';
+import { QueryError } from './QueryError';
+
 export function QueryState({
   query,
 }: {
   query: { isPending: boolean; error: Error | null; refetch: () => unknown };
 }) {
-  if (!query.isPending && !query.error) return null;
+  if (query.error) {
+    return (
+      <QueryError
+        className="p-6"
+        message={query.error.message}
+        onRetry={() => {
+          void query.refetch();
+        }}
+      />
+    );
+  }
+  if (!query.isPending) return null;
   return (
-    <View className="p-6 gap-3 items-center">
-      {query.error ? (
-        <>
-          <Text
-            accessibilityRole="alert"
-            className="text-center text-base text-theme-text-secondary"
-          >
-            {query.error.message}
-          </Text>
-          <Button
-            label="다시 시도"
-            onPress={() => {
-              void query.refetch();
-            }}
-          />
-        </>
-      ) : (
-        <ActivityIndicator accessibilityLabel="기록 불러오는 중" />
-      )}
+    <View className="p-6 items-center">
+      <ActivityIndicator accessibilityLabel="기록 불러오는 중" />
     </View>
   );
 }

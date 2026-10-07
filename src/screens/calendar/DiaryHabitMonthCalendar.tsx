@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo } from 'react';
-import { Pressable, View } from 'react-native';
-import { Text } from '../../components/Text';
+import { View } from 'react-native';
 import { EmotionImage } from '../../components/EmotionImage';
+import { QueryError } from '../../components/QueryError';
 import { OrganicBadge } from '../../components/OrganicBadge';
 import { EMOTIONS } from '../../domain/constants';
 import { diaryQueries, habitQueries } from '../../queries';
@@ -41,20 +41,14 @@ export function DiaryHabitMonthCalendar(props: {
   return (
     <View className={props.fillHeight ? 'flex-1 min-h-0 gap-4' : 'gap-4'}>
       {(diaries.isError || completions.isError) && (
-        <View className="flex-row gap-2">
-          <Text accessibilityRole="alert" className="text-sm text-theme-danger">
-            월 기록을 불러오지 못했어요.
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => {
-              void diaries.refetch();
-              void completions.refetch();
-            }}
-          >
-            <Text className="text-sm underline text-theme-danger">다시 시도</Text>
-          </Pressable>
-        </View>
+        <QueryError
+          className="flex-row gap-2"
+          message="월 기록을 불러오지 못했어요."
+          onRetry={() => {
+            void diaries.refetch();
+            void completions.refetch();
+          }}
+        />
       )}
       <CalendarMonthHeader
         month={props.month}

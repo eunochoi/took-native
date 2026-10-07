@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { ScrollView, View, useWindowDimensions } from 'react-native';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { PickerOption } from '../../components/PickerOption';
 import { Button } from '../../components/Button';
+import { QueryError } from '../../components/QueryError';
 import { Text } from '../../components/Text';
 export function HomeYearPicker({
   year,
@@ -26,19 +27,13 @@ export function HomeYearPicker({
       {(closePicker) => (
         <>
           {query.isError ? (
-            <View className="py-8 items-center gap-3">
-              <Text className="text-theme-text-secondary">
-                선택할 수 있는 연도를 불러오지 못했어요.
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => {
-                  void query.refetch();
-                }}
-              >
-                <Text className="text-theme-accent">다시 시도</Text>
-              </Pressable>
-            </View>
+            <QueryError
+              className="py-8"
+              message="선택할 수 있는 연도를 불러오지 못했어요."
+              onRetry={() => {
+                void query.refetch();
+              }}
+            />
           ) : query.isPending ? (
             <Text className="py-8 text-center text-theme-text-secondary">
               연도를 불러오는 중이에요.

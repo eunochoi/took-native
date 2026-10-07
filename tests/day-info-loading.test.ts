@@ -106,3 +106,25 @@ test('changing dates waits for date queries and applies only the selected date c
   assert.equal(section.props.habits.find((habit: any) => habit.id === 1).completed, true);
   assert.equal(section.props.habits.find((habit: any) => habit.id === 2).completed, false);
 });
+
+test('day query failure shows the common error and retries all day queries before displaying records', () => {
+  const h = harness();
+  const retried: string[] = [];
+  for (const kind of ['diary', 'habits', 'completions']) {
+    h.results[kind] = {
+      isError: kind === 'completions',
+      isPending: false,
+      data: kind === 'habits' ? habits : null,
+      refetch: () => retried.push(kind),
+    };
+  }
+  const tree = h.render();
+  assert(!tree.some((node) => node.type === 'DayInfoHabitSection'));
+  const error = tree.find((node) => node.type === 'QueryError');
+  assert.equal(error.props.message, '기록을 불러오지 못했어요.');
+  error.props.onRetry();
+  assert.deepEqual(retried, ['diary', 'habits', 'completions']);
+  h.results.diary.data = null;
+  h.results.completions = { data: [], isPending: false, isError: false };
+  assert(h.render().some((node) => node.type === 'DayInfoHabitSection'));
+});

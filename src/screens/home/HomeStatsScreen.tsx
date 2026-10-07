@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { BottomSheetPage } from '../../components/BottomSheetPage';
+import { QueryError } from '../../components/QueryError';
 import { Text } from '../../components/Text';
 import { soberQueries, statsQueries } from '../../queries';
 import { useAppTheme } from '../../theme/AppThemeProvider';
@@ -65,23 +66,16 @@ export function HomeStatsScreen({
             {sections.map((section) => (
               <View key={section.label}>
                 {section.queries.some((query) => query.isError && !query.data) ? (
-                  <View className="min-h-32 items-center justify-center gap-3">
-                    <Text className="text-theme-text-secondary">
-                      {section.label} 기록을 불러오지 못했어요.
-                    </Text>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={`${section.label} 기록 다시 시도`}
-                      className="min-h-11 justify-center"
-                      onPress={() => {
-                        section.queries.forEach((query) => {
-                          if (query.isError) void query.refetch();
-                        });
-                      }}
-                    >
-                      <Text className="text-theme-accent">다시 시도</Text>
-                    </Pressable>
-                  </View>
+                  <QueryError
+                    className="min-h-32"
+                    message={`${section.label} 기록을 불러오지 못했어요.`}
+                    retryAccessibilityLabel={`${section.label} 기록 다시 시도`}
+                    onRetry={() => {
+                      section.queries.forEach((query) => {
+                        if (query.isError) void query.refetch();
+                      });
+                    }}
+                  />
                 ) : section.queries.some((query) => !query.data) ? (
                   <HomeStatsSkeleton />
                 ) : (

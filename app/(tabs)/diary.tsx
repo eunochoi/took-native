@@ -2,7 +2,8 @@ import { useScrollToTop } from 'expo-router';
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
+import { ActivityIndicator, FlatList, View } from 'react-native';
+import { QueryError } from '../../src/components/QueryError';
 import { AlertModal, type AlertContent } from '../../src/components/AlertModal';
 import { AppIcon } from '../../src/components/AppIcon';
 import { ColorView } from '../../src/components/ColorTransition';
@@ -10,7 +11,6 @@ import { EmptyState } from '../../src/components/EmptyState';
 import { RecordSortPicker } from '../../src/components/RecordSortPicker';
 import { ScrollEdgeFade } from '../../src/components/ScrollEdgeFade';
 import { TabBottomSpacer } from '../../src/components/TabBottomSpacer';
-import { Text } from '../../src/components/Text';
 import { Toolbar } from '../../src/components/Toolbar';
 import { ToolbarFilterButton } from '../../src/components/ToolbarFilterButton';
 import { ToolbarSortButton } from '../../src/components/ToolbarSortButton';
@@ -51,17 +51,13 @@ export default function DiaryList() {
     ? diaries.map((diary, index): Row => ({ kind: 'diary', diary, first: index === 0 }))
     : [{ kind: 'state' }];
   const emptyContent = failedWithoutData ? (
-    <View className="min-h-64 items-center justify-center gap-3">
-      <Text className="text-theme-text-secondary">일기 목록을 불러오지 못했어요.</Text>
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => {
-          void list.refetch();
-        }}
-      >
-        <Text className="text-theme-accent">다시 시도</Text>
-      </Pressable>
-    </View>
+    <QueryError
+      className="min-h-64"
+      message="일기 목록을 불러오지 못했어요."
+      onRetry={() => {
+        void list.refetch();
+      }}
+    />
   ) : list.isPending ? (
     <DiaryListSkeleton />
   ) : (
@@ -128,14 +124,11 @@ export default function DiaryList() {
                 />
               )}
               {list.isError && list.data && (
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => {
+                <QueryError
+                  onRetry={() => {
                     void (list.isFetchNextPageError ? list.fetchNextPage() : list.refetch());
                   }}
-                >
-                  <Text className="text-theme-accent">다시 시도</Text>
-                </Pressable>
+                />
               )}
             </View>
             <TabBottomSpacer />

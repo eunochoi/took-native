@@ -6,12 +6,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter, useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
-import { FlatList, Pressable, ScrollView, View } from 'react-native';
+import { FlatList, ScrollView, View } from 'react-native';
+import { QueryError } from '../../src/components/QueryError';
 import { AlertModal, type AlertContent } from '../../src/components/AlertModal';
 import { RecordSortPicker } from '../../src/components/RecordSortPicker';
 import { ScrollEdgeFade } from '../../src/components/ScrollEdgeFade';
 import { TabBottomSpacer } from '../../src/components/TabBottomSpacer';
-import { Text } from '../../src/components/Text';
 import { setHabitCompletion, sortHabits } from '../../src/db/habit';
 import { shiftDate } from '../../src/domain/date';
 import { MAX_HABIT_COUNT } from '../../src/domain/limits';
@@ -80,18 +80,14 @@ export default function HabitList() {
   const failed = list.isError || completions.isError;
   const gridItems = ready ? [...sorted, ...(sorted.length % 2 ? [null] : [])] : [];
   const emptyContent = failed ? (
-    <View className="min-h-64 items-center justify-center gap-3">
-      <Text className="text-theme-text-secondary">습관 목록을 불러오지 못했어요.</Text>
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => {
-          void list.refetch();
-          void completions.refetch();
-        }}
-      >
-        <Text className="text-theme-accent">다시 시도</Text>
-      </Pressable>
-    </View>
+    <QueryError
+      className="min-h-64"
+      message="습관 목록을 불러오지 못했어요."
+      onRetry={() => {
+        void list.refetch();
+        void completions.refetch();
+      }}
+    />
   ) : !ready ? (
     <HabitListSkeleton />
   ) : (
@@ -160,20 +156,14 @@ export default function HabitList() {
           )}
           ListFooterComponent={
             ready && failed ? (
-              <View className="py-4 items-center gap-2">
-                <Text className="text-sm text-theme-text-secondary">
-                  습관 목록을 불러오지 못했어요.
-                </Text>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => {
-                    void list.refetch();
-                    void completions.refetch();
-                  }}
-                >
-                  <Text className="text-theme-accent">다시 시도</Text>
-                </Pressable>
-              </View>
+              <QueryError
+                className="py-4"
+                message="습관 목록을 불러오지 못했어요."
+                onRetry={() => {
+                  void list.refetch();
+                  void completions.refetch();
+                }}
+              />
             ) : null
           }
         />
