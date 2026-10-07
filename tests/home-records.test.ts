@@ -17,8 +17,9 @@ function harness(path: string, name: string) {
   const slots: any[] = [];
   let cursor = 0;
   let queries: any[] = [];
-  let visible = false;
-  let cleanup: (() => void) | undefined;
+  let parameter = '2026';
+  const pushes: unknown[] = [];
+  const changes: unknown[] = [];
   const results: Record<string, any> = {};
   runInNewContext(
     ts.transpileModule(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'), {
@@ -45,9 +46,14 @@ function harness(path: string, name: string) {
           };
         if (dependency === 'expo-router')
           return {
-            useFocusEffect: (effect: () => () => void) => {
-              cleanup ??= effect();
-            },
+            useLocalSearchParams: () => ({ year: parameter }),
+            useRouter: () => ({
+              push: (href: unknown) => pushes.push(href),
+              setParams: (params: { year: string }) => {
+                changes.push(params);
+                parameter = params.year;
+              },
+            }),
           };
         if (dependency === 'react-native')
           return {
@@ -92,16 +98,18 @@ function harness(path: string, name: string) {
   );
   return {
     results,
-    blur: () => cleanup?.(),
-    render: (next = visible) => {
+    pushes,
+    changes,
+    render: (next?: number | string) => {
       cursor = 0;
       queries = [];
-      visible = next;
+      if (next !== undefined) parameter = String(next);
       const tree = exports[name]({
-        visible,
-        today: '2026-10-05',
-        onClose: () => {
-          visible = false;
+        year: Number(parameter),
+        currentYear: 2026,
+        onYearChange: (year: number) => {
+          parameter = String(year);
+          changes.push(year);
         },
       });
       return { tree, nodes: nodes(tree), queries };
@@ -109,55 +117,38 @@ function harness(path: string, name: string) {
   };
 }
 
-const records = () => harness('src/screens/home/HomeRecordsModal.tsx', 'HomeRecordsModal');
+const records = () => harness('src/screens/home/HomeStatsScreen.tsx', 'HomeStatsScreen');
 const sheet = (view: ReturnType<ReturnType<typeof records>['render']>) =>
-  view.nodes.find((node) => node.type === 'BottomSheetModal');
+  view.nodes.find((node) => node.type === 'BottomSheetPage');
 
-test('home keeps the launcher outside the records modal and main content does not scroll', () => {
+test('home launcher pushes the current year stats route without mounting a local modal', () => {
   const home = harness('app/(tabs)/index.tsx', 'default');
-  let view = home.render();
+  const view = home.render();
   assert.equal(view.tree.type, 'ColorView');
   assert(view.tree.props.className.includes('bg-theme-surface'));
   assert(view.nodes.some((node) => node.type === 'HomeTopSection'));
-  assert(!view.nodes.some((node) => node.type === 'TabBottomSpacer'));
   assert(
     !view.nodes.some((node) =>
-      ['ScrollView', 'AnimatedView', 'HomeRecordsPanel'].includes(node.type),
+      ['ScrollView', 'HomeStatsScreen', 'HomeRecordsModal'].includes(node.type),
     ),
   );
   const bottom = view.tree.props.children[1];
   assert.equal(bottom.props.style.paddingBottom, 124.5);
   const launcher = nodes(bottom).find((node) => node.props.accessibilityLabel === '모아보기');
-  assert.equal(launcher.type, 'Pressable');
-  assert.equal(launcher.props.accessibilityLabel, '모아보기');
   assert.equal(launcher.props.children[1].props.name, 'arrow-forward');
-  assert.equal(view.tree.props.children[2].type, 'HomeRecordsModal');
-  assert.equal(view.tree.props.children[2].props.visible, false);
-  assert(!nodes(bottom).some((node) => node.type === 'HomeRecordsModal'));
   launcher.props.onPress();
-  view = home.render();
-  assert.equal(view.tree.props.children[2].props.visible, true);
-  view.tree.props.children[2].props.onClose();
-  assert.equal(home.render().tree.props.children[2].props.visible, false);
-  nodes(home.render().tree.props.children[1])
-    .find((node) => node.props.accessibilityLabel === '모아보기')
-    .props.onPress();
-  home.blur();
-  assert.equal(home.render().tree.props.children[2].props.visible, false);
+  const href = home.pushes[0] as any;
+  assert.equal(href.pathname, '/home/[year]/stats');
+  assert.equal(href.params.year, '2026');
 });
 
-test('records use the common automatic-height sheet and keep all four analysis sections', () => {
-  const ui = records();
-  let view = ui.render();
-  assert(view.queries.every((query) => !query.enabled));
-  assert.equal(sheet(view).props.visible, false);
-  assert(!view.nodes.some((node) => node.type === 'DiaryAnalysis'));
-  view = ui.render(true);
+test('stats use the common route sheet and keep all four analysis sections', () => {
+  const view = records().render();
   assert.equal(sheet(view).props.title, '모아보기');
+  assert.equal(sheet(view).props.backRoute, '/');
   assert.equal(sheet(view).props.scrollFade, true);
-  assert.equal(sheet(view).props.maxHeight, 810);
   assert.equal(sheet(view).props.contentKey, 2026);
-  assert(view.queries.every((query) => query.enabled));
+  assert(view.queries.every((query) => query.enabled !== false));
   for (const component of ['DiaryAnalysis', 'EmotionStats', 'HabitAnalysis', 'SoberAnalysis'])
     assert.equal(view.nodes.filter((node) => node.type === component).length, 1);
   assert(
@@ -165,15 +156,27 @@ test('records use the common automatic-height sheet and keep all four analysis s
       ['AnimatedView', 'ScrollView', 'ScrollEdgeFade'].includes(node.type),
     ),
   );
-  sheet(view).props.onClose();
-  assert.equal(sheet(ui.render()).props.visible, false);
+});
+
+test('year route follows URL params and updates the same route instead of pushing another', () => {
+  const route = harness('app/home/[year]/stats.tsx', 'default');
+  const view = route.render(2024);
+  assert.equal(view.tree.type, 'HomeStatsScreen');
+  assert.equal(view.tree.props.year, 2024);
+  assert.equal(view.tree.props.currentYear, 2026);
+  view.tree.props.onYearChange(2023);
+  assert.equal((route.changes[0] as any).year, '2023');
+  assert.equal(route.render().tree.props.year, 2023);
+  assert.equal(route.pushes.length, 0);
+  for (const invalid of ['abc', '0', '2101', '2026.5'])
+    assert.equal(route.render(invalid).tree.props.year, 2026);
 });
 
 test('section failures retry independently and cached records remain visible', () => {
   const ui = records();
   let retries = 0;
   ui.results.habit = { isError: true, refetch: () => retries++ };
-  let view = ui.render(true);
+  let view = ui.render();
   for (const component of ['DiaryAnalysis', 'EmotionStats', 'SoberAnalysis'])
     assert(view.nodes.some((node) => node.type === component));
   assert(!view.nodes.some((node) => node.type === 'HabitAnalysis'));
@@ -187,9 +190,9 @@ test('section failures retry independently and cached records remain visible', (
   assert(ui.render().nodes.some((node) => node.type === 'HomeStatsSkeleton'));
 });
 
-test('year picker closes independently and selected year persists when records reopen', () => {
+test('year picker closes independently and analysis queries follow the selected URL year', () => {
   const ui = records();
-  let view = ui.render(true);
+  let view = ui.render();
   const content = sheet(view).props.children;
   assert.equal(content.props.className, 'gap-6 pt-1 pb-6');
   assert(nodes(content).some((node) => node.type === 'DiaryAnalysis'));
@@ -204,7 +207,7 @@ test('year picker closes independently and selected year persists when records r
   yearButton.props.onPress();
   view = ui.render();
   view.nodes.find((node) => node.type === 'HomeYearPicker').props.onClose();
-  assert.equal(sheet(ui.render()).props.visible, true);
+  assert.equal(sheet(ui.render()).props.contentKey, 2026);
   ui.render()
     .nodes.find((node) => node.props.accessibilityLabel === '2026년, 연도 선택')
     .props.onPress();
@@ -218,8 +221,10 @@ test('year picker closes independently and selected year persists when records r
   const sober = view.nodes.find((node) => node.type === 'SoberAnalysis');
   assert.deepEqual(sober.props.sobers, []);
   assert.deepEqual(sober.props.restarts, []);
-  assert.equal(typeof sober.props.onOpen, 'function');
+  assert.equal(sober.props.onOpen, undefined);
+  assert.equal(ui.pushes.length, 0);
+  assert.equal(view.queries.find((query) => query.kind === 'diary').year, 2024);
+  assert.equal(view.queries.find((query) => query.kind === 'habit').year, 2024);
   assert(!view.nodes.some((node) => node.type === 'HomeYearPicker'));
-  sheet(view).props.onClose();
-  assert.equal(sheet(ui.render(true)).props.contentKey, 2024);
+  assert.equal(sheet(ui.render()).props.contentKey, 2024);
 });

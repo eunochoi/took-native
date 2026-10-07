@@ -246,15 +246,11 @@ test('sober rankings use the current streak in both directions, including restar
     { id: 2, sober_id: 2, restarted_at: '2025-12-01T00:00:00.000Z' },
   ];
   const routes: unknown[] = [];
-  let closed = 0;
   const tree = render(
     'SoberAnalysis',
     {
       sobers,
       restarts,
-      onOpen: () => {
-        closed++;
-      },
     },
     undefined,
     { routes },
@@ -264,7 +260,6 @@ test('sober rankings use the current streak in both directions, including restar
   rows[0].props.onPress();
   rows[2].props.onPress();
   assert.deepEqual(routes, ['/sober/3', '/sober/5']);
-  assert.equal(closed, 2);
   assert(text(tree).includes('진행 중 5개'));
   assert.deepEqual(
     Array.from(rows, (row: any) => row.key),

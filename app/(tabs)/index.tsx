@@ -1,10 +1,8 @@
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { AppIcon } from '../../src/components/AppIcon';
 import { ColorView } from '../../src/components/ColorTransition';
 import { useToday } from '../../src/queries';
-import { HomeRecordsModal } from '../../src/screens/home/HomeRecordsModal';
 import { HomeTopSection } from '../../src/screens/home/HomeTopSection';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
 import { PAGE_CLASS_NAME } from '../../src/theme/classes';
@@ -12,8 +10,7 @@ import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 export default function Home() {
   const today = useToday();
   const { iconSizes, navigationBottom, navigationHeight } = useAppTheme();
-  const [recordsOpen, setRecordsOpen] = useState(false);
-  useFocusEffect(useCallback(() => () => setRecordsOpen(false), []));
+  const router = useRouter();
   return (
     <ColorView className={PAGE_CLASS_NAME}>
       <HomeTopSection today={today} />
@@ -28,8 +25,9 @@ export default function Home() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="모아보기"
-            accessibilityState={{ expanded: recordsOpen }}
-            onPress={() => setRecordsOpen(true)}
+            onPress={() =>
+              router.push({ pathname: '/home/[year]/stats', params: { year: today.slice(0, 4) } })
+            }
             className="py-2 my-3 self-end flex-row items-center justify-center gap-2 active:opacity-70"
           >
             <Text className="text-base font-semibold text-theme-accent-deep">모아보기</Text>
@@ -37,7 +35,6 @@ export default function Home() {
           </Pressable>
         </View>
       </View>
-      <HomeRecordsModal visible={recordsOpen} today={today} onClose={() => setRecordsOpen(false)} />
     </ColorView>
   );
 }

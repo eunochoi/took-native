@@ -11,15 +11,7 @@ import { formatSoberDuration, getSoberSummary } from '../../domain/sober';
 import { useCurrentMinute } from '../../hooks/useCurrentMinute';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 
-export function SoberAnalysis({
-  sobers,
-  restarts,
-  onOpen,
-}: {
-  sobers: Sober[];
-  restarts: SoberRestart[];
-  onOpen?: () => void;
-}) {
+export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts: SoberRestart[] }) {
   const router = useRouter();
   const now = useCurrentMinute();
   const { rem: appRem } = useAppTheme();
@@ -68,7 +60,6 @@ export function SoberAnalysis({
                 accessibilityRole="button"
                 accessibilityLabel={`${sober.name} 절제 항목 정보`}
                 onPress={() => {
-                  onOpen?.();
                   router.push(`/sober/${sober.id}`);
                 }}
                 className={`flex-row items-center gap-6 min-h-24 py-3 ${index < visibleSobers.length - 1 ? 'border-b border-theme-border/60' : ''}`}
