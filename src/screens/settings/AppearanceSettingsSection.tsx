@@ -1,18 +1,10 @@
 import { Pressable, View } from 'react-native';
 import { Text } from '../../components/Text';
 import type { Settings } from '../../settings/model';
+import { ACCENT_KEYS as accents, ACCENT_LABELS as accentLabels } from '../../theme/accents';
 import { ACCENT_PALETTES } from '../../theme/colors';
 import { SettingStepSelector } from './SettingStepSelector';
 
-const accents = ['blue', 'green', 'purple', 'pink', 'yellow', 'grey'] as const;
-const accentLabels = {
-  blue: '파랑',
-  green: '초록',
-  purple: '보라',
-  pink: '분홍',
-  yellow: '딥 청록',
-  grey: '회색',
-};
 const modes = ['light', 'dark', 'system'] as const;
 const sizes = ['small', 'normal', 'large'] as const;
 
