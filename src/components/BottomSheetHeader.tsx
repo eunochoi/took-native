@@ -28,7 +28,7 @@ export function BottomSheetHeader({
         <AppIcon name="chevron-down" size={iconSizes.lg} color={colors.accent} />
       </Pressable>
       <View className="self-stretch flex-row items-center gap-2 pb-2 mb-4">
-        {menuAction && <View className="w-11 shrink-0" />}
+        {menuAction && <View className="-ml-2 w-11 shrink-0" />}
         <View className="flex-1 min-w-0 flex-row items-center justify-center gap-2">
           {titleIcon}
           <Text
