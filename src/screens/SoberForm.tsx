@@ -21,7 +21,7 @@ import { SOBER_DESCRIPTION_MAX_LENGTH, SOBER_NAME_MAX_LENGTH } from '../domain/l
 import { formatSoberGoal, SOBER_ICONS, type SoberInput } from '../domain/sober';
 import { soberQueries, useRecordMutation } from '../queries';
 import { useAppTheme } from '../theme/AppThemeProvider';
-import { SoberDateTimePicker } from './sober/SoberDateTimePicker';
+import { DateTimePicker } from '../components/DateTimePicker';
 import { SoberGoalPicker } from './sober/SoberGoalPicker';
 import { SoberIconPicker } from './sober/SoberIconPicker';
 
@@ -123,7 +123,7 @@ export function SoberForm({ id }: { id?: number }) {
             />
           )}
           {picker === 'date' && (
-            <SoberDateTimePicker
+            <DateTimePicker
               mode="start"
               title="언제부터 거리를 두기 시작했나요?"
               value={draft.initial_started_at}

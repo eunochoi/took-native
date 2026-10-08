@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { runInNewContext } from 'node:vm';
-import { soberDateTimeDraft, parseSoberDateTime } from '../src/domain/sober';
+import { dateTimeDraft, parseDateTime } from '../src/domain/date';
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
 const jsx = (type: unknown, props: any) => ({ type, props });
@@ -11,10 +11,7 @@ function render(mode: 'start' | 'restart', memo?: string) {
   const exports: any = {};
   runInNewContext(
     ts.transpileModule(
-      readFileSync(
-        new URL('../src/screens/sober/SoberDateTimePicker.tsx', import.meta.url),
-        'utf8',
-      ),
+      readFileSync(new URL('../src/components/DateTimePicker.tsx', import.meta.url), 'utf8'),
       {
         compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
       },
@@ -30,7 +27,7 @@ function render(mode: 'start' | 'restart', memo?: string) {
           };
         if (name === 'react-native') return { View: 'View', TextInput: 'TextInput' };
         if (name === 'date-fns') return require('date-fns');
-        if (name.includes('domain/sober')) return { soberDateTimeDraft, parseSoberDateTime };
+        if (name.includes('domain/date')) return { dateTimeDraft, parseDateTime };
         if (name.includes('useCurrentMinute')) return { useCurrentMinute: () => Date.now() };
         if (name.includes('AppThemeProvider'))
           return { useAppTheme: () => ({ colors: {}, iconSizes: {} }) };
@@ -45,7 +42,7 @@ function render(mode: 'start' | 'restart', memo?: string) {
       },
     },
   );
-  const modal = exports.SoberDateTimePicker({
+  const modal = exports.DateTimePicker({
     mode,
     memo,
     title: '날짜',

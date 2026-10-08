@@ -124,18 +124,18 @@ test('sober detail opens the next overlay only after its current sheet closes', 
     return true;
   });
   actions.props.children[0].props.onPress();
-  assert(!ui.render().some((node) => node.type === 'SoberDateTimePicker'));
+  assert(!ui.render().some((node) => node.type === 'DateTimePicker'));
   menu.props.onClose();
   afterClose!();
   nodes = ui.render();
-  const picker = nodes.find((node) => node.type === 'SoberDateTimePicker');
+  const picker = nodes.find((node) => node.type === 'DateTimePicker');
   assert.equal(picker.props.value, ui.record.restarted_at);
   assert.equal(picker.props.memo, '메모');
   assert(!nodes.some((node) => node.type === 'BottomSheetModal' && node.props.visible));
   picker.props.onApply('2026-10-04T01:00:00Z', '수정');
   assert.equal(ui.writes[0].input.id, 2);
   picker.props.onClose();
-  assert(!ui.render().some((node) => node.type === 'SoberDateTimePicker'));
+  assert(!ui.render().some((node) => node.type === 'DateTimePicker'));
 });
 
 test('sober delete retains its selected record and cancellation leaves every overlay closed', () => {

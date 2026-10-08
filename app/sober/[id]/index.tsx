@@ -26,7 +26,7 @@ import {
 import { useCurrentMinute } from '../../../src/hooks/useCurrentMinute';
 import { soberQueries, useRecordMutation } from '../../../src/queries';
 import { SoberMonthCalendar } from '../../../src/screens/sober/SoberMonthCalendar';
-import { SoberDateTimePicker } from '../../../src/screens/sober/SoberDateTimePicker';
+import { DateTimePicker } from '../../../src/components/DateTimePicker';
 import { SoberDayInfo } from '../../../src/screens/sober/SoberDayInfo';
 import { SoberGauge } from '../../../src/screens/sober/SoberGauge';
 import { SoberLongRecords } from '../../../src/screens/sober/SoberLongRecords';
@@ -221,7 +221,7 @@ export default function SoberDetail() {
         )}
       </BottomSheetModal>
       {picker && (
-        <SoberDateTimePicker
+        <DateTimePicker
           mode="restart"
           title={picker.id ? '다시 시작 기록 수정' : '다시 거리를 둘까요?'}
           description={

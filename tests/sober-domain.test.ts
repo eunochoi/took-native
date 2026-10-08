@@ -1,3 +1,4 @@
+import { dateTimeDraft, parseDateTime } from '../src/domain/date';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
@@ -10,8 +11,6 @@ import {
   getSoberSummary,
   getSoberProgress,
   formatSoberDuration,
-  parseSoberDateTime,
-  soberDateTimeDraft,
   validateSober,
   validateSoberRestart,
   SOBER_DAY_MS,
@@ -103,7 +102,10 @@ test('ranked records include every interval and sort duration DESC', () => {
   );
   assert.equal(long[1].current, true);
   const short = getSoberSummary(sober, [restart(1, day / 2)], origin + day / 2);
-  assert.deepEqual(short.longRecords.map((item) => item.duration), [day / 2, 0]);
+  assert.deepEqual(
+    short.longRecords.map((item) => item.duration),
+    [day / 2, 0],
+  );
   assert.equal(short.longRecords[1].current, true);
   assert.equal(getLongestSoberStreak(getSoberStreaks(sober, [], origin + 40 * day)), 40 * day);
 });
@@ -184,15 +186,13 @@ test('local calendar drafts roundtrip UTC and reject clock errors and nonexisten
   try {
     process.env.TZ = 'Asia/Seoul';
     const iso = '2024-03-01T15:35:00.000Z';
-    assert.deepEqual(soberDateTimeDraft(iso), { date: '2024-03-02', hour: '00', minute: '35' });
-    assert.equal(parseSoberDateTime(soberDateTimeDraft(iso), Date.parse(iso)), iso);
+    assert.deepEqual(dateTimeDraft(iso), { date: '2024-03-02', hour: '00', minute: '35' });
+    assert.equal(parseDateTime(dateTimeDraft(iso), Date.parse(iso)), iso);
     for (const patch of [{ hour: '24' }, { minute: '60' }, { hour: '' }, { date: '2024-02-30' }])
-      assert.throws(() =>
-        parseSoberDateTime({ ...soberDateTimeDraft(iso), ...patch }, Date.parse(iso)),
-      );
+      assert.throws(() => parseDateTime({ ...dateTimeDraft(iso), ...patch }, Date.parse(iso)));
     process.env.TZ = 'America/New_York';
     assert.throws(() =>
-      parseSoberDateTime(
+      parseDateTime(
         { date: '2024-03-10', hour: '02', minute: '30' },
         Date.parse('2024-03-11T00:00:00.000Z'),
       ),

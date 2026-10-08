@@ -1,5 +1,5 @@
 import { isHabitIconColor, type HabitIconColorKey } from './constants';
-import { format, parseISO } from 'date-fns';
+import { assertDateTime } from './date';
 import type { Sober, SoberRestart } from '../db/types';
 import {
   SOBER_DESCRIPTION_MAX_LENGTH,
@@ -58,18 +58,6 @@ export interface SoberStreak {
 }
 const isSoberIcon = (value: unknown): value is SoberIconKey =>
   typeof value === 'string' && Object.prototype.hasOwnProperty.call(SOBER_ICONS, value);
-function assertSoberDatetime(value: string, now: number) {
-  const timestamp = Date.parse(value);
-  if (
-    typeof value !== 'string' ||
-    !Number.isFinite(timestamp) ||
-    new Date(timestamp).toISOString() !== value ||
-    value < '1900-01-01T00:00:00.000Z' ||
-    value > '2100-12-31T23:59:59.999Z'
-  )
-    throw new Error('날짜와 시간을 확인해주세요.');
-  if (timestamp > now) throw new Error('미래 시각에는 기록할 수 없어요.');
-}
 export function validateSober(input: SoberInput, now: number) {
   if (
     typeof input.name !== 'string' ||
@@ -98,7 +86,7 @@ export function validateSober(input: SoberInput, now: number) {
       : input.goal_days !== null
   )
     throw new Error(`직접 목표는 1~${SOBER_MAX_GOAL_DAYS}일로 입력해주세요.`);
-  assertSoberDatetime(input.initial_started_at, now);
+  assertDateTime(input.initial_started_at, now);
 }
 export function validateSoberRestart(
   input: SoberRestartInput,
@@ -107,7 +95,7 @@ export function validateSoberRestart(
 ) {
   if (!Number.isSafeInteger(input.sober_id) || input.sober_id <= 0)
     throw new Error('거리두기 항목을 확인해주세요.');
-  assertSoberDatetime(input.restarted_at, now);
+  assertDateTime(input.restarted_at, now);
   if (Date.parse(input.restarted_at) < Date.parse(initialStartedAt))
     throw new Error('최초 시작 시각 이후에 기록해주세요.');
   if (
@@ -194,30 +182,4 @@ export function getSoberSummary(sober: Sober, restarts: SoberRestart[], now: num
     longest: getLongestSoberStreak(streaks),
     longRecords: getLongSoberStreaks(streaks),
   };
-}
-
-interface SoberDateTimeDraft {
-  date: string;
-  hour: string;
-  minute: string;
-}
-export function soberDateTimeDraft(iso: string): SoberDateTimeDraft {
-  const date = parseISO(iso);
-  return { date: format(date, 'yyyy-MM-dd'), hour: format(date, 'HH'), minute: format(date, 'mm') };
-}
-export function parseSoberDateTime(draft: SoberDateTimeDraft, now: number) {
-  if (
-    !/^\d{1,2}$/.test(draft.hour) ||
-    !/^\d{1,2}$/.test(draft.minute) ||
-    Number(draft.hour) > 23 ||
-    Number(draft.minute) > 59
-  )
-    throw new Error('시간은 0~23시, 분은 0~59분으로 입력해주세요.');
-  const local = `${draft.date}T${draft.hour.padStart(2, '0')}:${draft.minute.padStart(2, '0')}:00`;
-  const date = new Date(local);
-  if (!Number.isFinite(date.getTime()) || format(date, "yyyy-MM-dd'T'HH:mm:ss") !== local)
-    throw new Error('날짜와 시간을 확인해주세요.');
-  const iso = date.toISOString();
-  assertSoberDatetime(iso, now);
-  return iso;
 }

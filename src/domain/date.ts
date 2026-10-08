@@ -40,3 +40,42 @@ export function getStreak(dates: string[], today = todayString()) {
   const current = previous === today || previous === shiftDate(today, -1) ? streak : 0;
   return { current, longest };
 }
+
+export function assertDateTime(value: string, now: number) {
+  const timestamp = Date.parse(value);
+  if (
+    typeof value !== 'string' ||
+    !Number.isFinite(timestamp) ||
+    new Date(timestamp).toISOString() !== value ||
+    value < '1900-01-01T00:00:00.000Z' ||
+    value > '2100-12-31T23:59:59.999Z'
+  )
+    throw new Error('날짜와 시간을 확인해주세요.');
+  if (timestamp > now) throw new Error('미래 시각에는 기록할 수 없어요.');
+}
+
+interface DateTimeDraft {
+  date: string;
+  hour: string;
+  minute: string;
+}
+export function dateTimeDraft(iso: string): DateTimeDraft {
+  const date = parseISO(iso);
+  return { date: format(date, 'yyyy-MM-dd'), hour: format(date, 'HH'), minute: format(date, 'mm') };
+}
+export function parseDateTime(draft: DateTimeDraft, now: number) {
+  if (
+    !/^\d{1,2}$/.test(draft.hour) ||
+    !/^\d{1,2}$/.test(draft.minute) ||
+    Number(draft.hour) > 23 ||
+    Number(draft.minute) > 59
+  )
+    throw new Error('시간은 0~23시, 분은 0~59분으로 입력해주세요.');
+  const local = `${draft.date}T${draft.hour.padStart(2, '0')}:${draft.minute.padStart(2, '0')}:00`;
+  const date = new Date(local);
+  if (!Number.isFinite(date.getTime()) || format(date, "yyyy-MM-dd'T'HH:mm:ss") !== local)
+    throw new Error('날짜와 시간을 확인해주세요.');
+  const iso = date.toISOString();
+  assertDateTime(iso, now);
+  return iso;
+}
