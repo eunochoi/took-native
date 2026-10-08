@@ -155,8 +155,8 @@ test('diary calendar owns decorations and future-date limits while using the def
 });
 
 test('habit calendar fills completed and missed dates while keeping locked history legible', () => {
-  const { HabitMonthCalendar } = load('src/screens/habit/HabitMonthCalendar.tsx');
-  const tree = HabitMonthCalendar({
+  const { HabitMonthStatistics } = load('src/screens/habit/HabitMonthStatistics.tsx');
+  const tree = HabitMonthStatistics({
     habit: { initial_started_at: '2026-09-01T00:00:00.000Z' },
     month: '2026-09',
     today: '2026-10-07',
@@ -190,8 +190,8 @@ test('habit calendar fills completed and missed dates while keeping locked histo
 });
 
 test('habit calendar does not mark missing records as missed while data is unavailable', () => {
-  const { HabitMonthCalendar } = load('src/screens/habit/HabitMonthCalendar.tsx');
-  const tree = HabitMonthCalendar({
+  const { HabitMonthStatistics } = load('src/screens/habit/HabitMonthStatistics.tsx');
+  const tree = HabitMonthStatistics({
     habit: { initial_started_at: '2026-09-01T00:00:00.000Z' },
     month: '2026-09',
     today: '2026-10-07',
@@ -298,7 +298,7 @@ test('day detail falls back to today for a direct future-date route', () => {
 
 
 test('habit start and future boundaries block adjacent cells and share guarded month navigation', () => {
-  const { HabitMonthCalendar } = load('src/screens/habit/HabitMonthCalendar.tsx');
+  const { HabitMonthStatistics } = load('src/screens/habit/HabitMonthStatistics.tsx');
   const months: string[] = [];
   const toggled: string[] = [];
   const props = {
@@ -312,7 +312,7 @@ test('habit start and future boundaries block adjacent cells and share guarded m
     onMonthChange: (month: string) => months.push(month),
     onToggle: (date: string) => toggled.push(date),
   };
-  const tree = HabitMonthCalendar(props);
+  const tree = HabitMonthStatistics(props);
   const header = nodes(tree).find((node) => node.type === 'CalendarHeader');
   assert.equal(header.props.navigation.canGoPrevious, false);
   assert.equal(header.props.navigation.canGoNext, true);
@@ -330,7 +330,7 @@ test('habit start and future boundaries block adjacent cells and share guarded m
   CalendarDay(cell(tree, '2026-10-01').props).props.onPress();
   assert.deepEqual(months, ['2026-10']);
   assert.deepEqual(toggled, []);
-  const current = HabitMonthCalendar({ ...props, month: '2026-10' });
+  const current = HabitMonthStatistics({ ...props, month: '2026-10' });
   for (const date of ['2026-10-09', '2026-11-01']) {
     assert.equal(cell(current, date).props.disabled, true);
     CalendarDay(cell(current, date).props).props.onPress();
