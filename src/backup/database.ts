@@ -4,7 +4,7 @@ import { isHabitIconColor } from '../domain/constants';
 import { SCHEMA_VERSION } from '../db/schema';
 import { validateHabit } from '../db/habit';
 import { validateSober, validateSoberRestart } from '../domain/sober';
-import { MAX_SOBER_COUNT } from '../domain/limits';
+import { MAX_HABIT_COUNT, MAX_SOBER_COUNT } from '../domain/limits';
 import type { Completion, Diary, DiaryImage, Habit, Sober, SoberRestart } from '../db/types';
 import { isDate, localDate } from '../domain/date';
 import { parseSettings } from '../settings/model';
@@ -90,7 +90,7 @@ export function validateBackupRecords(records: BackupRecords, files: Record<stri
   if (
     diaryIds.size !== records.diaries.length ||
     habitMap.size !== records.habits.length ||
-    records.habits.length > 20 ||
+    records.habits.length > MAX_HABIT_COUNT ||
     new Set(records.diaries.map((diary) => diary.date)).size !== records.diaries.length
   )
     throw new Error('백업에 중복되거나 너무 많은 기록이 있습니다.');

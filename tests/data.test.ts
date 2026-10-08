@@ -6,6 +6,7 @@ import { saveDiary, deleteDiary, getDiaryById, getDiaryList } from '../src/db/di
 import { saveHabit, deleteHabit, setHabitCompletion, getCompletionsByHabit } from '../src/db/habit';
 import { getDiaryStats, getHabitStats } from '../src/db/stats';
 import { shiftDate, todayString } from '../src/domain/date';
+import { MAX_HABIT_COUNT } from '../src/domain/limits';
 
 const today = todayString();
 test('schema initialization is repeatable and refuses future versions without deleting records', async () => {
@@ -49,7 +50,7 @@ test('habit name uniqueness, item limit, valid icons and four-day edits are enfo
   ]);
   await setHabitCompletion(db, first, shiftDate(today, -3), true);
   await assert.rejects(setHabitCompletion(db, first, shiftDate(today, -4), true));
-  for (let i = 1; i < 20; i++)
+  for (let i = 1; i < MAX_HABIT_COUNT; i++)
     await saveHabit(db, { name: `습관${i}`, priority: 0, icon_key: 'goal' });
   await assert.rejects(saveHabit(db, { name: '초과', priority: 0, icon_key: 'goal' }));
   raw.close();
