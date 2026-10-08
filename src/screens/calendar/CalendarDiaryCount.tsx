@@ -20,7 +20,7 @@ export function CalendarDiaryCount({ count }: { count: number }) {
         className="shrink text-sm leading-5 text-theme-text-secondary"
         style={{ includeFontPadding: false }}
       >
-        마음{' '}
+        일기{' '}
         <Text
           className="text-sm leading-5 font-semibold text-theme-accent-deep"
           style={{ includeFontPadding: false }}
