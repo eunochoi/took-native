@@ -158,7 +158,9 @@ export async function exportBackup(db: SQLiteDatabase, destination: 'device' | '
 }
 
 export function discardBackupSelection(uris: string[]) {
+  const prefix = new File(Paths.cache, 'took-import-').uri;
   for (const uri of uris) {
+    if (!uri.startsWith(prefix)) continue;
     try {
       const file = new File(uri);
       if (file.exists) file.delete();
@@ -171,16 +173,34 @@ export function discardBackupSelection(uris: string[]) {
 export async function chooseBackup(): Promise<string[] | null> {
   const result = await DocumentPicker.getDocumentAsync({
     type: ['application/zip', 'application/octet-stream', 'application/x-zip-compressed'],
-    copyToCacheDirectory: true,
+    // Android's picker cache is outside the project's scoped cache in Expo Go.
+    copyToCacheDirectory: false,
     multiple: true,
   });
   if (result.canceled) return null;
-  const uris = result.assets.map((asset) => asset.uri);
-  if (uris.length > MAX_BACKUP_FILES || uris.some((uri) => new File(uri).size > MAX_BACKUP_BYTES)) {
-    discardBackupSelection(uris);
+  if (
+    result.assets.length > MAX_BACKUP_FILES ||
+    result.assets.some((asset) => (asset.size ?? 0) > MAX_BACKUP_BYTES)
+  )
     throw new Error('선택한 백업의 파일 수나 크기 제한을 초과했습니다.');
+  const uris: string[] = [];
+  const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  try {
+    for (const [index, asset] of result.assets.entries()) {
+      const source = new File(asset.uri);
+      if (source.size > MAX_BACKUP_BYTES)
+        throw new Error('선택한 백업의 파일 수나 크기 제한을 초과했습니다.');
+      const copy = new File(Paths.cache, `took-import-${id}-${index}.zip`);
+      uris.push(copy.uri);
+      await source.copy(copy);
+      if (copy.size > MAX_BACKUP_BYTES)
+        throw new Error('선택한 백업의 파일 수나 크기 제한을 초과했습니다.');
+    }
+    return uris;
+  } catch (error) {
+    discardBackupSelection(uris);
+    throw error;
   }
-  return uris;
 }
 
 export function restoreBackup(db: SQLiteDatabase, uris: string[]) {

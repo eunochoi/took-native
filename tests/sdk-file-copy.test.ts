@@ -99,7 +99,7 @@ function copying(kind: 'diary' | 'backup') {
         ? exports.saveDiaryImages(db, { date: '2026-10-05', emotion: 1, content: 'test' }, [
             { file: 'new.jpg', uri: 'draft.jpg', temporary: true },
           ])
-        : exports.restoreBackup(db, ['selected.zip']),
+        : exports.restoreBackup(db, ['cache/took-import-1-test-0.zip']),
   };
 }
 
@@ -129,7 +129,7 @@ for (const kind of ['diary', 'backup'] as const) {
     assert(!operation.events.includes('delete:media/old.jpg'));
     if (kind === 'backup') {
       assert(operation.events.includes('staging removed'));
-      assert(operation.events.includes('delete:selected.zip'));
+      assert(operation.events.includes('delete:cache/took-import-1-test-0.zip'));
     }
   });
 }

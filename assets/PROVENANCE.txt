@@ -1,3 +1,0 @@
-Took basic emotion PNGs, cat artwork, app icon, Tmoney font assets were copied from the existing Took web project on 2026-10-03. Runtime code does not depend on that project. Source originals were not modified.
-
-Simple emotions: faithful PNG rendering of the existing SimpleEmotionIcon shape, colors, and Font Awesome Free 6 face glyphs. See emotions/simple/LICENSE.txt.
