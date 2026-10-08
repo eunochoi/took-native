@@ -29,7 +29,7 @@ export function SoberStatisticsSummary({
           },
           {
             icon: 'play-circle-outline',
-            label: '최초 시작일',
+            label: '시작일',
             value: format(parseISO(initialStartedAt), 'yy년 M월 d일'),
           },
         ] as const

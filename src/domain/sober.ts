@@ -1,11 +1,11 @@
+import type { Sober, SoberRestart } from '../db/types';
 import { isHabitIconColor, type HabitIconColorKey } from './constants';
 import { assertDateTime } from './date';
-import type { Sober, SoberRestart } from '../db/types';
 import {
   SOBER_DESCRIPTION_MAX_LENGTH,
+  SOBER_MAX_GOAL_DAYS,
   SOBER_MEMO_MAX_LENGTH,
   SOBER_NAME_MAX_LENGTH,
-  SOBER_MAX_GOAL_DAYS,
 } from './limits';
 
 export const SOBER_ICONS = {
@@ -81,8 +81,8 @@ export function validateSober(input: SoberInput, now: number) {
   if (
     input.goal_mode === 'MANUAL'
       ? !Number.isSafeInteger(input.goal_days) ||
-        input.goal_days! <= 0 ||
-        input.goal_days! > SOBER_MAX_GOAL_DAYS
+      input.goal_days! <= 0 ||
+      input.goal_days! > SOBER_MAX_GOAL_DAYS
       : input.goal_days !== null
   )
     throw new Error(`직접 목표는 1~${SOBER_MAX_GOAL_DAYS}일로 입력해주세요.`);
@@ -97,7 +97,7 @@ export function validateSoberRestart(
     throw new Error('거리두기 항목을 확인해주세요.');
   assertDateTime(input.restarted_at, now);
   if (Date.parse(input.restarted_at) < Date.parse(initialStartedAt))
-    throw new Error('최초 시작 시각 이후에 기록해주세요.');
+    throw new Error('시작 시각 이후에 기록해주세요.');
   if (
     input.memo !== null &&
     (typeof input.memo !== 'string' || input.memo.length > SOBER_MEMO_MAX_LENGTH)

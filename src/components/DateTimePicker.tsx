@@ -1,17 +1,17 @@
-import { AppIcon } from './AppIcon';
-import { CharacterCount } from './CharacterCount';
-import { useState } from 'react';
-import { View, TextInput } from 'react-native';
 import { format, parseISO } from 'date-fns';
-import { FormPickerRow } from './FormPickerRow';
-import { BottomSheetModal } from './BottomSheetModal';
-import { Text } from './Text';
-import { Button } from './Button';
-import { DatePickerCalendar } from '../screens/calendar/DatePickerCalendar';
+import { useState } from 'react';
+import { TextInput, View } from 'react-native';
 import { dateTimeDraft, parseDateTime } from '../domain/date';
 import { SOBER_MEMO_MAX_LENGTH } from '../domain/limits';
 import { useCurrentMinute } from '../hooks/useCurrentMinute';
+import { DatePickerCalendar } from '../screens/calendar/DatePickerCalendar';
 import { useAppTheme } from '../theme/AppThemeProvider';
+import { AppIcon } from './AppIcon';
+import { BottomSheetModal } from './BottomSheetModal';
+import { Button } from './Button';
+import { CharacterCount } from './CharacterCount';
+import { FormPickerRow } from './FormPickerRow';
+import { Text } from './Text';
 
 const TIME_INPUT_CLASS_NAME =
   'h-12 w-16 rounded-2xl bg-transparent border border-theme-border text-center text-lg text-theme-text-primary font-normal';
@@ -138,7 +138,7 @@ export function DateTimePicker({
               try {
                 const iso = parseDateTime(draft, Date.now());
                 if (minTime && Date.parse(iso) < Date.parse(minTime))
-                  throw new Error('최초 시작 시각 이후에 기록해주세요.');
+                  throw new Error('시작 시각 이후에 기록해주세요.');
                 close(() => onApply(iso, mode === 'restart' ? text.trim() || null : null));
               } catch (failure) {
                 setError((failure as Error).message);
