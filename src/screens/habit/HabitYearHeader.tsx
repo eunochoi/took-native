@@ -5,16 +5,18 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 
 export function HabitYearHeader({
   year,
+  startedDate,
   today,
   onYearChange,
 }: {
   year: number;
+  startedDate: string;
   today: string;
   onYearChange: (year: number) => void;
 }) {
   const { colors, rem: appRem } = useAppTheme();
-  const minYear = 1900;
-  const maxYear = 2100;
+  const minYear = Number(startedDate.slice(0, 4));
+  const maxYear = Number(today.slice(0, 4));
   const arrows = ([-1, 1] as const).map((amount) => {
     const nextYear = year + amount;
     const enabled = nextYear >= minYear && nextYear <= maxYear;
@@ -43,7 +45,7 @@ export function HabitYearHeader({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${year}년, 올해로 이동`}
-        onPress={() => onYearChange(Number(today.slice(0, 4)))}
+        onPress={() => onYearChange(maxYear)}
         className="flex-1 items-center justify-center"
       >
         <Text accessibilityRole="header" className="text-base">

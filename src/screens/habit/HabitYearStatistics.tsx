@@ -25,7 +25,7 @@ export function HabitYearStatistics({
   return (
     <View className="gap-4">
       <Text accessibilityRole="header" className="text-xl font-bold">연도별 기록</Text>
-      <HabitYearHeader year={year} today={today} onYearChange={setYear} />
+      <HabitYearHeader year={year} startedDate={startedDate} today={today} onYearChange={setYear} />
       <HabitStatisticsSummary
         stats={[
           { label: '실천 횟수', value: yearly.completed, unit: '회' },

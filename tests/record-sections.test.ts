@@ -499,3 +499,39 @@ test('yearly statistics refresh records, return to this year and preserve disabl
     assert(boundaryUi.render().nodes.some((node) => node.props.accessibilityLabel === `${year}년, 올해로 이동`));
   }
 });
+
+
+test('year navigation includes start and current years and blocks requests outside the range', () => {
+  const changes: number[] = [];
+  const ui = section('src/screens/habit/HabitYearHeader.tsx', 'HabitYearHeader', {
+    year: 2023, startedDate: '2023-12-31', today: '2025-01-01',
+    onYearChange: (year: number) => changes.push(year),
+  });
+  const first = ui.render().nodes;
+  const previous = first.find((node) => node.props.accessibilityLabel === '이전 연도');
+  assert.equal(previous.props.disabled, true);
+  assert.match(previous.props.className, /opacity-30/);
+  previous.props.onPress();
+  assert.deepEqual(changes, []);
+  first.find((node) => node.props.accessibilityLabel === '다음 연도').props.onPress();
+  assert.deepEqual(changes, [2024]);
+  const middle = ui.render({ year: 2024 }).nodes;
+  for (const label of ['이전 연도', '다음 연도']) {
+    const button = middle.find((node) => node.props.accessibilityLabel === label);
+    assert.equal(button.props.disabled, false);
+    button.props.onPress();
+  }
+  assert.deepEqual(changes, [2024, 2023, 2025]);
+  const last = ui.render({ year: 2025 }).nodes;
+  const next = last.find((node) => node.props.accessibilityLabel === '다음 연도');
+  assert.equal(next.props.disabled, true);
+  next.props.onPress();
+  assert.deepEqual(changes, [2024, 2023, 2025]);
+  const sameYear = ui.render({ year: 2025, startedDate: '2025-01-01' }).nodes;
+  for (const label of ['이전 연도', '다음 연도']) {
+    const button = sameYear.find((node) => node.props.accessibilityLabel === label);
+    assert.equal(button.props.disabled, true);
+    button.props.onPress();
+  }
+  assert.deepEqual(changes, [2024, 2023, 2025]);
+});
