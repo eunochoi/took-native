@@ -141,9 +141,9 @@ test('diary calendar owns decorations and future-date limits while using the def
   assert(selected.every((date) => date <= day.today));
   const content = nodes(cell(tree, day.date));
   assert.equal(content.find((node) => node.type === 'EmotionImage').props.fill, true);
-  const badge = content.find((node) => node.type === 'OrganicBadge');
+  const badge = content.find((node) => node.type === 'Badge');
   assert.equal(badge.props.children, 2);
-  assert.equal(badge.props.className, 'absolute -top-1 -right-2');
+  assert.equal(badge.props.className, 'h-6 w-6 absolute -top-1 -right-2');
   assert.equal(
     cell(tree, '2026-10-06').props.children.props.className,
     'items-center justify-center scale-[1.2]',

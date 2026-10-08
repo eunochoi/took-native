@@ -1,14 +1,14 @@
-import { UNDERLINE_TAB_LIST_CLASS_NAME } from '../../theme/classes';
-import { UnderlineTab } from '../../components/UnderlineTab';
-import { AnalysisHeader } from './AnalysisHeader';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { Badge } from '../../components/Badge';
 import { EmotionImage } from '../../components/EmotionImage';
-import { OrganicBadge } from '../../components/OrganicBadge';
 import { Text } from '../../components/Text';
+import { UnderlineTab } from '../../components/UnderlineTab';
 import type { getDiaryStats } from '../../db/stats';
 import { EMOTIONS } from '../../domain/constants';
 import { useAppTheme } from '../../theme/AppThemeProvider';
+import { UNDERLINE_TAB_LIST_CLASS_NAME } from '../../theme/classes';
+import { AnalysisHeader } from './AnalysisHeader';
 const halves = ['전체', '전반기', '후반기'];
 export function EmotionStats({
   stats,
@@ -44,9 +44,9 @@ export function EmotionStats({
                   <View>
                     <EmotionImage emotion={id} size={appRem * 3} />
                     {max > 0 && counts[id] === max && (
-                      <OrganicBadge tone="home" className="absolute -right-3 -top-2">
+                      <Badge className="absolute -right-3 -top-2 h-7 w-8">
                         1등
-                      </OrganicBadge>
+                      </Badge>
                     )}
                   </View>
                   <View className="flex-row items-baseline gap-1">

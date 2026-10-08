@@ -6,7 +6,7 @@ import test from 'node:test';
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
 const jsx = (type: unknown, props: any) => ({ type, props });
-function load(name: string, colors: Record<string, string> = {}) {
+function load(name: string) {
   const exports: Record<string, Function> = {};
   runInNewContext(
     ts.transpileModule(
@@ -24,10 +24,10 @@ function load(name: string, colors: Record<string, string> = {}) {
             Pressable: 'Pressable',
             ActivityIndicator: 'ActivityIndicator',
             View: 'View',
-            Image: 'Image',
           };
         if (dependency.endsWith('AppThemeProvider'))
-          return { useAppTheme: () => ({ iconSizes: { md: 24 }, colors }) };
+          return { useAppTheme: () => ({ iconSizes: { md: 24 }, colors: {} }) };
+        if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
         return { Text: 'Text', AppIcon: 'AppIcon' };
       },
     },
@@ -93,20 +93,16 @@ test('shared menu button passes each record menu label, disabled state and openi
   assert.equal(opened, 1);
 });
 
-test('organic badges follow theme changes and keep restart color independent', () => {
-  for (const colors of [
-    { accent: '#8CADE2', accentDeep: '#7C9BCE', soberRestart: '#DA909C' },
-    { accent: '#629E9A', accentDeep: '#4D817E', soberRestart: '#DA909C' },
-  ]) {
-    const badge = load('OrganicBadge', colors);
-    for (const [tone, expected] of [
-      ['home', colors.accent],
-      ['calendar', colors.accentDeep],
-      ['restart', colors.soberRestart],
-    ]) {
-      const node = badge({ tone, children: 3 });
-      assert.equal(node.props.children[0].props.style.tintColor, expected);
-      assert.equal(node.props.children[1].props.children, 3);
-    }
-  }
+test('badges retain caller sizing and position with shared theme classes', () => {
+  const badge = load('Badge');
+  const node = badge({ children: 3, className: 'h-6 w-6 absolute -top-1 -right-2' });
+  assert.match(node.props.className, /bg-theme-accent-light/);
+  assert.match(node.props.className, /border-\[1px\] border-theme-accent\/30/);
+  assert.match(node.props.className, /rounded-\[50%_45%_55%_50%\/60%_50%_50%_55%\]/);
+  assert.match(node.props.className, /h-6 w-6 absolute -top-1 -right-2/);
+  assert.equal(node.props.style, undefined);
+  assert.equal(node.props.children.type, 'Text');
+  assert.match(node.props.children.props.className, /text-theme-accent/);
+  assert.equal(node.props.children.props.children, 3);
+  assert.equal(badge({ children: '1등' }).props.children.props.children, '1등');
 });

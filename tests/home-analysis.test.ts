@@ -206,15 +206,15 @@ test('emotion counts keep period filtering and tied badges without added summari
   stats.emotions[1] = 2;
   stats.halves[0][0] = 1;
   const tree = render('EmotionStats', { stats, year: 2024 });
-  assert.equal(nodes(tree).filter((node) => node.type === 'OrganicBadge').length, 2);
+  assert.equal(nodes(tree).filter((node) => node.type === 'Badge').length, 2);
   const firstHalf = render('EmotionStats', { stats, year: 2024 }, 1);
   assert(text(firstHalf).includes('전반기 1개'));
-  assert.equal(nodes(firstHalf).filter((node) => node.type === 'OrganicBadge').length, 1);
+  assert.equal(nodes(firstHalf).filter((node) => node.type === 'Badge').length, 1);
   assert(!text(tree).includes('돌아보기'));
   assert(!text(tree).includes('월별'));
   assert.equal(
     nodes(render('EmotionStats', { stats: emptyStats(), year: 2024 })).filter(
-      (node) => node.type === 'OrganicBadge',
+      (node) => node.type === 'Badge',
     ).length,
     0,
   );

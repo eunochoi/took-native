@@ -17,26 +17,11 @@ const out = path.join(root, 'assets/ui');
     deviceScaleFactor: 4,
   });
   await page.setContent(
-    `<style>@font-face{font-family:Fredoka;src:url(data:font/ttf;base64,${font});font-weight:300 700;font-stretch:75% 125%;}html{font-size:15px}body{margin:0;background:transparent}#wordmark{display:inline-flex;align-items:baseline;gap:.125rem;font-size:48px;color:#585858}#letters{font-family:Fredoka;font-weight:550;font-stretch:95%;line-height:1}#dot{height:.23em;width:.23em;border-radius:50%;background:#8CADE2}#blob{border-radius:50% 45% 55% 50% / 60% 50% 50% 55%;}</style><span id="wordmark"><span id="letters">to:ok</span><span id="dot"></span></span><div id="blob"></div>`,
+    `<style>@font-face{font-family:Fredoka;src:url(data:font/ttf;base64,${font});font-weight:300 700;font-stretch:75% 125%;}html{font-size:15px}body{margin:0;background:transparent}#wordmark{display:inline-flex;align-items:baseline;gap:.125rem;font-size:48px;color:#585858}#letters{font-family:Fredoka;font-weight:550;font-stretch:95%;line-height:1}#dot{height:.23em;width:.23em;border-radius:50%;background:#8CADE2}</style><span id="wordmark"><span id="letters">to:ok</span><span id="dot"></span></span>`,
   );
   await page.evaluate(() => document.fonts.ready);
   const bounds = await page.locator('#wordmark').boundingBox();
   await page.locator('#wordmark').screenshot({ path: out + '/wordmark.png', omitBackground: true });
-  for (const [name, w, h, color] of [
-    ['badge-home', 30, 26.25, '#8CADE2'],
-    ['badge-calendar', 22.5, 22.5, '#7C9BCE'],
-  ]) {
-    await page
-      .locator('#blob')
-      .evaluate(
-        (el, { w, h, color }) =>
-          Object.assign(el.style, { width: w + 'px', height: h + 'px', background: color }),
-        { w, h, color },
-      );
-    await page
-      .locator('#blob')
-      .screenshot({ path: out + '/' + name + '.png', omitBackground: true });
-  }
   fs.writeFileSync(
     out + '/wordmark.json',
     JSON.stringify({ width: bounds.width, height: bounds.height }, null, 2) + '\n',

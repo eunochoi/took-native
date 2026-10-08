@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { View } from 'react-native';
 import { EmotionImage } from '../../components/EmotionImage';
 import { QueryError } from '../../components/QueryError';
-import { OrganicBadge } from '../../components/OrganicBadge';
+import { Badge } from '../../components/Badge';
 import { EMOTIONS } from '../../domain/constants';
 import { diaryQueries, habitQueries } from '../../queries';
 import { CalendarDay } from './CalendarDay';
@@ -100,12 +100,9 @@ export function DiaryHabitMonthCalendar(props: {
                     </View>
                   )}
                   {count > 0 && (
-                    <OrganicBadge
-                      tone="calendar"
-                      className={diary ? 'absolute -top-1 -right-2' : ''}
-                    >
+                    <Badge className={`h-6 w-6 ${diary ? 'absolute -top-1 -right-2' : ''}`}>
                       {count}
-                    </OrganicBadge>
+                    </Badge>
                   )}
                 </View>
               ) : undefined}
