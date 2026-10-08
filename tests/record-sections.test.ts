@@ -255,7 +255,7 @@ test('long records show five rows when collapsed and at most twenty when expande
 test('ranked records keep the heading and description without an empty message or toggle', () => {
   const ui = section('src/screens/sober/SoberLongRecords.tsx', 'SoberLongRecords', { records: [] });
   const empty = ui.render();
-  for (const text of ['거리두기 기록', '오래 유지한 순으로 최대 20개의 기록을 보여드려요.']) {
+  for (const text of ['상위 기록', '오래 유지한 순으로 최대 20개의 기록을 보여드려요.']) {
     assert(empty.nodes.some((node) => node.type === 'Text' && node.props.children === text));
   }
   assert.equal(rows(empty.nodes).length, 0);

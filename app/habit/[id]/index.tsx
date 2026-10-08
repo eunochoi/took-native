@@ -1,20 +1,20 @@
-import { useMemo, useState } from 'react';
-import { AlertModal, type AlertContent } from '../../../src/components/AlertModal';
-import { useAppTheme } from '../../../src/theme/AppThemeProvider';
-import { View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useSQLiteContext } from 'expo-sqlite';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
-import { habitQueries, useRecordMutation, useToday } from '../../../src/queries';
-import { setHabitCompletion } from '../../../src/db/habit';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useMemo, useState } from 'react';
+import { View } from 'react-native';
+import { AlertModal, type AlertContent } from '../../../src/components/AlertModal';
 import { BottomSheetPage } from '../../../src/components/BottomSheetPage';
+import { HabitIcon } from '../../../src/components/HabitIcon';
+import { QueryState } from '../../../src/components/QueryState';
+import { Text } from '../../../src/components/Text';
+import { setHabitCompletion } from '../../../src/db/habit';
+import { habitQueries, useRecordMutation, useToday } from '../../../src/queries';
 import { HabitMenu } from '../../../src/screens/habit/HabitMenu';
 import { HabitStars } from '../../../src/screens/habit/HabitStars';
 import { HabitStatistics } from '../../../src/screens/habit/HabitStatistics';
-import { Text } from '../../../src/components/Text';
-import { HabitIcon } from '../../../src/components/HabitIcon';
-import { QueryState } from '../../../src/components/QueryState';
+import { useAppTheme } from '../../../src/theme/AppThemeProvider';
 
 export default function HabitDetail() {
   const [alert, setAlert] = useState<AlertContent | null>(null);
@@ -50,19 +50,14 @@ export default function HabitDetail() {
           <QueryState query={records} />
           {habit ? (
             <>
-              <View className="gap-4">
+              <View className="gap-4 justify-center items-center">
                 <View className="items-center gap-4">
                   <HabitIcon name={habit.icon_key} colorKey={habit.icon_color} size={appRem * 3} />
                 </View>
-                <View className="items-center gap-y-2">
-                  <View className="flex-row items-center gap-2">
-                    <Text className="text-sm text-theme-text-secondary">우선순위</Text>
-                    <HabitStars priority={habit.priority} size={appRem} />
-                  </View>
-                  <Text className="text-sm text-theme-text-secondary">
-                    시작 일시 {format(parseISO(habit.initial_started_at), 'yyyy년 M월 d일 HH:mm')}
-                  </Text>
-                </View>
+                <HabitStars priority={habit.priority} size={appRem * 1.3} />
+                <Text className="text-sm text-theme-text-secondary">
+                  시작 일시 {format(parseISO(habit.initial_started_at), 'yyyy년 M월 d일 HH:mm')}
+                </Text>
               </View>
               <HabitStatistics
                 habit={habit}

@@ -2,16 +2,16 @@ import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo } from 'react';
 import { View } from 'react-native';
+import { Badge } from '../../components/Badge';
 import { EmotionImage } from '../../components/EmotionImage';
 import { QueryError } from '../../components/QueryError';
-import { Badge } from '../../components/Badge';
+import { calendarDays } from '../../domain/calendar';
 import { EMOTIONS } from '../../domain/constants';
+import { useCalendarNavigation } from '../../hooks/useCalendarNavigation';
+import { useMonthSwipe } from '../../hooks/useMonthSwipe';
 import { diaryQueries, habitQueries } from '../../queries';
 import { CalendarDay } from './CalendarDay';
 import { CalendarGrid } from './CalendarGrid';
-import { calendarDays } from '../../domain/calendar';
-import { useMonthSwipe } from '../../hooks/useMonthSwipe';
-import { useCalendarNavigation } from '../../hooks/useCalendarNavigation';
 import { CalendarHeader } from './CalendarHeader';
 
 export function DiaryHabitMonthCalendar(props: {
@@ -101,7 +101,7 @@ export function DiaryHabitMonthCalendar(props: {
                     </View>
                   )}
                   {count > 0 && (
-                    <Badge className={`h-6 w-6 ${diary ? 'absolute -top-1 -right-2' : ''}`}>
+                    <Badge className={`h-auto w-auto py-0.5 px-1.5 ${diary ? 'absolute -top-1 -right-2' : ''}`}>
                       {count}
                     </Badge>
                   )}

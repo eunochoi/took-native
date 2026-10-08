@@ -24,16 +24,25 @@ export function HabitYearStatistics({
   );
   return (
     <View className="gap-4">
-      <Text accessibilityRole="header" className="text-xl font-bold">연도별 기록</Text>
-      <HabitYearHeader year={year} startedDate={startedDate} today={today} onYearChange={setYear} />
-      <HabitStatisticsSummary
-        stats={[
-          { label: '실천 횟수', value: yearly.completed, unit: '회' },
-          { label: '실천율', value: yearly.rate, unit: '%' },
-        ]}
-        unavailable={unavailable}
-      />
-      <HabitYearChart monthly={yearly.monthly} />
+      <Text accessibilityRole="header" className="text-xl font-semibold">
+        연간 기록
+      </Text>
+      <View className="px-2 gap-4">
+        <HabitStatisticsSummary
+          stats={[
+            { label: '실천 횟수', value: yearly.completed, unit: '회' },
+            { label: '실천율', value: yearly.rate, unit: '%' },
+          ]}
+          unavailable={unavailable}
+        />
+        <HabitYearHeader
+          year={year}
+          startedDate={startedDate}
+          today={today}
+          onYearChange={setYear}
+        />
+        <HabitYearChart monthly={yearly.monthly} />
+      </View>
     </View>
   );
 }
