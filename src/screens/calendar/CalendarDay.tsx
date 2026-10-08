@@ -65,6 +65,7 @@ export function CalendarDay({
     >
       {children ?? (
         <View
+          key={"default-day"}
           className={twMerge('w-3/5 aspect-square items-center justify-center', contentClassName)}
         >
           <Text
