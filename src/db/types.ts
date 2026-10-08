@@ -25,7 +25,7 @@ export interface Habit {
   priority: number;
   icon_key: HabitIconKey;
   icon_color: HabitIconColorKey;
-  created_date: string;
+  initial_started_at: string;
   created_at: string;
   updated_at: string;
 }

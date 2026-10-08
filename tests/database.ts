@@ -1,6 +1,6 @@
 import initSqlJs, { type Database } from 'sql.js';
 import type { SQLiteDatabase } from 'expo-sqlite';
-import { migrateDatabase } from '../src/db/migrations';
+import { initializeDatabase } from '../src/db/schema';
 
 export async function database(bytes?: Uint8Array) {
   const SQL = await initSqlJs();
@@ -43,7 +43,7 @@ export async function database(bytes?: Uint8Array) {
     },
   };
   const db = adapter as unknown as SQLiteDatabase;
-  if (!bytes) await migrateDatabase(db);
+  if (!bytes) await initializeDatabase(db);
   return { db, raw };
 }
 export const rows = (raw: Database, sql: string) => raw.exec(sql)[0]?.values ?? [];

@@ -51,6 +51,7 @@ function section(path: string, name: string, initialProps: Record<string, unknow
               return slots[index].value;
             },
           };
+        if (dependency.endsWith('domain/date')) return require('../src/domain/date');
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (dependency === 'react-native') return { View: 'View', Pressable: 'Pressable' };
         if (dependency.endsWith('hooks/useMonthSwipe'))
@@ -128,7 +129,7 @@ const habit: Habit = {
   priority: 1,
   icon_key: 'walking',
   icon_color: 'theme',
-  created_date: '2024-03-01',
+  initial_started_at: '2024-03-01T00:00:00.000Z',
   created_at: '2024-03-01T00:00:00Z',
   updated_at: '2024-03-01T00:00:00Z',
 };

@@ -1,18 +1,19 @@
-import { SECTION_TITLE_CLASS_NAME, FORM_TEXT_INPUT_CLASS_NAME } from '../theme/classes';
-import { FormSubmitButton } from '../components/FormSubmitButton';
-import { CharacterCount } from '../components/CharacterCount';
 import { useQuery } from '@tanstack/react-query';
+import { format, parseISO } from 'date-fns';
 import { usePreventRemove } from 'expo-router/react-navigation';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
-import { View, TextInput } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { AlertModal, type AlertContent } from '../components/AlertModal';
+import { BottomSheetPage } from '../components/BottomSheetPage';
+import { CharacterCount } from '../components/CharacterCount';
+import { DateTimePicker } from '../components/DateTimePicker';
 import { FormPickerRow } from '../components/FormPickerRow';
+import { FormSubmitButton } from '../components/FormSubmitButton';
 import { HabitIcon } from '../components/HabitIcon';
 import { IconColorPicker } from '../components/IconColorPicker';
 import { QueryState } from '../components/QueryState';
 import { RecordFormLayout } from '../components/RecordFormLayout';
-import { BottomSheetPage } from '../components/BottomSheetPage';
 import { Text } from '../components/Text';
 import { saveHabit } from '../db/habit';
 import {
@@ -25,6 +26,7 @@ import {
 import { HABIT_NAME_MAX_LENGTH } from '../domain/limits';
 import { habitQueries, useRecordMutation } from '../queries';
 import { useAppTheme } from '../theme/AppThemeProvider';
+import { FORM_TEXT_INPUT_CLASS_NAME, SECTION_TITLE_CLASS_NAME } from '../theme/classes';
 import { HabitIconPicker } from './habit/HabitIconPicker';
 import { HABIT_PRIORITY_LABELS, HabitPriorityPicker } from './habit/HabitPriorityPicker';
 import { HabitStars } from './habit/HabitStars';
@@ -38,7 +40,10 @@ export function HabitForm({ id }: { id?: number }) {
   const [priority, setPriority] = useState(0);
   const [icon, setIcon] = useState<HabitIconKey>('goal');
   const [iconColor, setIconColor] = useState<HabitIconColorKey>(DEFAULT_HABIT_ICON_COLOR);
-  const [picker, setPicker] = useState<'priority' | 'icon' | 'color' | null>(null);
+  const [initialStartedAt, setInitialStartedAt] = useState(() =>
+    new Date(Math.floor(Date.now() / 60000) * 60000).toISOString(),
+  );
+  const [picker, setPicker] = useState<'priority' | 'icon' | 'color' | 'date' | null>(null);
   const [saved, setSaved] = useState(false);
   const loaded = useRef(false);
   useEffect(() => {
@@ -48,10 +53,19 @@ export function HabitForm({ id }: { id?: number }) {
       setPriority(query.data.priority);
       setIcon(query.data.icon_key);
       setIconColor(query.data.icon_color);
+      setInitialStartedAt(query.data.initial_started_at);
     }
   }, [query.data]);
   const mutation = useRecordMutation(
-    () => saveHabit(db, { id, name, priority, icon_key: icon, icon_color: iconColor }),
+    () =>
+      saveHabit(db, {
+        id,
+        name,
+        priority,
+        icon_key: icon,
+        icon_color: iconColor,
+        initial_started_at: initialStartedAt,
+      }),
     'habit',
     () => setSaved(true),
     (error) => setAlert({ title: '처리하지 못했어요', message: error.message }),
@@ -119,6 +133,15 @@ export function HabitForm({ id }: { id?: number }) {
               value={iconColor}
               onClose={() => setPicker(null)}
               onApply={setIconColor}
+            />
+          )}
+          {picker === 'date' && id === undefined && (
+            <DateTimePicker
+              mode="start"
+              title="언제부터 습관을 시작했나요?"
+              value={initialStartedAt}
+              onClose={() => setPicker(null)}
+              onApply={setInitialStartedAt}
             />
           )}
           <AlertModal
@@ -191,6 +214,20 @@ export function HabitForm({ id }: { id?: number }) {
             />
           }
         />
+      </View>
+      <View className="gap-3">
+        <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
+          시작 일시
+        </Text>
+        <FormPickerRow
+          label={format(parseISO(initialStartedAt), 'yyyy년 M월 d일 HH:mm')}
+          accessibilityLabel="시작 일시 선택"
+          disabled={id !== undefined || mutation.isPending}
+          onPress={() => setPicker('date')}
+        />
+        <Text className="px-2 text-sm text-theme-accent">
+          시작 일시는 저장 후 변경할 수 없어요.
+        </Text>
       </View>
     </RecordFormLayout>
   );

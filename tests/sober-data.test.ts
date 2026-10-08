@@ -10,7 +10,6 @@ import {
   saveSoberRestart,
   deleteSoberRestart,
 } from '../src/db/sober';
-import { migrateDatabase } from '../src/db/migrations';
 import { saveHabit } from '../src/db/habit';
 import { MAX_SOBER_COUNT } from '../src/domain/limits';
 import type { SoberInput } from '../src/domain/sober';
@@ -118,37 +117,41 @@ test('duplicate names, item limit, future times, missing FK and cross-item edits
   await assert.rejects(saveSober(db, { ...input, id: 999, name: '없는 항목' }, now));
   raw.close();
 });
-test('schema 2 upgrades in place, is repeatable, and keeps all Habit rows', async () => {
+test('both habits and sober starts stay immutable even without completion or restart records', async () => {
   const { db, raw } = await database();
-  await saveHabit(db, { name: '남길 습관', priority: 2, icon_key: 'reading', icon_color: 'theme' });
-  raw.exec('DROP TABLE sober_restarts; DROP TABLE sobers; PRAGMA user_version = 2;');
-  await migrateDatabase(db);
-  await migrateDatabase(db);
-  assert.equal(rows(raw, 'PRAGMA user_version')[0][0], 4);
-  assert.deepEqual(rows(raw, 'SELECT name, icon_color FROM habits'), [['남길 습관', 'theme']]);
-  assert.equal((await getSoberList(db)).length, 0);
-  raw.close();
-});
-
-test('schema 3 migrates existing Sober and restart records to theme color without data loss', async () => {
-  const { db, raw } = await database();
-  const id = await saveSober(db, input, now);
-  await saveSoberRestart(
+  const habit = await saveHabit(
     db,
-    { sober_id: id, restarted_at: '2024-01-10T10:20:00.000Z', memo: '남길 메모' },
+    { name: '독서', priority: 1, icon_key: 'reading', initial_started_at: start },
     now,
   );
-  raw.exec('ALTER TABLE sobers DROP COLUMN icon_color; PRAGMA user_version = 3;');
-  await migrateDatabase(db);
-  await migrateDatabase(db);
-  assert.equal(rows(raw, 'PRAGMA user_version')[0][0], 4);
-  const record = await getSoberById(db, id);
-  assert.equal(record?.name, input.name);
-  assert.equal(record?.icon_color, 'theme');
-  assert.equal((await getSoberRestarts(db, id))[0].memo, '남길 메모');
-  await saveSober(db, { ...input, id, icon_color: 'pink' }, now);
-  assert.equal((await getSoberById(db, id))?.icon_color, 'pink');
-  await assert.rejects(saveSober(db, { ...input, id, icon_color: 'invalid' as never }, now));
-  assert.equal((await getSoberById(db, id))?.icon_color, 'pink');
+  const sober = await saveSober(db, input, now);
+  for (const changed of ['2023-12-01T10:20:00.000Z', '2024-01-15T10:20:00.000Z']) {
+    await assert.rejects(
+      saveHabit(
+        db,
+        { id: habit, name: '변경', priority: 1, icon_key: 'reading', initial_started_at: changed },
+        now,
+      ),
+      /저장 후 변경/,
+    );
+    await assert.rejects(
+      saveSober(db, { ...input, id: sober, name: '변경', initial_started_at: changed }, now),
+      /저장 후 변경/,
+    );
+  }
+  assert.deepEqual(rows(raw, 'SELECT name, initial_started_at FROM habits'), [['독서', start]]);
+  assert.equal((await getSoberById(db, sober))?.initial_started_at, start);
+  await assert.rejects(
+    saveHabit(
+      db,
+      {
+        name: '미래',
+        priority: 0,
+        icon_key: 'goal',
+        initial_started_at: new Date(now + 1).toISOString(),
+      },
+      now,
+    ),
+  );
   raw.close();
 });

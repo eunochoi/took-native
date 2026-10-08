@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Text } from '../../components/Text';
 import type { Habit } from '../../db/types';
 import type { getHabitMonthSummary } from '../../domain/habitStats';
-import { canCheckHabit, shiftDate } from '../../domain/date';
+import { canCheckHabit, shiftDate, localDate } from '../../domain/date';
 import { CalendarGrid } from '../calendar/CalendarGrid';
 import { calendarDays } from '../../domain/calendar';
 import { useMonthSwipe } from '../../hooks/useMonthSwipe';
@@ -31,6 +31,7 @@ export function HabitMonthCalendar({
   unavailable: boolean;
   onToggle: (date: string, checked: boolean) => void;
 }) {
+  const startedDate = localDate(habit.initial_started_at);
   const days = useMemo(() => calendarDays(month), [month]);
   const swipe = useMonthSwipe(month, onMonthChange);
   const completedDates = useMemo(() => new Set(dates), [dates]);
@@ -66,11 +67,7 @@ export function HabitMonthCalendar({
           const outside = date.slice(0, 7) !== month;
           const completed = !outside && completedDates.has(date);
           const missed =
-            !unavailable &&
-            !outside &&
-            date >= habit.created_date &&
-            date < lockedBefore &&
-            !completed;
+            !unavailable && !outside && date >= startedDate && date < lockedBefore && !completed;
           return (
             <CalendarDay
               key={date}
@@ -78,8 +75,8 @@ export function HabitMonthCalendar({
               month={month}
               today={today}
               onMonthChange={onMonthChange}
-              disabled={disabled || (!outside && !canCheckHabit(date, habit.created_date, today))}
-              dimmed={date < habit.created_date || date > today}
+              disabled={disabled || (!outside && !canCheckHabit(date, startedDate, today))}
+              dimmed={date < startedDate || date > today}
               onSelect={(selectedDate) => onToggle(selectedDate, !completed)}
               label={`${date}${completed ? ', 완료 기록 있음' : ''}${missed ? ', 놓친 횟수' : ''}`}
               contentClassName={

@@ -155,7 +155,7 @@ test('diary calendar owns decorations and future-date limits while using the def
 test('habit calendar fills completed and missed dates while keeping locked history legible', () => {
   const { HabitMonthCalendar } = load('src/screens/habit/HabitMonthCalendar.tsx');
   const tree = HabitMonthCalendar({
-    habit: { created_date: '2026-09-01' },
+    habit: { initial_started_at: '2026-09-01T00:00:00.000Z' },
     month: '2026-09',
     today: '2026-10-07',
     dates: ['2026-09-10', '2026-09-12', '2026-09-13'],
@@ -190,7 +190,7 @@ test('habit calendar fills completed and missed dates while keeping locked histo
 test('habit calendar does not mark missing records as missed while data is unavailable', () => {
   const { HabitMonthCalendar } = load('src/screens/habit/HabitMonthCalendar.tsx');
   const tree = HabitMonthCalendar({
-    habit: { created_date: '2026-09-01' },
+    habit: { initial_started_at: '2026-09-01T00:00:00.000Z' },
     month: '2026-09',
     today: '2026-10-07',
     dates: [],

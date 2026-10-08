@@ -10,8 +10,8 @@ import {
 } from '../domain/limits';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-export const SCHEMA_VERSION = 4;
-const SCHEMA_V1 = `
+export const SCHEMA_VERSION = 5;
+const SCHEMA = `
 CREATE TABLE diaries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   date TEXT NOT NULL UNIQUE CHECK(length(date) = 10),
@@ -23,7 +23,7 @@ CREATE TABLE habits (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE CHECK(length(trim(name)) BETWEEN 1 AND ${HABIT_NAME_MAX_LENGTH}),
   priority INTEGER NOT NULL CHECK(priority BETWEEN 0 AND 2),
-  icon_key TEXT NOT NULL, created_date TEXT NOT NULL,
+  icon_key TEXT NOT NULL, icon_color TEXT NOT NULL DEFAULT '${DEFAULT_HABIT_ICON_COLOR}', initial_started_at TEXT NOT NULL,
   created_at TEXT NOT NULL, updated_at TEXT NOT NULL
 );
 CREATE TABLE habit_completions (
@@ -40,14 +40,13 @@ CREATE TABLE diary_images (
   UNIQUE(diary_id, position)
 );
 CREATE TABLE settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);
-`;
 
-const SCHEMA_V3 = `
 CREATE TABLE sobers (
  id INTEGER PRIMARY KEY AUTOINCREMENT,
  name TEXT NOT NULL UNIQUE CHECK(length(trim(name)) BETWEEN 1 AND ${SOBER_NAME_MAX_LENGTH}),
  description TEXT CHECK(description IS NULL OR length(description) <= ${SOBER_DESCRIPTION_MAX_LENGTH}),
  icon_key TEXT NOT NULL,
+ icon_color TEXT NOT NULL DEFAULT '${DEFAULT_HABIT_ICON_COLOR}',
  is_priority INTEGER NOT NULL DEFAULT 0 CHECK(is_priority IN (0, 1)),
  initial_started_at TEXT NOT NULL,
  goal_mode TEXT NOT NULL CHECK(goal_mode IN ('AUTO', 'MANUAL')),
@@ -65,41 +64,16 @@ CREATE TABLE sober_restarts (
 CREATE INDEX sober_restart_time ON sober_restarts(sober_id, restarted_at);
 `;
 
-export async function migrateDatabase(db: SQLiteDatabase) {
+export async function initializeDatabase(db: SQLiteDatabase) {
   await db.execAsync(
     'PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;',
   );
   const version =
     (await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version ?? 0;
-  if (version > SCHEMA_VERSION)
-    throw new Error('더 최신 앱에서 만든 데이터입니다. 앱을 업데이트해주세요.');
-  if (version === 0) {
-    await db.withTransactionAsync(async () => {
-      const tx = db;
-      await tx.execAsync(SCHEMA_V1);
-      await tx.execAsync('PRAGMA user_version = 1;');
-    });
-  }
-  if (version < 2) {
-    await db.withTransactionAsync(async () => {
-      await db.execAsync(
-        `ALTER TABLE habits ADD COLUMN icon_color TEXT NOT NULL DEFAULT '${DEFAULT_HABIT_ICON_COLOR}';`,
-      );
-      await db.execAsync('PRAGMA user_version = 2;');
-    });
-  }
-  if (version < 3) {
-    await db.withTransactionAsync(async () => {
-      await db.execAsync(SCHEMA_V3);
-      await db.execAsync('PRAGMA user_version = 3;');
-    });
-  }
-  if (version < 4) {
-    await db.withTransactionAsync(async () => {
-      await db.execAsync(
-        `ALTER TABLE sobers ADD COLUMN icon_color TEXT NOT NULL DEFAULT '${DEFAULT_HABIT_ICON_COLOR}';`,
-      );
-      await db.execAsync('PRAGMA user_version = 4;');
-    });
-  }
+  if (version === SCHEMA_VERSION) return;
+  if (version !== 0) throw new Error('지원하지 않는 DB 버전입니다.');
+  await db.withTransactionAsync(async () => {
+    await db.execAsync(SCHEMA);
+    await db.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION};`);
+  });
 }

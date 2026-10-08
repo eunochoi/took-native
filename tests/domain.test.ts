@@ -103,3 +103,18 @@ test('read queries cannot observe an intermediate same-connection transaction', 
   await Promise.all([write, read]);
   assert.deepEqual(events, ['begin', 'commit', 'read']);
 });
+
+test('start timestamps use the device calendar date across the UTC midnight boundary', async () => {
+  const { localDate, canCheckHabit } = await import('../src/domain/date');
+  const previous = process.env.TZ;
+  process.env.TZ = 'Asia/Seoul';
+  try {
+    const date = localDate('2026-10-07T15:30:00.000Z');
+    assert.equal(date, '2026-10-08');
+    assert.equal(canCheckHabit('2026-10-07', date, '2026-10-08'), false);
+    assert.equal(canCheckHabit('2026-10-08', date, '2026-10-08'), true);
+  } finally {
+    if (previous === undefined) delete process.env.TZ;
+    else process.env.TZ = previous;
+  }
+});

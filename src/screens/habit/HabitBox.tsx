@@ -7,7 +7,7 @@ import { HabitIcon } from '../../components/HabitIcon';
 import { Text } from '../../components/Text';
 import type { Completion, Habit } from '../../db/types';
 import { resolveIconColor } from '../../domain/constants';
-import { canCheckHabit, shiftDate } from '../../domain/date';
+import { canCheckHabit, shiftDate, localDate } from '../../domain/date';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { HabitMenu } from './HabitMenu';
 import { HabitStars } from './HabitStars';
@@ -30,6 +30,7 @@ export function HabitBox({
   const habitColor = resolveIconColor(habit.icon_color, colors.accent);
   const checked = (date: string) =>
     records.some((record) => record.habit_id === habit.id && record.date === date);
+  const startedDate = localDate(habit.initial_started_at);
   const done = checked(today);
   return (
     <View className="flex-1 gap-4 bg-theme-surface px-2 py-4">
@@ -60,7 +61,7 @@ export function HabitBox({
       <View className="flex-row justify-around">
         {Array.from({ length: 4 }, (_, i) => shiftDate(today, -i)).map((date) => {
           const completed = checked(date);
-          const locked = disabled || !canCheckHabit(date, habit.created_date, today);
+          const locked = disabled || !canCheckHabit(date, startedDate, today);
           return (
             <Pressable
               key={date}
@@ -90,7 +91,7 @@ export function HabitBox({
       </View>
       <Pressable
         accessibilityRole="button"
-        disabled={disabled || done || !canCheckHabit(today, habit.created_date, today)}
+        disabled={disabled || done || !canCheckHabit(today, startedDate, today)}
         onPress={() => onToggle(habit.id, today, true)}
         className={`mt-auto min-h-10 rounded-xl px-3 py-2 flex-row items-center justify-center gap-2 bg-theme-surface-muted border-[1px] border-theme-text-secondary/5`}
       >

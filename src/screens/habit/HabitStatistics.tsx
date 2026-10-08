@@ -1,3 +1,4 @@
+import { localDate } from '../../domain/date';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -25,11 +26,15 @@ export function HabitStatistics({
   const { colors, iconSizes } = useAppTheme();
   const [month, setMonth] = useState(today.slice(0, 7));
   const [year, setYear] = useState(Number(today.slice(0, 4)));
+  const startedDate = localDate(habit.initial_started_at);
   const summary = useMemo(
-    () => getHabitMonthSummary(month, habit.created_date, dates, today),
-    [month, habit.created_date, dates, today],
+    () => getHabitMonthSummary(month, startedDate, dates, today),
+    [month, startedDate, dates, today],
   );
-  const yearly = useMemo(() => getHabitYearSummary(year, dates), [year, dates]);
+  const yearly = useMemo(
+    () => getHabitYearSummary(year, dates, startedDate),
+    [year, dates, startedDate],
+  );
   const max = Math.max(...yearly.monthly, 1);
   return (
     <>

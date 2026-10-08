@@ -1,4 +1,4 @@
-import { SCHEMA_VERSION } from '../src/db/migrations';
+import { SCHEMA_VERSION } from '../src/db/schema';
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';

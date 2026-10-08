@@ -13,7 +13,7 @@ const habits = Array.from({ length: 6 }, (_, index) => ({
   id: index + 1,
   name: `습관 ${index + 1}`,
   priority: index % 3,
-  created_date: '2026-10-01',
+  initial_started_at: '2026-10-01T00:00:00.000Z',
   created_at: '2026-10-01T00:00:00Z',
   icon_key: 'goal',
   icon_color: 'theme',
@@ -40,6 +40,7 @@ function harness() {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('domain/date')) return require('../src/domain/date');
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react') return { useState: () => [null, () => {}] };
         if (name === 'react-native')

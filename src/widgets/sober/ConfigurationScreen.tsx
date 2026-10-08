@@ -6,7 +6,7 @@ import { SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
 import { WidgetPreview, type WidgetConfigurationScreenProps } from 'react-native-android-widget';
 import { SettingsProvider } from '../../settings/SettingsProvider';
 import { AppThemeProvider } from '../../theme/AppThemeProvider';
-import { migrateDatabase } from '../../db/migrations';
+import { initializeDatabase } from '../../db/schema';
 import { getSoberList, getSoberRestarts } from '../../db/sober';
 import { withReadLock } from '../../db';
 import type { Sober, SoberRestart } from '../../db/types';
@@ -31,7 +31,7 @@ export function SoberWidgetConfiguration(props: WidgetConfigurationScreenProps) 
             <NativeText>설정을 불러오지 못했어요. 다시 시도해주세요.</NativeText>
           </SafeAreaView>
         ) : (
-          <SQLiteProvider databaseName="took.db" onInit={migrateDatabase}>
+          <SQLiteProvider databaseName="took.db" onInit={initializeDatabase}>
             <SettingsProvider onError={onError}>
               <AppThemeProvider>
                 <ConfigurationContent {...props} />

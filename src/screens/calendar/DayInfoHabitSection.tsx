@@ -5,7 +5,7 @@ import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
 import type { Habit } from '../../db/types';
 import { resolveIconColor } from '../../domain/constants';
-import { canCheckHabit, shiftDate } from '../../domain/date';
+import { canCheckHabit, shiftDate, localDate } from '../../domain/date';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 
 const HABIT_PREVIEW_COUNT = 5;
@@ -30,7 +30,8 @@ export function DayInfoHabitSection({
   const done = habits.filter((habit) => habit.completed).length;
   const renderHabit = (habit: Habit & { completed: boolean }) => {
     const habitColor = resolveIconColor(habit.icon_color, colors.accent);
-    const disabled = pendingId !== null || !canCheckHabit(date, habit.created_date, today);
+    const disabled =
+      pendingId !== null || !canCheckHabit(date, localDate(habit.initial_started_at), today);
     return (
       <View
         key={habit.id}

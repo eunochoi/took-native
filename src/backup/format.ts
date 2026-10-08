@@ -1,4 +1,4 @@
-import { SCHEMA_VERSION } from '../db/migrations';
+import { SCHEMA_VERSION } from '../db/schema';
 export { MAX_BACKUP_BYTES, MAX_BACKUP_FILES, MAX_BACKUP_PART_BYTES } from '../domain/limits';
 export interface BackupManifest {
   format: 'took-backup';

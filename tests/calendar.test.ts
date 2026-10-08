@@ -10,7 +10,7 @@ const habit = (id: number, createdDate: string, priority = 0): Habit => ({
   icon_key: 'goal',
   icon_color: 'blue',
   priority,
-  created_date: createdDate,
+  initial_started_at: new Date(`${createdDate}T00:00:00`).toISOString(),
   created_at: `${createdDate}T00:00:00.000Z`,
   updated_at: `${createdDate}T00:00:00.000Z`,
 });

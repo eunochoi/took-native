@@ -1,14 +1,14 @@
-import { differenceInCalendarDays, endOfMonth, format, isLeapYear, parseISO } from 'date-fns';
+import { differenceInCalendarDays, endOfMonth, format, parseISO } from 'date-fns';
 import { shiftDate } from './date';
 
 export function getHabitMonthSummary(
   month: string,
-  created: string,
+  startedDate: string,
   dates: string[],
   today: string,
 ) {
   const end = format(endOfMonth(parseISO(`${month}-01`)), 'yyyy-MM-dd');
-  const start = created > `${month}-01` ? created : `${month}-01`;
+  const start = startedDate > `${month}-01` ? startedDate : `${month}-01`;
   const target = start <= end ? differenceInCalendarDays(parseISO(end), parseISO(start)) + 1 : 0;
   const locked = shiftDate(today, -4) < end ? shiftDate(today, -4) : end;
   const lockedDays = target
@@ -22,18 +22,21 @@ export function getHabitMonthSummary(
   };
 }
 
-export function getHabitYearSummary(year: number, dates: string[]) {
+export function getHabitYearSummary(year: number, dates: string[], startedDate = `${year}-01-01`) {
   const monthly = Array<number>(12).fill(0);
   const prefix = `${year}-`;
+  const start = startedDate > `${year}-01-01` ? startedDate : `${year}-01-01`;
+  const end = `${year}-12-31`;
+  const target = start <= end ? differenceInCalendarDays(parseISO(end), parseISO(start)) + 1 : 0;
   let completed = 0;
   for (const date of dates) {
-    if (!date.startsWith(prefix)) continue;
+    if (!date.startsWith(prefix) || date < start) continue;
     monthly[Number(date.slice(5, 7)) - 1]++;
     completed++;
   }
   return {
     completed,
     monthly,
-    rate: ((completed / (isLeapYear(parseISO(`${year}-01-01`)) ? 366 : 365)) * 100).toFixed(1),
+    rate: target ? ((completed / target) * 100).toFixed(1) : '0.0',
   };
 }

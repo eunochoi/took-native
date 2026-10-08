@@ -19,8 +19,8 @@ export const assertYear = (year: number) => {
   if (!Number.isInteger(year) || year < 1900 || year > 2100)
     throw new Error('연도를 확인해주세요.');
 };
-export const canCheckHabit = (date: string, createdDate: string, today = todayString()) =>
-  isDate(date) && date <= today && date >= shiftDate(today, -3) && date >= createdDate;
+export const canCheckHabit = (date: string, startedDate: string, today = todayString()) =>
+  isDate(date) && date <= today && date >= shiftDate(today, -3) && date >= startedDate;
 export const monthDays = (month: string): string[] => {
   assertDate(`${month}-01`);
   const start = startOfWeek(startOfMonth(parseISO(`${month}-01`)));
@@ -40,6 +40,8 @@ export function getStreak(dates: string[], today = todayString()) {
   const current = previous === today || previous === shiftDate(today, -1) ? streak : 0;
   return { current, longest };
 }
+
+export const localDate = (iso: string) => format(parseISO(iso), 'yyyy-MM-dd');
 
 export function assertDateTime(value: string, now: number) {
   const timestamp = Date.parse(value);

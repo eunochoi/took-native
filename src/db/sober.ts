@@ -55,13 +55,10 @@ export function saveSober(db: SQLiteDatabase, input: SoberInput, now = Date.now(
         timestamp,
       ] as const;
       if (id) {
-        const restarts = await getSoberRestarts(db, id);
-        if (
-          restarts.some(
-            (item) => Date.parse(item.restarted_at) < Date.parse(input.initial_started_at),
-          )
-        )
-          throw new Error('다시 시작 기록보다 늦은 시각으로 최초 시작을 변경할 수 없어요.');
+        const sober = await getSoberById(db, id);
+        if (!sober) throw new Error('거리두기 항목을 찾을 수 없어요.');
+        if (input.initial_started_at !== sober.initial_started_at)
+          throw new Error('시작 일시는 저장 후 변경할 수 없어요.');
         const result = await db.runAsync(
           'UPDATE sobers SET name = ?, description = ?, icon_key = ?, icon_color = ?, is_priority = ?, initial_started_at = ?, goal_mode = ?, goal_days = ?, updated_at = ? WHERE id = ?',
           ...values,

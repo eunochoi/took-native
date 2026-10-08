@@ -6,7 +6,7 @@ import {
   DEFAULT_HABIT_ICON_COLOR,
   MAX_HABIT_COUNT,
 } from '../domain/constants';
-import { assertDate, canCheckHabit, todayString } from '../domain/date';
+import { assertDate, assertDateTime, canCheckHabit, localDate } from '../domain/date';
 import type { Settings } from '../settings/model';
 import { withWriteLock } from './index';
 import type { Completion, Habit } from './types';
@@ -48,8 +48,9 @@ interface HabitInput {
   priority: number;
   icon_key: Habit['icon_key'];
   icon_color?: Habit['icon_color'];
+  initial_started_at?: string;
 }
-export function validateHabit(input: HabitInput) {
+export function validateHabit(input: HabitInput, now = Date.now()) {
   if (!input.name.trim() || input.name.trim().length > HABIT_NAME_MAX_LENGTH)
     throw new Error(`습관 이름은 1~${HABIT_NAME_MAX_LENGTH}자로 입력해주세요.`);
   if (
@@ -60,25 +61,33 @@ export function validateHabit(input: HabitInput) {
     !isHabitIconColor(input.icon_color ?? DEFAULT_HABIT_ICON_COLOR)
   )
     throw new Error('습관 설정을 확인해주세요.');
+  if (input.initial_started_at !== undefined) assertDateTime(input.initial_started_at, now);
 }
-export function saveHabit(db: SQLiteDatabase, input: HabitInput) {
+export function saveHabit(db: SQLiteDatabase, input: HabitInput, now = Date.now()) {
   return withWriteLock(async () => {
-    validateHabit(input);
+    validateHabit(input, now);
     let id = input.id ?? 0;
     await db.withTransactionAsync(async () => {
       const tx = db;
       const name = input.name.trim();
       if (await tx.getFirstAsync('SELECT id FROM habits WHERE name = ? AND id != ?', name, id))
         throw new Error('같은 이름의 습관이 있습니다.');
-      const now = new Date().toISOString();
+      const timestamp = new Date(now).toISOString();
       if (id) {
+        const habit = await getHabitById(tx, id);
+        if (!habit) throw new Error('습관을 찾을 수 없습니다.');
+        if (
+          input.initial_started_at !== undefined &&
+          input.initial_started_at !== habit.initial_started_at
+        )
+          throw new Error('시작 일시는 저장 후 변경할 수 없어요.');
         const result = await tx.runAsync(
           'UPDATE habits SET name = ?, priority = ?, icon_key = ?, icon_color = ?, updated_at = ? WHERE id = ?',
           name,
           input.priority,
           input.icon_key,
           input.icon_color ?? DEFAULT_HABIT_ICON_COLOR,
-          now,
+          timestamp,
           id,
         );
         if (!result.changes) throw new Error('습관을 찾을 수 없습니다.');
@@ -90,14 +99,14 @@ export function saveHabit(db: SQLiteDatabase, input: HabitInput) {
           throw new Error(`습관은 최대 ${MAX_HABIT_COUNT}개까지 만들 수 있습니다.`);
         id = (
           await tx.runAsync(
-            'INSERT INTO habits (name, priority, icon_key, icon_color, created_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO habits (name, priority, icon_key, icon_color, initial_started_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
             name,
             input.priority,
             input.icon_key,
             input.icon_color ?? DEFAULT_HABIT_ICON_COLOR,
-            todayString(),
-            now,
-            now,
+            input.initial_started_at ?? timestamp,
+            timestamp,
+            timestamp,
           )
         ).lastInsertRowId;
       }
@@ -117,8 +126,8 @@ export function setHabitCompletion(
       const tx = db;
       const habit = await getHabitById(tx, id);
       if (!habit) throw new Error('습관을 찾을 수 없습니다.');
-      if (!canCheckHabit(date, habit.created_date))
-        throw new Error('습관 생성일 이후, 오늘을 포함한 최근 4일만 변경할 수 있습니다.');
+      if (!canCheckHabit(date, localDate(habit.initial_started_at)))
+        throw new Error('습관 시작일 이후, 오늘을 포함한 최근 4일만 변경할 수 있습니다.');
       if (completed)
         await tx.runAsync(
           'INSERT OR IGNORE INTO habit_completions (habit_id, date, created_at) VALUES (?, ?, ?)',

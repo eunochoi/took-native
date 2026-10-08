@@ -13,7 +13,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router/react-navigation';
 import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { migrateDatabase } from '../src/db/migrations';
+import { initializeDatabase } from '../src/db/schema';
 import { SettingsProvider } from '../src/settings/SettingsProvider';
 import { initializeMedia } from '../src/media';
 import { AppLoadingScreen } from '../src/components/AppLoadingScreen';
@@ -46,8 +46,8 @@ const sheetRoutes = [
 
 // Fast Refresh can overlap the old connection's cleanup with the new setup.
 const databaseOptions: SQLiteOpenOptions = { useNewConnection: __DEV__ };
-async function initializeDatabase(db: SQLiteDatabase) {
-  await migrateDatabase(db);
+async function initializeAppDatabase(db: SQLiteDatabase) {
+  await initializeDatabase(db);
   await initializeMedia(db);
 }
 
@@ -163,7 +163,7 @@ export default function RootLayout() {
               key={attempt}
               databaseName="took.db"
               options={databaseOptions}
-              onInit={initializeDatabase}
+              onInit={initializeAppDatabase}
               onError={onError}
             >
               <SettingsProvider onError={onError}>

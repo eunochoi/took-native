@@ -60,7 +60,7 @@ export default function HabitDetail() {
                     <HabitStars priority={habit.priority} size={appRem} />
                   </View>
                   <Text className="text-sm text-theme-text-secondary">
-                    생성일 {format(parseISO(habit.created_date), 'yyyy년 M월 d일')}
+                    시작 일시 {format(parseISO(habit.initial_started_at), 'yyyy년 M월 d일 HH:mm')}
                   </Text>
                 </View>
               </View>

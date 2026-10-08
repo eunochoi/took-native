@@ -91,13 +91,7 @@ export function SoberForm({ id }: { id?: number }) {
         <>
           {mutation.isPending && <ActivityIndicator color={colors.accent} />}
           <Button
-            label={
-              mutation.isPending
-                ? '저장 중...'
-                : id
-                  ? '변경사항 저장하기'
-                  : '저장하기'
-            }
+            label={mutation.isPending ? '저장 중...' : id ? '변경사항 저장하기' : '저장하기'}
             disabled={!draft.name.trim() || mutation.isPending}
             onPress={() => {
               if (saving.current) return;
@@ -122,7 +116,7 @@ export function SoberForm({ id }: { id?: number }) {
               onApply={(goal_mode, goal_days) => setDraft({ ...draft, goal_mode, goal_days })}
             />
           )}
-          {picker === 'date' && (
+          {picker === 'date' && id === undefined && (
             <DateTimePicker
               mode="start"
               title="언제부터 거리를 두기 시작했나요?"
@@ -240,9 +234,12 @@ export function SoberForm({ id }: { id?: number }) {
         <FormPickerRow
           label={format(parseISO(draft.initial_started_at), 'yyyy년 M월 d일 HH:mm')}
           accessibilityLabel="시작 일시 선택"
-          disabled={mutation.isPending}
+          disabled={id !== undefined || mutation.isPending}
           onPress={() => setPicker('date')}
         />
+        <Text className="px-2 text-sm text-theme-accent">
+          시작 일시는 저장 후 변경할 수 없어요.
+        </Text>
       </View>
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>

@@ -1,19 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { database, rows } from './database';
-import { migrateDatabase } from '../src/db/migrations';
+import { initializeDatabase } from '../src/db/schema';
 import { saveDiary, deleteDiary, getDiaryById, getDiaryList } from '../src/db/diary';
 import { saveHabit, deleteHabit, setHabitCompletion, getCompletionsByHabit } from '../src/db/habit';
 import { getDiaryStats, getHabitStats } from '../src/db/stats';
 import { shiftDate, todayString } from '../src/domain/date';
 
 const today = todayString();
-test('schema migration is repeatable and refuses future versions without deleting records', async () => {
+test('schema initialization is repeatable and refuses future versions without deleting records', async () => {
   const { db, raw } = await database();
   await saveDiary(db, { date: today, emotion: 0, text: '남길 기록', files: [] });
-  await migrateDatabase(db);
-  raw.exec('PRAGMA user_version = 5;');
-  await assert.rejects(migrateDatabase(db));
+  await initializeDatabase(db);
+  raw.exec('PRAGMA user_version = 6;');
+  await assert.rejects(initializeDatabase(db));
   assert.equal(rows(raw, 'SELECT count(*) FROM diaries')[0][0], 1);
   raw.close();
 });
@@ -38,13 +38,15 @@ test('habit deletion cascades only completions, not diaries', async () => {
   assert.equal(rows(raw, 'SELECT count(*) FROM diaries')[0][0], 1);
   raw.close();
 });
-test('habit name uniqueness, 20-item limit, valid icons and four-day edits are enforced in data layer', async () => {
+test('habit name uniqueness, item limit, valid icons and four-day edits are enforced in data layer', async () => {
   const { db, raw } = await database();
   const first = await saveHabit(db, { name: '매일 걷기', priority: 1, icon_key: 'walking' });
   await assert.rejects(saveHabit(db, { name: ' 매일 걷기 ', priority: 1, icon_key: 'walking' }));
   await assert.rejects(setHabitCompletion(db, first, shiftDate(today, -1), true));
   await assert.rejects(setHabitCompletion(db, first, shiftDate(today, 1), true));
-  raw.run('UPDATE habits SET created_date = ?', [shiftDate(today, -10)]);
+  raw.run('UPDATE habits SET initial_started_at = ?', [
+    new Date(`${shiftDate(today, -10)}T00:00:00`).toISOString(),
+  ]);
   await setHabitCompletion(db, first, shiftDate(today, -3), true);
   await assert.rejects(setHabitCompletion(db, first, shiftDate(today, -4), true));
   for (let i = 1; i < 20; i++)
@@ -113,7 +115,9 @@ test('year-specific stats do not constrain lifetime streaks and zero completions
 test('diary pages batch ordered photos and only the independent completions on each date', async () => {
   const { db, raw } = await database();
   const habit = await saveHabit(db, { name: '산책', priority: 1, icon_key: 'walking' });
-  raw.run('UPDATE habits SET created_date = ?', [shiftDate(today, -10)]);
+  raw.run('UPDATE habits SET initial_started_at = ?', [
+    new Date(`${shiftDate(today, -10)}T00:00:00`).toISOString(),
+  ]);
   await setHabitCompletion(db, habit, today, true);
   const target = await saveDiary(db, {
     date: today,
@@ -226,19 +230,6 @@ test('habit colors persist through edits and reject unknown palette keys', async
   raw.close();
 });
 
-test('existing local database receives a default icon color without losing habits', async () => {
-  const { db, raw } = await database();
-  await saveHabit(db, { name: '남길 습관', priority: 1, icon_key: 'walking' });
-  raw.exec(
-    'DROP TABLE sober_restarts; DROP TABLE sobers; ALTER TABLE habits DROP COLUMN icon_color; PRAGMA user_version = 1;',
-  );
-  await migrateDatabase(db);
-  await migrateDatabase(db);
-  assert.deepEqual(rows(raw, 'SELECT name, icon_color FROM habits'), [['남길 습관', 'theme']]);
-  assert.equal(rows(raw, 'PRAGMA user_version')[0][0], 4);
-  raw.close();
-});
-
 test('new habits default to the theme color and can return to it after a fixed color', async () => {
   const { db, raw } = await database();
   const id = await saveHabit(db, { name: '기본색 습관', priority: 1, icon_key: 'walking' });
@@ -284,5 +275,30 @@ test('diary aggregates isolate years and preserve monthly and emotion totals', a
     stats.total,
   );
   assert.equal((await getDiaryStats(db, 2022)).total, 0);
+  raw.close();
+});
+
+test('a past habit start controls available dates while the last four days remain the only editable window', async () => {
+  const { db, raw } = await database();
+  const initialStartedAt = new Date(`${shiftDate(today, -10)}T23:30:00`).toISOString();
+  const id = await saveHabit(db, {
+    name: '과거 시작',
+    priority: 0,
+    icon_key: 'goal',
+    initial_started_at: initialStartedAt,
+  });
+  assert.equal(rows(raw, 'SELECT initial_started_at FROM habits')[0][0], initialStartedAt);
+  await setHabitCompletion(db, id, shiftDate(today, -3), true);
+  await assert.rejects(setHabitCompletion(db, id, shiftDate(today, -4), true));
+  await assert.rejects(setHabitCompletion(db, id, shiftDate(today, -11), true));
+  await saveHabit(db, {
+    id,
+    name: '이름 수정',
+    priority: 1,
+    icon_key: 'goal',
+    initial_started_at: initialStartedAt,
+  });
+  assert.equal(rows(raw, 'SELECT initial_started_at FROM habits')[0][0], initialStartedAt);
+  assert.equal(rows(raw, 'SELECT count(*) FROM habit_completions')[0][0], 1);
   raw.close();
 });

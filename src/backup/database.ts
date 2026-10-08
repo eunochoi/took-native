@@ -1,12 +1,12 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { validateDiary } from '../db/diary';
 import { isHabitIconColor } from '../domain/constants';
-import { SCHEMA_VERSION } from '../db/migrations';
+import { SCHEMA_VERSION } from '../db/schema';
 import { validateHabit } from '../db/habit';
 import { validateSober, validateSoberRestart } from '../domain/sober';
 import { MAX_SOBER_COUNT } from '../domain/limits';
 import type { Completion, Diary, DiaryImage, Habit, Sober, SoberRestart } from '../db/types';
-import { isDate } from '../domain/date';
+import { isDate, localDate } from '../domain/date';
 import { parseSettings } from '../settings/model';
 
 interface BackupRecords {
@@ -53,7 +53,7 @@ export async function readBackupDatabase(
     'SELECT id, date, emotion, text, created_at, updated_at FROM diaries',
   );
   const habits = await db.getAllAsync<Habit>(
-    'SELECT id, name, priority, icon_key, icon_color, created_date, created_at, updated_at FROM habits',
+    'SELECT id, name, priority, icon_key, icon_color, initial_started_at, created_at, updated_at FROM habits',
   );
   const completions = await db.getAllAsync<Completion>(
     'SELECT habit_id, date, created_at FROM habit_completions',
@@ -135,7 +135,7 @@ export function validateBackupRecords(records: BackupRecords, files: Record<stri
       !validId(habit.id) ||
       typeof habit.name !== 'string' ||
       !isHabitIconColor(habit.icon_color) ||
-      !isDate(habit.created_date) ||
+      typeof habit.initial_started_at !== 'string' ||
       !validTime(habit.created_at) ||
       !validTime(habit.updated_at)
     )
@@ -150,7 +150,12 @@ export function validateBackupRecords(records: BackupRecords, files: Record<stri
     throw new Error('습관 기록이 중복되었습니다.');
   for (const row of records.completions) {
     const habit = habitMap.get(row.habit_id);
-    if (!habit || !isDate(row.date) || row.date < habit.created_date || !validTime(row.created_at))
+    if (
+      !habit ||
+      !isDate(row.date) ||
+      row.date < localDate(habit.initial_started_at) ||
+      !validTime(row.created_at)
+    )
       throw new Error('습관 완료 기록이 손상되었습니다.');
   }
   const soberMap = new Map(records.sobers.map((item) => [item.id, item]));
@@ -201,13 +206,13 @@ export async function replaceRecords(
       );
     for (const row of records.habits)
       await tx.runAsync(
-        'INSERT INTO habits (id, name, priority, icon_key, icon_color, created_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO habits (id, name, priority, icon_key, icon_color, initial_started_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         row.id,
         row.name,
         row.priority,
         row.icon_key,
         row.icon_color,
-        row.created_date,
+        row.initial_started_at,
         row.created_at,
         row.updated_at,
       );

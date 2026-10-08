@@ -22,7 +22,7 @@ async function fixture() {
     icon_key: 'goal',
     icon_color: 'lavender',
   });
-  value.raw.run("UPDATE habits SET created_date = '2024-02-01' WHERE id = 1");
+  value.raw.run("UPDATE habits SET initial_started_at = '2024-02-01T00:00:00.000Z' WHERE id = 1");
   value.raw.run('INSERT INTO habit_completions VALUES (?, ?, ?)', [
     1,
     '2024-02-29',
