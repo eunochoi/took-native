@@ -5,7 +5,7 @@ import { useMonthSwipe } from '../../hooks/useMonthSwipe';
 import { useCalendarNavigation } from '../../hooks/useCalendarNavigation';
 import { CalendarDay } from './CalendarDay';
 import { CalendarGrid } from './CalendarGrid';
-import { CalendarMonthHeader } from './CalendarMonthHeader';
+import { CalendarHeader } from './CalendarHeader';
 
 export function DatePickerCalendar({
   month,
@@ -27,12 +27,10 @@ export function DatePickerCalendar({
   const swipe = useMonthSwipe(navigation.changeMonth);
   return (
     <View className="gap-4">
-      <CalendarMonthHeader
-        headingWeight="normal"
+      <CalendarHeader
         month={month}
         today={today}
         navigation={navigation}
-        onToday={() => onSelect(today)}
       />
       <CalendarGrid {...swipe.panHandlers} accessibilityLabel={`${month} 날짜 선택 달력`}>
         {days.map((date) => {

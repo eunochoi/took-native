@@ -177,16 +177,15 @@ for (const month of ['2021-02', '2026-10', '2026-03']) {
 }
 
 test('month header preserves month limits and switches months without changing records', () => {
-  const render = load('src/screens/calendar/CalendarMonthHeader.tsx', []);
+  const render = load('src/screens/calendar/CalendarHeader.tsx', []);
   const changed: string[] = [];
   const props = {
     navigation: useCalendarNavigation('2026-09', (month) => changed.push(month)),
     month: '2026-09',
     today: '2026-10-07',
-    title: '월별 기록',
     onMonthChange: (month: string) => changed.push(month),
   };
-  const header = render('CalendarMonthHeader', props);
+  const header = render('CalendarHeader', props);
   nodes(header)
     .find((node) => node.props.accessibilityLabel === '다음 달')
     .props.onPress();
@@ -194,15 +193,86 @@ test('month header preserves month limits and switches months without changing r
     .find((node) => node.props.accessibilityLabel?.includes('이번 달로 이동'))
     .props.onPress();
   assert.deepEqual(changed, ['2026-10', '2026-10']);
-  const first = nodes(render('CalendarMonthHeader', { ...props, month: '1900-01', navigation: useCalendarNavigation('1900-01', props.onMonthChange) })).find(
+  const first = nodes(render('CalendarHeader', { ...props, month: '1900-01', navigation: useCalendarNavigation('1900-01', props.onMonthChange) })).find(
     (node) => node.props.accessibilityLabel === '이전 달',
   );
   assert.equal(first.props.disabled, true);
   first.props.onPress();
-  const last = nodes(render('CalendarMonthHeader', { ...props, month: '2100-12', navigation: useCalendarNavigation('2100-12', props.onMonthChange) })).find(
+  const last = nodes(render('CalendarHeader', { ...props, month: '2100-12', navigation: useCalendarNavigation('2100-12', props.onMonthChange) })).find(
     (node) => node.props.accessibilityLabel === '다음 달',
   );
   assert.equal(last.props.disabled, true);
   last.props.onPress();
   assert.equal(changed.length, 2);
+});
+
+
+test('calendar header dims and disables arrows at supplied date boundaries', () => {
+  const render = load('src/screens/calendar/CalendarHeader.tsx', []);
+  const changed: string[] = [];
+  const navigation = useCalendarNavigation(
+    '2026-10', (month) => changed.push(month), '2026-10-03', '2026-10-08',
+  );
+  const tree = render('CalendarHeader', {
+    month: '2026-10', today: '2026-10-08', navigation,
+  });
+  for (const label of ['이전 달', '다음 달']) {
+    const button = nodes(tree).find((node) => node.props.accessibilityLabel === label);
+    assert.equal(button.props.disabled, true);
+    assert.match(button.props.className, /opacity-30/);
+    button.props.onPress();
+  }
+  assert.deepEqual(changed, []);
+});
+
+test('month title returns to the current month without selecting a date', () => {
+  const render = load('src/screens/calendar/CalendarHeader.tsx', []);
+  const changed: string[] = [];
+  const props = {
+    month: '2026-09',
+    today: '2026-10-08',
+    navigation: useCalendarNavigation('2026-09', (month) => changed.push(month), undefined, '2026-10-08'),
+  };
+  const previous = render('CalendarHeader', props);
+  const button = nodes(previous).find((node) => node.props.accessibilityLabel === `${props.month}, 이번 달로 이동`);
+  assert(button);
+  assert.equal(button.props.children.type, 'Text');
+  assert.equal(button.props.children.props.children, '2026년 9월');
+  assert(!nodes(previous).some((node) => node.type === 'AppIcon' && node.props.name === 'date'));
+  button.props.onPress();
+  assert.deepEqual(changed, ['2026-10']);
+  const current = render('CalendarHeader', { ...props, month: '2026-10' });
+  const currentTitle = nodes(current).find((node) => node.props.accessibilityLabel === '2026-10, 이번 달로 이동');
+  assert(currentTitle);
+  currentTitle.props.onPress();
+  assert.deepEqual(changed, ['2026-10', '2026-10']);
+
+});
+
+
+test('title alignment places grouped arrows at the opposite edge and preserves navigation', () => {
+  const render = load('src/screens/calendar/CalendarHeader.tsx', []);
+  const titleLabel = '2026-09, 이번 달로 이동';
+  for (const [titleAlign, labels] of [
+    ['left', [titleLabel, '이전 달', '다음 달']],
+    ['center', ['이전 달', titleLabel, '다음 달']],
+    ['right', ['이전 달', '다음 달', titleLabel]],
+  ] as const) {
+    const changes: string[] = [];
+    const tree = render('CalendarHeader', {
+      month: '2026-09', today: '2026-10-08', titleAlign,
+      navigation: useCalendarNavigation('2026-09', (month) => changes.push(month), undefined, '2026-10-08'),
+    });
+    const buttons = nodes(tree).filter((node) => node.props.accessibilityRole === 'button');
+    assert.deepEqual(buttons.map((node) => node.props.accessibilityLabel), [...labels]);
+    if (titleAlign !== 'center') {
+      const group = nodes(tree).find((node) => node.type === 'View' && node.key === 'arrows');
+      assert(group);
+      assert.equal(group.props.children.length, 2);
+    }
+    buttons.find((node) => node.props.accessibilityLabel === '이전 달').props.onPress();
+    buttons.find((node) => node.props.accessibilityLabel === '다음 달').props.onPress();
+    buttons.find((node) => node.props.accessibilityLabel === titleLabel).props.onPress();
+    assert.deepEqual(changes, ['2026-08', '2026-10', '2026-10']);
+  }
 });

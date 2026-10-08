@@ -12,7 +12,7 @@ import { CalendarGrid } from './CalendarGrid';
 import { calendarDays } from '../../domain/calendar';
 import { useMonthSwipe } from '../../hooks/useMonthSwipe';
 import { useCalendarNavigation } from '../../hooks/useCalendarNavigation';
-import { CalendarMonthHeader } from './CalendarMonthHeader';
+import { CalendarHeader } from './CalendarHeader';
 
 export function DiaryHabitMonthCalendar(props: {
   month: string;
@@ -52,11 +52,10 @@ export function DiaryHabitMonthCalendar(props: {
           }}
         />
       )}
-      <CalendarMonthHeader
+      <CalendarHeader
         month={props.month}
         today={props.today}
         navigation={navigation}
-        onToday={() => props.onSelect(props.today)}
       />
       <CalendarGrid
         fillHeight={props.fillHeight}

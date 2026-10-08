@@ -69,8 +69,8 @@ function section(path: string, name: string, initialProps: Record<string, unknow
           return { HabitMonthCalendar: 'HabitMonthCalendar' };
         if (dependency.endsWith('/CalendarGrid')) return { CalendarGrid: 'CalendarGrid' };
         if (dependency.endsWith('domain/calendar')) return localRequire(dependency);
-        if (dependency.endsWith('/CalendarMonthHeader'))
-          return { CalendarMonthHeader: 'CalendarMonthHeader' };
+        if (dependency.endsWith('/CalendarHeader'))
+          return { CalendarHeader: 'CalendarHeader' };
         if (dependency.endsWith('/CalendarDay')) return { CalendarDay: 'CalendarDay' };
         if (dependency.includes('/components/')) return { Text: 'Text', AppIcon: 'AppIcon' };
         if (dependency.endsWith('domain/habitStats')) {

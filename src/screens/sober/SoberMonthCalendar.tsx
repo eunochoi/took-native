@@ -7,7 +7,7 @@ import { useMonthSwipe } from '../../hooks/useMonthSwipe';
 import { useCalendarNavigation } from '../../hooks/useCalendarNavigation';
 import { CalendarDay } from '../calendar/CalendarDay';
 import { CalendarGrid } from '../calendar/CalendarGrid';
-import { CalendarMonthHeader } from '../calendar/CalendarMonthHeader';
+import { CalendarHeader } from '../calendar/CalendarHeader';
 
 export function SoberMonthCalendar({
   month,
@@ -31,8 +31,7 @@ export function SoberMonthCalendar({
   const swipe = useMonthSwipe(navigation.changeMonth);
   return (
     <View className="gap-4">
-      <CalendarMonthHeader
-        title="거리두기 기록"
+      <CalendarHeader
         month={month}
         today={today}
         navigation={navigation}

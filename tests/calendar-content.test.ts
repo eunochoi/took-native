@@ -313,7 +313,7 @@ test('habit start and future boundaries block adjacent cells and share guarded m
     onToggle: (date: string) => toggled.push(date),
   };
   const tree = HabitMonthCalendar(props);
-  const header = nodes(tree).find((node) => node.type === 'CalendarMonthHeader');
+  const header = nodes(tree).find((node) => node.type === 'CalendarHeader');
   assert.equal(header.props.navigation.canGoPrevious, false);
   assert.equal(header.props.navigation.canGoNext, true);
   header.props.navigation.changeMonth(-1);

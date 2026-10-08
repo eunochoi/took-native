@@ -9,7 +9,7 @@ import { calendarDays } from '../../domain/calendar';
 import { useMonthSwipe } from '../../hooks/useMonthSwipe';
 import { useCalendarNavigation } from '../../hooks/useCalendarNavigation';
 import { CalendarDay } from '../calendar/CalendarDay';
-import { CalendarMonthHeader } from '../calendar/CalendarMonthHeader';
+import { CalendarHeader } from '../calendar/CalendarHeader';
 
 export function HabitMonthCalendar({
   habit,
@@ -40,8 +40,7 @@ export function HabitMonthCalendar({
   const lockedBefore = shiftDate(today, -3);
   return (
     <View className="gap-4">
-      <CalendarMonthHeader
-        title="월별 기록"
+      <CalendarHeader
         month={month}
         today={today}
         navigation={navigation}
