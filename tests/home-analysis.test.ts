@@ -20,7 +20,8 @@ function render(
   scenario: { results?: Record<string, any>; routes?: unknown[] } = {},
 ) {
   const exports: Record<string, Function> = {};
-  const jsx = (type: unknown, props: any, key?: unknown) => ({ type, props, key });
+  const jsx = (type: unknown, props: any, key?: unknown) =>
+    typeof type === 'function' ? type(props) : { type, props, key };
   runInNewContext(
     ts.transpileModule(
       readFileSync(new URL(`../src/screens/home/${name}.tsx`, import.meta.url), 'utf8'),
@@ -31,6 +32,8 @@ function render(
     {
       exports,
       require: (dependency: string) => {
+        if (dependency.endsWith('/DiaryStatisticsSummary'))
+          return { DiaryStatisticsSummary: (summaryProps: any) => render('DiaryStatisticsSummary', summaryProps) };
         if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (dependency === 'react')

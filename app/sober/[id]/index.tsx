@@ -7,31 +7,25 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { AlertModal, type AlertContent } from '../../../src/components/AlertModal';
-import { AppIcon } from '../../../src/components/AppIcon';
 import { BottomSheetModal } from '../../../src/components/BottomSheetModal';
+import { BottomSheetPage } from '../../../src/components/BottomSheetPage';
 import { Button } from '../../../src/components/Button';
 import { ConfirmModal } from '../../../src/components/ConfirmModal';
+import { DateTimePicker } from '../../../src/components/DateTimePicker';
 import { PickerAction } from '../../../src/components/PickerAction';
 import { QueryState } from '../../../src/components/QueryState';
-import { BottomSheetPage } from '../../../src/components/BottomSheetPage';
 import { Text } from '../../../src/components/Text';
 import { deleteSoberRestart, saveSoberRestart } from '../../../src/db/sober';
 import type { SoberRestart } from '../../../src/db/types';
-import {
-  formatSoberDuration,
-  formatSoberGoal,
-  getSoberSummary,
-  type SoberRestartInput,
-} from '../../../src/domain/sober';
+import { getSoberSummary, type SoberRestartInput } from '../../../src/domain/sober';
 import { useCurrentMinute } from '../../../src/hooks/useCurrentMinute';
 import { soberQueries, useRecordMutation } from '../../../src/queries';
-import { SoberMonthCalendar } from '../../../src/screens/sober/SoberMonthCalendar';
-import { DateTimePicker } from '../../../src/components/DateTimePicker';
 import { SoberDayInfo } from '../../../src/screens/sober/SoberDayInfo';
 import { SoberGauge } from '../../../src/screens/sober/SoberGauge';
 import { SoberLongRecords } from '../../../src/screens/sober/SoberLongRecords';
 import { SoberMenu } from '../../../src/screens/sober/SoberMenu';
-import { useAppTheme } from '../../../src/theme/AppThemeProvider';
+import { SoberMonthCalendar } from '../../../src/screens/sober/SoberMonthCalendar';
+import { SoberStatisticsSummary } from '../../../src/screens/sober/SoberStatisticsSummary';
 import { BODY_DESCRIPTION_CLASS_NAME, SECTION_TITLE_CLASS_NAME } from '../../../src/theme/classes';
 
 type Overlay =
@@ -46,7 +40,6 @@ export default function SoberDetail() {
   const soberId = Number(id);
   const db = useSQLiteContext();
   const router = useRouter();
-  const { rem: appRem } = useAppTheme();
   const now = useCurrentMinute();
   const today = format(new Date(now), 'yyyy-MM-dd');
   const [selected, setSelected] = useState(today);
@@ -138,40 +131,10 @@ export default function SoberDetail() {
               iconKey={sober.icon_key}
               iconColor={sober.icon_color}
             />
-            <View className="w-full flex-row">
-              {(
-                [
-                  {
-                    icon: 'emoji-events',
-                    label: '최고 기록',
-                    value: formatSoberDuration(summary.longest, { years: true }),
-                  },
-                  {
-                    icon: 'flag',
-                    label: `목표 ${formatSoberGoal(summary.goalDays)}`,
-                    value: `${summary.progress.toFixed(1)}%`,
-                  },
-                  {
-                    icon: 'play-circle-outline',
-                    label: '최초 시작일',
-                    value: format(parseISO(sober.initial_started_at), 'yy년 M월 d일'),
-                  },
-                ] as const
-              ).map((stat, index) => (
-                <View
-                  key={stat.label}
-                  className={`flex-1 min-w-0 items-center gap-2 px-1 py-4 border-theme-border-muted ${index < 2 ? 'border-r' : ''}`}
-                >
-                  <AppIcon name={stat.icon} size={appRem * 2} className="text-theme-accent" />
-                  <Text className="text-center text-sm text-theme-text-secondary">
-                    {stat.label}
-                  </Text>
-                  <Text className="whitespace-nowrap text-center text-sm tracking-tighter font-bold leading-snug text-theme-text-primary">
-                    {stat.value}
-                  </Text>
-                </View>
-              ))}
-            </View>
+            <SoberStatisticsSummary
+              summary={summary}
+              initialStartedAt={sober.initial_started_at}
+            />
             <Button
               labelWeight="normal"
               className="w-full"
