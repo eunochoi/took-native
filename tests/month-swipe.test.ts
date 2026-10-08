@@ -1,3 +1,4 @@
+import { useCalendarNavigation } from './helpers/calendar-navigation';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -6,7 +7,7 @@ import { runInNewContext } from 'node:vm';
 import { shiftMonth } from '../src/domain/date';
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
-function swipe(month: string) {
+function swipe(month: string, minDate?: string, maxDate?: string) {
   const exports: any = {};
   let handlers: any;
   const changes: string[] = [];
@@ -34,8 +35,9 @@ function swipe(month: string) {
       },
     },
   );
-  const hook = exports.useMonthSwipe(month, (next: string) => changes.push(next));
-  return { ...handlers, ...hook, changes };
+  const navigation = useCalendarNavigation(month, (next) => changes.push(next), minDate, maxDate);
+  const hook = exports.useMonthSwipe(navigation.changeMonth);
+  return { ...handlers, ...hook, ...navigation, changes };
 }
 const gesture = (dx: number, dy = 0, touches = 1) => ({ dx, dy, numberActiveTouches: touches });
 
@@ -69,4 +71,36 @@ test('buttons and swipe share month boundaries and cross calendar years correctl
   const h = swipe('2026-12');
   h.changeMonth(1);
   assert.deepEqual(h.changes, ['2027-01']);
+});
+
+
+test('date bounds include endpoints and restrict buttons, swipe and direct month changes', () => {
+  const first = swipe('2026-09', '2026-09-15', '2026-10-08');
+  assert.equal(first.canGoPrevious, false);
+  assert.equal(first.canGoNext, true);
+  assert.equal(first.isDateAvailable('2026-09-14'), false);
+  assert.equal(first.isDateAvailable('2026-09-15'), true);
+  assert.equal(first.isDateAvailable('2026-10-08'), true);
+  assert.equal(first.isDateAvailable('2026-10-09'), false);
+  first.changeMonth(-1);
+  first.onPanResponderRelease(null, gesture(100));
+  first.changeToMonth('2026-08');
+  assert.deepEqual(first.changes, []);
+  first.changeMonth(1);
+  assert.deepEqual(first.changes, ['2026-10']);
+  const last = swipe('2026-10', '2026-09-15', '2026-10-08');
+  assert.equal(last.canGoNext, false);
+  last.changeMonth(1);
+  last.onPanResponderRelease(null, gesture(-100));
+  last.changeToMonth('2026-11');
+  assert.deepEqual(last.changes, []);
+});
+
+test('a range within one month disables both directions and handles leap dates', () => {
+  const h = swipe('2024-02', '2024-02-15', '2024-02-29');
+  assert.equal(h.canGoPrevious, false);
+  assert.equal(h.canGoNext, false);
+  assert.equal(h.isDateAvailable('2024-02-29'), true);
+  assert.equal(h.isDateAvailable('2024-02-30'), false);
+  assert.equal(h.isDateAvailable('2024-03-01'), false);
 });

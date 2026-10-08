@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { View } from 'react-native';
 import { calendarDays } from '../../domain/calendar';
 import { useMonthSwipe } from '../../hooks/useMonthSwipe';
+import { useCalendarNavigation } from '../../hooks/useCalendarNavigation';
 import { CalendarDay } from './CalendarDay';
 import { CalendarGrid } from './CalendarGrid';
 import { CalendarMonthHeader } from './CalendarMonthHeader';
@@ -22,19 +23,20 @@ export function DatePickerCalendar({
   onSelect: (date: string) => void;
 }) {
   const days = useMemo(() => calendarDays(month), [month]);
-  const swipe = useMonthSwipe(month, onMonthChange);
+  const navigation = useCalendarNavigation(month, onMonthChange, minDate, today);
+  const swipe = useMonthSwipe(navigation.changeMonth);
   return (
     <View className="gap-4">
       <CalendarMonthHeader
         headingWeight="normal"
         month={month}
         today={today}
-        onMonthChange={onMonthChange}
+        navigation={navigation}
         onToday={() => onSelect(today)}
       />
       <CalendarGrid {...swipe.panHandlers} accessibilityLabel={`${month} 날짜 선택 달력`}>
         {days.map((date) => {
-          const unavailable = date > today || (!!minDate && date < minDate);
+          const unavailable = !navigation.isDateAvailable(date);
           return (
             <CalendarDay
               key={date}

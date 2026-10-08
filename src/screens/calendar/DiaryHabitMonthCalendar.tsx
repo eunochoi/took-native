@@ -11,6 +11,7 @@ import { CalendarDay } from './CalendarDay';
 import { CalendarGrid } from './CalendarGrid';
 import { calendarDays } from '../../domain/calendar';
 import { useMonthSwipe } from '../../hooks/useMonthSwipe';
+import { useCalendarNavigation } from '../../hooks/useCalendarNavigation';
 import { CalendarMonthHeader } from './CalendarMonthHeader';
 
 export function DiaryHabitMonthCalendar(props: {
@@ -22,7 +23,8 @@ export function DiaryHabitMonthCalendar(props: {
   fillHeight?: boolean;
 }) {
   const days = useMemo(() => calendarDays(props.month), [props.month]);
-  const swipe = useMonthSwipe(props.month, props.onMonthChange);
+  const navigation = useCalendarNavigation(props.month, props.onMonthChange, undefined, props.today);
+  const swipe = useMonthSwipe(navigation.changeMonth);
   const db = useSQLiteContext();
   const diaries = useQuery(diaryQueries.month(db, props.month));
   const completions = useQuery(
@@ -53,7 +55,7 @@ export function DiaryHabitMonthCalendar(props: {
       <CalendarMonthHeader
         month={props.month}
         today={props.today}
-        onMonthChange={props.onMonthChange}
+        navigation={navigation}
         onToday={() => props.onSelect(props.today)}
       />
       <CalendarGrid
@@ -76,8 +78,8 @@ export function DiaryHabitMonthCalendar(props: {
               selected={props.selected}
               fillHeight={props.fillHeight}
               showSelectedIndicator={false}
-              disabled={date > props.today}
-              dimmed={date > props.today}
+              disabled={!navigation.isDateAvailable(date)}
+              dimmed={!navigation.isDateAvailable(date)}
               onSelect={props.onSelect}
               label={[
                 date,

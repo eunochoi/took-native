@@ -1,15 +1,7 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { PanResponder } from 'react-native';
-import { shiftMonth } from '../domain/date';
 
-export function useMonthSwipe(month: string, onMonthChange: (month: string) => void) {
-  const changeMonth = useCallback(
-    (amount: number) => {
-      const next = shiftMonth(month, amount);
-      if (next >= '1900-01' && next <= '2100-12') onMonthChange(next);
-    },
-    [month, onMonthChange],
-  );
+export function useMonthSwipe(changeMonth: (amount: number) => void) {
   const swipe = useMemo(
     () =>
       PanResponder.create({
@@ -24,5 +16,5 @@ export function useMonthSwipe(month: string, onMonthChange: (month: string) => v
       }),
     [changeMonth],
   );
-  return { changeMonth, panHandlers: swipe.panHandlers };
+  return { panHandlers: swipe.panHandlers };
 }

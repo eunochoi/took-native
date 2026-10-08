@@ -1,3 +1,4 @@
+import { useCalendarNavigation } from './helpers/calendar-navigation';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -28,6 +29,7 @@ function evaluate(
         if (name === 'react-native') return { Pressable: 'Pressable', View: 'View' };
         if (name === 'date-fns' || name === 'tailwind-merge') return require(name);
         if (name.endsWith('domain/calendar')) return require('../src/domain/calendar');
+        if (name.endsWith('useCalendarNavigation')) return { useCalendarNavigation };
         if (name.endsWith('domain/date')) return require('../src/domain/date');
         if (name.endsWith('domain/constants')) return require('../src/domain/constants');
         if (name.endsWith('hooks/useMonthSwipe'))
@@ -292,4 +294,48 @@ test('day detail falls back to today for a direct future-date route', () => {
       expected,
     );
   }
+});
+
+
+test('habit start and future boundaries block adjacent cells and share guarded month navigation', () => {
+  const { HabitMonthCalendar } = load('src/screens/habit/HabitMonthCalendar.tsx');
+  const months: string[] = [];
+  const toggled: string[] = [];
+  const props = {
+    habit: { initial_started_at: '2026-09-15T12:00:00.000Z' },
+    month: '2026-09',
+    today: '2026-10-08',
+    dates: [],
+    summary: { completed: 0, missed: 0, rate: 0 },
+    disabled: false,
+    unavailable: false,
+    onMonthChange: (month: string) => months.push(month),
+    onToggle: (date: string) => toggled.push(date),
+  };
+  const tree = HabitMonthCalendar(props);
+  const header = nodes(tree).find((node) => node.type === 'CalendarMonthHeader');
+  assert.equal(header.props.navigation.canGoPrevious, false);
+  assert.equal(header.props.navigation.canGoNext, true);
+  header.props.navigation.changeMonth(-1);
+  assert.deepEqual(months, []);
+  for (const date of ['2026-08-31', '2026-09-14']) {
+    const item = cell(tree, date);
+    assert.equal(item.props.disabled, true);
+    assert.equal(item.props.dimmed, true);
+    CalendarDay(item.props).props.onPress();
+  }
+  const start = cell(tree, '2026-09-15');
+  assert.equal(start.props.disabled, true); // Older than four days, but history remains legible.
+  assert.equal(start.props.dimmed, false);
+  CalendarDay(cell(tree, '2026-10-01').props).props.onPress();
+  assert.deepEqual(months, ['2026-10']);
+  assert.deepEqual(toggled, []);
+  const current = HabitMonthCalendar({ ...props, month: '2026-10' });
+  for (const date of ['2026-10-09', '2026-11-01']) {
+    assert.equal(cell(current, date).props.disabled, true);
+    CalendarDay(cell(current, date).props).props.onPress();
+  }
+  CalendarDay(cell(current, '2026-10-05').props).props.onPress();
+  CalendarDay(cell(current, props.today).props).props.onPress();
+  assert.deepEqual(toggled, ['2026-10-05', '2026-10-08']);
 });

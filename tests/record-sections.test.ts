@@ -1,3 +1,4 @@
+import { useCalendarNavigation } from './helpers/calendar-navigation';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -51,17 +52,12 @@ function section(path: string, name: string, initialProps: Record<string, unknow
               return slots[index].value;
             },
           };
+        if (dependency.endsWith('useCalendarNavigation')) return { useCalendarNavigation };
         if (dependency.endsWith('domain/date')) return require('../src/domain/date');
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (dependency === 'react-native') return { View: 'View', Pressable: 'Pressable' };
         if (dependency.endsWith('hooks/useMonthSwipe'))
-          return {
-            useMonthSwipe: (month: string, onChange: (month: string) => void) => ({
-              changeMonth: (amount: number) =>
-                onChange(localRequire('../../domain/date').shiftMonth(month, amount)),
-              panHandlers: {},
-            }),
-          };
+          return { useMonthSwipe: () => ({ panHandlers: {} }) };
         if (dependency === 'expo-router') return { useRouter: () => ({ push: () => undefined }) };
         if (dependency.endsWith('AppThemeProvider'))
           return { useAppTheme: () => ({ colors: {}, rem: 15, iconSizes: {} }) };

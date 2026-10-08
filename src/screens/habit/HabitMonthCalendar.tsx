@@ -7,6 +7,7 @@ import { canCheckHabit, shiftDate, localDate } from '../../domain/date';
 import { CalendarGrid } from '../calendar/CalendarGrid';
 import { calendarDays } from '../../domain/calendar';
 import { useMonthSwipe } from '../../hooks/useMonthSwipe';
+import { useCalendarNavigation } from '../../hooks/useCalendarNavigation';
 import { CalendarDay } from '../calendar/CalendarDay';
 import { CalendarMonthHeader } from '../calendar/CalendarMonthHeader';
 
@@ -33,7 +34,8 @@ export function HabitMonthCalendar({
 }) {
   const startedDate = localDate(habit.initial_started_at);
   const days = useMemo(() => calendarDays(month), [month]);
-  const swipe = useMonthSwipe(month, onMonthChange);
+  const navigation = useCalendarNavigation(month, onMonthChange, startedDate, today);
+  const swipe = useMonthSwipe(navigation.changeMonth);
   const completedDates = useMemo(() => new Set(dates), [dates]);
   const lockedBefore = shiftDate(today, -3);
   return (
@@ -42,7 +44,7 @@ export function HabitMonthCalendar({
         title="월별 기록"
         month={month}
         today={today}
-        onMonthChange={onMonthChange}
+        navigation={navigation}
       />
       <View className="flex-row py-3">
         {[
@@ -74,9 +76,9 @@ export function HabitMonthCalendar({
               date={date}
               month={month}
               today={today}
-              onMonthChange={onMonthChange}
-              disabled={disabled || (!outside && !canCheckHabit(date, startedDate, today))}
-              dimmed={date < startedDate || date > today}
+              onMonthChange={navigation.changeToMonth}
+              disabled={disabled || !navigation.isDateAvailable(date) || (!outside && !canCheckHabit(date, startedDate, today))}
+              dimmed={!navigation.isDateAvailable(date)}
               onSelect={(selectedDate) => onToggle(selectedDate, !completed)}
               label={`${date}${completed ? ', 완료 기록 있음' : ''}${missed ? ', 놓친 횟수' : ''}`}
               contentClassName={

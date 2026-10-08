@@ -1,3 +1,4 @@
+import { useCalendarNavigation } from './helpers/calendar-navigation';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -76,6 +77,7 @@ function load(path: string, states: unknown[], date = '2026-09-30') {
             habitQueries: { completions: () => ({}) },
           };
         if (name.endsWith('domain/calendar')) return { calendarDays };
+        if (name.endsWith('useCalendarNavigation')) return { useCalendarNavigation };
         if (name.endsWith('domain/date')) return require('../src/domain/date');
         if (name.endsWith('useMonthSwipe'))
           return {
@@ -178,6 +180,7 @@ test('month header preserves month limits and switches months without changing r
   const render = load('src/screens/calendar/CalendarMonthHeader.tsx', []);
   const changed: string[] = [];
   const props = {
+    navigation: useCalendarNavigation('2026-09', (month) => changed.push(month)),
     month: '2026-09',
     today: '2026-10-07',
     title: '월별 기록',
@@ -191,12 +194,12 @@ test('month header preserves month limits and switches months without changing r
     .find((node) => node.props.accessibilityLabel?.includes('이번 달로 이동'))
     .props.onPress();
   assert.deepEqual(changed, ['2026-10', '2026-10']);
-  const first = nodes(render('CalendarMonthHeader', { ...props, month: '1900-01' })).find(
+  const first = nodes(render('CalendarMonthHeader', { ...props, month: '1900-01', navigation: useCalendarNavigation('1900-01', props.onMonthChange) })).find(
     (node) => node.props.accessibilityLabel === '이전 달',
   );
   assert.equal(first.props.disabled, true);
   first.props.onPress();
-  const last = nodes(render('CalendarMonthHeader', { ...props, month: '2100-12' })).find(
+  const last = nodes(render('CalendarMonthHeader', { ...props, month: '2100-12', navigation: useCalendarNavigation('2100-12', props.onMonthChange) })).find(
     (node) => node.props.accessibilityLabel === '다음 달',
   );
   assert.equal(last.props.disabled, true);
