@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
@@ -7,8 +6,6 @@ import type { Habit } from '../../db/types';
 import { resolveIconColor } from '../../domain/constants';
 import { canCheckHabit, shiftDate, localDate } from '../../domain/date';
 import { useAppTheme } from '../../theme/AppThemeProvider';
-
-const HABIT_PREVIEW_COUNT = 5;
 
 export function DayInfoHabitSection({
   habits,
@@ -25,7 +22,6 @@ export function DayInfoHabitSection({
 }) {
   const { colors, iconSizes } = useAppTheme();
   const router = useRouter();
-  const [expanded, setExpanded] = useState(false);
   const editable = date >= shiftDate(today, -3) && date <= today;
   const done = habits.filter((habit) => habit.completed).length;
   const renderHabit = (habit: Habit & { completed: boolean }) => {
@@ -98,7 +94,7 @@ export function DayInfoHabitSection({
                 습관 체크는 오늘부터 3일 전까지 변경할 수 있어요.
               </Text>
             )}
-            {(expanded ? habits : habits.slice(0, HABIT_PREVIEW_COUNT)).map(renderHabit)}
+            {habits.map(renderHabit)}
           </View>
         ) : (
           <View className="h-56 items-center justify-center">
@@ -107,25 +103,6 @@ export function DayInfoHabitSection({
             </Text>
           </View>
         )}
-        <View className="h-9 mt-2 items-center justify-center">
-          {habits.length > HABIT_PREVIEW_COUNT && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ expanded }}
-              onPress={() => setExpanded(!expanded)}
-              className="h-9 flex-row items-center gap-1 px-4"
-            >
-              <Text className="text-sm text-theme-accent">
-                {expanded ? '접기' : `더보기 (${habits.length - HABIT_PREVIEW_COUNT}개)`}
-              </Text>
-              <AppIcon
-                name={expanded ? 'chevron-up' : 'chevron-down'}
-                size={iconSizes.md}
-                color={colors.accent}
-              />
-            </Pressable>
-          )}
-        </View>
       </View>
     </View>
   );

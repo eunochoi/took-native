@@ -270,7 +270,7 @@ test('ranked records keep the heading and description without an empty message o
   assert.equal(expandButton(exact.nodes), undefined);
 });
 
-test('day habits preview five rows, expand in order and retain totals and completion actions', () => {
+test('day habits show all rows in order and retain totals and completion actions without a toggle', () => {
   const toggles: unknown[][] = [];
   const ui = section('src/screens/calendar/DayInfoHabitSection.tsx', 'DayInfoHabitSection', {
     habits,
@@ -279,35 +279,24 @@ test('day habits preview five rows, expand in order and retain totals and comple
     pendingId: null,
     onToggle: (...args: unknown[]) => toggles.push(args),
   });
-  const collapsed = ui.render();
-  assert.equal(
-    collapsed.nodes.filter((node) => node.props.accessibilityRole === 'checkbox').length,
-    5,
-  );
-  assert.equal(expandButton(collapsed.nodes).props.accessibilityState.expanded, false);
-  assert(
-    collapsed.nodes.some(
-      (node) => JSON.stringify(node.props.children) === JSON.stringify([4, '/', 6, ' 완료']),
-    ),
-  );
-  expandButton(collapsed.nodes).props.onPress();
-  const expanded = ui.render();
-  const checkboxes = expanded.nodes.filter((node) => node.props.accessibilityRole === 'checkbox');
-  assert.equal(checkboxes.length, 6);
+  const all = ui.render();
+  const checkboxes = all.nodes.filter((node) => node.props.accessibilityRole === 'checkbox');
+  assert.equal(checkboxes.length, habits.length);
+  assert.equal(expandButton(all.nodes), undefined);
+  assert(all.nodes.some(
+    (node) => JSON.stringify(node.props.children) === JSON.stringify([4, '/', 6, ' 완료']),
+  ));
   assert.deepEqual(
-    expanded.nodes
+    all.nodes
       .filter((node) => node.type === 'Text' && /^습관 \d$/.test(node.props.children))
       .map((node) => node.props.children),
     habits.map((item) => item.name),
   );
-  checkboxes[4].props.onPress();
-  assert.deepEqual(toggles, [[5, true]]);
-  expandButton(expanded.nodes).props.onPress();
-  assert.equal(
-    ui.render().nodes.filter((node) => node.props.accessibilityRole === 'checkbox').length,
-    5,
-  );
-  assert.equal(expandButton(ui.render({ habits: habits.slice(0, 5) }).nodes), undefined);
+  checkboxes[5].props.onPress();
+  assert.deepEqual(toggles, [[6, true]]);
+  const fewer = ui.render({ habits: habits.slice(0, 5) });
+  assert.equal(fewer.nodes.filter((node) => node.props.accessibilityRole === 'checkbox').length, 5);
+  assert.equal(expandButton(fewer.nodes), undefined);
 });
 
 test('day habits retain the recent-four-day lock and empty state for dates without habits', () => {
@@ -322,7 +311,7 @@ test('day habits retain the recent-four-day lock and empty state for dates witho
   const lockedCheckboxes = locked.nodes.filter(
     (node) => node.props.accessibilityRole === 'checkbox',
   );
-  assert.equal(lockedCheckboxes.length, 5);
+  assert.equal(lockedCheckboxes.length, habits.length);
   assert(
     lockedCheckboxes.every(
       (node) => node.props.disabled && node.props.className.includes('opacity-60'),
@@ -330,7 +319,7 @@ test('day habits retain the recent-four-day lock and empty state for dates witho
   );
   assert.deepEqual(
     lockedCheckboxes.map((node) => node.props.accessibilityState.checked),
-    [true, true, true, true, false],
+    [true, true, true, true, false, false],
   );
   const lockMessage = '습관 체크는 오늘부터 3일 전까지 변경할 수 있어요.';
   assert(locked.nodes.some((node) => node.props.children === lockMessage));
@@ -369,7 +358,7 @@ test('day habits retain the recent-four-day lock and empty state for dates witho
   const unchecked = ui.render({ habits: habits.map((habit) => ({ ...habit, completed: false })) });
   assert.equal(
     unchecked.nodes.filter((node) => node.props.accessibilityRole === 'checkbox').length,
-    5,
+    habits.length,
   );
   assert(
     unchecked.nodes.some(
