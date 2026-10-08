@@ -44,7 +44,7 @@ export function EmotionStats({
                   <View>
                     <EmotionImage emotion={id} size={appRem * 3} />
                     {max > 0 && counts[id] === max && (
-                      <Badge className="absolute -right-3 -top-2 h-7 w-8">
+                      <Badge className="absolute -right-2 -top-2 h-7 w-8">
                         1등
                       </Badge>
                     )}
