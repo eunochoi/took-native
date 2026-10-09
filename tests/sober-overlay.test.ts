@@ -85,12 +85,14 @@ function scenario(file = '../app/sober/[id]/index.tsx') {
           if (name === '@tanstack/react-query')
             return {
               useQuery: ({ kind }: any) => ({ data: kind === 'sober' ? sober : [record] }),
+              useInfiniteQuery: () => ({ data: { pages: [{ records: [record] }] } }),
             };
           if (name.endsWith('/queries'))
             return {
               soberQueries: {
                 byId: () => ({ kind: 'sober' }),
                 restarts: () => ({ kind: 'restarts' }),
+                memos: () => ({}),
               },
               useRecordMutation: (
                 fn: Function,
@@ -161,6 +163,22 @@ function scenario(file = '../app/sober/[id]/index.tsx') {
   };
 }
 
+test('memo launcher pushes a route above sober detail without closing its sheet', () => {
+  const ui = scenario();
+  const nodes = ui.render();
+  const button = nodes.find(
+    (node) => node.type === 'Button' && node.props.label === '메모 기록보기',
+  );
+  assert.equal(button.props.subtle, true);
+  button.props.onPress();
+  assert.equal(ui.pushes.length, 1);
+  assert.equal(ui.pushes[0].pathname, '/sober/[id]/memos');
+  assert.equal(ui.pushes[0].params.id, '1');
+  assert.equal(
+    ui.render().find((node) => node.type === 'BottomSheetPage').props.closeRequested,
+    undefined,
+  );
+});
 
 test('calendar and direct restart launch push routes while preserving detail selection and month', () => {
   const ui = scenario();
@@ -262,4 +280,77 @@ test('restart deletion blocks repeat requests and exits until completion, and fa
     true,
   );
   assert(ui.render().some((node) => node.type === 'SoberDayInfo'));
+});
+
+function memoCard(ui: ReturnType<typeof scenario>) {
+  const flat = ui
+    .render()
+    .find((node) => node.type === 'BottomSheetPage')
+    .props.renderScrollView({});
+  return ui
+    .nodes(flat.props.renderItem({ item: flat.props.data[0], index: 0 }))
+    .find((node) => node.type === 'SoberRestartCard');
+}
+
+test('memo edit waits for the menu to close and retains the memo route underneath', () => {
+  const ui = scenario('../app/sober/[id]/memos.tsx');
+  memoCard(ui).props.onMenu(ui.record);
+  const menu = ui.render().find((node) => node.type === 'BottomSheetModal' && node.props.visible);
+  let next!: () => void;
+  menu.props
+    .children((action: () => void) => {
+      next = action;
+      return true;
+    })
+    .props.children[0].props.onPress();
+  assert.equal(ui.pushes.length, 0);
+  menu.props.onClose();
+  next();
+  assert.equal(ui.pushes[0].pathname, '/sober/[id]/restart/[restartId]/edit');
+  assert.equal(ui.pushes[0].params.restartId, '2');
+  assert.equal(
+    ui.render().find((node) => node.type === 'BottomSheetPage').props.title,
+    '커피 메모',
+  );
+});
+
+test('memo deletion explains recalculation, prevents repeats and unlocks after success', async () => {
+  const ui = scenario('../app/sober/[id]/memos.tsx');
+  memoCard(ui).props.onMenu(ui.record);
+  const menu = ui.render().find((node) => node.type === 'BottomSheetModal' && node.props.visible);
+  let next!: () => void;
+  menu.props
+    .children((action: () => void) => {
+      next = action;
+      return true;
+    })
+    .props.children[1].props.onPress();
+  menu.props.onClose();
+  next();
+  const confirm = ui.render().find((node) => node.type === 'ConfirmModal');
+  assert.equal(confirm.props.visible, true);
+  assert.match(confirm.props.message, /경과 시간과 통계가 다시 계산/);
+  confirm.props.onConfirm();
+  confirm.props.onConfirm();
+  assert.deepEqual(ui.writes, [{ id: 2, owner: 1 }]);
+  assert.equal(memoCard(ui).props.pending, true);
+  assert.equal(
+    ui
+      .render()
+      .find((node) => node.type === 'BottomSheetPage')
+      .props.onBeforeClose(),
+    false,
+  );
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  ui.completeWrite();
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  assert.equal(
+    ui
+      .render()
+      .find((node) => node.type === 'BottomSheetPage')
+      .props.onBeforeClose(),
+    true,
+  );
+  assert.equal(memoCard(ui).props.pending, false);
+  assert(ui.notices.some((notice) => notice.tone === 'success'));
 });

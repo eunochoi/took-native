@@ -86,6 +86,15 @@ export default function SoberDetail() {
               openModal({ pathname: '/sober/[id]/restart/new', params: { id: String(soberId) } })
             }
           />
+          <Button
+            subtle
+            labelWeight="normal"
+            className="w-full"
+            label="메모 기록보기"
+            onPress={() =>
+              openModal({ pathname: '/sober/[id]/memos', params: { id: String(soberId) } })
+            }
+          />
         </View>
         {!!sober.description && (
           <View className="gap-3">

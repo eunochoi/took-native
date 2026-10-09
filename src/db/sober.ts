@@ -21,6 +21,36 @@ export const getSoberRestarts = (db: SQLiteDatabase, soberId?: number) =>
         'SELECT * FROM sober_restarts WHERE sober_id = ? ORDER BY restarted_at, id',
         soberId,
       );
+export const SOBER_MEMO_PAGE_SIZE = 20;
+export type SoberMemoCursor = Pick<SoberRestart, 'id' | 'restarted_at'>;
+export async function getSoberMemoPage(
+  db: SQLiteDatabase,
+  soberId: number,
+  sort: 'ASC' | 'DESC',
+  cursor: SoberMemoCursor | null = null,
+) {
+  if (!Number.isSafeInteger(soberId) || soberId <= 0 || (sort !== 'ASC' && sort !== 'DESC'))
+    throw new Error('메모 기록 조회 조건을 확인해주세요.');
+  const comparison = sort === 'ASC' ? '>' : '<';
+  const records = await db.getAllAsync<SoberRestart>(
+    `SELECT * FROM sober_restarts
+     WHERE sober_id = ? AND memo IS NOT NULL AND trim(memo) != ''
+     ${cursor ? `AND (restarted_at ${comparison} ? OR (restarted_at = ? AND id ${comparison} ?))` : ''}
+     ORDER BY restarted_at ${sort}, id ${sort} LIMIT ?`,
+    soberId,
+    ...(cursor ? [cursor.restarted_at, cursor.restarted_at, cursor.id] : []),
+    SOBER_MEMO_PAGE_SIZE + 1,
+  );
+  const page = records.slice(0, SOBER_MEMO_PAGE_SIZE);
+  const last = page.at(-1);
+  return {
+    records: page,
+    nextCursor:
+      records.length > SOBER_MEMO_PAGE_SIZE && last
+        ? { id: last.id, restarted_at: last.restarted_at }
+        : undefined,
+  };
+}
 export function sortSobers(
   sobers: Sober[],
   settings: Pick<Settings, 'soberSort' | 'soberPriorityFirst'>,

@@ -1,4 +1,10 @@
-import { getSoberList, getSoberById, getSoberRestarts } from '../db/sober';
+import {
+  getSoberList,
+  getSoberById,
+  getSoberRestarts,
+  getSoberMemoPage,
+  type SoberMemoCursor,
+} from '../db/sober';
 import {
   infiniteQueryOptions,
   queryOptions,
@@ -79,6 +85,13 @@ export const habitQueries = {
     }),
 };
 export const soberQueries = {
+  memos: (db: SQLiteDatabase, id: number, sort: 'ASC' | 'DESC') =>
+    infiniteQueryOptions({
+      queryKey: ['sober', 'memos', id, sort],
+      queryFn: ({ pageParam }) => withReadLock(() => getSoberMemoPage(db, id, sort, pageParam)),
+      initialPageParam: null as SoberMemoCursor | null,
+      getNextPageParam: (last) => last.nextCursor,
+    }),
   list: (db: SQLiteDatabase) =>
     queryOptions({
       queryKey: ['sober', 'list'],

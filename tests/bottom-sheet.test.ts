@@ -24,6 +24,7 @@ function harness(
     onOpened?: () => void;
     scrollEnabled?: boolean;
     footer?: unknown;
+    renderScrollView?: (props: any) => unknown;
   } = {},
 ) {
   const slots: any[] = [];
@@ -396,7 +397,7 @@ function harness(
       return close(action);
     },
     scroll() {
-      return find(tree, (node) => node.type === 'ScrollView');
+      return find(tree, (node) => node.type === 'ScrollView' || node.type === 'MemoList');
     },
     sheet() {
       return find(tree, (node) => node.key?.startsWith('sheet-'));
@@ -617,6 +618,35 @@ test('a touch begun below the top stays a scroll even when it reaches zero; the 
   h.completeAnimation();
   assert.equal(h.y, 0);
   assert.equal(h.closes, 0);
+});
+
+test('custom list viewport shares native scrolling, safe-area padding and sheet dismissal', () => {
+  const h = harness(true, false, 720, {
+    fixedHeight: true,
+    renderScrollView: (props) => ({ type: 'MemoList', props }),
+  });
+  h.show();
+  h.layout();
+  h.completeOpen();
+  assert.equal(h.scroll().type, 'MemoList');
+  assert.equal(h.native.props, undefined);
+  assert.equal(h.scroll().props.contentContainerStyle.paddingBottom, 75);
+  assert.equal(h.scroll().props.nestedScrollEnabled, true);
+  assert.equal(h.native.config.requireExternalGestureToFail, h.pan);
+  h.offset(120);
+  h.begin();
+  h.offset(0);
+  h.move(0, 160);
+  assert.equal(h.gestureState, 'failed');
+  assert.equal(h.y, 0);
+  h.end();
+  h.begin();
+  h.move(0, 160);
+  assert.equal(h.gestureState, 'active');
+  assert.deepEqual(h.scrollCommands, [0]);
+  h.end();
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
 });
 
 test('upward and horizontal touches remain scrolls; a stationary tap never becomes a sheet drag', () => {

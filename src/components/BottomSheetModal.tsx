@@ -13,8 +13,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomSheetLifecycle, type CloseBottomSheet } from '../hooks/useBottomSheetLifecycle';
 import { useScrollFade } from '../hooks/useScrollFade';
 import { useAppTheme } from '../theme/AppThemeProvider';
-import { BottomSheetScrollViewport } from './BottomSheetScrollViewport';
 import { BottomSheetHeader } from './BottomSheetHeader';
+import {
+  BottomSheetScrollViewport,
+  type BottomSheetScrollProps,
+} from './BottomSheetScrollViewport';
 import { NoticeHost } from './NoticeProvider';
 
 export function BottomSheetModal({
@@ -23,6 +26,7 @@ export function BottomSheetModal({
   titleIcon,
   onClose,
   children,
+  renderScrollView,
   maxHeight,
   fixedHeight = false,
   scrollFade = false,
@@ -42,7 +46,7 @@ export function BottomSheetModal({
   title: string;
   titleIcon?: ReactNode;
   onClose: () => void;
-  children: ReactNode | ((closeSheet: CloseBottomSheet) => ReactNode);
+  children?: ReactNode | ((closeSheet: CloseBottomSheet) => ReactNode);
   maxHeight?: number;
   fixedHeight?: boolean;
   scrollFade?: boolean;
@@ -57,6 +61,7 @@ export function BottomSheetModal({
   footer?: ReactNode | ((closeSheet: CloseBottomSheet) => ReactNode);
   scrollEnabled?: boolean;
   scrollRef?: AnimatedRef<ScrollView>;
+  renderScrollView?: (props: BottomSheetScrollProps) => ReactNode;
 }) {
   const { rem: appRem, reducedMotion: reduceMotion } = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -136,6 +141,7 @@ export function BottomSheetModal({
                 />
                 <BottomSheetScrollViewport
                   motion={motion}
+                  renderScrollView={renderScrollView}
                   fade={fade}
                   fixedHeight={fixedHeight}
                   scrollEnabled={scrollEnabled}

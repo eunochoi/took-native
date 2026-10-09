@@ -13,6 +13,7 @@ export function RecordSortPicker({
   priorityFirst,
   allowCustom = false,
   ascendingLabel = '과거순',
+  sortLabel = '생성일 정렬',
   onClose,
   onApply,
 }: {
@@ -21,6 +22,7 @@ export function RecordSortPicker({
   priorityFirst?: boolean;
   allowCustom?: boolean;
   ascendingLabel?: string;
+  sortLabel?: string;
   onClose: () => void;
   onApply: (sort: 'ASC' | 'DESC' | 'CUSTOM', priorityFirst: boolean) => void;
 }) {
@@ -50,7 +52,7 @@ export function RecordSortPicker({
     >
       <View className="gap-6">
         <View className="gap-3">
-          <Text className="text-base font-semibold">생성일 정렬</Text>
+          <Text className="text-base font-semibold">{sortLabel}</Text>
           <View className="flex-row gap-3">
             {options.map((option) => (
               <View key={option.value} className="flex-1">
