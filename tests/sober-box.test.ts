@@ -81,6 +81,7 @@ for (const [label, record, events, elapsed] of [
           View: 'View',
           Text: 'Text',
           SoberIcon: 'SoberIcon',
+          ProgressBar: 'ProgressBar',
           SoberMenu: 'SoberMenu',
         };
       },
@@ -93,8 +94,8 @@ for (const [label, record, events, elapsed] of [
       isFirst: true,
       isLast: true,
     });
-    const progress = nodes.find((node) => node.props.accessibilityRole === 'progressbar');
-    assert.equal(progress.props.accessibilityValue.now, expected.progress);
+    const progress = nodes.find((node) => node.type === 'ProgressBar');
+    assert.equal(progress.props.value, expected.progress);
     assert(
       nodes.some(
         (node) =>

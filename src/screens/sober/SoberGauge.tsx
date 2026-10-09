@@ -1,6 +1,7 @@
 import { format, parseISO } from 'date-fns';
 import { View } from 'react-native';
 import { SoberIcon } from '../../components/SoberIcon';
+import { ProgressBar } from '../../components/ProgressBar';
 import { Text } from '../../components/Text';
 import type { HabitIconColorKey } from '../../domain/constants';
 import type { SoberIconKey } from '../../domain/sober';
@@ -23,7 +24,6 @@ export function SoberGauge({
   iconColor: HabitIconColorKey;
 }) {
   const { rem: appRem } = useAppTheme();
-  const value = Math.min(100, Math.max(0, progress));
   return (
     <View className="w-full items-center gap-6">
       <SoberIcon name={iconKey} colorKey={iconColor} size={appRem * 5} />
@@ -35,14 +35,10 @@ export function SoberGauge({
           {format(parseISO(start), 'yy년 M월 d일 HH:mm')} 시작
         </Text>
       </View>
-      <View
-        accessibilityRole="progressbar"
+      <ProgressBar
+        value={progress}
         accessibilityLabel={`목표 ${formatSoberGoal(goalDays)}`}
-        accessibilityValue={{ min: 0, max: 100, now: value }}
-        className="h-6 w-full overflow-hidden rounded-xl bg-theme-border-muted"
-      >
-        <View className="h-full rounded-xl bg-theme-accent" style={{ width: `${value}%` }} />
-      </View>
+      />
     </View>
   );
 }

@@ -1,4 +1,5 @@
 import { View } from 'react-native';
+import { ProgressBar } from '../../components/ProgressBar';
 import { Text } from '../../components/Text';
 
 export function HabitTodayProgress({ done, total }: { done: number; total: number }) {
@@ -16,14 +17,11 @@ export function HabitTodayProgress({ done, total }: { done: number; total: numbe
         </View>
         <Text className="text-5xl font-semibold text-theme-accent">{rate}%</Text>
       </View>
-      <View
-        accessibilityRole="progressbar"
+      <ProgressBar
+        value={rate}
         accessibilityLabel="오늘의 습관"
-        accessibilityValue={{ min: 0, max: 100, now: rate, text: `${done}/${total} 완료` }}
-        className="h-5 w-full overflow-hidden rounded-full bg-theme-accent/15"
-      >
-        <View className="h-full rounded-full bg-theme-accent" style={{ width: `${rate}%` }} />
-      </View>
+        accessibilityValueText={`${done}/${total} 완료`}
+      />
     </View>
   );
 }

@@ -125,7 +125,7 @@ export function SoberWidget({
               width: trackWidth,
               height: trackHeight,
               borderRadius: trackHeight / 2,
-              backgroundColor: '#EBEBEB',
+              backgroundColor: tokens.colorValues.lightBorderMuted as `#${string}`,
               overflow: 'hidden',
             }}
           >

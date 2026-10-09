@@ -3,6 +3,7 @@ import { format, parseISO } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { SoberIcon } from '../../components/SoberIcon';
+import { ProgressBar } from '../../components/ProgressBar';
 import { Text } from '../../components/Text';
 import type { Sober, SoberRestart } from '../../db/types';
 import {
@@ -65,13 +66,7 @@ export function SoberBox({
           </Text>
           <Text className="text-sm text-theme-text-secondary">{progress.toFixed(1)}%</Text>
         </View>
-        <View
-          accessibilityRole="progressbar"
-          accessibilityValue={{ min: 0, max: 100, now: progress }}
-          className="h-2 overflow-hidden rounded-full bg-theme-border-muted"
-        >
-          <View className="h-full rounded-full bg-theme-accent" style={{ width: `${progress}%` }} />
-        </View>
+        <ProgressBar value={progress} />
         <Text className="text-sm text-theme-text-secondary">
           목표 {formatSoberGoal(goalDays)} · {format(parseISO(start), 'yyyy. M. d')}
           시작
