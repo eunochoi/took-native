@@ -32,7 +32,7 @@ export function DayInfoDiarySection({
   };
   return (
     <View
-      className="shrink-0 p-1"
+      className="shrink-0 px-1 pb-1"
       style={{ height: Math.max(contentHeight, galleryHeight) + appRem * 5 }}
     >
       <View className="h-12 flex-row items-center justify-between gap-2 py-2">

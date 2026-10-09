@@ -44,9 +44,6 @@ export function SoberLongRecords({ records }: { records: SoberStreak[] }) {
     <View className="gap-4">
       <Text accessibilityRole="header" className="text-xl font-semibold">상위 기록</Text>
       <View className='px-2 gap-4'>
-        <Text className="text-sm text-theme-text-secondary">
-          오래 유지한 순으로 최대 20개의 기록을 보여드려요.
-        </Text>
         <View>
           {records.slice(0, expanded ? 20 : 5).map(renderRecord)}
           {records.length > 5 && (

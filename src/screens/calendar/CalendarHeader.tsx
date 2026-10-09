@@ -44,7 +44,7 @@ export function CalendarHeader({
       >
         <AppIcon
           name={amount === -1 ? 'chevron-left' : 'chevron-right'}
-          size={appRem * 1.5}
+          size={appRem * 1.1}
           color={colors.tertiary}
         />
       </Pressable>

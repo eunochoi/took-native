@@ -33,9 +33,6 @@ export function SoberMonthCalendar({
     <View className="gap-4">
       <Text accessibilityRole="header" className="text-xl font-semibold">월간 기록</Text>
       <View className='px-2 gap-4'>
-        <Text className="text-sm text-theme-text-secondary">
-          재시작일과 도전 횟수를 한눈에 확인하세요.
-        </Text>
         <CalendarHeader
           month={month}
           today={today}

@@ -6,6 +6,7 @@ import { usePreventRemove } from 'expo-router/react-navigation';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
+import { twMerge } from 'tailwind-merge';
 import { AlertModal, type AlertContent } from '../../../src/components/AlertModal';
 import { BottomSheetModal } from '../../../src/components/BottomSheetModal';
 import { BottomSheetPage } from '../../../src/components/BottomSheetPage';
@@ -26,7 +27,7 @@ import { SoberLongRecords } from '../../../src/screens/sober/SoberLongRecords';
 import { SoberMenu } from '../../../src/screens/sober/SoberMenu';
 import { SoberMonthCalendar } from '../../../src/screens/sober/SoberMonthCalendar';
 import { SoberStatisticsSummary } from '../../../src/screens/sober/SoberStatisticsSummary';
-import { BODY_DESCRIPTION_CLASS_NAME, SECTION_TITLE_CLASS_NAME } from '../../../src/theme/classes';
+import { BODY_DESCRIPTION_CLASS_NAME } from '../../../src/theme/classes';
 
 type Overlay =
   | { kind: 'day' }
@@ -145,10 +146,12 @@ export default function SoberDetail() {
           </View>
           {!!sober.description && (
             <View className="gap-3">
-              <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
+              <Text accessibilityRole="header" className="text-xl font-semibold">
                 나의 다짐
               </Text>
-              <Text className={BODY_DESCRIPTION_CLASS_NAME}>{sober.description}</Text>
+              <Text className={twMerge(BODY_DESCRIPTION_CLASS_NAME, 'px-2')}>
+                {sober.description}
+              </Text>
             </View>
           )}
           <SoberMonthCalendar
