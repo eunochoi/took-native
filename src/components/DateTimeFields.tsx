@@ -10,7 +10,7 @@ import { FormPickerRow } from './FormPickerRow';
 import { Text } from './Text';
 
 const TIME_INPUT_CLASS_NAME =
-  'h-12 w-16 rounded-2xl bg-transparent border border-theme-border text-center text-lg text-theme-text-primary font-normal';
+  'h-12 w-16 py-0 rounded-2xl bg-transparent border border-theme-border text-center text-lg leading-none text-theme-text-primary font-normal';
 
 export function DateTimeFields({
   draft,
@@ -71,6 +71,7 @@ export function DateTimeFields({
                 if (!disabled) onChange({ ...draft, hour });
               }}
               className={TIME_INPUT_CLASS_NAME}
+              style={{ includeFontPadding: false, textAlignVertical: 'center' }}
             />
             <Text>:</Text>
             <TextInput
@@ -83,6 +84,7 @@ export function DateTimeFields({
                 if (!disabled) onChange({ ...draft, minute });
               }}
               className={TIME_INPUT_CLASS_NAME}
+              style={{ includeFontPadding: false, textAlignVertical: 'center' }}
             />
           </View>
         </View>
