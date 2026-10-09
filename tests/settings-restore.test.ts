@@ -14,6 +14,7 @@ function harness() {
   let restore: () => Promise<void> = async () => {};
   let reload: () => Promise<void> = async () => {};
   let cancel: () => Promise<void> = async () => {};
+  let update: () => Promise<void> = async () => {};
   const events: string[] = [];
   const discarded: string[][] = [];
   const exports: any = {};
@@ -105,7 +106,7 @@ function harness() {
           return {
             useSettings: () => ({
               settings: {},
-              updateSettings: async () => {},
+              updateSettings: () => update(),
               reloadSettings: async () => {
                 events.push('reload');
                 await reload();
@@ -149,6 +150,11 @@ function harness() {
     backup: () => find(tree, 'BackupSection').props,
     confirm: () => find(tree, 'ConfirmModal').props,
     alert: () => find(tree, 'AlertModal').props,
+    appearance: () => find(tree, 'AppearanceSettingsSection').props,
+    emotion: () => find(tree, 'EmotionIconStyleSelector').props,
+    setUpdate(fn: typeof update) {
+      update = fn;
+    },
     setChoose(fn: typeof choose) {
       choose = fn;
     },
@@ -171,6 +177,40 @@ test('settings passes a callable scroll handler to its ordinary ScrollView', () 
   const ui = harness();
   assert.equal(ui.scroll().props.onScroll, ui.onScroll);
   assert.equal(typeof ui.scroll().props.onScroll, 'function');
+});
+
+test('appearance save errors reach the picker while immediate changes show an error alert', async () => {
+  const h = harness();
+  h.setUpdate(async () => {
+    throw new Error('저장 실패');
+  });
+  await assert.rejects(h.appearance().onApply({ themeMode: 'dark' }), /저장 실패/);
+  h.render();
+  assert.equal(h.alert().visible, false);
+  assert.equal(h.backup().activity, null);
+  h.emotion().onChange('type2');
+  await tick();
+  h.render();
+  assert.equal(h.alert().title, '설정을 저장하지 못했어요');
+});
+
+test('appearance save rejects competing work and releases the settings lock after completion', async () => {
+  const h = harness();
+  let finish!: () => void;
+  h.setUpdate(
+    () =>
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const pending = h.appearance().onApply({ fontSize: 'large' });
+  h.render();
+  assert.equal(h.appearance().disabled, true);
+  await assert.rejects(h.appearance().onApply({ themeMode: 'dark' }), /다른 작업/);
+  finish();
+  await pending;
+  h.render();
+  assert.equal(h.appearance().disabled, false);
 });
 
 test('file selection waits for confirmation; cancel cleans cache without changing records', async () => {

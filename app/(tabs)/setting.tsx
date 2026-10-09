@@ -64,17 +64,19 @@ export default function SettingsScreen() {
     active.current = false;
     setActivity(null);
   };
-  const change = async (patch: Partial<Settings>) => {
-    if (
-      active.current ||
-      Object.entries(patch).every(([key, value]) => settings[key as keyof Settings] === value)
-    )
+  const change = async (patch: Partial<Settings>, reportError = true) => {
+    if (active.current) {
+      if (!reportError) throw new Error('다른 작업이 진행 중이에요. 잠시 후 다시 저장해주세요.');
+      return;
+    }
+    if (Object.entries(patch).every(([key, value]) => settings[key as keyof Settings] === value))
       return;
     active.current = true;
     setActivity('settings');
     try {
       await updateSettings(patch);
     } catch (error) {
+      if (!reportError) throw error;
       setAlert({
         title: '설정을 저장하지 못했어요',
         message: error instanceof Error ? error.message : '다시 시도해주세요.',
@@ -228,6 +230,7 @@ export default function SettingsScreen() {
             onChange={(patch) => {
               void change(patch);
             }}
+            onApply={(patch) => change(patch, false)}
           />
           <View className="gap-3">
             <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
