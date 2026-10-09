@@ -1,4 +1,4 @@
-export const ACCENT_KEYS = ['blue', 'green', 'purple', 'pink', 'yellow', 'grey'] as const;
+export const ACCENT_KEYS = ['blue', 'purple', 'pink', 'green', 'yellow', 'grey'] as const;
 export const ACCENT_LABELS = {
   blue: '파랑',
   green: '초록',
