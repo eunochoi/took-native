@@ -1,5 +1,6 @@
 import { useRef } from 'react';
-import { View, Pressable } from 'react-native';
+import { View } from 'react-native';
+import { Button } from './Button';
 import { BottomSheetModal } from './BottomSheetModal';
 import { Text } from './Text';
 
@@ -33,27 +34,28 @@ export function ConfirmModal({
       }}
       footer={(close) => (
         <View className="flex-row gap-3">
-          <Pressable
-            accessibilityRole="button"
+          <Button
+            label="취소"
+            labelWeight="normal"
+            outline
+            subtle
             onPress={() => {
               if (!confirmed.current) close();
             }}
-            className="min-h-12 flex-1 items-center justify-center rounded-full bg-transparent border border-theme-border px-5"
-          >
-            <Text className="text-base">취소</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
+            className="flex-1"
+          />
+          <Button
+            label={confirmLabel}
+            labelWeight="normal"
+            danger={danger}
             onPress={() => {
               if (confirmed.current) return;
               confirmed.current = true;
               // A dismiss already in progress must not turn into a destructive confirm.
               if (!close()) confirmed.current = false;
             }}
-            className={`min-h-12 flex-1 items-center justify-center rounded-full px-5 ${danger ? 'bg-theme-danger' : 'bg-theme-accent'}`}
-          >
-            <Text className="text-base text-theme-text-on-accent">{confirmLabel}</Text>
-          </Pressable>
+            className="flex-1"
+          />
         </View>
       )}
     >

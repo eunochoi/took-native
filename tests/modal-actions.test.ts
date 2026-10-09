@@ -23,6 +23,7 @@ function renderConfirm(onConfirm: () => void, onCancel: () => void) {
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         return {
           Pressable: 'Pressable',
+          Button: 'Button',
           View: 'View',
           Text: 'Text',
           BottomSheetModal: 'BottomSheetModal',
@@ -50,6 +51,7 @@ function renderConfirm(onConfirm: () => void, onCancel: () => void) {
   const [cancel, confirm] = body.props.children;
   return {
     shell,
+    body,
     cancel,
     confirm,
     closeCount: () => accepted,
@@ -214,3 +216,19 @@ for (const kind of ['diary', 'habit', 'sober'] as const) {
     assert.equal(menu.deletions(), 0);
   });
 }
+
+test('confirmation retains equal-width cancel and confirm actions with common Button variants', () => {
+  const ui = renderConfirm(
+    () => {},
+    () => {},
+  );
+  assert.equal(ui.body.props.className, 'flex-row gap-3');
+  assert.equal(ui.cancel.type, 'Button');
+  assert.equal(ui.confirm.type, 'Button');
+  assert.equal(ui.cancel.props.label, '취소');
+  assert.equal(ui.confirm.props.label, '삭제');
+  assert.equal(ui.cancel.props.className, 'flex-1');
+  assert.equal(ui.confirm.props.className, 'flex-1');
+  assert.equal(ui.cancel.props.outline, true);
+  assert.equal(ui.confirm.props.danger, true);
+});
