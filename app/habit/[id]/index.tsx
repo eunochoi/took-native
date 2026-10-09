@@ -55,9 +55,9 @@ export default function HabitDetail() {
                 today={today}
                 unavailable={records.isPending || records.isError}
               />
-              <View className="rounded-theme p-4 gap-3 bg-theme-accent-light">
+              <View className="rounded-theme p-4 gap-3 bg-theme-accent-light/50">
                 <View className="gap-1">
-                  <Text className="text-base leading-5 font-semibold text-theme-accent">
+                  <Text className="text-sm leading-5 font-semibold text-theme-accent">
                     실천 가능일
                   </Text>
                   <Text className="text-sm leading-5 text-theme-accent">
@@ -65,7 +65,7 @@ export default function HabitDetail() {
                   </Text>
                 </View>
                 <View className="gap-1">
-                  <Text className="text-base leading-5 font-semibold text-theme-accent">
+                  <Text className="text-sm leading-5 font-semibold text-theme-accent">
                     실천율
                   </Text>
                   <Text className="text-sm leading-5 text-theme-accent">
@@ -73,7 +73,7 @@ export default function HabitDetail() {
                   </Text>
                 </View>
                 <View className="gap-1">
-                  <Text className="text-base leading-5 font-semibold text-theme-accent">
+                  <Text className="text-sm leading-5 font-semibold text-theme-accent">
                     놓친 횟수
                   </Text>
                   <Text className="text-sm leading-5 text-theme-accent">
