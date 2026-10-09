@@ -81,8 +81,8 @@ export function validateSober(input: SoberInput, now: number) {
   if (
     input.goal_mode === 'MANUAL'
       ? !Number.isSafeInteger(input.goal_days) ||
-      input.goal_days! <= 0 ||
-      input.goal_days! > SOBER_MAX_GOAL_DAYS
+        input.goal_days! <= 0 ||
+        input.goal_days! > SOBER_MAX_GOAL_DAYS
       : input.goal_days !== null
   )
     throw new Error(`직접 목표는 1~${SOBER_MAX_GOAL_DAYS}일로 입력해주세요.`);

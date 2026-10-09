@@ -185,7 +185,10 @@ test('section failures retry independently and cached records remain visible', (
     assert(view.nodes.some((node) => node.type === component));
   assert(!view.nodes.some((node) => node.type === 'HabitAnalysis'));
   view.nodes
-    .find((node) => node.type === 'QueryError' && node.props.retryAccessibilityLabel === '습관 기록 다시 시도')
+    .find(
+      (node) =>
+        node.type === 'QueryError' && node.props.retryAccessibilityLabel === '습관 기록 다시 시도',
+    )
     .props.onRetry();
   assert.equal(retries, 1);
   ui.results.habit.data = { all: [], top: [], bottom: [] };

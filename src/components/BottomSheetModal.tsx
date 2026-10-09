@@ -139,14 +139,18 @@ export function BottomSheetModal({
                   scrollEnabled={scrollEnabled}
                   scrollFade={scrollFade}
                   contentKey={contentKey}
-                  bottomPadding={!footer && insets.bottom > 0 ? appRem * 3 + insets.bottom : undefined}
+                  bottomPadding={
+                    !footer && insets.bottom > 0 ? appRem * 3 + insets.bottom : undefined
+                  }
                 >
                   {typeof children === 'function' ? children(closeSheet) : children}
                 </BottomSheetScrollViewport>
                 {footer && (
                   <View
                     className="pb-4"
-                    style={insets.bottom > 0 ? { paddingBottom: appRem + insets.bottom } : undefined}
+                    style={
+                      insets.bottom > 0 ? { paddingBottom: appRem + insets.bottom } : undefined
+                    }
                   >
                     {typeof footer === 'function' ? footer(closeSheet) : footer}
                   </View>

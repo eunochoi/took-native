@@ -39,9 +39,7 @@ export function SoberStatisticsSummary({
           className={`flex-1 min-w-0 items-center gap-2 px-1 py-4 border-theme-border-muted ${index < 2 ? 'border-r' : ''}`}
         >
           <AppIcon name={stat.icon} size={appRem * 2} className="text-theme-accent" />
-          <Text className="text-center text-sm text-theme-text-secondary">
-            {stat.label}
-          </Text>
+          <Text className="text-center text-sm text-theme-text-secondary">{stat.label}</Text>
           <Text className="whitespace-nowrap text-center text-sm tracking-tighter font-bold leading-snug text-theme-text-primary">
             {stat.value}
           </Text>

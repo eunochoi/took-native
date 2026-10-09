@@ -85,8 +85,7 @@ function section(path: string, name: string, initialProps: Record<string, unknow
           return { HabitMonthStatistics: 'HabitMonthStatistics' };
         if (dependency.endsWith('/CalendarGrid')) return { CalendarGrid: 'CalendarGrid' };
         if (dependency.endsWith('domain/calendar')) return localRequire(dependency);
-        if (dependency.endsWith('/CalendarHeader'))
-          return { CalendarHeader: 'CalendarHeader' };
+        if (dependency.endsWith('/CalendarHeader')) return { CalendarHeader: 'CalendarHeader' };
         if (dependency.endsWith('/CalendarDay')) return { CalendarDay: 'CalendarDay' };
         if (dependency.includes('/components/')) return { Text: 'Text', AppIcon: 'AppIcon' };
         if (dependency.endsWith('domain/habitStats')) {
@@ -285,9 +284,11 @@ test('day habits show all rows in order and retain totals and completion actions
   const checkboxes = all.nodes.filter((node) => node.props.accessibilityRole === 'checkbox');
   assert.equal(checkboxes.length, habits.length);
   assert.equal(expandButton(all.nodes), undefined);
-  assert(all.nodes.some(
-    (node) => JSON.stringify(node.props.children) === JSON.stringify([4, '/', 6, ' 완료']),
-  ));
+  assert(
+    all.nodes.some(
+      (node) => JSON.stringify(node.props.children) === JSON.stringify([4, '/', 6, ' 완료']),
+    ),
+  );
   assert.deepEqual(
     all.nodes
       .filter((node) => node.type === 'Text' && /^습관 \d$/.test(node.props.children))
@@ -378,12 +379,20 @@ test('day habits retain the recent-four-day lock and empty state for dates witho
 test('monthly and yearly statistics cache their calculations and navigate independently', () => {
   const dates = ['2024-03-07'];
   const ui = section('src/screens/habit/HabitStatistics.tsx', 'HabitStatistics', {
-    habit: { ...habit, initial_started_at: '2023-03-01T00:00:00.000Z' }, dates, today: '2024-03-10', disabled: false, unavailable: false,
+    habit: { ...habit, initial_started_at: '2023-03-01T00:00:00.000Z' },
+    dates,
+    today: '2024-03-10',
+    disabled: false,
+    unavailable: false,
     onToggle: () => undefined,
   });
   const yearlyProps = ui.render().nodes.find((node) => node.type === 'HabitYearStatistics').props;
   assert.equal(yearlyProps.startedDate, '2023-03-01');
-  const yearUi = section('src/screens/habit/HabitYearStatistics.tsx', 'HabitYearStatistics', yearlyProps);
+  const yearUi = section(
+    'src/screens/habit/HabitYearStatistics.tsx',
+    'HabitYearStatistics',
+    yearlyProps,
+  );
   yearUi.render();
   assert.deepEqual(ui.calls, { month: 1, year: 0, calendar: 0 });
   assert.deepEqual(yearUi.calls, { month: 0, year: 1, calendar: 0 });
@@ -391,7 +400,10 @@ test('monthly and yearly statistics cache their calculations and navigate indepe
   yearUi.render({ unavailable: true });
   assert.equal(ui.calls.month, 1);
   assert.equal(yearUi.calls.year, 1);
-  yearUi.render().nodes.find((node) => node.props.accessibilityLabel === '이전 연도').props.onPress();
+  yearUi
+    .render()
+    .nodes.find((node) => node.props.accessibilityLabel === '이전 연도')
+    .props.onPress();
   yearUi.render();
   assert.equal(yearUi.calls.year, 2);
   assert.equal(ui.calls.month, 1);
@@ -424,7 +436,11 @@ test('habit statistics reflect replacement records and the same checkbox toggle 
   const dateCell = section('src/screens/calendar/CalendarDay.tsx', 'CalendarDay', {});
   const press = (props: Record<string, unknown>) => dateCell.render(props).result.props.onPress();
   const currentNodes = monthUi.render().nodes;
-  assert.equal(currentNodes.filter((node) => node.props.className === 'text-2xl font-bold text-theme-accent').length, 3);
+  assert.equal(
+    currentNodes.filter((node) => node.props.className === 'text-2xl font-bold text-theme-accent')
+      .length,
+    3,
+  );
   const current = dayProps(currentNodes, '2024-03-10');
   assert.equal(current.disabled, false);
   const locked = dayProps(currentNodes, '2024-03-06');
@@ -452,50 +468,77 @@ test('habit statistics reflect replacement records and the same checkbox toggle 
   assert.deepEqual(ui.calls, { month: 3, year: 0, calendar: 0 });
 });
 
-
 test('yearly statistics refresh records, return to this year and preserve disabled year boundaries', () => {
   const ui = section('src/screens/habit/HabitYearStatistics.tsx', 'HabitYearStatistics', {
-    dates: [], startedDate: '2023-03-01', today: '2024-03-10', unavailable: false,
+    dates: [],
+    startedDate: '2023-03-01',
+    today: '2024-03-10',
+    unavailable: false,
   });
   ui.render();
   const updated = ui.render({ dates: ['2024-03-07', '2024-03-10'] }).nodes;
   assert.equal(ui.calls.year, 2);
-  const completed = updated.find((node) => node.props.className === 'text-2xl font-bold text-theme-accent');
+  const completed = updated.find(
+    (node) => node.props.className === 'text-2xl font-bold text-theme-accent',
+  );
   assert.equal(completed.props.children[0], 2);
-  const bars = updated.filter((node) => node.type === 'View' && typeof node.props.style?.height === 'number');
+  const bars = updated.filter(
+    (node) => node.type === 'View' && typeof node.props.style?.height === 'number',
+  );
   assert.equal(bars.length, 12);
   assert.equal(bars[2].props.style.height, 160);
   const header = section('src/screens/habit/HabitYearHeader.tsx', 'HabitYearHeader', {
-    year: 2024, startedDate: '2023-03-01', today: '2024-03-10', onYearChange: () => undefined,
+    year: 2024,
+    startedDate: '2023-03-01',
+    today: '2024-03-10',
+    onYearChange: () => undefined,
   }).render().result;
-  assert.deepEqual(Array.from(header.props.children, (node: any) => node.props.accessibilityLabel),
-    ['이전 연도', '2024년, 올해로 이동', '다음 연도']);
+  assert.deepEqual(
+    Array.from(header.props.children, (node: any) => node.props.accessibilityLabel),
+    ['이전 연도', '2024년, 올해로 이동', '다음 연도'],
+  );
   const hidden = ui.render({ unavailable: true }).nodes;
-  assert(hidden.filter((node) => node.props.className === 'text-2xl font-bold text-theme-accent')
-    .every((node) => node.props.children[0] === '—'));
+  assert(
+    hidden
+      .filter((node) => node.props.className === 'text-2xl font-bold text-theme-accent')
+      .every((node) => node.props.children[0] === '—'),
+  );
   hidden.find((node) => node.props.accessibilityLabel === '이전 연도').props.onPress();
   const past = ui.render().nodes;
   const title = past.find((node) => node.props.accessibilityLabel === '2023년, 올해로 이동');
   assert(title);
   title.props.onPress();
   assert(ui.render().nodes.some((node) => node.props.accessibilityLabel === '2024년, 올해로 이동'));
-  for (const [year, label] of [[1900, '이전 연도'], [2100, '다음 연도']] as const) {
+  for (const [year, label] of [
+    [1900, '이전 연도'],
+    [2100, '다음 연도'],
+  ] as const) {
     const boundaryUi = section('src/screens/habit/HabitYearStatistics.tsx', 'HabitYearStatistics', {
-      dates: [], startedDate: `${year}-01-01`, today: `${year}-01-01`, unavailable: false,
+      dates: [],
+      startedDate: `${year}-01-01`,
+      today: `${year}-01-01`,
+      unavailable: false,
     });
-    const button = boundaryUi.render().nodes.find((node) => node.props.accessibilityLabel === label);
+    const button = boundaryUi
+      .render()
+      .nodes.find((node) => node.props.accessibilityLabel === label);
     assert.equal(button.props.disabled, true);
     assert.match(button.props.className, /opacity-30/);
     button.props.onPress();
-    assert(boundaryUi.render().nodes.some((node) => node.props.accessibilityLabel === `${year}년, 올해로 이동`));
+    assert(
+      boundaryUi
+        .render()
+        .nodes.some((node) => node.props.accessibilityLabel === `${year}년, 올해로 이동`),
+    );
   }
 });
-
 
 test('year navigation includes start and current years and blocks requests outside the range', () => {
   const changes: number[] = [];
   const ui = section('src/screens/habit/HabitYearHeader.tsx', 'HabitYearHeader', {
-    year: 2023, startedDate: '2023-12-31', today: '2025-01-01',
+    year: 2023,
+    startedDate: '2023-12-31',
+    today: '2025-01-01',
     onYearChange: (year: number) => changes.push(year),
   });
   const first = ui.render().nodes;
@@ -527,8 +570,6 @@ test('year navigation includes start and current years and blocks requests outsi
   assert.deepEqual(changes, [2024, 2023, 2025]);
 });
 
-
-
 test('yearly habit summary uses monthly label order and refreshes missed counts when today changes', () => {
   const ui = section('src/screens/habit/HabitYearStatistics.tsx', 'HabitYearStatistics', {
     dates: ['2024-03-07', '2024-03-10'],
@@ -538,19 +579,20 @@ test('yearly habit summary uses monthly label order and refreshes missed counts 
   });
   const view = ui.render().nodes;
   assert.deepEqual(
-    view.filter((node) => node.props.className === 'text-sm text-theme-text-secondary')
+    view
+      .filter((node) => node.props.className === 'text-sm text-theme-text-secondary')
       .map((node) => node.props.children),
     ['실천 횟수', '놓친 횟수', '실천율'],
   );
-  const values = (nodes: any[]) => nodes
-    .filter((node) => node.props.className === 'text-2xl font-bold text-theme-accent')
-    .map((node) => node.props.children[0]);
+  const values = (nodes: any[]) =>
+    nodes
+      .filter((node) => node.props.className === 'text-2xl font-bold text-theme-accent')
+      .map((node) => node.props.children[0]);
   assert.deepEqual(values(view), [2, 66, '2.9']);
   assert.deepEqual(values(ui.render({ today: '2024-03-12' }).nodes), [2, 67, '2.8']);
   assert.equal(ui.calls.year, 2);
   assert.deepEqual(values(ui.render({ unavailable: true }).nodes), ['—', '—', '—']);
 });
-
 
 test('yearly habit rate displays a dash when the habit has not started yet', () => {
   const ui = section('src/screens/habit/HabitYearStatistics.tsx', 'HabitYearStatistics', {
@@ -559,8 +601,9 @@ test('yearly habit rate displays a dash when the habit has not started yet', () 
     today: '2024-03-20',
     unavailable: false,
   });
-  const values = ui.render().nodes
-    .filter((node) => node.props.className === 'text-2xl font-bold text-theme-accent')
+  const values = ui
+    .render()
+    .nodes.filter((node) => node.props.className === 'text-2xl font-bold text-theme-accent')
     .map((node) => node.props.children[0]);
   assert.deepEqual(values, [0, 0, '—']);
 });

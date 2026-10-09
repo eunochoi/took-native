@@ -141,10 +141,7 @@ export default function SoberDetail() {
               iconKey={sober.icon_key}
               iconColor={sober.icon_color}
             />
-            <SoberStatisticsSummary
-              summary={summary}
-              initialStartedAt={sober.initial_started_at}
-            />
+            <SoberStatisticsSummary summary={summary} initialStartedAt={sober.initial_started_at} />
             <Button
               labelWeight="normal"
               className="w-full"

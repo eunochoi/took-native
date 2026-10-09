@@ -33,7 +33,10 @@ function render(
       exports,
       require: (dependency: string) => {
         if (dependency.endsWith('/DiaryStatisticsSummary'))
-          return { DiaryStatisticsSummary: (summaryProps: any) => render('DiaryStatisticsSummary', summaryProps) };
+          return {
+            DiaryStatisticsSummary: (summaryProps: any) =>
+              render('DiaryStatisticsSummary', summaryProps),
+          };
         if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (dependency === 'react')
