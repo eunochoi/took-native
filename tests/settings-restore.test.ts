@@ -17,12 +17,12 @@ function harness() {
   let update: () => Promise<void> = async () => {};
   const events: string[] = [];
   const discarded: string[][] = [];
+  const notices: any[] = [];
   const exports: any = {};
   const onScroll = () => {};
   const names = [
     'ColorScrollView',
     'TabBottomSpacer',
-    'AlertModal',
     'ConfirmModal',
     'ScrollEdgeFade',
     'Text',
@@ -44,6 +44,8 @@ function harness() {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/NoticeProvider'))
+          return { useNotice: () => ({ showNotice: (notice: any) => notices.push(notice) }) };
         if (name.endsWith('/widgets/sober'))
           return { refreshSoberWidgets: () => events.push('widget') };
         if (name === 'tailwind-merge') return require('tailwind-merge');
@@ -150,7 +152,7 @@ function harness() {
     onScroll,
     backup: () => find(tree, 'BackupSection').props,
     confirm: () => find(tree, 'ConfirmModal').props,
-    alert: () => find(tree, 'AlertModal').props,
+    notice: () => notices.at(-1),
     appearance: () => find(tree, 'AppearanceSettingsSection').props,
     emotion: () => find(tree, 'EmotionIconStyleSelector').props,
     setUpdate(fn: typeof update) {
@@ -180,19 +182,19 @@ test('settings passes a callable scroll handler to its ordinary ScrollView', () 
   assert.equal(typeof ui.scroll().props.onScroll, 'function');
 });
 
-test('appearance save errors reach the picker while immediate changes show an error alert', async () => {
+test('appearance save errors reach the picker while immediate changes show an error notice', async () => {
   const h = harness();
   h.setUpdate(async () => {
     throw new Error('저장 실패');
   });
   await assert.rejects(h.appearance().onApply({ themeMode: 'dark' }), /저장 실패/);
   h.render();
-  assert.equal(h.alert().visible, false);
+  assert.equal(h.notice(), undefined);
   assert.equal(h.backup().activity, null);
   h.emotion().onChange('type2');
   await tick();
   h.render();
-  assert.equal(h.alert().title, '설정을 저장하지 못했어요');
+  assert.equal(h.notice().title, '설정을 저장하지 못했어요');
 });
 
 test('appearance save rejects competing work and releases the settings lock after completion', async () => {
@@ -255,7 +257,7 @@ test('confirmation consumes selection once, restores then refreshes; stale cance
   h.render();
   assert.deepEqual(h.events, ['cancel', 'restore', 'widget', 'reload', 'reset']);
   assert.deepEqual(h.discarded, [['cache/a.zip']]);
-  assert.equal(h.alert().title, '복원 완료');
+  assert.equal(h.notice().title, '복원 완료');
   assert.equal(h.backup().activity, null);
 });
 
@@ -273,7 +275,7 @@ test('file-picker cancel and selection failure release the busy state', async ()
   h.backup().onRestore();
   await tick();
   h.render();
-  assert.equal(h.alert().title, '복원하지 못했어요');
+  assert.equal(h.notice().title, '복원하지 못했어요');
   assert.equal(h.backup().activity, null);
 });
 
@@ -335,7 +337,7 @@ test('leaving before query cancellation completes prevents restore; failed resto
     failed.confirm().onConfirm();
     await tick();
     failed.render();
-    assert.equal(failed.alert().title, afterRestore ? '기록은 복원됐어요' : '복원하지 못했어요');
+    assert.equal(failed.notice().title, afterRestore ? '기록은 복원됐어요' : '복원하지 못했어요');
     assert.deepEqual(failed.discarded, [['cache/a.zip']]);
     assert.equal(failed.backup().activity, null);
   }

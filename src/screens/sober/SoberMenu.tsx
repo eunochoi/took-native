@@ -9,7 +9,7 @@ import { useRecordMutation } from '../../queries';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { PickerAction } from '../../components/PickerAction';
 import { ConfirmModal } from '../../components/ConfirmModal';
-import { AlertModal, type AlertContent } from '../../components/AlertModal';
+import { useNotice } from '../../components/NoticeProvider';
 
 export function SoberMenu({
   sober,
@@ -24,12 +24,12 @@ export function SoberMenu({
   const { openModal } = useModalNavigation();
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState(false);
-  const [alert, setAlert] = useState<AlertContent | null>(null);
+  const { showNotice } = useNotice();
   const mutation = useRecordMutation(
     () => deleteSober(db, sober.id),
     'sober',
     onDeleted,
-    (error) => setAlert({ title: '삭제하지 못했어요', message: error.message }),
+    (error) => showNotice({ tone: 'error', title: '삭제하지 못했어요', message: error.message }),
   );
   return (
     <>
@@ -70,12 +70,6 @@ export function SoberMenu({
           setConfirm(false);
           mutation.mutate(undefined);
         }}
-      />
-      <AlertModal
-        visible={alert !== null}
-        title={alert?.title ?? ''}
-        message={alert?.message}
-        onConfirm={() => setAlert(null)}
       />
     </>
   );

@@ -4,7 +4,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, View } from 'react-native';
 import { QueryError } from '../../src/components/QueryError';
-import { AlertModal, type AlertContent } from '../../src/components/AlertModal';
+import { useNotice } from '../../src/components/NoticeProvider';
 import { AppIcon } from '../../src/components/AppIcon';
 import { ColorView } from '../../src/components/ColorTransition';
 import { EmptyState } from '../../src/components/EmptyState';
@@ -28,7 +28,7 @@ import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 type Row = { kind: 'state' } | { kind: 'diary'; diary: DiaryDetail; first: boolean };
 
 export default function DiaryList() {
-  const [alert, setAlert] = useState<AlertContent | null>(null);
+  const { showNotice } = useNotice();
   const { colors, rem: appRem } = useAppTheme();
   const db = useSQLiteContext();
   const fade = useScrollFade();
@@ -163,7 +163,7 @@ export default function DiaryList() {
             void updateSettings({ diarySort: sort })
               .then(() => scroll.current?.scrollToOffset({ offset: 0, animated: true }))
               .catch((error: Error) =>
-                setAlert({ title: '설정 저장 실패', message: error.message }),
+                showNotice({ tone: 'error', title: '설정 저장 실패', message: error.message }),
               );
           }}
         />
@@ -184,12 +184,6 @@ export default function DiaryList() {
           }}
         />
       )}
-      <AlertModal
-        visible={alert !== null}
-        title={alert?.title ?? ''}
-        message={alert?.message}
-        onConfirm={() => setAlert(null)}
-      />
     </ColorView>
   );
 }

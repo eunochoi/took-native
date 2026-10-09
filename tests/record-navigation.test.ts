@@ -63,7 +63,9 @@ function navigation(kind: string, initial: string[]) {
 }
 
 // Exercise each actual form's save callback and effects without native views or SQLite writes.
-function form(kind: string, router: unknown) {
+function form(kind: string, router: unknown, isNew = false) {
+  const notices: any[] = [];
+  let failed!: (error: Error) => void;
   const states: unknown[] = [];
   let cursor = 0;
   let effects: (() => void)[] = [];
@@ -84,6 +86,8 @@ function form(kind: string, router: unknown) {
     {
       exports,
       require: (dependency: string) => {
+        if (dependency.endsWith('/NoticeProvider'))
+          return { useNotice: () => ({ showNotice: (notice: any) => notices.push(notice) }) };
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (dependency === 'react')
           return {
@@ -113,7 +117,13 @@ function form(kind: string, router: unknown) {
             habitQueries: queries,
             soberQueries: queries,
             useToday: () => '2026-10-07',
-            useRecordMutation: (_work: unknown, _scope: unknown, success: typeof saved) => {
+            useRecordMutation: (
+              _work: unknown,
+              _scope: unknown,
+              success: typeof saved,
+              failure: typeof failed,
+            ) => {
+              failed = failure;
               saved = success;
               return { isPending: pending };
             },
@@ -129,6 +139,7 @@ function form(kind: string, router: unknown) {
             DEFAULT_HABIT_ICON_COLOR: 'theme',
           };
         if (dependency === '../domain/date') return { isDate: () => false };
+        if (dependency === '../domain/sober') return require('../src/domain/sober');
         if (dependency === 'date-fns') return { format: () => '', parseISO: () => new Date() };
         return fallback;
       },
@@ -165,12 +176,14 @@ function form(kind: string, router: unknown) {
   const render = () => {
     cursor = 0;
     effects = [];
-    const page = exports[`${name}Form`]({ id: 42 });
+    const page = exports[`${name}Form`]({ id: isNew ? undefined : 42 });
     effects.forEach((effect) => effect());
     return pageExports.BottomSheetPage(page.props);
   };
   return {
     render,
+    notices,
+    fail: () => failed(new Error('저장 실패')),
     finish: () => saved!(42),
     pending: (value: boolean) => {
       pending = value;
@@ -179,6 +192,27 @@ function form(kind: string, router: unknown) {
 }
 
 for (const kind of ['diary', 'habit', 'sober']) {
+  test(`${kind} creation notices appear after closing; cancel and failure never report success`, () => {
+    const nav = navigation(kind, ['(tabs)', `${kind}/new`]);
+    const screen = form(kind, nav.router, true);
+    const initial = screen.render();
+    assert.equal(initial.props.onClosed, undefined);
+    screen.fail();
+    assert.equal(screen.notices.length, 1);
+    assert.equal(screen.notices[0].tone, 'error');
+    assert.equal(screen.render().props.visible, true);
+    screen.finish();
+    const closing = screen.render();
+    assert.equal(screen.notices.length, 1);
+    closing.props.onClose();
+    assert.equal(screen.notices.length, 2);
+    assert.equal(screen.notices[1].tone, 'success');
+    assert.match(screen.notices[1].title, kind === 'diary' ? /저장했어요/ : /추가했어요/);
+    const cancelled = form(kind, navigation(kind, ['(tabs)', `${kind}/new`]).router, true);
+    cancelled.render().props.onClose();
+    assert.equal(cancelled.notices.length, 0);
+  });
+
   test(`${kind} save animates the form close before returning to the original detail`, () => {
     const nav = navigation(kind, ['(tabs)', `${kind}/[id]/index`, `${kind}/[id]/edit`]);
     const screen = form(kind, nav.router);
@@ -194,7 +228,11 @@ for (const kind of ['diary', 'habit', 'sober']) {
     assert.deepEqual(nav.actions, []);
     assert.equal(nav.state().routes.length, 3);
     // The lifecycle invokes onClose only when its downward animation finishes.
+    assert.equal(screen.notices.length, 0);
     closingSheet.props.onClose();
+    assert.equal(screen.notices.length, 1);
+    assert.equal(screen.notices[0].tone, 'success');
+    assert.match(screen.notices[0].title, /수정했어요/);
     assert.deepEqual(nav.actions, ['POP']);
     assert.deepEqual(
       nav.state().routes.map((route: any) => route.name),

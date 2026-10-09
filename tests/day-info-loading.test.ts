@@ -40,6 +40,8 @@ function harness() {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/NoticeProvider'))
+          return { useNotice: () => ({ showNotice: () => {} }) };
         if (name.endsWith('domain/date')) return require('../src/domain/date');
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react') return { useState: () => [null, () => {}] };

@@ -20,6 +20,7 @@ import { AppLoadingScreen } from '../src/components/AppLoadingScreen';
 import { refreshSoberWidgets } from '../src/widgets/sober';
 import { NotificationController } from '../src/notifications/NotificationController';
 import { ModalNavigationProvider } from '../src/navigation/ModalNavigationProvider';
+import { NoticeProvider } from '../src/components/NoticeProvider';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 const queryClient = new QueryClient({
@@ -174,7 +175,9 @@ export default function RootLayout() {
               <SettingsProvider onError={onError}>
                 <AppThemeProvider>
                   <GestureHandlerRootView style={{ flex: 1 }}>
-                    <Navigation onReady={onNavigationReady} />
+                    <NoticeProvider>
+                      <Navigation onReady={onNavigationReady} />
+                    </NoticeProvider>
                   </GestureHandlerRootView>
                 </AppThemeProvider>
               </SettingsProvider>

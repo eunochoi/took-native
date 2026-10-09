@@ -44,6 +44,7 @@ function load(file: string, modules: Record<string, any> = {}) {
 
 test('form sheets retain footer, overlays and the dismissal guard while locking image drag scrolling', () => {
   const guard = () => false;
+  const closed = () => {};
   const { RecordFormLayout } = load('../src/components/RecordFormLayout.tsx', {
     './BottomSheetPage': { BottomSheetPage: 'BottomSheetPage' },
   });
@@ -52,6 +53,7 @@ test('form sheets retain footer, overlays and the dismissal guard while locking 
     backRoute: '/diary',
     onBeforeClose: guard,
     closeRequested: true,
+    onClosed: closed,
     footer: 'save',
     overlays: 'picker',
     children: 'fields',
@@ -63,6 +65,7 @@ test('form sheets retain footer, overlays and the dismissal guard while locking 
   assert.equal(sheet.props.backRoute, '/diary');
   assert.equal(sheet.props.onBeforeClose, guard);
   assert.equal(sheet.props.closeRequested, true);
+  assert.equal(sheet.props.onClosed, closed);
   assert.equal(sheet.props.footer, 'save');
   assert.equal(sheet.props.scrollEnabled, false);
   assert.equal(sheet.props.children.props.children, 'fields');

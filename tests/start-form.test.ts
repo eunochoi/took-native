@@ -36,6 +36,8 @@ function form(name: 'HabitForm' | 'SoberForm', id?: number) {
     {
       exports,
       require: (dependency: string) => {
+        if (dependency.endsWith('/NoticeProvider'))
+          return { useNotice: () => ({ showNotice: () => {} }) };
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (dependency === 'react')
           return {

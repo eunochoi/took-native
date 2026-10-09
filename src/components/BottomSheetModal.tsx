@@ -15,6 +15,7 @@ import { useScrollFade } from '../hooks/useScrollFade';
 import { useAppTheme } from '../theme/AppThemeProvider';
 import { BottomSheetScrollViewport } from './BottomSheetScrollViewport';
 import { BottomSheetHeader } from './BottomSheetHeader';
+import { NoticeHost } from './NoticeProvider';
 
 export function BottomSheetModal({
   visible,
@@ -154,6 +155,7 @@ export function BottomSheetModal({
             </Animated.View>
           </GestureDetector>
         )}
+        {presentation === 'modal' && <NoticeHost modal active={present} />}
       </KeyboardAvoidingView>
     </GestureHandlerRootView>
   );

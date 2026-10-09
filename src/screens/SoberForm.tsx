@@ -7,7 +7,7 @@ import { format, parseISO } from 'date-fns';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Switch, TextInput, View } from 'react-native';
-import { AlertModal, type AlertContent } from '../components/AlertModal';
+import { useNotice } from '../components/NoticeProvider';
 import { Button } from '../components/Button';
 import { FormPickerRow } from '../components/FormPickerRow';
 import { IconColorPicker } from '../components/IconColorPicker';
@@ -42,7 +42,7 @@ export function SoberForm({ id }: { id?: number }) {
   }));
   const [loaded, setLoaded] = useState(false);
   const [picker, setPicker] = useState<'goal' | 'date' | 'icon' | 'color' | null>(null);
-  const [alert, setAlert] = useState<AlertContent | null>(null);
+  const { showNotice } = useNotice();
   const [saved, setSaved] = useState(false);
   const saving = useRef(false);
   useEffect(() => {
@@ -55,16 +55,28 @@ export function SoberForm({ id }: { id?: number }) {
     () => saveSober(db, draft),
     'sober',
     () => setSaved(true),
-    (error) => setAlert({ title: '저장하지 못했어요', message: error.message }),
+    (error) => showNotice({ tone: 'error', title: '저장하지 못했어요', message: error.message }),
   );
   usePreventRemove(mutation.isPending, () =>
-    setAlert({ title: '잠시만 기다려주세요', message: '거리두기 항목을 저장하고 있어요.' }),
+    showNotice({
+      tone: 'info',
+      title: '잠시만 기다려주세요',
+      message: '거리두기 항목을 저장하고 있어요.',
+    }),
   );
   const title = id ? '거리두기 수정' : '거리두기 추가';
+  const onClosed = saved
+    ? () =>
+        showNotice({
+          tone: 'success',
+          title: id ? '거리두기를 수정했어요' : '거리두기를 추가했어요',
+        })
+    : undefined;
   if (id !== undefined && (query.isPending || query.error || !query.data || !loaded))
     return (
       <BottomSheetPage
         closeRequested={saved && !mutation.isPending}
+        onClosed={onClosed}
         backRoute="/sober"
         title={title}
       >
@@ -77,11 +89,13 @@ export function SoberForm({ id }: { id?: number }) {
   return (
     <RecordFormLayout
       closeRequested={saved && !mutation.isPending}
+      onClosed={onClosed}
       title={title}
       backRoute="/sober"
       onBeforeClose={() => {
         if (!mutation.isPending) return true;
-        setAlert({
+        showNotice({
+          tone: 'info',
           title: '잠시만 기다려주세요',
           message: '저장이 진행 중입니다. 완료될 때까지 기다려주세요.',
         });
@@ -140,12 +154,6 @@ export function SoberForm({ id }: { id?: number }) {
               onApply={(icon_color) => setDraft({ ...draft, icon_color })}
             />
           )}
-          <AlertModal
-            visible={alert !== null}
-            title={alert?.title ?? ''}
-            message={alert?.message}
-            onConfirm={() => setAlert(null)}
-          />
         </>
       }
     >

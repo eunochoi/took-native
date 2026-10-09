@@ -19,6 +19,7 @@ type Props = Omit<
 > & {
   backRoute: Href;
   closeRequested?: boolean;
+  onClosed?: () => void;
 };
 
 // Navigation owns the page lifetime; the shared sheet owns its dismissal animation.
@@ -27,6 +28,7 @@ export function BottomSheetPage({
   closeRequested = false,
   scrollFade = true,
   onBeforeClose,
+  onClosed,
   ...props
 }: Props) {
   const router = useRouter();
@@ -69,6 +71,7 @@ export function BottomSheetPage({
         try {
           if (router.canGoBack()) router.back();
           else router.replace(backRoute);
+          onClosed?.();
         } catch (error) {
           if (token.current !== null) finishTransition(key, token.current);
           token.current = null;

@@ -143,6 +143,7 @@ function harness(
     },
     cancelAnimationFrame: () => {},
     require: (name: string) => {
+      if (name.endsWith('/NoticeProvider')) return { NoticeHost: () => null };
       const sheetModule = sheetModules[name.split('/').at(-1)!];
       if (sheetModule) return sheetModule;
       if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };

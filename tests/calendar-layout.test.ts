@@ -25,6 +25,8 @@ function load(path: string, states: unknown[], date = '2026-09-30') {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/NoticeProvider'))
+          return { useNotice: () => ({ showNotice: () => {} }) };
         if (name.endsWith('theme/classes')) return require('../src/theme/classes');
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react')

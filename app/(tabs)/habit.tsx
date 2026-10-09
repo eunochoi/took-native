@@ -9,7 +9,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
 import { FlatList, ScrollView, View } from 'react-native';
 import { QueryError } from '../../src/components/QueryError';
-import { AlertModal, type AlertContent } from '../../src/components/AlertModal';
+import { useNotice } from '../../src/components/NoticeProvider';
 import { RecordSortPicker } from '../../src/components/RecordSortPicker';
 import { ScrollEdgeFade } from '../../src/components/ScrollEdgeFade';
 import { TabBottomSpacer } from '../../src/components/TabBottomSpacer';
@@ -30,7 +30,7 @@ import { useAppTheme } from '../../src/theme/AppThemeProvider';
 
 export default function HabitList() {
   const [sortOpen, setSortOpen] = useState(false);
-  const [alert, setAlert] = useState<AlertContent | null>(null);
+  const { showNotice } = useNotice();
   const { colors, rem: appRem } = useAppTheme();
   const db = useSQLiteContext();
   const fade = useScrollFade();
@@ -46,7 +46,7 @@ export default function HabitList() {
       setHabitCompletion(db, id, date, checked),
     'habitCompletion',
     undefined,
-    (error) => setAlert({ title: '처리하지 못했어요', message: error.message }),
+    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
   );
   const pending = useRef(new Set<number>());
   const [pendingIds, setPendingIds] = useState<ReadonlySet<number>>(new Set());
@@ -76,7 +76,9 @@ export default function HabitList() {
   const change = (values: Parameters<typeof updateSettings>[0]) => {
     void updateSettings(values)
       .then(() => scroll.current?.scrollTo({ y: 0, animated: true }))
-      .catch((error: Error) => setAlert({ title: '설정 저장 실패', message: error.message }));
+      .catch((error: Error) =>
+        showNotice({ tone: 'error', title: '설정 저장 실패', message: error.message }),
+      );
   };
   const failed = list.isError || completions.isError;
   const gridItems = ready ? [...sorted, ...(sorted.length % 2 ? [null] : [])] : [];
@@ -186,12 +188,6 @@ export default function HabitList() {
           }}
         />
       )}
-      <AlertModal
-        visible={alert !== null}
-        title={alert?.title ?? ''}
-        message={alert?.message}
-        onConfirm={() => setAlert(null)}
-      />
     </ColorView>
   );
 }

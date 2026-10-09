@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { Alert, AppState } from 'react-native';
+import { AppState } from 'react-native';
 import { useRootNavigationState, useRouter } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import { useSettings } from '../settings/SettingsProvider';
 import { REMINDERS, syncReminders } from './index';
+import { useNotice } from '../components/NoticeProvider';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -15,6 +16,7 @@ Notifications.setNotificationHandler({
 });
 
 export function NotificationController() {
+  const { showNotice } = useNotice();
   const { settings } = useSettings();
   const router = useRouter();
   const navigation = useRootNavigationState();
@@ -23,7 +25,11 @@ export function NotificationController() {
   useEffect(() => {
     const sync = () => {
       void syncReminders(current.current).catch(() => {
-        Alert.alert('알림을 예약하지 못했어요', '설정에서 알림 시간을 다시 저장해주세요.');
+        showNotice({
+          tone: 'error',
+          title: '알림을 예약하지 못했어요',
+          message: '설정에서 알림 시간을 다시 저장해주세요.',
+        });
       });
     };
     sync();
@@ -35,6 +41,7 @@ export function NotificationController() {
     settings.diaryReminderTime,
     settings.habitReminderTime,
     settings.soberReminderTime,
+    showNotice,
   ]);
   useEffect(() => {
     if (!navigation?.key) return;

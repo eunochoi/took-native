@@ -1,6 +1,6 @@
 import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { RecordMenuButton } from '../../components/RecordMenuButton';
-import { AlertModal, type AlertContent } from '../../components/AlertModal';
+import { useNotice } from '../../components/NoticeProvider';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -12,7 +12,7 @@ import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { PickerAction } from '../../components/PickerAction';
 
 export function HabitMenu({ habit, onDeleted }: { habit: Habit; onDeleted?: () => void }) {
-  const [alert, setAlert] = useState<AlertContent | null>(null);
+  const { showNotice } = useNotice();
   const db = useSQLiteContext();
   const { openModal } = useModalNavigation();
   const [open, setOpen] = useState(false);
@@ -21,7 +21,7 @@ export function HabitMenu({ habit, onDeleted }: { habit: Habit; onDeleted?: () =
     () => deleteHabit(db, habit.id),
     'habit',
     onDeleted,
-    (error) => setAlert({ title: '처리하지 못했어요', message: error.message }),
+    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
   );
   return (
     <>
@@ -62,12 +62,6 @@ export function HabitMenu({ habit, onDeleted }: { habit: Habit; onDeleted?: () =
           setConfirmOpen(false);
           mutation.mutate(undefined);
         }}
-      />
-      <AlertModal
-        visible={alert !== null}
-        title={alert?.title ?? ''}
-        message={alert?.message}
-        onConfirm={() => setAlert(null)}
       />
     </>
   );

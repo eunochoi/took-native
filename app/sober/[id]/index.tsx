@@ -7,7 +7,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { twMerge } from 'tailwind-merge';
-import { AlertModal, type AlertContent } from '../../../src/components/AlertModal';
+import { useNotice } from '../../../src/components/NoticeProvider';
 import { BottomSheetModal } from '../../../src/components/BottomSheetModal';
 import { BottomSheetPage } from '../../../src/components/BottomSheetPage';
 import { Button } from '../../../src/components/Button';
@@ -47,7 +47,7 @@ export default function SoberDetail() {
   const [month, setMonth] = useState(today.slice(0, 7));
   const query = useQuery(soberQueries.byId(db, soberId));
   const restarts = useQuery(soberQueries.restarts(db, soberId));
-  const [alert, setAlert] = useState<AlertContent | null>(null);
+  const { showNotice } = useNotice();
   const [overlay, setOverlay] = useState<Overlay>(null);
   const picker = overlay?.kind === 'restart' ? overlay : null;
   const menu = overlay?.kind === 'menu' ? overlay.record : null;
@@ -60,10 +60,15 @@ export default function SoberDetail() {
     },
     'sober',
     undefined,
-    (error) => setAlert({ title: '기록을 처리하지 못했어요', message: error.message }),
+    (error) =>
+      showNotice({ tone: 'error', title: '기록을 처리하지 못했어요', message: error.message }),
   );
   usePreventRemove(mutation.isPending, () =>
-    setAlert({ title: '잠시만 기다려주세요', message: '다시 시작 기록을 저장하고 있어요.' }),
+    showNotice({
+      tone: 'info',
+      title: '잠시만 기다려주세요',
+      message: '다시 시작 기록을 저장하고 있어요.',
+    }),
   );
   const submit = (action: RestartAction) => {
     if (writing.current) return;
@@ -109,7 +114,11 @@ export default function SoberDetail() {
       <BottomSheetPage
         onBeforeClose={() => {
           if (!mutation.isPending) return true;
-          setAlert({ title: '잠시만 기다려주세요', message: '다시 시작 기록을 저장하고 있어요.' });
+          showNotice({
+            tone: 'info',
+            title: '잠시만 기다려주세요',
+            message: '다시 시작 기록을 저장하고 있어요.',
+          });
           return false;
         }}
         title={sober.name}
@@ -260,12 +269,6 @@ export default function SoberDetail() {
           if (confirm) submit({ kind: 'delete', id: confirm.id });
           setOverlay(null);
         }}
-      />
-      <AlertModal
-        visible={alert !== null}
-        title={alert?.title ?? ''}
-        message={alert?.message}
-        onConfirm={() => setAlert(null)}
       />
     </>
   );

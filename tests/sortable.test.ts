@@ -43,6 +43,8 @@ function renderer(path: string, states: any[], saved: any[] = []) {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/NoticeProvider'))
+          return { useNotice: () => ({ showNotice: () => {} }) };
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react')
           return {
@@ -133,11 +135,7 @@ test('photo grid keeps add tile outside draggable data and passes the drop order
 
 test('habit grid saves the returned ID order and prevents saving during a drag', async () => {
   const saved: any[] = [];
-  const render = renderer(
-    'app/habit/order.tsx',
-    [null, [3, 1, 2], false, false, false, false],
-    saved,
-  );
+  const render = renderer('app/habit/order.tsx', [[3, 1, 2], false, false, false, false], saved);
   const initialTree = render('default');
   const grid = nodes(initialTree).find((node) => node.type === 'Grid');
   const sheet = nodes(initialTree).find((node) => node.type === 'BottomSheetPage');

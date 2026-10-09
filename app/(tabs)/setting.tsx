@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, View } from 'react-native';
+import { Linking, Pressable, ScrollView, View } from 'react-native';
 import { refreshSoberWidgets } from '../../src/widgets/sober';
 import {
   chooseBackup,
@@ -11,7 +11,7 @@ import {
   exportBackup,
   restoreBackup,
 } from '../../src/backup';
-import { AlertModal, type AlertContent } from '../../src/components/AlertModal';
+import { useNotice } from '../../src/components/NoticeProvider';
 import { AppIcon } from '../../src/components/AppIcon';
 import { ColorView } from '../../src/components/ColorTransition';
 import { ConfirmModal } from '../../src/components/ConfirmModal';
@@ -32,7 +32,7 @@ import { useAppTheme } from '../../src/theme/AppThemeProvider';
 import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 
 export default function SettingsScreen() {
-  const [alert, setAlert] = useState<AlertContent | null>(null);
+  const { showNotice } = useNotice();
   const { colors, rem: appRem, iconSizes } = useAppTheme();
   const fade = useScrollFade();
   const scroll = useRef<ScrollView>(null);
@@ -78,7 +78,8 @@ export default function SettingsScreen() {
       await updateSettings(patch);
     } catch (error) {
       if (!reportError) throw error;
-      setAlert({
+      showNotice({
+        tone: 'error',
         title: '설정을 저장하지 못했어요',
         message: error instanceof Error ? error.message : '다시 시도해주세요.',
       });
@@ -94,7 +95,8 @@ export default function SettingsScreen() {
     try {
       const exported = await exportBackup(db, destination);
       if (exported && destination === 'device')
-        setAlert({
+        showNotice({
+          tone: 'success',
           title: '백업 저장 완료',
           message:
             exported > 1
@@ -102,7 +104,8 @@ export default function SettingsScreen() {
               : '선택한 폴더에 백업 파일을 저장했어요.',
         });
     } catch (error) {
-      setAlert({
+      showNotice({
+        tone: 'error',
         title: '백업하지 못했어요',
         message: error instanceof Error ? error.message : '다시 시도해주세요.',
       });
@@ -126,7 +129,8 @@ export default function SettingsScreen() {
       setPendingRestore(uris);
     } catch (error) {
       if (mounted.current)
-        setAlert({
+        showNotice({
+          tone: 'error',
           title: '복원하지 못했어요',
           message: error instanceof Error ? error.message : '파일을 확인해주세요.',
         });
@@ -151,10 +155,15 @@ export default function SettingsScreen() {
       refreshSoberWidgets();
       await Promise.all([reloadSettings(), client.resetQueries()]);
       if (mounted.current)
-        setAlert({ title: '복원 완료', message: '백업의 기록과 설정을 불러왔어요.' });
+        showNotice({
+          tone: 'success',
+          title: '복원 완료',
+          message: '백업의 기록과 설정을 불러왔어요.',
+        });
     } catch (error) {
       if (mounted.current)
-        setAlert({
+        showNotice({
+          tone: 'error',
           title: restored ? '기록은 복원됐어요' : '복원하지 못했어요',
           message: restored
             ? '화면을 새로 불러오지 못했어요. 앱을 다시 실행해주세요.'
@@ -199,7 +208,11 @@ export default function SettingsScreen() {
               disabled={disabled}
               onPress={() => {
                 void Linking.openURL('https://to-ok.me/intro').catch(() =>
-                  Alert.alert('앱 소개를 열지 못했어요', '다시 시도해주세요.'),
+                  showNotice({
+                    tone: 'error',
+                    title: '앱 소개를 열지 못했어요',
+                    message: '다시 시도해주세요.',
+                  }),
                 );
               }}
               className={`h-11 shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
@@ -277,12 +290,6 @@ export default function SettingsScreen() {
         confirmLabel="복원"
         onCancel={cancelRestore}
         onConfirm={() => void restoreSelected()}
-      />
-      <AlertModal
-        visible={alert !== null}
-        title={alert?.title ?? ''}
-        message={alert?.message}
-        onConfirm={() => setAlert(null)}
       />
     </ColorView>
   );

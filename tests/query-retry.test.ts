@@ -18,6 +18,8 @@ function load(file: string, results: Record<string, any> = {}) {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/NoticeProvider'))
+          return { useNotice: () => ({ showNotice: () => {} }) };
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (name === 'react')
           return {

@@ -1,6 +1,6 @@
 import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { RecordMenuButton } from '../../components/RecordMenuButton';
-import { AlertModal, type AlertContent } from '../../components/AlertModal';
+import { useNotice } from '../../components/NoticeProvider';
 import { View } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
 import { format, parseISO } from 'date-fns';
@@ -22,7 +22,7 @@ export function DiaryMenu({
   today: string;
   onDeleted?: () => void;
 }) {
-  const [alert, setAlert] = useState<AlertContent | null>(null);
+  const { showNotice } = useNotice();
   const db = useSQLiteContext();
   const { openModal } = useModalNavigation();
   const [open, setOpen] = useState(false);
@@ -34,7 +34,7 @@ export function DiaryMenu({
     },
     'diary',
     onDeleted,
-    (error) => setAlert({ title: '처리하지 못했어요', message: error.message }),
+    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
   );
   const title = `${format(parseISO(diary.date), 'yyyy년 M월 d일')} 일기`;
   return (
@@ -82,12 +82,6 @@ export function DiaryMenu({
           setConfirmOpen(false);
           mutation.mutate(undefined);
         }}
-      />
-      <AlertModal
-        visible={alert !== null}
-        title={alert?.title ?? ''}
-        message={alert?.message}
-        onConfirm={() => setAlert(null)}
       />
     </>
   );

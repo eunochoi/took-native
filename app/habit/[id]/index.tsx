@@ -2,9 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { View } from 'react-native';
-import { AlertModal, type AlertContent } from '../../../src/components/AlertModal';
+import { useNotice } from '../../../src/components/NoticeProvider';
 import { BottomSheetPage } from '../../../src/components/BottomSheetPage';
 import { HabitIcon } from '../../../src/components/HabitIcon';
 import { QueryState } from '../../../src/components/QueryState';
@@ -17,7 +17,7 @@ import { HabitStatistics } from '../../../src/screens/habit/HabitStatistics';
 import { useAppTheme } from '../../../src/theme/AppThemeProvider';
 
 export default function HabitDetail() {
-  const [alert, setAlert] = useState<AlertContent | null>(null);
+  const { showNotice } = useNotice();
   const { rem: appRem } = useAppTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const db = useSQLiteContext();
@@ -31,7 +31,7 @@ export default function HabitDetail() {
       setHabitCompletion(db, Number(id), date, checked),
     'habitCompletion',
     undefined,
-    (error) => setAlert({ title: '처리하지 못했어요', message: error.message }),
+    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
   );
   const habit = query.data;
   return (
@@ -99,12 +99,6 @@ export default function HabitDetail() {
           ) : null}
         </View>
       </BottomSheetPage>
-      <AlertModal
-        visible={alert !== null}
-        title={alert?.title ?? ''}
-        message={alert?.message}
-        onConfirm={() => setAlert(null)}
-      />
     </>
   );
 }

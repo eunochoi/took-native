@@ -1,7 +1,7 @@
 import { AppIcon } from '../../src/components/AppIcon';
 import { FormSubmitButton } from '../../src/components/FormSubmitButton';
 import type { ScrollView } from 'react-native';
-import { AlertModal, type AlertContent } from '../../src/components/AlertModal';
+import { useNotice } from '../../src/components/NoticeProvider';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
 import { usePreventRemove } from 'expo-router/react-navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -21,7 +21,7 @@ import { HabitOrderItem } from '../../src/screens/habit/HabitOrderItem';
 import { useSettings } from '../../src/settings/SettingsProvider';
 
 export default function HabitOrder() {
-  const [alert, setAlert] = useState<AlertContent | null>(null);
+  const { showNotice } = useNotice();
   const { colors, rem: appRem } = useAppTheme();
   const scrollRef = useAnimatedRef<ScrollView>();
   const db = useSQLiteContext();
@@ -48,7 +48,8 @@ export default function HabitOrder() {
       );
   }, [query.data, order, settings]);
   usePreventRemove(saving, () =>
-    setAlert({
+    showNotice({
+      tone: 'info',
       title: '잠시만 기다려주세요',
       message: '저장이 진행 중입니다. 완료될 때까지 기다려주세요.',
     }),
@@ -90,7 +91,8 @@ export default function HabitOrder() {
         onBeforeClose={() => {
           if (!saving && !dragging) return true;
           if (saving)
-            setAlert({
+            showNotice({
+              tone: 'info',
               title: '잠시만 기다려주세요',
               message: '저장이 진행 중입니다. 완료될 때까지 기다려주세요.',
             });
@@ -105,7 +107,7 @@ export default function HabitOrder() {
               void updateSettings({ habitOrder: isDefault ? [] : (order ?? []) })
                 .then(() => setSaved(true))
                 .catch((error: Error) =>
-                  setAlert({ title: '저장하지 못했어요', message: error.message }),
+                  showNotice({ tone: 'error', title: '저장하지 못했어요', message: error.message }),
                 )
                 .finally(() => setSaving(false));
             }}
@@ -174,12 +176,6 @@ export default function HabitOrder() {
           </View>
         </View>
       </BottomSheetPage>
-      <AlertModal
-        visible={alert !== null}
-        title={alert?.title ?? ''}
-        message={alert?.message}
-        onConfirm={() => setAlert(null)}
-      />
     </>
   );
 }

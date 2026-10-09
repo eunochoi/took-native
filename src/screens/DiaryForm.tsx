@@ -6,7 +6,7 @@ import {
 import { FormSubmitButton } from '../components/FormSubmitButton';
 import { CharacterCount } from '../components/CharacterCount';
 import { RecordFormLayout } from '../components/RecordFormLayout';
-import { AlertModal, type AlertContent } from '../components/AlertModal';
+import { useNotice } from '../components/NoticeProvider';
 import { DIARY_TEXT_MAX_LENGTH, DIARY_IMAGE_MAX_COUNT } from '../domain/limits';
 import { useAppTheme } from '../theme/AppThemeProvider';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -35,7 +35,7 @@ import { EMOTIONS } from '../domain/constants';
 import { isDate } from '../domain/date';
 
 export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: string }) {
-  const [alert, setAlert] = useState<AlertContent | null>(null);
+  const { showNotice } = useNotice();
   const { colors, rem: appRem, iconSizes } = useAppTheme();
   const db = useSQLiteContext();
   const today = useToday();
@@ -82,11 +82,12 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
     },
     'diary',
     () => setSaved(true),
-    (error) => setAlert({ title: '처리하지 못했어요', message: error.message }),
+    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
   );
   const busy = mutation.isPending || picking;
   usePreventRemove(busy, () =>
-    setAlert({
+    showNotice({
+      tone: 'info',
       title: '잠시만 기다려주세요',
       message: mutation.isPending
         ? '저장이 진행 중입니다. 완료될 때까지 기다려주세요.'
@@ -102,10 +103,18 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
     });
   }, []);
   const title = format(parseISO(date), 'yyyy. M. d. EEEE', { locale: ko });
+  const onClosed = saved
+    ? () =>
+        showNotice({
+          tone: 'success',
+          title: id ? '일기를 수정했어요' : '일기를 저장했어요',
+        })
+    : undefined;
   if (id !== undefined && (query.isPending || query.error || !query.data))
     return (
       <BottomSheetPage
         closeRequested={saved && !mutation.isPending}
+        onClosed={onClosed}
         backRoute="/diary"
         title="일기 수정"
       >
@@ -116,12 +125,14 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
   return (
     <RecordFormLayout
       closeRequested={saved && !mutation.isPending}
+      onClosed={onClosed}
       scrollEnabled={!dragging}
       title={title}
       backRoute="/diary"
       onBeforeClose={() => {
         if (!busy) return true;
-        setAlert({
+        showNotice({
+          tone: 'info',
           title: '잠시만 기다려주세요',
           message: mutation.isPending
             ? '저장이 진행 중입니다. 완료될 때까지 기다려주세요.'
@@ -149,12 +160,6 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
               }}
             />
           )}
-          <AlertModal
-            visible={alert !== null}
-            title={alert?.title ?? ''}
-            message={alert?.message}
-            onConfirm={() => setAlert(null)}
-          />
         </>
       }
     >
@@ -247,7 +252,11 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
                 })
                 .catch((error: Error) => {
                   if (mounted.current)
-                    setAlert({ title: '사진을 추가하지 못했어요', message: error.message });
+                    showNotice({
+                      tone: 'error',
+                      title: '사진을 추가하지 못했어요',
+                      message: error.message,
+                    });
                 })
                 .finally(() => {
                   if (mounted.current) setPicking(false);

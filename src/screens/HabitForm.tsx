@@ -4,7 +4,7 @@ import { usePreventRemove } from 'expo-router/react-navigation';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
-import { AlertModal, type AlertContent } from '../components/AlertModal';
+import { useNotice } from '../components/NoticeProvider';
 import { BottomSheetPage } from '../components/BottomSheetPage';
 import { CharacterCount } from '../components/CharacterCount';
 import { DateTimePicker } from '../components/DateTimePicker';
@@ -32,7 +32,7 @@ import { HABIT_PRIORITY_LABELS, HabitPriorityPicker } from './habit/HabitPriorit
 import { HabitStars } from './habit/HabitStars';
 
 export function HabitForm({ id }: { id?: number }) {
-  const [alert, setAlert] = useState<AlertContent | null>(null);
+  const { showNotice } = useNotice();
   const { colors, rem: appRem } = useAppTheme();
   const db = useSQLiteContext();
   const query = useQuery({ ...habitQueries.byId(db, id ?? 0), enabled: id !== undefined });
@@ -68,10 +68,11 @@ export function HabitForm({ id }: { id?: number }) {
       }),
     'habit',
     () => setSaved(true),
-    (error) => setAlert({ title: '처리하지 못했어요', message: error.message }),
+    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
   );
   usePreventRemove(mutation.isPending, () =>
-    setAlert({
+    showNotice({
+      tone: 'info',
       title: '잠시만 기다려주세요',
       message: '저장이 진행 중입니다. 완료될 때까지 기다려주세요.',
     }),
@@ -79,10 +80,18 @@ export function HabitForm({ id }: { id?: number }) {
   const title = id ? '습관 항목 수정' : '습관 항목 추가';
   const iconLabel = HABIT_ICON_OPTIONS.find((option) => option.key === icon)?.label ?? '아이콘';
   const colorLabel = iconColor === 'theme' ? '기본 테마색' : HABIT_ICON_COLORS[iconColor].label;
+  const onClosed = saved
+    ? () =>
+        showNotice({
+          tone: 'success',
+          title: id ? '습관을 수정했어요' : '습관을 추가했어요',
+        })
+    : undefined;
   if (id !== undefined && (query.isPending || query.error || !query.data || !loaded.current))
     return (
       <BottomSheetPage
         closeRequested={saved && !mutation.isPending}
+        onClosed={onClosed}
         backRoute="/habit"
         title={title}
       >
@@ -93,11 +102,13 @@ export function HabitForm({ id }: { id?: number }) {
   return (
     <RecordFormLayout
       closeRequested={saved && !mutation.isPending}
+      onClosed={onClosed}
       title={title}
       backRoute="/habit"
       onBeforeClose={() => {
         if (!mutation.isPending) return true;
-        setAlert({
+        showNotice({
+          tone: 'info',
           title: '잠시만 기다려주세요',
           message: '저장이 진행 중입니다. 완료될 때까지 기다려주세요.',
         });
@@ -144,12 +155,6 @@ export function HabitForm({ id }: { id?: number }) {
               onApply={setInitialStartedAt}
             />
           )}
-          <AlertModal
-            visible={alert !== null}
-            title={alert?.title ?? ''}
-            message={alert?.message}
-            onConfirm={() => setAlert(null)}
-          />
         </>
       }
     >

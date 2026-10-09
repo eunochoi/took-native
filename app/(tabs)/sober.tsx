@@ -1,5 +1,5 @@
-import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { EmptyState } from '../../src/components/EmptyState';
+import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { EMPTY_STATE_CLASS_NAME, PAGE_CLASS_NAME } from '../../src/theme/classes';
 
 import { useQuery } from '@tanstack/react-query';
@@ -7,7 +7,7 @@ import { useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo, useRef, useState } from 'react';
 import { FlatList, View } from 'react-native';
-import { AlertModal, type AlertContent } from '../../src/components/AlertModal';
+import { useNotice } from '../../src/components/NoticeProvider';
 import { AppIcon } from '../../src/components/AppIcon';
 import { ColorView } from '../../src/components/ColorTransition';
 import { QueryError } from '../../src/components/QueryError';
@@ -38,7 +38,7 @@ export default function SoberList() {
   const restarts = useQuery(soberQueries.restarts(db));
   const { settings, updateSettings } = useSettings();
   const [sortOpen, setSortOpen] = useState(false);
-  const [alert, setAlert] = useState<AlertContent | null>(null);
+  const { showNotice } = useNotice();
   const now = useCurrentMinute();
   const fade = useScrollFade();
   const scroll = useRef<FlatList<Row>>(null);
@@ -64,7 +64,7 @@ export default function SoberList() {
     void updateSettings(patch)
       .then(() => scroll.current?.scrollToOffset({ offset: 0, animated: true }))
       .catch((error: Error) =>
-        setAlert({ title: '설정을 저장하지 못했어요', message: error.message }),
+        showNotice({ tone: 'error', title: '설정을 저장하지 못했어요', message: error.message }),
       );
   return (
     <ColorView className={PAGE_CLASS_NAME}>
@@ -172,12 +172,6 @@ export default function SoberList() {
           }}
         />
       )}
-      <AlertModal
-        visible={alert !== null}
-        title={alert?.title ?? ''}
-        message={alert?.message}
-        onConfirm={() => setAlert(null)}
-      />
     </ColorView>
   );
 }

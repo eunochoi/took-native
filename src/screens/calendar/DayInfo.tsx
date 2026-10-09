@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { QueryError } from '../../components/QueryError';
-import { AlertModal, type AlertContent } from '../../components/AlertModal';
+import { useNotice } from '../../components/NoticeProvider';
 import { setHabitCompletion, sortHabits } from '../../db/habit';
 import { dayHabits } from '../../domain/calendar';
 import { diaryQueries, habitQueries, useRecordMutation } from '../../queries';
@@ -13,7 +12,7 @@ import { DayInfoDiarySection } from './DayInfoDiarySection';
 import { DayInfoHabitSection } from './DayInfoHabitSection';
 
 export function DayInfo({ date, today }: { date: string; today: string }) {
-  const [alert, setAlert] = useState<AlertContent | null>(null);
+  const { showNotice } = useNotice();
   const { colors } = useAppTheme();
   const { settings } = useSettings();
   const db = useSQLiteContext();
@@ -25,7 +24,7 @@ export function DayInfo({ date, today }: { date: string; today: string }) {
       setHabitCompletion(db, id, targetDate, checked),
     'habitCompletion',
     undefined,
-    (error) => setAlert({ title: '처리하지 못했어요', message: error.message }),
+    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
   );
   const pending = diary.isPending || habits.isPending || completions.isPending;
   const error = diary.isError || habits.isError || completions.isError;
@@ -72,12 +71,6 @@ export function DayInfo({ date, today }: { date: string; today: string }) {
           />
         </View>
       )}
-      <AlertModal
-        visible={alert !== null}
-        title={alert?.title ?? ''}
-        message={alert?.message}
-        onConfirm={() => setAlert(null)}
-      />
     </View>
   );
 }

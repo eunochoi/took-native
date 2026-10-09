@@ -119,6 +119,8 @@ function renderRecordMenu(kind: 'diary' | 'habit' | 'sober') {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/NoticeProvider'))
+          return { useNotice: () => ({ showNotice: () => {} }) };
         if (name === 'react')
           return {
             useState: (initial: unknown) => {
@@ -157,7 +159,6 @@ function renderRecordMenu(kind: 'diary' | 'habit' | 'sober') {
           BottomSheetModal: 'BottomSheetModal',
           PickerAction: 'PickerAction',
           ConfirmModal: 'ConfirmModal',
-          AlertModal: 'AlertModal',
         };
       },
     },

@@ -367,12 +367,14 @@ test('controller waits for navigation, routes notification taps and cleans up fo
   let last: any = { notification: { request: { content: { data: { url: '/diary' } } } } };
   let handler: any;
   const component = load('../src/notifications/NotificationController.tsx', {
+    '../components/NoticeProvider': {
+      useNotice: () => ({ showNotice: (notice: any) => notices.push(notice) }),
+    },
     react: {
       useEffect: (effect: any) => effects.push(effect),
       useRef: (value: any) => ({ current: value }),
     },
     'react-native': {
-      Alert: { alert: (title: string, message: string) => notices.push({ title, message }) },
       AppState: {
         addEventListener: (_event: any, listener: any) => {
           foreground = listener;
@@ -444,6 +446,7 @@ test('controller waits for navigation, routes notification taps and cleans up fo
   foreground('active');
   await new Promise<void>((resolve) => setImmediate(resolve));
   assert.equal(notices.length, 1);
+  assert.equal(notices[0].tone, 'error');
   assert.equal(notices[0].title, '알림을 예약하지 못했어요');
   nextCleanups.forEach((cleanup) => cleanup());
   assert.equal(removed, 3);
