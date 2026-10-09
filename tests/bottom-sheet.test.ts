@@ -644,17 +644,17 @@ test('release distance decides dismissal; passing the line and dragging back res
   h.completeOpen();
   h.begin();
   h.move(0, 140);
-  h.move(0, 60);
+  h.move(0, 79);
   h.end();
   assert.equal(h.latestAnimation().kind, 'spring');
   h.completeAnimation();
   assert.equal(h.y, 0);
   assert.equal(h.closes, 0);
   h.begin();
-  h.move(0, 100); // 25 percent of the measured 400-point sheet.
+  h.move(0, 80); // 20 percent of the measured 400-point sheet.
   h.end();
   assert.equal(h.latestAnimation().kind, 'timing');
-  assert.equal(h.latestAnimation().from, 100);
+  assert.equal(h.latestAnimation().from, 80);
   assert(h.latestAnimation().target >= 400);
   assert.equal(h.closes, 0);
   assert.equal(h.sheet().props.pointerEvents, 'none');
@@ -690,7 +690,7 @@ test('short sheets use their actual height rather than the maximum allowed heigh
   h.layout(200);
   h.completeEnter();
   h.begin();
-  h.move(0, 55);
+  h.move(0, 40); // 20 percent of the measured 200-point sheet.
   h.end();
   assert.equal(h.latestAnimation().kind, 'timing');
   h.completeAnimation();

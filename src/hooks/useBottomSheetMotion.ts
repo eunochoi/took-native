@@ -225,7 +225,7 @@ export function useBottomSheetMotion({
       })
       .onEnd((_event, success) => {
         if (phase.value !== 'dragging') return;
-        if (success && measuredHeight.value > 0 && sheetY.value >= measuredHeight.value * 0.25) {
+        if (success && measuredHeight.value > 0 && sheetY.value >= measuredHeight.value * 0.2) {
           // Lock immediately on the UI thread; the existing JS close path owns callbacks.
           phase.value = 'closing';
           scheduleOnRN(onDismiss, session.value);
