@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { Pressable, Text, View } from 'react-native';
 import { AppIcon } from '../../src/components/AppIcon';
 import { ColorView } from '../../src/components/ColorTransition';
@@ -10,7 +10,7 @@ import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 export default function Home() {
   const today = useToday();
   const { iconSizes, navigationBottom, navigationHeight } = useAppTheme();
-  const router = useRouter();
+  const { openModal } = useModalNavigation();
   return (
     <ColorView className={PAGE_CLASS_NAME}>
       <HomeTopSection today={today} />
@@ -26,7 +26,7 @@ export default function Home() {
             accessibilityRole="button"
             accessibilityLabel="모아보기"
             onPress={() =>
-              router.push({ pathname: '/home/[year]/stats', params: { year: today.slice(0, 4) } })
+              openModal({ pathname: '/home/[year]/stats', params: { year: today.slice(0, 4) } })
             }
             className="py-2 my-3 self-end flex-row items-center justify-center gap-2 active:opacity-70"
           >

@@ -59,6 +59,8 @@ function section(path: string, name: string, initialProps: Record<string, unknow
         if (dependency === 'react-native') return { View: 'View', Pressable: 'Pressable' };
         if (dependency.endsWith('hooks/useMonthSwipe'))
           return { useMonthSwipe: () => ({ panHandlers: {} }) };
+        if (dependency.endsWith('/ModalNavigationProvider'))
+          return { useModalNavigation: () => ({ openModal: () => undefined }) };
         if (dependency === 'expo-router') return { useRouter: () => ({ push: () => undefined }) };
         if (dependency.endsWith('AppThemeProvider'))
           return { useAppTheme: () => ({ colors: {}, rem: 15, iconSizes: {} }) };

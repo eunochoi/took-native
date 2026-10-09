@@ -1,7 +1,7 @@
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { RecordMenuButton } from '../../components/RecordMenuButton';
 import { AlertModal, type AlertContent } from '../../components/AlertModal';
 import { View } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { format, parseISO } from 'date-fns';
 import { useState } from 'react';
@@ -24,7 +24,7 @@ export function DiaryMenu({
 }) {
   const [alert, setAlert] = useState<AlertContent | null>(null);
   const db = useSQLiteContext();
-  const router = useRouter();
+  const { openModal } = useModalNavigation();
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const mutation = useRecordMutation(
@@ -57,7 +57,7 @@ export function DiaryMenu({
               disabled={diary.date > today}
               onPress={() =>
                 closePicker(() => {
-                  router.push(`/diary/${diary.id}/edit`);
+                  openModal(`/diary/${diary.id}/edit`);
                 })
               }
             />

@@ -57,6 +57,8 @@ for (const [label, record, events, elapsed] of [
       require: (name: string) => {
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'date-fns') return require(name);
+        if (name.endsWith('/ModalNavigationProvider'))
+          return { useModalNavigation: () => ({ openModal: () => undefined }) };
         if (name === 'expo-router') return { useRouter: () => ({ push: () => undefined }) };
         if (name.endsWith('AppThemeProvider'))
           return { useAppTheme: () => ({ colors: {}, iconSizes: {} }) };

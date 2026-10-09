@@ -1,9 +1,10 @@
+import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { AppIcon } from '../../src/components/AppIcon';
 import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 import { EmptyState } from '../../src/components/EmptyState';
 import { ColorView } from '../../src/components/ColorTransition';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter, useScrollToTop } from 'expo-router';
+import { useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
 import { FlatList, ScrollView, View } from 'react-native';
@@ -33,7 +34,7 @@ export default function HabitList() {
   const { colors, rem: appRem } = useAppTheme();
   const db = useSQLiteContext();
   const fade = useScrollFade();
-  const router = useRouter();
+  const { openModal } = useModalNavigation();
   const today = useToday();
   const scroll = useRef<ScrollView>(null);
   useScrollToTop(scroll);
@@ -119,7 +120,7 @@ export default function HabitList() {
             />
             <ToolbarAddButton
               disabled={!list.data || sorted.length >= MAX_HABIT_COUNT}
-              onPress={() => router.push('/habit/new')}
+              onPress={() => openModal('/habit/new')}
             />
           </Toolbar>
         </HabitTopSection>

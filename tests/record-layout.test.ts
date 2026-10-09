@@ -74,6 +74,14 @@ test('route sheet closing uses history or the fallback and only focused routes i
   let hasHistory = true;
   let focused = true;
   const { BottomSheetPage } = load('../src/components/BottomSheetPage.tsx', {
+    react: { useRef: (current: unknown) => ({ current }), useLayoutEffect: () => {} },
+    '../navigation/ModalNavigationProvider': {
+      useModalTransition: () => ({
+        beginOpening: () => 1,
+        beginClosing: () => 2,
+        finishTransition: () => {},
+      }),
+    },
     './BottomSheetModal': { BottomSheetModal: 'BottomSheetModal' },
     'expo-router': {
       useRouter: () => ({
@@ -82,7 +90,10 @@ test('route sheet closing uses history or the fallback and only focused routes i
         replace: (route: string) => calls.push(route),
       }),
     },
-    'expo-router/react-navigation': { useIsFocused: () => focused },
+    'expo-router/react-navigation': {
+      useIsFocused: () => focused,
+      useRoute: () => ({ key: 'sheet' }),
+    },
     'react-native': { useWindowDimensions: () => ({ height: 800 }) },
   });
   const page = BottomSheetPage({ title: '습관', backRoute: '/habit', children: 'body' });

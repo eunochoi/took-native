@@ -1,7 +1,7 @@
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { AppIcon } from '../../components/AppIcon';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { Pressable, View } from 'react-native';
-import { useRouter } from 'expo-router';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Text } from '../../components/Text';
@@ -23,8 +23,8 @@ export function DiaryCard({
   today: string;
 }) {
   const { colors, rem: appRem, iconSizes } = useAppTheme();
-  const router = useRouter();
-  const open = () => router.push(`/diary/${diary.id}`);
+  const { openModal } = useModalNavigation();
+  const open = () => openModal(`/diary/${diary.id}`);
   return (
     <View className={`gap-4 ${last ? 'pb-0' : 'pb-6'} ${first ? 'pt-0' : 'pt-6'}`}>
       <View className="flex-row items-center gap-3">
@@ -78,7 +78,7 @@ export function DiaryCard({
                 key={habit.id}
                 accessibilityRole="button"
                 accessibilityLabel={`${habit.name} 습관 상세보기`}
-                onPress={() => router.push(`/habit/${habit.id}`)}
+                onPress={() => openModal(`/habit/${habit.id}`)}
                 className="max-w-full flex-row items-center gap-1"
               >
                 <AppIcon

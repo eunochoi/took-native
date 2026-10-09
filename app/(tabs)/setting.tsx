@@ -1,5 +1,6 @@
+import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRouter, useScrollToTop } from 'expo-router';
+import { useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, View } from 'react-native';
@@ -36,7 +37,7 @@ export default function SettingsScreen() {
   const scroll = useRef<ScrollView>(null);
   useScrollToTop(scroll);
   const db = useSQLiteContext();
-  const router = useRouter();
+  const { openModal } = useModalNavigation();
   const client = useQueryClient();
   const { settings, updateSettings, reloadSettings } = useSettings();
   const [activity, setActivity] = useState<'export' | 'restore' | 'settings' | null>(null);
@@ -183,7 +184,7 @@ export default function SettingsScreen() {
               accessibilityRole="button"
               accessibilityState={{ disabled }}
               disabled={disabled}
-              onPress={() => router.push('/privacy')}
+              onPress={() => openModal('/privacy')}
               className={`h-11 shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
             >
               <AppIcon name="privacy-tip" size={appRem * 1.2} className="text-theme-accent" />
@@ -236,7 +237,7 @@ export default function SettingsScreen() {
               accessibilityRole="button"
               accessibilityState={{ disabled }}
               disabled={disabled}
-              onPress={() => router.push('/habit/order')}
+              onPress={() => openModal('/habit/order')}
               className={`p-2 flex-row items-center justify-between gap-2 ${disabled ? 'opacity-40' : 'opacity-100'}`}
             >
               <Text className="text-base text-theme-text-secondary">습관 목록 순서 개인화</Text>

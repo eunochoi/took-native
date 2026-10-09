@@ -1,9 +1,9 @@
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { UNDERLINE_TAB_LIST_CLASS_NAME } from '../../theme/classes';
 import { UnderlineTab } from '../../components/UnderlineTab';
 import { AnalysisHeader } from './AnalysisHeader';
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
-import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { SoberIcon } from '../../components/SoberIcon';
 import { Text } from '../../components/Text';
@@ -13,7 +13,7 @@ import { useCurrentMinute } from '../../hooks/useCurrentMinute';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 
 export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts: SoberRestart[] }) {
-  const router = useRouter();
+  const { openModal } = useModalNavigation();
   const now = useCurrentMinute();
   const { rem: appRem } = useAppTheme();
   const [tab, setTab] = useState<'top' | 'bottom'>('top');
@@ -62,7 +62,7 @@ export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts:
                 accessibilityRole="button"
                 accessibilityLabel={`${sober.name}, ${formatSoberDuration(record.duration)}, ${format(parseISO(record.start), 'yy년 M월 d일 HH:mm')}부터 ${record.current ? '현재까지 진행 중' : `${format(parseISO(record.end), 'yy년 M월 d일 HH:mm')}까지`}, 거리두기 정보`}
                 onPress={() => {
-                  router.push(`/sober/${sober.id}`);
+                  openModal(`/sober/${sober.id}`);
                 }}
                 className={`flex-row items-center gap-6 min-h-24 py-3 ${index < visibleRecords.length - 1 ? 'border-b border-theme-border/60' : ''}`}
               >

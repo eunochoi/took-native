@@ -18,6 +18,7 @@ import { SettingsProvider } from '../src/settings/SettingsProvider';
 import { initializeMedia } from '../src/media';
 import { AppLoadingScreen } from '../src/components/AppLoadingScreen';
 import { refreshSoberWidgets } from '../src/widgets/sober';
+import { ModalNavigationProvider } from '../src/navigation/ModalNavigationProvider';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 const queryClient = new QueryClient({
@@ -77,30 +78,32 @@ function Navigation({ onReady }: { onReady: () => void }) {
         },
       }}
     >
-      <View className="flex-1 bg-theme-surface" onLayout={onReady}>
-        <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            animation: reducedMotion ? 'none' : 'slide_from_right',
-            contentStyle: { backgroundColor: colors.surface },
-          }}
-        >
-          <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
-          {sheetRoutes.map((name) => (
-            <Stack.Screen
-              key={name}
-              name={name}
-              options={{
-                presentation: 'transparentModal',
-                animation: 'none',
-                gestureEnabled: false,
-                contentStyle: { backgroundColor: 'transparent' },
-              }}
-            />
-          ))}
-        </Stack>
-      </View>
+      <ModalNavigationProvider>
+        <View className="flex-1 bg-theme-surface" onLayout={onReady}>
+          <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              animation: reducedMotion ? 'none' : 'slide_from_right',
+              contentStyle: { backgroundColor: colors.surface },
+            }}
+          >
+            <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
+            {sheetRoutes.map((name) => (
+              <Stack.Screen
+                key={name}
+                name={name}
+                options={{
+                  presentation: 'transparentModal',
+                  animation: 'none',
+                  gestureEnabled: false,
+                  contentStyle: { backgroundColor: 'transparent' },
+                }}
+              />
+            ))}
+          </Stack>
+        </View>
+      </ModalNavigationProvider>
     </ThemeProvider>
   );
 }

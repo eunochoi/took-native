@@ -42,6 +42,12 @@ function render(
         if (dependency.endsWith('AppThemeProvider'))
           return { useAppTheme: () => ({ rem: 15, iconSizes: {}, colors: {} }) };
         if (dependency.endsWith('domain/constants')) return { EMOTIONS };
+        if (dependency.endsWith('/ModalNavigationProvider'))
+          return {
+            useModalNavigation: () => ({
+              openModal: (route: unknown) => scenario.routes?.push(route),
+            }),
+          };
         if (dependency === 'expo-router')
           return { useRouter: () => ({ push: (route: unknown) => scenario.routes?.push(route) }) };
         if (dependency.endsWith('SettingsProvider'))

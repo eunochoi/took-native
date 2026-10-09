@@ -28,6 +28,7 @@ export function useBottomSheetMotion({
   onScrollOffset,
   onDismiss,
   onClosed,
+  onOpened,
   scrollEnabled = true,
   externalScrollRef,
 }: {
@@ -39,6 +40,7 @@ export function useBottomSheetMotion({
   onScrollOffset: (offset: number) => void;
   onDismiss: (session: number) => void;
   onClosed: (session: number, finished: boolean) => void;
+  onOpened: (session: number) => void;
   scrollEnabled?: boolean;
   externalScrollRef?: ReturnType<typeof useAnimatedRef<ScrollView>>;
 }) {
@@ -95,13 +97,16 @@ export function useBottomSheetMotion({
     () => ({
       sheetEnter: SlideInDown.duration(tokens.motion.pickerOpen)
         .reduceMotion(motionPolicy)
-        .withCallback((finished) => {
+        .withCallback(() => {
           'worklet';
-          if (finished && session.value === openingSession && phase.value === 'opening')
+          if (session.value === openingSession && phase.value === 'opening') {
+            // A cancelled entry is terminal too; never leave navigation locked indefinitely.
             phase.value = 'idle';
+            scheduleOnRN(onOpened, openingSession);
+          }
         }),
     }),
-    [motionPolicy, session, openingSession, phase],
+    [motionPolicy, session, openingSession, phase, onOpened],
   );
 
   const animateClose = useCallback(
@@ -134,6 +139,7 @@ export function useBottomSheetMotion({
   );
 
   const restoreAfterBlockedClose = useCallback(() => {
+    if (phase.value === 'opening') return;
     phase.value = 'returning';
     const returningSession = session.value;
     sheetY.value = withSpring(

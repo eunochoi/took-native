@@ -30,6 +30,8 @@ export function BottomSheetModal({
   menuAction,
   dismissOnBack = true,
   onBeforeClose,
+  onOpening,
+  onOpened,
   footer,
   scrollEnabled = true,
   scrollRef,
@@ -47,6 +49,8 @@ export function BottomSheetModal({
   menuAction?: ReactNode;
   dismissOnBack?: boolean;
   onBeforeClose?: () => boolean;
+  onOpening?: () => void;
+  onOpened?: () => void;
   footer?: ReactNode | ((closeSheet: CloseBottomSheet) => ReactNode);
   scrollEnabled?: boolean;
   scrollRef?: AnimatedRef<ScrollView>;
@@ -65,6 +69,8 @@ export function BottomSheetModal({
       title,
       onClose,
       onBeforeClose,
+      onOpening,
+      onOpened,
       presentation,
       dismissOnBack,
       height,

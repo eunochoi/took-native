@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { useSQLiteContext } from 'expo-sqlite';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
@@ -30,6 +31,7 @@ export function TodayRecordSection({ today }: { today: string }) {
   const now = useCurrentMinute();
   const db = useSQLiteContext();
   const router = useRouter();
+  const { openModal } = useModalNavigation();
   const diary = useQuery(diaryQueries.byDate(db, today));
   const habits = useQuery(habitQueries.list(db));
   const completions = useQuery(habitQueries.completions(db, today, today));
@@ -53,7 +55,7 @@ export function TodayRecordSection({ today }: { today: string }) {
           accessibilityState={{ disabled: diary.isPending || diary.isError }}
           disabled={diary.isPending || diary.isError}
           onPress={() =>
-            router.push(
+            openModal(
               diary.data
                 ? `/diary/${diary.data.id}`
                 : { pathname: '/diary/new', params: { date: today } },
@@ -117,7 +119,7 @@ export function TodayRecordSection({ today }: { today: string }) {
       </View>
       <Pressable
         accessibilityRole="button"
-        onPress={() => router.push(sober ? `/sober/${sober.id}` : '/sober')}
+        onPress={() => (sober ? openModal(`/sober/${sober.id}`) : router.push('/sober'))}
         className={recordCardClass}
       >
         <View className={recordIconContainerClass}>

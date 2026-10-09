@@ -19,6 +19,8 @@ function harness(
     presentation?: 'modal' | 'screen';
     dismissOnBack?: boolean;
     onBeforeClose?: () => boolean;
+    onOpening?: () => void;
+    onOpened?: () => void;
     scrollEnabled?: boolean;
     footer?: unknown;
   } = {},
@@ -831,4 +833,71 @@ test('saved route sheet remains mounted until the controlled closing animation c
   h.completeAnimation();
   assert.equal(h.closes, 1);
   assert.equal(h.tree, null);
+});
+
+test('route opening callbacks follow the sheet entry rather than backdrop completion', () => {
+  const events: string[] = [];
+  const h = harness(true, false, 720, {
+    presentation: 'screen',
+    onOpening: () => events.push('opening'),
+    onOpened: () => events.push('opened'),
+  });
+  assert.deepEqual(events, ['opening']);
+  h.completeAnimation();
+  assert.deepEqual(events, ['opening']);
+  h.completeEnter();
+  h.completeEnter();
+  assert.deepEqual(events, ['opening', 'opened']);
+});
+
+test('cancelled entry releases its transition and stale entry cannot release a new session', () => {
+  let opened = 0;
+  const h = harness(true, false, 720, {
+    presentation: 'screen',
+    onOpened: () => opened++,
+  });
+  const oldEntry = h.sheet().props.entering.callback;
+  oldEntry(false);
+  assert.equal(opened, 1);
+  h.setVisible(false);
+  h.completeAnimation();
+  h.setVisible(true);
+  oldEntry(true);
+  assert.equal(opened, 1);
+  h.completeEnter();
+  assert.equal(opened, 2);
+});
+
+test('blocked dismissal during entry preserves the opening callback and subsequent close', () => {
+  let opening = true;
+  const h = harness(true, false, 720, {
+    presentation: 'screen',
+    onBeforeClose: () => !opening,
+    onOpened: () => {
+      opening = false;
+    },
+  });
+  h.back();
+  assert.equal(h.closes, 0);
+  h.completeEnter();
+  assert.equal(opening, false);
+  h.back();
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
+});
+
+test('controlled dismissal requested during entry retries after the opening lock releases', () => {
+  let opening = true;
+  const h = harness(true, false, 720, {
+    presentation: 'screen',
+    onBeforeClose: () => !opening,
+    onOpened: () => {
+      opening = false;
+    },
+  });
+  h.setVisible(false);
+  assert.equal(h.closes, 0);
+  h.completeEnter();
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
 });

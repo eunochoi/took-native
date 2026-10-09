@@ -1,6 +1,6 @@
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { StarIcon } from '../../components/StarIcon';
 import { format, parseISO } from 'date-fns';
-import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { SoberIcon } from '../../components/SoberIcon';
 import { ProgressBar } from '../../components/ProgressBar';
@@ -29,7 +29,7 @@ export function SoberBox({
   isFirst: boolean;
   isLast?: boolean;
 }) {
-  const router = useRouter();
+  const { openModal } = useModalNavigation();
   const { colors, rem: appRem } = useAppTheme();
   const start = getCurrentSoberStart(sober, restarts);
   const duration = Math.max(0, now - Date.parse(start));
@@ -42,7 +42,7 @@ export function SoberBox({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`${sober.name} 거리두기 정보`}
-          onPress={() => router.push(`/sober/${sober.id}`)}
+          onPress={() => openModal(`/sober/${sober.id}`)}
           className="min-h-11 min-w-0 flex-1 flex-row items-center gap-2"
         >
           <Text numberOfLines={1} className="min-w-0 shrink text-base font-semibold">
@@ -59,7 +59,7 @@ export function SoberBox({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${sober.name}, ${formatSoberDuration(duration)}, 목표 ${formatSoberGoal(goalDays)}`}
-        onPress={() => router.push(`/sober/${sober.id}`)}
+        onPress={() => openModal(`/sober/${sober.id}`)}
         className="gap-3"
       >
         <View className="flex-row flex-wrap items-baseline justify-between gap-2">

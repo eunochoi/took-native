@@ -144,8 +144,19 @@ function form(kind: string, router: unknown) {
       exports: pageExports,
       require: (dependency: string) => {
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx };
+        if (dependency === 'react')
+          return { useRef: (current: unknown) => ({ current }), useLayoutEffect: () => {} };
+        if (dependency.endsWith('/ModalNavigationProvider'))
+          return {
+            useModalTransition: () => ({
+              beginOpening: () => 1,
+              beginClosing: () => 2,
+              finishTransition: () => {},
+            }),
+          };
         if (dependency === 'expo-router') return { useRouter: () => router };
-        if (dependency === 'expo-router/react-navigation') return { useIsFocused: () => true };
+        if (dependency === 'expo-router/react-navigation')
+          return { useIsFocused: () => true, useRoute: () => ({ key: 'sheet' }) };
         if (dependency === 'react-native') return { useWindowDimensions: () => ({ height: 800 }) };
         return { BottomSheetModal: 'BottomSheetModal' };
       },

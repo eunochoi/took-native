@@ -133,6 +133,10 @@ function renderRecordMenu(kind: 'diary' | 'habit' | 'sober') {
           };
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (name === 'date-fns') return require(name);
+        if (name.endsWith('/ModalNavigationProvider'))
+          return {
+            useModalNavigation: () => ({ openModal: (route: string) => routes.push(route) }),
+          };
         if (name === 'expo-router')
           return { useRouter: () => ({ push: (route: string) => routes.push(route) }) };
         if (name === 'expo-sqlite') return { useSQLiteContext: () => ({}) };

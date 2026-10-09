@@ -1,7 +1,7 @@
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { RecordMenuButton } from '../../components/RecordMenuButton';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import type { Sober } from '../../db/types';
 import { deleteSober } from '../../db/sober';
@@ -21,7 +21,7 @@ export function SoberMenu({
   disabled?: boolean;
 }) {
   const db = useSQLiteContext();
-  const router = useRouter();
+  const { openModal } = useModalNavigation();
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [alert, setAlert] = useState<AlertContent | null>(null);
@@ -47,7 +47,7 @@ export function SoberMenu({
               icon="edit"
               title="수정하기"
               description="목표, 시작 시간, 이름, 아이콘 등을 수정해요."
-              onPress={() => close(() => router.push(`/sober/${sober.id}/edit`))}
+              onPress={() => close(() => openModal(`/sober/${sober.id}/edit`))}
             />
             <PickerAction
               icon="delete-outline"

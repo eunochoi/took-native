@@ -1,7 +1,7 @@
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { AppIcon } from '../../components/AppIcon';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { HabitIcon } from '../../components/HabitIcon';
 import { Text } from '../../components/Text';
@@ -26,7 +26,7 @@ export function HabitBox({
   onToggle: (id: number, date: string, checked: boolean) => void;
 }) {
   const { colors, rem: appRem, iconSizes } = useAppTheme();
-  const router = useRouter();
+  const { openModal } = useModalNavigation();
   const habitColor = resolveIconColor(habit.icon_color, colors.accent);
   const checked = (date: string) =>
     records.some((record) => record.habit_id === habit.id && record.date === date);
@@ -39,7 +39,7 @@ export function HabitBox({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`${habit.name} 습관 정보`}
-            onPress={() => router.push(`/habit/${habit.id}`)}
+            onPress={() => openModal(`/habit/${habit.id}`)}
             className="items-center gap-2"
           >
             <HabitIcon name={habit.icon_key} colorKey={habit.icon_color} size={appRem * 1.875} />

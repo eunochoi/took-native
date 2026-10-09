@@ -47,6 +47,10 @@ function load(path: string, states: unknown[], date = '2026-09-30') {
               ];
             },
           };
+        if (name.endsWith('/ModalNavigationProvider'))
+          return {
+            useModalNavigation: () => ({ openModal: (href: unknown) => navigations.push(href) }),
+          };
         if (name === 'expo-router')
           return {
             useRouter: () => ({ push: (href: unknown) => navigations.push(href) }),

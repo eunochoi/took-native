@@ -1,8 +1,9 @@
+import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { EmptyState } from '../../src/components/EmptyState';
 import { EMPTY_STATE_CLASS_NAME, PAGE_CLASS_NAME } from '../../src/theme/classes';
 
 import { useQuery } from '@tanstack/react-query';
-import { useRouter, useScrollToTop } from 'expo-router';
+import { useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo, useRef, useState } from 'react';
 import { FlatList, View } from 'react-native';
@@ -32,7 +33,7 @@ type Row = { kind: 'state' } | { kind: 'sober'; sober: Sober };
 export default function SoberList() {
   const db = useSQLiteContext();
   const { colors, rem: appRem } = useAppTheme();
-  const router = useRouter();
+  const { openModal } = useModalNavigation();
   const list = useQuery(soberQueries.list(db));
   const restarts = useQuery(soberQueries.restarts(db));
   const { settings, updateSettings } = useSettings();
@@ -89,7 +90,7 @@ export default function SoberList() {
                 accessibilityLabel="거리두기 항목 정렬"
                 onPress={() => setSortOpen(true)}
               />
-              <ToolbarAddButton disabled={disabledAdd} onPress={() => router.push('/sober/new')} />
+              <ToolbarAddButton disabled={disabledAdd} onPress={() => openModal('/sober/new')} />
             </Toolbar>
           </SoberTopSection>
         }

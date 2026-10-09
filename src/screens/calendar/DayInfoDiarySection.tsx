@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { twMerge } from 'tailwind-merge';
 import { Pressable, View, useWindowDimensions } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
@@ -20,7 +20,7 @@ export function DayInfoDiarySection({
   diary: DiaryDetail | null;
 }) {
   const { colors, rem: appRem } = useAppTheme();
-  const router = useRouter();
+  const { openModal } = useModalNavigation();
   const { fontScale } = useWindowDimensions();
   // Three relaxed body lines, the link, spacing, and native font padding.
   const contentHeight = appRem * Math.max(26 / 3, (3 * 1.625 + 1.25) * fontScale + 1.25);
@@ -28,7 +28,7 @@ export function DayInfoDiarySection({
   const emotion = diary ? EMOTIONS[diary.emotion] : undefined;
   const open = () => {
     if (!diary) return;
-    router.push(`/diary/${diary.id}`);
+    openModal(`/diary/${diary.id}`);
   };
   return (
     <View
@@ -88,7 +88,7 @@ export function DayInfoDiarySection({
             <Pressable
               accessibilityRole="button"
               onPress={() => {
-                router.push({ pathname: '/diary/new', params: { date } });
+                openModal({ pathname: '/diary/new', params: { date } });
               }}
               className="mt-6 flex-row min-h-9 items-center gap-1.5 rounded-full bg-theme-accent px-4"
             >

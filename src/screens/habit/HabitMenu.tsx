@@ -1,8 +1,8 @@
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { RecordMenuButton } from '../../components/RecordMenuButton';
 import { AlertModal, type AlertContent } from '../../components/AlertModal';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { deleteHabit } from '../../db/habit';
 import type { Habit } from '../../db/types';
@@ -14,7 +14,7 @@ import { PickerAction } from '../../components/PickerAction';
 export function HabitMenu({ habit, onDeleted }: { habit: Habit; onDeleted?: () => void }) {
   const [alert, setAlert] = useState<AlertContent | null>(null);
   const db = useSQLiteContext();
-  const router = useRouter();
+  const { openModal } = useModalNavigation();
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const mutation = useRecordMutation(
@@ -39,7 +39,7 @@ export function HabitMenu({ habit, onDeleted }: { habit: Habit; onDeleted?: () =
               icon="edit"
               title="습관 수정하기"
               description="이름과 우선순위, 아이콘을 바꿔요."
-              onPress={() => closePicker(() => router.push(`/habit/${habit.id}/edit`))}
+              onPress={() => closePicker(() => openModal(`/habit/${habit.id}/edit`))}
             />
             <PickerAction
               icon="delete-outline"

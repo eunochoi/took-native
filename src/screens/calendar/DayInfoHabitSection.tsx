@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
@@ -21,7 +21,7 @@ export function DayInfoHabitSection({
   onToggle: (id: number, checked: boolean) => void;
 }) {
   const { colors, iconSizes } = useAppTheme();
-  const router = useRouter();
+  const { openModal } = useModalNavigation();
   const editable = date >= shiftDate(today, -3) && date <= today;
   const done = habits.filter((habit) => habit.completed).length;
   const renderHabit = (habit: Habit & { completed: boolean }) => {
@@ -59,7 +59,7 @@ export function DayInfoHabitSection({
           accessibilityRole="button"
           accessibilityLabel={`${habit.name} 습관 정보 보기`}
           onPress={() => {
-            router.push(`/habit/${habit.id}`);
+            openModal(`/habit/${habit.id}`);
           }}
           className="h-6 w-6 items-center justify-center"
         >

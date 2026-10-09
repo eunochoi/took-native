@@ -1,5 +1,5 @@
+import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -17,7 +17,7 @@ export default function CalendarScreen() {
   const today = useToday();
   const db = useSQLiteContext();
   const { tabContentBottom } = useAppTheme();
-  const router = useRouter();
+  const { openModal } = useModalNavigation();
   const [selected, setSelected] = useState(today);
   const [month, setMonth] = useState(today.slice(0, 7));
   const diaries = useQuery(diaryQueries.month(db, month));
@@ -43,7 +43,7 @@ export default function CalendarScreen() {
           onSelect={(date) => {
             setSelected(date);
             setMonth(date.slice(0, 7));
-            router.push({ pathname: '/calendar/[date]', params: { date } });
+            openModal({ pathname: '/calendar/[date]', params: { date } });
           }}
         />
       </View>

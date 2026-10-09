@@ -96,6 +96,8 @@ function harness() {
               },
             }),
           };
+        if (name.endsWith('/ModalNavigationProvider'))
+          return { useModalNavigation: () => ({ openModal: () => undefined }) };
         if (name === 'expo-router')
           return { useRouter: () => ({ push: () => {} }), useScrollToTop: () => {} };
         if (name === 'expo-sqlite') return { useSQLiteContext: () => ({}) };

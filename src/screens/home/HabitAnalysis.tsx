@@ -1,7 +1,7 @@
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { UNDERLINE_TAB_LIST_CLASS_NAME } from '../../theme/classes';
 import { UnderlineTab } from '../../components/UnderlineTab';
 import { AnalysisHeader } from './AnalysisHeader';
-import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { HabitIcon } from '../../components/HabitIcon';
@@ -17,7 +17,7 @@ export function HabitAnalysis({
   year: number;
 }) {
   const { rem: appRem } = useAppTheme();
-  const router = useRouter();
+  const { openModal } = useModalNavigation();
   const [tab, setTab] = useState<'top' | 'bottom'>('top');
   const habits = stats[tab].slice(0, 3);
   return (
@@ -51,7 +51,7 @@ export function HabitAnalysis({
             <Pressable
               key={habit.id}
               accessibilityRole="button"
-              onPress={() => router.push(`/habit/${habit.id}`)}
+              onPress={() => openModal(`/habit/${habit.id}`)}
               className={`flex-row items-center gap-6 min-h-24 py-3 ${index < habits.length - 1 ? 'border-b border-theme-border/60' : ''}`}
             >
               <View className="h-9 w-9 shrink-0 items-center justify-center">

@@ -44,6 +44,10 @@ function harness(path: string, name: string) {
               ];
             },
           };
+        if (dependency.endsWith('/ModalNavigationProvider'))
+          return {
+            useModalNavigation: () => ({ openModal: (href: unknown) => pushes.push(href) }),
+          };
         if (dependency === 'expo-router')
           return {
             useLocalSearchParams: () => ({ year: parameter }),

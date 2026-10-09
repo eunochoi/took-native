@@ -10,6 +10,8 @@ type Options = {
   title: string;
   onClose: () => void;
   onBeforeClose?: () => boolean;
+  onOpening?: () => void;
+  onOpened?: () => void;
   presentation: 'modal' | 'screen';
   dismissOnBack: boolean;
   height: number;
@@ -28,6 +30,8 @@ export function useBottomSheetLifecycle({
   title,
   onClose,
   onBeforeClose,
+  onOpening,
+  onOpened,
   presentation,
   dismissOnBack,
   height,
@@ -54,6 +58,12 @@ export function useBottomSheetLifecycle({
   onCloseRef.current = onClose;
   const beforeCloseRef = useRef(onBeforeClose);
   beforeCloseRef.current = onBeforeClose;
+  const visibleRef = useRef(visible);
+  visibleRef.current = visible;
+  const onOpeningRef = useRef(onOpening);
+  onOpeningRef.current = onOpening;
+  const onOpenedRef = useRef(onOpened);
+  onOpenedRef.current = onOpened;
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -80,6 +90,12 @@ export function useBottomSheetLifecycle({
   }, []);
   const dismissRef = useRef<(session: number) => void>(() => {});
   const dismiss = useCallback((currentSession: number) => dismissRef.current(currentSession), []);
+  const finishOpen = useCallback((openingSession: number) => {
+    if (!alive.current || generation.current !== openingSession || closing.current) return;
+    onOpenedRef.current?.();
+    // A save can request dismissal before the entering animation has finished.
+    if (!visibleRef.current) dismissRef.current(openingSession);
+  }, []);
   const motion = useBottomSheetMotion({
     rem,
     reducedMotion,
@@ -89,6 +105,7 @@ export function useBottomSheetLifecycle({
     onScrollOffset,
     onDismiss: dismiss,
     onClosed: finishClose,
+    onOpened: finishOpen,
     scrollEnabled,
     externalScrollRef: scrollRef,
   });
@@ -122,6 +139,7 @@ export function useBottomSheetLifecycle({
       closing.current = false;
       setClosingBody(false);
       afterCloseRef.current = undefined;
+      onOpeningRef.current?.();
       motionRef.current.prepareOpen(nextSession, height);
       setSession(nextSession);
       setPresent(true);
