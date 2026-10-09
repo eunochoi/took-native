@@ -118,7 +118,7 @@ export function SoberWidget({
           <TextWidget
             text={formatSoberDuration(summary.duration)}
             maxLines={1}
-            style={{ ...boldStyle, fontSize: 18 * scale, textAlign: 'center', width: trackWidth }}
+            style={{ ...boldStyle, fontSize: 17 * scale, textAlign: 'center', width: trackWidth }}
           />
           <OverlapWidget
             style={{

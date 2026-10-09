@@ -135,23 +135,22 @@ test('zero start, last milestone cap, exact millisecond progress and minute form
   assert.equal(formatSoberDuration(12 * day + 14 * 3600000 + 3 * 60000 + 59000), '12일 14시간 3분');
   assert.equal(formatSoberDuration(0), '0일 0시간 0분');
 });
-test('highest record year display starts at 365 days and omits minutes only in year mode', () => {
-  assert.equal(formatSoberDuration(365 * day - 1, { years: true }), '364일 23시간 59분');
-  assert.equal(formatSoberDuration(365 * day, { years: true }), '1년 0시간');
+test('all sober durations use years from 365 days and omit minutes after that boundary', () => {
+  assert.equal(formatSoberDuration(365 * day - 1), '364일 23시간 59분');
+  assert.equal(formatSoberDuration(365 * day), '1년 0시간');
   assert.equal(
-    formatSoberDuration(365 * day + 23 * 3600000 + 59 * 60000, { years: true }),
+    formatSoberDuration(365 * day + 23 * 3600000 + 59 * 60000),
     '1년 23시간',
   );
   assert.equal(
-    formatSoberDuration(400 * day + 2 * 3600000 + 15 * 60000, { years: true }),
+    formatSoberDuration(400 * day + 2 * 3600000 + 15 * 60000),
     '1년 35일 2시간',
   );
-  assert.equal(formatSoberDuration(730 * day + 59 * 60000, { years: true }), '2년 0시간');
+  assert.equal(formatSoberDuration(730 * day + 59 * 60000), '2년 0시간');
   assert.equal(
-    formatSoberDuration(3652 * day + 23 * 3600000 + 59 * 60000, { years: true }),
+    formatSoberDuration(3652 * day + 23 * 3600000 + 59 * 60000),
     '10년 2일 23시간',
   );
-  assert.equal(formatSoberDuration(400 * day + 2 * 3600000 + 15 * 60000), '400일 2시간 15분');
 });
 test('goals, icons, optional text, future and invalid datetimes are validated', () => {
   const now = origin + day;

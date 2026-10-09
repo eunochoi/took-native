@@ -145,10 +145,10 @@ export function getAutoSoberGoal(duration: number) {
 export function getSoberProgress(duration: number, goalDays: number) {
   return Math.min(100, Math.max(0, (duration / (goalDays * SOBER_DAY_MS)) * 100));
 }
-export function formatSoberDuration(duration: number, options: { years?: boolean } = {}) {
+export function formatSoberDuration(duration: number) {
   const minutes = Math.max(0, Math.floor(duration / 60000));
   const days = Math.floor(minutes / 1440);
-  if (options.years && days >= 365) {
+  if (days >= 365) {
     const remainingDays = days % 365;
     return `${Math.floor(days / 365)}년 ${remainingDays ? `${remainingDays}일 ` : ''}${Math.floor((minutes % 1440) / 60)}시간`;
   }

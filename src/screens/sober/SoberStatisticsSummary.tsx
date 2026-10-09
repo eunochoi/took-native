@@ -20,7 +20,7 @@ export function SoberStatisticsSummary({
           {
             icon: 'emoji-events',
             label: '최고 기록',
-            value: formatSoberDuration(summary.longest, { years: true }),
+            value: formatSoberDuration(summary.longest),
           },
           {
             icon: 'flag',
