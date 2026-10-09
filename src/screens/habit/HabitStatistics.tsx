@@ -9,16 +9,12 @@ export function HabitStatistics({
   habit,
   dates,
   today,
-  disabled,
   unavailable,
-  onToggle,
 }: {
   habit: Habit;
   dates: string[];
   today: string;
-  disabled: boolean;
   unavailable: boolean;
-  onToggle: (date: string, completed: boolean) => void;
 }) {
   const [month, setMonth] = useState(today.slice(0, 7));
   const startedDate = localDate(habit.initial_started_at);
@@ -35,9 +31,7 @@ export function HabitStatistics({
         onMonthChange={setMonth}
         today={today}
         summary={summary}
-        disabled={disabled}
         unavailable={unavailable}
-        onToggle={onToggle}
       />
       <HabitYearStatistics
         dates={dates}

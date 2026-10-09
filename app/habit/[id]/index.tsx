@@ -4,20 +4,17 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo } from 'react';
 import { View } from 'react-native';
-import { useNotice } from '../../../src/components/NoticeProvider';
 import { BottomSheetPage } from '../../../src/components/BottomSheetPage';
 import { HabitIcon } from '../../../src/components/HabitIcon';
 import { QueryState } from '../../../src/components/QueryState';
 import { Text } from '../../../src/components/Text';
-import { setHabitCompletion } from '../../../src/db/habit';
-import { habitQueries, useRecordMutation, useToday } from '../../../src/queries';
+import { habitQueries, useToday } from '../../../src/queries';
 import { HabitMenu } from '../../../src/screens/habit/HabitMenu';
 import { HabitStars } from '../../../src/screens/habit/HabitStars';
 import { HabitStatistics } from '../../../src/screens/habit/HabitStatistics';
 import { useAppTheme } from '../../../src/theme/AppThemeProvider';
 
 export default function HabitDetail() {
-  const { showNotice } = useNotice();
   const { rem: appRem } = useAppTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const db = useSQLiteContext();
@@ -26,13 +23,6 @@ export default function HabitDetail() {
   const query = useQuery(habitQueries.byId(db, Number(id)));
   const records = useQuery(habitQueries.completionsByHabit(db, Number(id)));
   const dates = useMemo(() => (records.data ?? []).map((record) => record.date), [records.data]);
-  const mutation = useRecordMutation(
-    ({ date, checked }: { date: string; checked: boolean }) =>
-      setHabitCompletion(db, Number(id), date, checked),
-    'habitCompletion',
-    undefined,
-    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
-  );
   const habit = query.data;
   return (
     <>
@@ -63,9 +53,7 @@ export default function HabitDetail() {
                 habit={habit}
                 dates={dates}
                 today={today}
-                disabled={mutation.isPending || records.isPending || records.isError}
                 unavailable={records.isPending || records.isError}
-                onToggle={(date, checked) => mutation.mutate({ date, checked })}
               />
               <View className="rounded-theme p-4 gap-3 bg-theme-accent-light">
                 <View className="gap-1">

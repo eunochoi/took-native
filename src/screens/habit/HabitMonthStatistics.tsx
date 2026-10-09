@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Text } from '../../components/Text';
 import type { Habit } from '../../db/types';
 import { calendarDays } from '../../domain/calendar';
-import { canCheckHabit, localDate, shiftDate } from '../../domain/date';
+import { localDate, shiftDate } from '../../domain/date';
 import type { getHabitMonthSummary } from '../../domain/habitStats';
 import { useCalendarNavigation } from '../../hooks/useCalendarNavigation';
 import { useMonthSwipe } from '../../hooks/useMonthSwipe';
@@ -19,9 +19,7 @@ export function HabitMonthStatistics({
   onMonthChange,
   today,
   summary,
-  disabled,
   unavailable,
-  onToggle,
 }: {
   habit: Habit;
   dates: string[];
@@ -29,9 +27,7 @@ export function HabitMonthStatistics({
   onMonthChange: (month: string) => void;
   today: string;
   summary: ReturnType<typeof getHabitMonthSummary>;
-  disabled: boolean;
   unavailable: boolean;
-  onToggle: (date: string, checked: boolean) => void;
 }) {
   const startedDate = localDate(habit.initial_started_at);
   const days = useMemo(() => calendarDays(month), [month]);
@@ -69,13 +65,8 @@ export function HabitMonthStatistics({
                 month={month}
                 today={today}
                 onMonthChange={navigation.changeToMonth}
-                disabled={
-                  disabled ||
-                  !navigation.isDateAvailable(date) ||
-                  (!outside && !canCheckHabit(date, startedDate, today))
-                }
+                disabled={!outside || !navigation.isDateAvailable(date)}
                 dimmed={!navigation.isDateAvailable(date)}
-                onSelect={(selectedDate) => onToggle(selectedDate, !completed)}
                 label={`${date}${completed ? ', 완료 기록 있음' : ''}${missed ? ', 놓친 횟수' : ''}`}
                 contentClassName={
                   completed

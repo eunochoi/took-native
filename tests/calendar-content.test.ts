@@ -162,10 +162,8 @@ test('habit calendar fills completed and missed dates while keeping locked histo
     today: '2026-10-07',
     dates: ['2026-09-10', '2026-09-12', '2026-09-13'],
     summary: { completed: 3, missed: 27, rate: 10 },
-    disabled: false,
     unavailable: false,
     onMonthChange: () => {},
-    onToggle: () => {},
   });
   for (const date of ['2026-09-10', '2026-09-12', '2026-09-13']) {
     const item = cell(tree, date);
@@ -197,10 +195,8 @@ test('habit calendar does not mark missing records as missed while data is unava
     today: '2026-10-07',
     dates: [],
     summary: { completed: 0, missed: 30, rate: 0 },
-    disabled: true,
     unavailable: true,
     onMonthChange: () => {},
-    onToggle: () => {},
   });
   const past = cell(tree, '2026-09-11');
   assert.equal(past.props.contentClassName, undefined);
@@ -300,17 +296,14 @@ test('day detail falls back to today for a direct future-date route', () => {
 test('habit start and future boundaries block adjacent cells and share guarded month navigation', () => {
   const { HabitMonthStatistics } = load('src/screens/habit/HabitMonthStatistics.tsx');
   const months: string[] = [];
-  const toggled: string[] = [];
   const props = {
     habit: { initial_started_at: '2026-09-15T12:00:00.000Z' },
     month: '2026-09',
     today: '2026-10-08',
     dates: [],
     summary: { completed: 0, missed: 0, rate: 0 },
-    disabled: false,
     unavailable: false,
     onMonthChange: (month: string) => months.push(month),
-    onToggle: (date: string) => toggled.push(date),
   };
   const tree = HabitMonthStatistics(props);
   const header = nodes(tree).find((node) => node.type === 'CalendarHeader');
@@ -325,11 +318,10 @@ test('habit start and future boundaries block adjacent cells and share guarded m
     CalendarDay(item.props).props.onPress();
   }
   const start = cell(tree, '2026-09-15');
-  assert.equal(start.props.disabled, true); // Older than four days, but history remains legible.
+  assert.equal(start.props.disabled, true); // Current-month dates only display history.
   assert.equal(start.props.dimmed, false);
   CalendarDay(cell(tree, '2026-10-01').props).props.onPress();
   assert.deepEqual(months, ['2026-10']);
-  assert.deepEqual(toggled, []);
   const current = HabitMonthStatistics({ ...props, month: '2026-10' });
   for (const date of ['2026-10-09', '2026-11-01']) {
     assert.equal(cell(current, date).props.disabled, true);
@@ -337,5 +329,47 @@ test('habit start and future boundaries block adjacent cells and share guarded m
   }
   CalendarDay(cell(current, '2026-10-05').props).props.onPress();
   CalendarDay(cell(current, props.today).props).props.onPress();
-  assert.deepEqual(toggled, ['2026-10-05', '2026-10-08']);
+  for (const item of nodes(current).filter((node) => node.type === 'CalendarDay')) {
+    assert.equal(item.props.onSelect, undefined);
+    if (item.props.date.slice(0, 7) === props.today.slice(0, 7)) {
+      assert.equal(CalendarDay(item.props).props.disabled, true);
+      CalendarDay(item.props).props.onPress();
+    }
+  }
+});
+
+test('habit detail only queries completion records and exposes no write action to its statistics', () => {
+  const habit = {
+    id: 1,
+    name: '독서',
+    icon_key: 'reading',
+    icon_color: 'theme',
+    priority: 1,
+    initial_started_at: '2026-10-01T00:00:00.000Z',
+  };
+  const { default: HabitDetail } = load('app/habit/[id]/index.tsx', {
+    'expo-router': {
+      useLocalSearchParams: () => ({ id: '1' }),
+      useRouter: () => ({ dismissTo() {} }),
+    },
+    'expo-sqlite': { useSQLiteContext: () => ({}) },
+    '../../../src/theme/AppThemeProvider': { useAppTheme: () => ({ rem: 15 }) },
+    '../../../src/queries': {
+      habitQueries: { byId: () => 'habit', completionsByHabit: () => 'completions' },
+      useToday: () => day.today,
+      useRecordMutation: () => assert.fail('habit detail must not create completion mutations'),
+    },
+    '@tanstack/react-query': {
+      useQuery: (kind: string) => ({
+        data: kind === 'habit' ? habit : [{ date: '2026-10-06' }],
+        isPending: false,
+        isError: false,
+      }),
+    },
+  });
+  const stats = nodes(HabitDetail()).find((node) => node.type === 'HabitStatistics');
+  assert.deepEqual(Array.from(stats.props.dates), ['2026-10-06']);
+  assert.equal(stats.props.onToggle, undefined);
+  assert.equal(stats.props.disabled, undefined);
+  assert.equal(stats.props.unavailable, false);
 });

@@ -382,9 +382,7 @@ test('monthly and yearly statistics cache their calculations and navigate indepe
     habit: { ...habit, initial_started_at: '2023-03-01T00:00:00.000Z' },
     dates,
     today: '2024-03-10',
-    disabled: false,
     unavailable: false,
-    onToggle: () => undefined,
   });
   const yearlyProps = ui.render().nodes.find((node) => node.type === 'HabitYearStatistics').props;
   assert.equal(yearlyProps.startedDate, '2023-03-01');
@@ -396,7 +394,7 @@ test('monthly and yearly statistics cache their calculations and navigate indepe
   yearUi.render();
   assert.deepEqual(ui.calls, { month: 1, year: 0, calendar: 0 });
   assert.deepEqual(yearUi.calls, { month: 0, year: 1, calendar: 0 });
-  ui.render({ disabled: true });
+  ui.render({ unavailable: true });
   yearUi.render({ unavailable: true });
   assert.equal(ui.calls.month, 1);
   assert.equal(yearUi.calls.year, 1);
@@ -415,15 +413,12 @@ test('monthly and yearly statistics cache their calculations and navigate indepe
   assert.equal(yearUi.calls.year, 2);
 });
 
-test('habit statistics reflect replacement records and the same checkbox toggle direction', () => {
-  const toggles: unknown[][] = [];
+test('habit statistics refresh replacement records while every date remains read-only', () => {
   const ui = section('src/screens/habit/HabitStatistics.tsx', 'HabitStatistics', {
     habit,
     dates: [],
     today: '2024-03-10',
-    disabled: false,
     unavailable: false,
-    onToggle: (...args: unknown[]) => toggles.push(args),
   });
   const calendar = ui.render().nodes.find((node) => node.type === 'HabitMonthStatistics');
   const monthUi = section(
@@ -441,28 +436,22 @@ test('habit statistics reflect replacement records and the same checkbox toggle 
       .length,
     3,
   );
-  const current = dayProps(currentNodes, '2024-03-10');
-  assert.equal(current.disabled, false);
-  const locked = dayProps(currentNodes, '2024-03-06');
-  assert.equal(locked.disabled, true);
-  press(locked);
-  assert.deepEqual(toggles, []);
-  press(current);
-  assert.deepEqual(toggles, [['2024-03-10', true]]);
+  for (const date of ['2024-03-06', '2024-03-10', '2024-03-11']) {
+    const cell = dayProps(currentNodes, date);
+    assert.equal(cell.disabled, true);
+    assert.equal(cell.onSelect, undefined);
+    press(cell);
+  }
   const updatedProps = ui
     .render({ dates: ['2024-03-10'] })
     .nodes.find((node) => node.type === 'HabitMonthStatistics').props;
   const checked = dayProps(monthUi.render(updatedProps).nodes, '2024-03-10');
   press(checked);
-  assert.deepEqual(toggles[1], ['2024-03-10', false]);
+  assert.equal(checked.disabled, true);
+  assert.equal(checked.onSelect, undefined);
+  assert.match(checked.contentClassName, /bg-theme-accent/);
+  assert.equal(checked.textClassName, 'text-theme-text-on-accent');
   assert.equal(checked.label, '2024-03-10, 완료 기록 있음');
-  const future = dayProps(monthUi.render().nodes, '2024-03-11');
-  press(future);
-  assert.equal(future.disabled, true);
-  assert.equal(toggles.length, 2);
-  const busy = dayProps(monthUi.render({ disabled: true }).nodes, '2024-03-10');
-  press(busy);
-  assert.equal(toggles.length, 2);
   assert.deepEqual(ui.calls, { month: 2, year: 0, calendar: 0 });
   ui.render({ today: '2024-03-11' });
   assert.deepEqual(ui.calls, { month: 3, year: 0, calendar: 0 });
