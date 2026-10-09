@@ -72,14 +72,15 @@ export function CalendarDay({
             className={twMerge(
               `text-xs ${weekday === 6 ? 'text-theme-calendar-saturday' : weekday === 0 ? 'text-theme-calendar-sunday' : 'text-theme-text-secondary'}`,
               textClassName,
+              showSelectedIndicator &&
+                isSelected &&
+                !outside &&
+                'bg-theme-accent text-theme-text-on-accent w-7 h-7 leading-7 text-center rounded-full',
             )}
           >
             {Number(date.slice(-2))}
           </Text>
         </View>
-      )}
-      {showSelectedIndicator && isSelected && !outside && (
-        <View className="absolute -bottom-[3px] h-1.5 w-1.5 rounded-full bg-theme-accent/80" />
       )}
       {showTodayIndicator && isToday && !outside && (
         <View className="absolute -bottom-[3px] h-1.5 w-4 rounded-full bg-theme-accent" />

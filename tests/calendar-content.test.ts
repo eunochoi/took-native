@@ -60,9 +60,9 @@ test('date cell owns weekday color, outside-month dimming and optional today/sel
   assert.equal(tree.props.accessibilityState.selected, true);
   assert.match(tree.props.accessibilityLabel, /오늘/);
   assert.equal(nodes(tree).filter((node) => node.props.className?.includes('h-1.5 w-4')).length, 1);
-  assert.equal(
-    nodes(tree).filter((node) => node.props.className?.includes('h-1.5 w-1.5')).length,
-    1,
+  assert.match(
+    nodes(tree).find((node) => node.type === 'Text').props.className,
+    /bg-theme-accent text-theme-text-on-accent w-7 h-7 leading-7 text-center rounded-full/,
   );
   const hidden = CalendarDay({
     ...day,
@@ -71,6 +71,7 @@ test('date cell owns weekday color, outside-month dimming and optional today/sel
     showSelectedIndicator: false,
   });
   assert(!nodes(hidden).some((node) => node.props.className?.includes('h-1.5')));
+  assert(!nodes(hidden).some((node) => node.props.className?.includes('bg-theme-accent')));
   for (const [date, color] of [
     ['2026-10-07', 'text-theme-text-secondary'],
     ['2026-10-10', 'text-theme-calendar-saturday'],
@@ -277,9 +278,9 @@ test('date picker owns its min/future range and default selection indicator', ()
     '2026-10-07',
   ]);
   const rendered = CalendarDay(cell(tree, '2026-10-05').props);
-  assert.equal(
-    nodes(rendered).filter((node) => node.props.className?.includes('h-1.5 w-1.5')).length,
-    1,
+  assert.match(
+    nodes(rendered).find((node) => node.type === 'Text').props.className,
+    /bg-theme-accent text-theme-text-on-accent w-7 h-7 leading-7 text-center rounded-full/,
   );
 });
 
