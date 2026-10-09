@@ -70,7 +70,7 @@ export function BottomSheetModal({
   const fade = useScrollFade();
   const { onScrollOffset } = fade;
   useEffect(() => onScrollOffset(0), [contentKey, onScrollOffset]);
-  const sheetHeight = Math.max(0, Math.min(maxHeight ?? height * 0.9, height - insets.top));
+  const sheetHeight = Math.max(0, Math.min(maxHeight ?? height * 0.95, height - insets.top));
   const { present, bodyVisible, closingBody, session, motion, closeSheet, onShow } =
     useBottomSheetLifecycle({
       visible,

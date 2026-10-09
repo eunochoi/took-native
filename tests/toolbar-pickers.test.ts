@@ -206,7 +206,7 @@ test('deselecting filter conditions is a draft; dismissing preserves saved condi
   assert.equal(ui.applied.length, 0);
 });
 
-test('filter resets period and emotion drafts without applying them and caps height at 90 percent', () => {
+test('filter resets period and emotion drafts without applying them', () => {
   const ui = filterPicker({ year: 2025, month: 0, emotion: 2 });
   const view = ui.render();
   assert(

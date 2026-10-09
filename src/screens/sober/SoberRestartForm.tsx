@@ -89,10 +89,10 @@ export function SoberRestartForm({
   };
   const onClosed = saved
     ? () =>
-        showNotice({
-          tone: 'success',
-          title: editing ? '다시 시작 기록을 수정했어요' : '다시 시작 기록을 추가했어요',
-        })
+      showNotice({
+        tone: 'success',
+        title: editing ? '다시 시작 기록을 수정했어요' : '다시 시작 기록을 추가했어요',
+      })
     : undefined;
   const title = editing ? '다시 시작 기록 수정' : '다시 거리를 둘까요?';
   const backRoute =
@@ -181,7 +181,6 @@ export function SoberRestartForm({
         <DateTimeFields
           draft={draft}
           minTime={item.initial_started_at}
-          collapsible
           disabled={busy}
           onChange={(value) => {
             if (saving.current || busy) return;

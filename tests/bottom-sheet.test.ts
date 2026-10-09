@@ -548,7 +548,7 @@ test('sheet delegates keyboard avoidance to its native container without measure
   assert(h.sheet().props.className.includes('shrink'));
   assert(surface.props.className.includes('shrink'));
   assert.equal(surface.props.style.paddingBottom, undefined);
-  assert.equal(surface.props.style.maxHeight, 800 * 0.9);
+  assert.equal(surface.props.style.maxHeight, 800 * 0.95);
   assert.ok(scroll.props.ref);
   assert.equal(scroll.props.contentContainerStyle.paddingBottom, 75);
   assert.equal(scroll.props.contentContainerClassName, 'gap-6 pt-6 pb-12');
@@ -556,14 +556,17 @@ test('sheet delegates keyboard avoidance to its native container without measure
   assert.equal(scroll.props.keyboardDismissMode, 'none');
 });
 
-test('fixed-height sheets use the common 90-percent height and a shrinking scroll viewport', () => {
-  const h = harness(true, false, undefined, { fixedHeight: true });
-  h.show();
-  const surface = h.sheet().props.children;
-  assert.equal(surface.props.style.height, 720);
-  assert.equal(surface.props.style.maxHeight, 720);
-  assert(surface.props.children[1].props.className.includes('flex-1'));
-  assert(h.scroll().props.className.includes('flex-1'));
+test('fixed-height route and modal sheets share the 95-percent maximum', () => {
+  for (const presentation of ['screen', 'modal'] as const) {
+    const h = harness(true, false, undefined, { fixedHeight: true, presentation });
+    if (presentation === 'modal') h.show();
+    const surface = h.sheet().props.children;
+    const expectedHeight = 800 * 0.95;
+    assert.equal(surface.props.style.height, expectedHeight);
+    assert.equal(surface.props.style.maxHeight, expectedHeight);
+    assert(surface.props.children[1].props.className.includes('flex-1'));
+    assert(h.scroll().props.className.includes('flex-1'));
+  }
 });
 
 test('day info uses automatic height with a bounded viewport and scopes surface fades to that viewport', () => {
