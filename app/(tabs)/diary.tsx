@@ -102,12 +102,21 @@ export default function DiaryList() {
             </Toolbar>
           </DiaryTopSection>
         }
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           if (item.kind === 'state') return <View className="pt-8">{emptyContent}</View>;
           return (
             <View className={item.first ? 'pt-8' : undefined} style={{ paddingHorizontal: '5%' }}>
               <View className={`border-theme-border/60 ${item.first ? 'border-t-0' : 'border-t'}`}>
-                <DiaryCard diary={item.diary} first={item.first} today={today} />
+                <DiaryCard
+                  diary={item.diary}
+                  first={item.first}
+                  last={
+                    index === rows.length - 1 &&
+                    !list.isFetchingNextPage &&
+                    !(list.isError && list.data)
+                  }
+                  today={today}
+                />
               </View>
             </View>
           );

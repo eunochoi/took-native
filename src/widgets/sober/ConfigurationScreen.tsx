@@ -123,7 +123,7 @@ function ConfigurationContent({
   };
   return (
     <SafeAreaView className="flex-1 bg-theme-background">
-      <ScrollView contentContainerClassName="px-[5%] py-6 gap-8">
+      <ScrollView contentContainerClassName="px-[5%] pt-6 pb-8 gap-8">
         <Text className="text-2xl font-bold">거리두기 설정</Text>
         <View className="items-center justify-center rounded-2xl bg-theme-surface-muted p-6">
           <WidgetPreview width={180} height={180} renderWidget={preview} showBorder={false} />
@@ -160,7 +160,7 @@ function ConfigurationContent({
           </Text>
         )}
       </ScrollView>
-      <View className="flex-row gap-3 px-[5%] py-4">
+      <View className="flex-row gap-3 px-[5%] pb-8">
         <Button
           className="flex-1"
           label="취소"

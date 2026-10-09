@@ -96,6 +96,7 @@ for (const [label, record, events, elapsed] of [
     });
     const progress = nodes.find((node) => node.type === 'ProgressBar');
     assert.equal(progress.props.value, expected.progress);
+    assert(nodes.some((node) => node.type === 'View' && node.props.className?.includes('pb-0')));
     assert(
       nodes.some(
         (node) =>
@@ -112,5 +113,14 @@ for (const [label, record, events, elapsed] of [
       link.props.accessibilityLabel,
       `${record.name}, ${soberDomain.formatSoberDuration(expected.duration)}, 목표 ${soberDomain.formatSoberGoal(expected.goalDays)}`,
     );
+    nodes.length = 0;
+    exports.SoberBox({
+      sober: record,
+      restarts: [...events],
+      now: origin + elapsed,
+      isFirst: true,
+      isLast: false,
+    });
+    assert(nodes.some((node) => node.type === 'View' && node.props.className?.includes('pb-5')));
   });
 }

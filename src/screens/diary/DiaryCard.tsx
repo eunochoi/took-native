@@ -14,17 +14,19 @@ import { DiaryGallery } from './DiaryGallery';
 export function DiaryCard({
   diary,
   first,
+  last = false,
   today,
 }: {
   diary: DiaryDetail;
   first: boolean;
+  last?: boolean;
   today: string;
 }) {
   const { colors, rem: appRem, iconSizes } = useAppTheme();
   const router = useRouter();
   const open = () => router.push(`/diary/${diary.id}`);
   return (
-    <View className={`gap-4 pb-6 ${first ? 'pt-0' : 'pt-6'}`}>
+    <View className={`gap-4 ${last ? 'pb-0' : 'pb-6'} ${first ? 'pt-0' : 'pt-6'}`}>
       <View className="flex-row items-center gap-3">
         <Pressable
           accessibilityRole="button"

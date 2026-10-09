@@ -108,6 +108,7 @@ export default function SoberList() {
                     restarts={grouped.get(item.sober.id) ?? []}
                     now={now}
                     isFirst={index === 0}
+                    isLast={index === rows.length - 1 && !failed}
                   />
                 </View>
               </View>
@@ -141,7 +142,7 @@ export default function SoberList() {
           <>
             {ready && sorted.length > 0 && failed ? (
               <QueryError
-                className="py-4"
+                className="pt-4"
                 message="거리두기 목록을 불러오지 못했어요."
                 onRetry={() => {
                   void list.refetch();

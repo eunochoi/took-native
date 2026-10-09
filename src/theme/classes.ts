@@ -12,6 +12,6 @@ export const SECTION_TITLE_CLASS_NAME = 'text-lg font-semibold';
 export const BODY_DESCRIPTION_CLASS_NAME = 'text-base text-theme-text-secondary';
 export const MUTED_DESCRIPTION_CLASS_NAME = 'tracking-tighter text-sm text-theme-text-secondary';
 export const UNDERLINE_TAB_LIST_CLASS_NAME = 'px-2 flex-row gap-3';
-export const EMPTY_STATE_CLASS_NAME = 'min-h-[220px] items-center justify-center gap-3 px-6 py-10';
+export const EMPTY_STATE_CLASS_NAME = 'min-h-[220px] items-center justify-center gap-3 px-6 pt-10';
 export const FORM_TEXT_INPUT_CLASS_NAME =
   'w-full border-0 bg-transparent p-0 text-base leading-8 font-normal text-theme-text-primary';

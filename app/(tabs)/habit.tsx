@@ -157,7 +157,7 @@ export default function HabitList() {
           ListFooterComponent={
             ready && failed ? (
               <QueryError
-                className="py-4"
+                className="pt-4"
                 message="습관 목록을 불러오지 못했어요."
                 onRetry={() => {
                   void list.refetch();

@@ -21,11 +21,13 @@ export function SoberBox({
   restarts,
   now,
   isFirst,
+  isLast = false,
 }: {
   sober: Sober;
   restarts: SoberRestart[];
   now: number;
   isFirst: boolean;
+  isLast?: boolean;
 }) {
   const router = useRouter();
   const { colors, rem: appRem } = useAppTheme();
@@ -34,7 +36,7 @@ export function SoberBox({
   const goalDays = sober.goal_mode === 'AUTO' ? getAutoSoberGoal(duration) : sober.goal_days!;
   const progress = getSoberProgress(duration, goalDays);
   return (
-    <View className={`gap-3 pb-5 px-2 ${isFirst ? 'pt-0' : 'pt-5'}`}>
+    <View className={`gap-3 px-2 ${isLast ? 'pb-0' : 'pb-5'} ${isFirst ? 'pt-0' : 'pt-5'}`}>
       <View className="flex-row items-center gap-3">
         <SoberIcon name={sober.icon_key} colorKey={sober.icon_color} />
         <Pressable

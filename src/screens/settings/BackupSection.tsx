@@ -18,7 +18,7 @@ export function BackupSection({
       <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
         백업 / 복원
       </Text>
-      <View className="gap-6 p-2">
+      <View className="gap-6 px-2 pt-2">
         <View className="gap-4 rounded-2xl bg-theme-surface-muted p-4">
           <View className="gap-2">
             <Text className="text-base font-semibold">기록 보관</Text>

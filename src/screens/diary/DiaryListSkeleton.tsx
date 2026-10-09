@@ -13,7 +13,7 @@ export function DiaryListSkeleton() {
       {[0, 1, 2].map((index) => (
         <View
           key={index}
-          className={`gap-4 pb-6 ${index === 0 ? 'pt-0 border-t-0' : 'pt-6 border-t border-theme-border/60'}`}
+          className={`gap-4 ${index === 2 ? 'pb-0' : 'pb-6'} ${index === 0 ? 'pt-0 border-t-0' : 'pt-6 border-t border-theme-border/60'}`}
         >
           <View className="flex-row items-center gap-3">
             <View className="h-12 w-12 rounded-full bg-theme-skeleton" />
