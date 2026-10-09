@@ -96,10 +96,13 @@ test('route sheet closing uses history or the fallback and only focused routes i
     'expo-router/react-navigation': {
       useIsFocused: () => focused,
       useRoute: () => ({ key: 'sheet' }),
+      useNavigationState: (select: Function) =>
+        select({ routes: [{ key: 'sheet', name: 'habit/[id]/index' }] }),
     },
-    'react-native': { useWindowDimensions: () => ({ height: 800 }) },
+    'react-native': { View: 'View', useWindowDimensions: () => ({ height: 800 }) },
   });
-  const page = BottomSheetPage({ title: '습관', backRoute: '/habit', children: 'body' });
+  const page = BottomSheetPage({ title: '습관', backRoute: '/habit', children: 'body' }).props
+    .children;
   assert.equal(page.props.presentation, 'screen');
   assert.equal(page.props.dismissOnBack, true);
   assert.equal(page.props.fixedHeight, true);
@@ -110,7 +113,7 @@ test('route sheet closing uses history or the fallback and only focused routes i
   page.props.onClose();
   assert.deepEqual(calls, ['back', '/habit']);
   focused = false;
-  assert.equal(BottomSheetPage({ backRoute: '/habit' }).props.dismissOnBack, false);
+  assert.equal(BottomSheetPage({ backRoute: '/habit' }).props.children.props.dismissOnBack, false);
 });
 
 test('shared header respects custom back guards, history and per-screen fallback routes', () => {

@@ -17,6 +17,7 @@ function harness(
     scrollFade?: boolean;
     fixedHeight?: boolean;
     presentation?: 'modal' | 'screen';
+    dimBackdrop?: boolean;
     dismissOnBack?: boolean;
     onBeforeClose?: () => boolean;
     onOpening?: () => void;
@@ -901,4 +902,24 @@ test('controlled dismissal requested during entry retries after the opening lock
   h.completeEnter();
   h.completeAnimation();
   assert.equal(h.closes, 1);
+});
+
+test('a nested route sheet keeps a transparent dismiss target without adding a second dim backdrop', () => {
+  for (const dimBackdrop of [true, false]) {
+    const h = harness(true, false, undefined, { presentation: 'screen', dimBackdrop });
+    h.completeOpen();
+    const findBackdrop = (node: any): any => {
+      if (Array.isArray(node)) return node.map(findBackdrop).find(Boolean);
+      if (!node || typeof node !== 'object') return undefined;
+      if (node.type === 'Pressable' && node.props.className?.includes('absolute inset-0'))
+        return node;
+      return findBackdrop(node.props?.children);
+    };
+    const backdrop = findBackdrop(h.tree);
+    assert.equal(backdrop.props.className.includes('bg-theme-overlay/25'), dimBackdrop);
+    backdrop.props.onPress();
+    assert.equal(h.closes, 0);
+    h.completeAnimation();
+    assert.equal(h.closes, 1);
+  }
 });

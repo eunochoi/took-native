@@ -17,6 +17,10 @@ function harness() {
     'habit/[id]/index',
     'diary/[id]/index',
     'sober/[id]/index',
+    'sober/[id]/day/[date]',
+    'sober/[id]/restart/new',
+    'sober/[id]/restart/[restartId]/edit',
+    'sober/[id]/memos',
     'habit/new',
     'privacy',
   ];
@@ -34,9 +38,28 @@ function harness() {
     push: (href: string) => {
       if (fail) throw new Error('navigation failed');
       dispatched.push(href);
-      const [, kind, id] = href.split('/');
-      const name = kind === 'privacy' ? kind : id === 'new' ? `${kind}/new` : `${kind}/[id]/index`;
-      pending.push(StackActions.push(name, { id }));
+      const [, kind, id, child, value, action] = href.split('/');
+      const name =
+        kind === 'privacy'
+          ? kind
+          : child === 'day'
+            ? 'sober/[id]/day/[date]'
+            : child === 'restart'
+              ? value === 'new'
+                ? 'sober/[id]/restart/new'
+                : 'sober/[id]/restart/[restartId]/edit'
+              : child === 'memos'
+                ? 'sober/[id]/memos'
+                : id === 'new'
+                  ? `${kind}/new`
+                  : `${kind}/[id]/index`;
+      pending.push(
+        StackActions.push(name, {
+          id,
+          date: child === 'day' ? value : undefined,
+          restartId: action === 'edit' ? value : undefined,
+        }),
+      );
     },
     canGoBack: () => state.index > 0,
     back: () => {
@@ -86,6 +109,7 @@ function harness() {
       },
       useIsFocused: () => state.routes[state.index].key === owner,
       useRoute: () => ({ key: owner }),
+      useNavigationState: (select: Function) => select(state),
     },
     'react-native': {
       View: 'View',
@@ -169,7 +193,12 @@ function harness() {
     page: (props: any = {}, key = state.routes[state.index].key) => {
       owner = key;
       cursor = 0;
-      return BottomSheetPage({ title: '정보', backRoute: '/', ...props }).props;
+      return BottomSheetPage({ title: '정보', backRoute: '/', ...props }).props.children.props;
+    },
+    presentation: (key: string) => {
+      owner = key;
+      cursor = 0;
+      return BottomSheetPage({ title: '정보', backRoute: '/' }).props;
     },
     unmount: (key: string) => {
       cleanups.get(key)?.forEach((cleanup) => cleanup());
@@ -338,3 +367,40 @@ test('all card and menu modal launches use the shared gate', () => {
   );
   assert(!/router\.push\([^)]*(?:\/\$\{|\/new)/.test(source));
 });
+
+for (const path of [
+  ['/sober/1', '/sober/1/day/2026-10-09', '/sober/1/restart/new'],
+  ['/sober/1', '/sober/1/restart/new'],
+  ['/sober/1', '/sober/1/day/2026-10-09', '/sober/1/restart/2/edit'],
+  ['/sober/1', '/sober/1/memos'],
+]) {
+  test(`nested sheet history restores its immediate parent: ${path.join(' -> ')}`, () => {
+    const h = harness();
+    let parentKey = h.rootKey;
+    for (const href of path) {
+      parentKey = h.state().routes.at(-1).key;
+      assert.equal(h.hooks().openModal(href), true);
+      h.flush();
+      const page = h.page();
+      page.onOpening();
+      page.onOpened();
+    }
+    const hidden = h.presentation(parentKey);
+    assert.equal(hidden.pointerEvents, 'none');
+    assert.equal(hidden.importantForAccessibility, 'no-hide-descendants');
+    assert.equal(hidden.className, 'flex-1');
+    assert.equal(hidden.children.props.visible, true);
+    assert.equal(hidden.children.props.dimBackdrop, parentKey === h.state().routes[1].key);
+    assert.equal(h.page().dimBackdrop, false);
+    const page = h.page();
+    assert.equal(page.onBeforeClose(), true);
+    page.onClose();
+    h.flush();
+    assert.equal(h.state().routes.at(-1).key, parentKey);
+    const restored = h.presentation(parentKey);
+    assert.equal(restored.pointerEvents, 'auto');
+    assert.equal(restored.className, 'flex-1');
+    assert.equal(restored.children.props.visible, true);
+    assert.equal(h.hooks().openModal('/sober/2'), true);
+  });
+}

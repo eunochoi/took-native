@@ -28,6 +28,7 @@ export function BottomSheetModal({
   scrollFade = false,
   contentKey,
   presentation = 'modal',
+  dimBackdrop = true,
   menuAction,
   dismissOnBack = true,
   onBeforeClose,
@@ -47,6 +48,7 @@ export function BottomSheetModal({
   scrollFade?: boolean;
   contentKey?: string | number;
   presentation?: 'modal' | 'screen';
+  dimBackdrop?: boolean;
   menuAction?: ReactNode;
   dismissOnBack?: boolean;
   onBeforeClose?: () => boolean;
@@ -103,7 +105,7 @@ export function BottomSheetModal({
               accessibilityRole="button"
               accessibilityLabel="닫기"
               onPress={() => closeSheet()}
-              className="absolute inset-0 bg-theme-overlay/25"
+              className={`absolute inset-0 ${dimBackdrop ? 'bg-theme-overlay/25' : ''}`}
             />
           </Animated.View>
         )}

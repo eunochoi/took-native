@@ -167,8 +167,14 @@ function form(kind: string, router: unknown, isNew = false) {
           };
         if (dependency === 'expo-router') return { useRouter: () => router };
         if (dependency === 'expo-router/react-navigation')
-          return { useIsFocused: () => true, useRoute: () => ({ key: 'sheet' }) };
-        if (dependency === 'react-native') return { useWindowDimensions: () => ({ height: 800 }) };
+          return {
+            useIsFocused: () => true,
+            useRoute: () => ({ key: 'sheet' }),
+            useNavigationState: (select: Function) =>
+              select({ routes: [{ key: 'sheet', name: 'habit/[id]/edit' }] }),
+          };
+        if (dependency === 'react-native')
+          return { View: 'View', useWindowDimensions: () => ({ height: 800 }) };
         return { BottomSheetModal: 'BottomSheetModal' };
       },
     },
@@ -178,7 +184,7 @@ function form(kind: string, router: unknown, isNew = false) {
     effects = [];
     const page = exports[`${name}Form`]({ id: isNew ? undefined : 42 });
     effects.forEach((effect) => effect());
-    return pageExports.BottomSheetPage(page.props);
+    return pageExports.BottomSheetPage(page.props).props.children;
   };
   return {
     render,
