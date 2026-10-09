@@ -18,6 +18,7 @@ import { SettingsProvider } from '../src/settings/SettingsProvider';
 import { initializeMedia } from '../src/media';
 import { AppLoadingScreen } from '../src/components/AppLoadingScreen';
 import { refreshSoberWidgets } from '../src/widgets/sober';
+import { NotificationController } from '../src/notifications/NotificationController';
 import { ModalNavigationProvider } from '../src/navigation/ModalNavigationProvider';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -80,6 +81,7 @@ function Navigation({ onReady }: { onReady: () => void }) {
     >
       <ModalNavigationProvider>
         <View className="flex-1 bg-theme-surface" onLayout={onReady}>
+          <NotificationController />
           <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
           <Stack
             screenOptions={{

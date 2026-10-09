@@ -31,6 +31,7 @@ function harness() {
     'BackupSection',
     'EmotionIconStyleSelector',
     'SettingsTopSection',
+    'NotificationSettingsSection',
   ];
   const jsx = (type: unknown, props: any) => ({ type, props });
   runInNewContext(

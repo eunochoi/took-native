@@ -45,6 +45,9 @@ async function fixture() {
       themeMode: 'system',
       themeAccent: 'green',
       fontSize: 'large',
+      diaryReminderTime: '21:00',
+      habitReminderTime: '08:30',
+      soberReminderTime: null,
     }),
   ]);
   const files = {
@@ -67,6 +70,9 @@ test('DB + images + settings survive backup roundtrip and atomic restore', async
   assert.equal(rows(target.raw, 'SELECT file_name FROM diary_images')[0][0], 'new-name.jpg');
   const restoredSettings = JSON.parse(String(rows(target.raw, 'SELECT value FROM settings')[0][0]));
   assert.equal(restoredSettings.emotionStyle, 'emoji');
+  assert.equal(restoredSettings.diaryReminderTime, '21:00');
+  assert.equal(restoredSettings.habitReminderTime, '08:30');
+  assert.equal(restoredSettings.soberReminderTime, null);
   assert.equal(restoredSettings.themeMode, 'system');
   assert.equal(restoredSettings.themeAccent, 'green');
   assert.equal(restoredSettings.fontSize, 'large');

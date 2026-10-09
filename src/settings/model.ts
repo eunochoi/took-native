@@ -9,6 +9,9 @@ export interface Settings {
   habitOrder: number[];
   soberSort: 'ASC' | 'DESC';
   soberPriorityFirst: boolean;
+  diaryReminderTime: string | null;
+  habitReminderTime: string | null;
+  soberReminderTime: string | null;
 }
 export const DEFAULT_SETTINGS: Settings = {
   themeAccent: 'blue',
@@ -21,6 +24,9 @@ export const DEFAULT_SETTINGS: Settings = {
   habitOrder: [],
   soberSort: 'DESC',
   soberPriorityFirst: false,
+  diaryReminderTime: null,
+  habitReminderTime: null,
+  soberReminderTime: null,
 };
 export function parseSettings(raw: unknown): Settings {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw))
@@ -37,6 +43,10 @@ export function parseSettings(raw: unknown): Settings {
     typeof settings.habitPriorityFirst !== 'boolean' ||
     !['ASC', 'DESC'].includes(settings.soberSort) ||
     typeof settings.soberPriorityFirst !== 'boolean' ||
+    [settings.diaryReminderTime, settings.habitReminderTime, settings.soberReminderTime].some(
+      (time) =>
+        time !== null && (typeof time !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)),
+    ) ||
     !Array.isArray(settings.habitOrder) ||
     settings.habitOrder.length > 10000 ||
     settings.habitOrder.some((id) => !Number.isSafeInteger(id) || id <= 0) ||
@@ -55,5 +65,8 @@ export function parseSettings(raw: unknown): Settings {
     habitOrder: settings.habitOrder,
     soberSort: settings.soberSort,
     soberPriorityFirst: settings.soberPriorityFirst,
+    diaryReminderTime: settings.diaryReminderTime,
+    habitReminderTime: settings.habitReminderTime,
+    soberReminderTime: settings.soberReminderTime,
   };
 }

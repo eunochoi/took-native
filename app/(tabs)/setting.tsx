@@ -25,6 +25,7 @@ import { BackupDestinationPicker } from '../../src/screens/settings/BackupDestin
 import { BackupSection } from '../../src/screens/settings/BackupSection';
 import { EmotionIconStyleSelector } from '../../src/screens/settings/EmotionIconStyleSelector';
 import { SettingsTopSection } from '../../src/screens/settings/SettingsTopSection';
+import { NotificationSettingsSection } from '../../src/screens/settings/NotificationSettingsSection';
 import type { Settings } from '../../src/settings/model';
 import { useSettings } from '../../src/settings/SettingsProvider';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
@@ -209,6 +210,7 @@ export default function SettingsScreen() {
           </Toolbar>
         </SettingsTopSection>
         <View className="pt-6 gap-12" style={{ paddingHorizontal: '5%' }}>
+          <NotificationSettingsSection disabled={disabled} />
           <View className="gap-3">
             <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
               감정 아이콘

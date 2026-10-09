@@ -25,6 +25,12 @@
       "./plugins/withAndroidDevApp.cjs",
       "expo-router",
       "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png"
+        }
+      ],
       "expo-font",
       [
         "expo-splash-screen",
