@@ -46,7 +46,7 @@ export function HabitMonthStatistics({
         <HabitStatisticsSummary
           stats={[
             { label: '실천 횟수', value: summary.completed, unit: '회' },
-            { label: '놓친 실천', value: summary.missed, unit: '회' },
+            { label: '놓친 횟수', value: summary.missed, unit: '회' },
             { label: '실천율', value: summary.rate ?? '—', unit: '%' },
           ]}
           unavailable={unavailable}

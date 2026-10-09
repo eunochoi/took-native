@@ -67,6 +67,32 @@ export default function HabitDetail() {
                 unavailable={records.isPending || records.isError}
                 onToggle={(date, checked) => mutation.mutate({ date, checked })}
               />
+              <View className="rounded-theme p-4 gap-3 bg-theme-accent-light">
+                <View className="gap-1">
+                  <Text className="text-base leading-5 font-semibold text-theme-accent">
+                    실천 가능일
+                  </Text>
+                  <Text className="text-sm leading-5 text-theme-accent">
+                    해당 기간에서 시작일 이전과 미래를 제외한 날짜
+                  </Text>
+                </View>
+                <View className="gap-1">
+                  <Text className="text-base leading-5 font-semibold text-theme-accent">
+                    실천율
+                  </Text>
+                  <Text className="text-sm leading-5 text-theme-accent">
+                    실천 횟수 ÷ 실천 가능일 × 100
+                  </Text>
+                </View>
+                <View className="gap-1">
+                  <Text className="text-base leading-5 font-semibold text-theme-accent">
+                    놓친 횟수
+                  </Text>
+                  <Text className="text-sm leading-5 text-theme-accent">
+                    최근 4일을 제외한 미실천 횟수
+                  </Text>
+                </View>
+              </View>
             </>
           ) : !query.isPending && !query.error ? (
             <Text>습관을 찾을 수 없습니다.</Text>

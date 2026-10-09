@@ -19,8 +19,8 @@ export function HabitYearStatistics({
 }) {
   const [year, setYear] = useState(Number(today.slice(0, 4)));
   const yearly = useMemo(
-    () => getHabitYearSummary(year, dates, startedDate),
-    [year, dates, startedDate],
+    () => getHabitYearSummary(year, dates, startedDate, today),
+    [year, dates, startedDate, today],
   );
   return (
     <View className="gap-4">
@@ -31,7 +31,8 @@ export function HabitYearStatistics({
         <HabitStatisticsSummary
           stats={[
             { label: '실천 횟수', value: yearly.completed, unit: '회' },
-            { label: '실천율', value: yearly.rate, unit: '%' },
+            { label: '놓친 횟수', value: yearly.missed, unit: '회' },
+            { label: '실천율', value: yearly.rate ?? '—', unit: '%' },
           ]}
           unavailable={unavailable}
         />
