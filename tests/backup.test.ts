@@ -6,6 +6,8 @@ import { createArchive, readArchive } from './backup-format';
 import { readBackupDatabase, replaceRecords, validateBackupRecords } from '../src/backup/database';
 import { saveDiary } from '../src/db/diary';
 import { saveHabit } from '../src/db/habit';
+import { saveSober } from '../src/db/sober';
+import { SOBER_ICONS } from '../src/domain/sober';
 import { DEFAULT_SETTINGS } from '../src/settings/model';
 
 async function fixture() {
@@ -89,6 +91,63 @@ test('DB + images + settings survive backup roundtrip and atomic restore', async
   source.raw.close();
   snapshot.raw.close();
   target.raw.close();
+});
+test('expanded habit and sober icons survive saving and archive restore', async () => {
+  const source = await database();
+  const habitIcons = [
+    'laundry',
+    'showering',
+    'bedMaking',
+    'outing',
+    'contact',
+    'chatting',
+    'coding',
+    'notes',
+  ] as const;
+  const soberIcons = [
+    'carbonatedDrinks',
+    'shortVideos',
+    'lateWork',
+    'skinPicking',
+    'comparison',
+  ] as const;
+  const now = Date.parse('2026-10-09T00:00:00.000Z');
+  for (const icon_key of habitIcons)
+    await saveHabit(source.db, { name: icon_key, priority: 0, icon_key }, now);
+  for (const icon_key of soberIcons)
+    await saveSober(
+      source.db,
+      {
+        name: SOBER_ICONS[icon_key].label,
+        description: null,
+        icon_key,
+        icon_color: 'theme',
+        is_priority: 0,
+        initial_started_at: new Date(now).toISOString(),
+        goal_mode: 'AUTO',
+        goal_days: null,
+      },
+      now,
+    );
+  const decoded = readArchive(createArchive({ 'took.db': source.raw.export() }));
+  const snapshot = await database(decoded.files['took.db']);
+  const records = await readBackupDatabase(snapshot.db, decoded.files);
+  const target = await database();
+  try {
+    await replaceRecords(target.db, records, new Map());
+    assert.deepEqual(
+      rows(target.raw, 'SELECT icon_key FROM habits ORDER BY id'),
+      habitIcons.map((key) => [key]),
+    );
+    assert.deepEqual(
+      rows(target.raw, 'SELECT icon_key FROM sobers ORDER BY id'),
+      soberIcons.map((key) => [key]),
+    );
+  } finally {
+    source.raw.close();
+    snapshot.raw.close();
+    target.raw.close();
+  }
 });
 test('failed restore transaction preserves current diary, habit and settings', async () => {
   const source = await fixture();

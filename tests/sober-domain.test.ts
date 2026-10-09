@@ -231,9 +231,13 @@ test('all Sober registry entries exist in the selected native icon family', () =
     ionicons: require('@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Ionicons.json'),
     'material-community': require('@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/MaterialCommunityIcons.json'),
   };
-  assert.equal(Object.keys(SOBER_ICONS).length, 20);
+  assert.equal(Object.keys(SOBER_ICONS).length, 50);
   assert.equal(Object.keys(SOBER_ICONS)[0], 'favorite');
-  for (const icon of Object.values(SOBER_ICONS)) {
+  const icons = Object.values(SOBER_ICONS);
+  assert.equal(new Set(icons.map((icon) => `${icon.family}:${icon.name}`)).size, icons.length);
+  assert.equal(new Set(icons.map((icon) => icon.label)).size, icons.length);
+  for (const icon of icons) {
+    assert(icon.label.trim());
     if (icon.family === 'badge') assert.equal(icon.name, '19');
     else assert(icon.name in maps[icon.family]);
   }

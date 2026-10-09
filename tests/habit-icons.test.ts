@@ -14,7 +14,11 @@ test('habit options use distinct supported icons and meaningful labels', () => {
     ionicons: require('@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Ionicons.json'),
     'material-community': require('@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/MaterialCommunityIcons.json'),
   };
-  assert.equal(constants.HABIT_ICON_OPTIONS.length, 25);
+  assert.equal(constants.HABIT_ICON_OPTIONS.length, 50);
+  assert.deepEqual(
+    constants.HABIT_ICON_OPTIONS.map(({ key }) => key),
+    Object.keys(constants.HABIT_ICONS),
+  );
   const icons = constants.HABIT_ICON_OPTIONS.map(({ key, label }) => {
     assert(label.trim());
     const icon = constants.HABIT_ICONS[key];
