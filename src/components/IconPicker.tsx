@@ -22,40 +22,42 @@ export function IconPicker<Key extends string>({
 }) {
   const [draft, setDraft] = useState(value);
   return (
-    <BottomSheetModal visible title={title} onClose={onClose}>
-      {(close) => (
-        <View className="gap-5">
-          <View className="gap-2">
-            {Array.from({ length: Math.ceil(options.length / 5) }, (_, row) => (
-              <View key={row} className="flex-row gap-2">
-                {options.slice(row * 5, row * 5 + 5).map(({ key, label }) => (
-                  <View key={key} className="flex-1 min-w-0">
-                    <PickerOption
-                      compact
-                      selectionOnly
-                      selected={draft === key}
-                      accessibilityLabel={label}
-                      onPress={() => setDraft(key)}
-                    >
-                      {renderIcon(key)}
-                      <Text
-                        className={`text-xs text-center ${draft === key ? 'text-theme-accent' : 'text-theme-text-secondary'}`}
-                      >
-                        {label}
-                      </Text>
-                    </PickerOption>
-                  </View>
-                ))}
+    <BottomSheetModal
+      visible
+      title={title}
+      onClose={onClose}
+      footer={(close) => (
+        <Button
+          labelWeight="normal"
+          label="선택 완료"
+          onPress={() => close(() => onApply(draft))}
+        />
+      )}
+    >
+      <View className="gap-2">
+        {Array.from({ length: Math.ceil(options.length / 5) }, (_, row) => (
+          <View key={row} className="flex-row gap-2">
+            {options.slice(row * 5, row * 5 + 5).map(({ key, label }) => (
+              <View key={key} className="flex-1 min-w-0">
+                <PickerOption
+                  compact
+                  selectionOnly
+                  selected={draft === key}
+                  accessibilityLabel={label}
+                  onPress={() => setDraft(key)}
+                >
+                  {renderIcon(key)}
+                  <Text
+                    className={`text-xs text-center ${draft === key ? 'text-theme-accent' : 'text-theme-text-secondary'}`}
+                  >
+                    {label}
+                  </Text>
+                </PickerOption>
               </View>
             ))}
           </View>
-          <Button
-            labelWeight="normal"
-            label="선택 완료"
-            onPress={() => close(() => onApply(draft))}
-          />
-        </View>
-      )}
+        ))}
+      </View>
     </BottomSheetModal>
   );
 }

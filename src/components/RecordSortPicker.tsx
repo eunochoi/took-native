@@ -36,70 +36,75 @@ export function RecordSortPicker({
     ...(allowCustom ? [{ value: 'CUSTOM', label: '커스텀' }] : []),
   ] as { value: 'ASC' | 'DESC' | 'CUSTOM'; label: string }[];
   return (
-    <BottomSheetModal visible title={title} maxHeight={height * 0.9} onClose={onClose}>
-      {(closePicker) => (
-        <View className="gap-6">
-          <View className="gap-3">
-            <Text className="text-base font-semibold">생성일 정렬</Text>
-            <View className="flex-row gap-3">
-              {options.map((option) => (
-                <View key={option.value} className="flex-1">
-                  <PickerOption
-                    compact
-                    selected={draftSort === option.value}
-                    accessibilityLabel={option.label}
-                    onPress={() => {
-                      setSort(option.value);
-                      if (option.value === 'CUSTOM') setPriority(false);
-                    }}
+    <BottomSheetModal
+      visible
+      title={title}
+      maxHeight={height * 0.9}
+      onClose={onClose}
+      footer={(closePicker) => (
+        <Button
+          label="적용하기"
+          onPress={() =>
+            closePicker(() => onApply(draftSort, draftSort === 'CUSTOM' ? false : draftPriority))
+          }
+        />
+      )}
+    >
+      <View className="gap-6">
+        <View className="gap-3">
+          <Text className="text-base font-semibold">생성일 정렬</Text>
+          <View className="flex-row gap-3">
+            {options.map((option) => (
+              <View key={option.value} className="flex-1">
+                <PickerOption
+                  compact
+                  selected={draftSort === option.value}
+                  accessibilityLabel={option.label}
+                  onPress={() => {
+                    setSort(option.value);
+                    if (option.value === 'CUSTOM') setPriority(false);
+                  }}
+                >
+                  <Text
+                    className={`text-base ${draftSort === option.value ? 'text-theme-accent' : ''}`}
                   >
-                    <Text
-                      className={`text-base ${draftSort === option.value ? 'text-theme-accent' : ''}`}
-                    >
-                      {option.label}
-                    </Text>
-                  </PickerOption>
-                </View>
-              ))}
-            </View>
-          </View>
-          {priorityFirst !== undefined && (
-            <View className="gap-3">
-              <Text className="text-base font-semibold">중요도</Text>
-              <PickerOption
-                selected={draftPriority}
-                disabled={draftSort === 'CUSTOM'}
-                accessibilityLabel="중요도 우선"
-                onPress={() => setPriority(!draftPriority)}
-              >
-                <View className="flex-row items-center gap-2">
-                  <StarIcon
-                    filled={draftPriority}
-                    size={iconSizes.md}
-                    color={draftPriority ? colors.accent : colors.textPrimary}
-                  />
-                  <Text className={`text-base ${draftPriority ? 'text-theme-accent' : ''}`}>
-                    중요한 항목 먼저
+                    {option.label}
                   </Text>
-                </View>
-              </PickerOption>
-              <View className="h-10 justify-center">
-                <Text numberOfLines={2} className="text-center text-sm leading-5 text-theme-accent">
-                  {draftSort === 'CUSTOM'
-                    ? '직접 정한 순서로 보여드려요.'
-                    : '중요한 항목부터, 생성일 순으로 정렬해요.'}
+                </PickerOption>
+              </View>
+            ))}
+          </View>
+        </View>
+        {priorityFirst !== undefined && (
+          <View className="gap-3">
+            <Text className="text-base font-semibold">중요도</Text>
+            <PickerOption
+              selected={draftPriority}
+              disabled={draftSort === 'CUSTOM'}
+              accessibilityLabel="중요도 우선"
+              onPress={() => setPriority(!draftPriority)}
+            >
+              <View className="flex-row items-center gap-2">
+                <StarIcon
+                  filled={draftPriority}
+                  size={iconSizes.md}
+                  color={draftPriority ? colors.accent : colors.textPrimary}
+                />
+                <Text className={`text-base ${draftPriority ? 'text-theme-accent' : ''}`}>
+                  중요한 항목 먼저
                 </Text>
               </View>
+            </PickerOption>
+            <View className="h-10 justify-center">
+              <Text numberOfLines={2} className="text-center text-sm leading-5 text-theme-accent">
+                {draftSort === 'CUSTOM'
+                  ? '직접 정한 순서로 보여드려요.'
+                  : '중요한 항목부터, 생성일 순으로 정렬해요.'}
+              </Text>
             </View>
-          )}
-          <Button
-            label="적용하기"
-            onPress={() =>
-              closePicker(() => onApply(draftSort, draftSort === 'CUSTOM' ? false : draftPriority))
-            }
-          />
-        </View>
-      )}
+          </View>
+        )}
+      </View>
     </BottomSheetModal>
   );
 }

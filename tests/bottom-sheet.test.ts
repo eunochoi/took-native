@@ -803,6 +803,25 @@ test('form drag lock disables the sheet pan and the footer stays outside the scr
   assert.equal(h.scroll().props.contentContainerClassName, 'gap-6 pt-6 pb-12');
 });
 
+test('footer actions use the shared close lifecycle and dispatch once after dismissal', () => {
+  let applied = 0;
+  const h = harness(true, false, 720, {
+    footer: (close: (action: () => void) => boolean) => ({
+      onPress: () => close(() => applied++),
+    }),
+  });
+  h.show();
+  h.completeOpen();
+  const action = h.sheet().props.children.props.children.at(-1).props.children;
+  assert.equal(action.onPress(), true);
+  assert.equal(action.onPress(), false);
+  assert.equal(applied, 0);
+  h.completeAnimation();
+  h.flushFrames();
+  assert.equal(h.closes, 1);
+  assert.equal(applied, 1);
+});
+
 test('saved route sheet remains mounted until the controlled closing animation completes', () => {
   const h = harness(true, false, 720, { presentation: 'screen' });
   h.completeOpen();

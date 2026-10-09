@@ -51,106 +51,83 @@ export function DiaryFilterPicker({
       scrollFade
       maxHeight={height * 0.9}
       onClose={onClose}
+      footer={(closePicker) => (
+        <Button
+          label={applyLabel}
+          accessibilityLabel="일기 필터 적용"
+          onPress={() =>
+            closePicker(() =>
+              onApply(draftYear, draftYear === null ? 0 : draftMonth, draftEmotion),
+            )
+          }
+        />
+      )}
     >
-      {(closePicker) => (
-        <View className="gap-6">
-          <View className="gap-3">
-            <Text className="text-base font-semibold">기간</Text>
-            <View className="gap-1.5">
-              <View className="flex-row items-center gap-2">
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="이전 연도 선택"
-                  disabled={displayYear <= 1900}
-                  onPress={() => selectYear(displayYear - 1)}
-                  className={`h-12 w-12 items-center justify-center rounded-theme bg-transparent active:opacity-70 ${displayYear <= 1900 ? 'opacity-40' : 'opacity-100'}`}
+      <View className="gap-6">
+        <View className="gap-3">
+          <Text className="text-base font-semibold">기간</Text>
+          <View className="gap-1.5">
+            <View className="flex-row items-center gap-2">
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="이전 연도 선택"
+                disabled={displayYear <= 1900}
+                onPress={() => selectYear(displayYear - 1)}
+                className={`h-12 w-12 items-center justify-center rounded-theme bg-transparent active:opacity-70 ${displayYear <= 1900 ? 'opacity-40' : 'opacity-100'}`}
+              >
+                <AppIcon name="chevron-left" size={iconSizes.md} color={colors.text} />
+              </Pressable>
+              <View className="flex-1">
+                <PickerOption
+                  selectionOnly
+                  compact
+                  selected={draftYear === displayYear && draftMonth === 0}
+                  accessibilityLabel={`${displayYear}년 전체`}
+                  onPress={() => {
+                    if (draftYear === displayYear && draftMonth === 0) {
+                      setYear(null);
+                      setMonth(0);
+                    } else selectYear(displayYear);
+                  }}
                 >
-                  <AppIcon name="chevron-left" size={iconSizes.md} color={colors.text} />
-                </Pressable>
-                <View className="flex-1">
-                  <PickerOption
-                    selectionOnly
-                    compact
-                    selected={draftYear === displayYear && draftMonth === 0}
-                    accessibilityLabel={`${displayYear}년 전체`}
-                    onPress={() => {
-                      if (draftYear === displayYear && draftMonth === 0) {
-                        setYear(null);
-                        setMonth(0);
-                      } else selectYear(displayYear);
-                    }}
+                  <Text
+                    className={`text-base font-normal ${draftYear === displayYear && draftMonth === 0 ? 'text-theme-accent' : ''}`}
                   >
-                    <Text
-                      className={`text-base font-normal ${draftYear === displayYear && draftMonth === 0 ? 'text-theme-accent' : ''}`}
-                    >
-                      {displayYear}년
-                    </Text>
-                  </PickerOption>
-                </View>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="다음 연도 선택"
-                  disabled={displayYear >= 2100}
-                  onPress={() => selectYear(displayYear + 1)}
-                  className={`h-12 w-12 items-center justify-center rounded-theme bg-transparent active:opacity-70 ${displayYear >= 2100 ? 'opacity-40' : 'opacity-100'}`}
-                >
-                  <AppIcon name="chevron-right" size={iconSizes.md} color={colors.text} />
-                </Pressable>
+                    {displayYear}년
+                  </Text>
+                </PickerOption>
               </View>
-              <View className="gap-1.5">
-                {[0, 6].map((offset) => (
-                  <View key={offset} className="flex-row gap-1.5">
-                    {Array.from({ length: 6 }, (_, index) => offset + index + 1).map((value) => {
-                      const selected = draftYear === displayYear && draftMonth === value;
-                      return (
-                        <View key={value} className="flex-1">
-                          <PickerOption
-                            selectionOnly
-                            compact
-                            selected={selected}
-                            accessibilityLabel={`${displayYear}년 ${value}월`}
-                            onPress={() => {
-                              setYear(displayYear);
-                              setMonth(selected ? 0 : value);
-                            }}
-                          >
-                            <Text
-                              className={`text-sm font-normal ${selected ? 'text-theme-accent' : ''}`}
-                            >
-                              {value}월
-                            </Text>
-                          </PickerOption>
-                        </View>
-                      );
-                    })}
-                  </View>
-                ))}
-              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="다음 연도 선택"
+                disabled={displayYear >= 2100}
+                onPress={() => selectYear(displayYear + 1)}
+                className={`h-12 w-12 items-center justify-center rounded-theme bg-transparent active:opacity-70 ${displayYear >= 2100 ? 'opacity-40' : 'opacity-100'}`}
+              >
+                <AppIcon name="chevron-right" size={iconSizes.md} color={colors.text} />
+              </Pressable>
             </View>
-          </View>
-          <View className="gap-3">
-            <Text className="text-base font-semibold">감정</Text>
-            <View className="gap-1">
-              {[EMOTIONS.slice(0, 5), EMOTIONS.slice(5)].map((row, rowIndex) => (
-                <View key={rowIndex} className="flex-row gap-1.5">
-                  {row.map((item, index) => {
-                    const id = rowIndex * 5 + index;
-                    const selected = draftEmotion === id;
+            <View className="gap-1.5">
+              {[0, 6].map((offset) => (
+                <View key={offset} className="flex-row gap-1.5">
+                  {Array.from({ length: 6 }, (_, index) => offset + index + 1).map((value) => {
+                    const selected = draftYear === displayYear && draftMonth === value;
                     return (
-                      <View key={item.key} className="flex-1 min-w-0">
+                      <View key={value} className="flex-1">
                         <PickerOption
                           selectionOnly
                           compact
-                          dense
                           selected={selected}
-                          accessibilityLabel={item.name}
-                          onPress={() => setEmotion(selected ? null : id)}
+                          accessibilityLabel={`${displayYear}년 ${value}월`}
+                          onPress={() => {
+                            setYear(displayYear);
+                            setMonth(selected ? 0 : value);
+                          }}
                         >
-                          <EmotionImage emotion={id} size={appRem * 2.25} />
                           <Text
-                            className={`text-xs font-normal ${selected ? 'text-theme-accent' : ''}`}
+                            className={`text-sm font-normal ${selected ? 'text-theme-accent' : ''}`}
                           >
-                            {item.name}
+                            {value}월
                           </Text>
                         </PickerOption>
                       </View>
@@ -160,31 +137,54 @@ export function DiaryFilterPicker({
               ))}
             </View>
           </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="선택 초기화"
-            onPress={() => {
-              setYear(null);
-              setMonth(0);
-              setEmotion(null);
-              setDisplayYear(currentYear);
-            }}
-            className="h-10 self-center flex-row items-center justify-center gap-1.5 px-4 active:opacity-70"
-          >
-            <AppIcon name="restart-alt" size={iconSizes.md} color={colors.accent} />
-            <Text className="text-sm text-theme-accent">선택 초기화</Text>
-          </Pressable>
-          <Button
-            label={applyLabel}
-            accessibilityLabel="일기 필터 적용"
-            onPress={() =>
-              closePicker(() =>
-                onApply(draftYear, draftYear === null ? 0 : draftMonth, draftEmotion),
-              )
-            }
-          />
         </View>
-      )}
+        <View className="gap-3">
+          <Text className="text-base font-semibold">감정</Text>
+          <View className="gap-1">
+            {[EMOTIONS.slice(0, 5), EMOTIONS.slice(5)].map((row, rowIndex) => (
+              <View key={rowIndex} className="flex-row gap-1.5">
+                {row.map((item, index) => {
+                  const id = rowIndex * 5 + index;
+                  const selected = draftEmotion === id;
+                  return (
+                    <View key={item.key} className="flex-1 min-w-0">
+                      <PickerOption
+                        selectionOnly
+                        compact
+                        dense
+                        selected={selected}
+                        accessibilityLabel={item.name}
+                        onPress={() => setEmotion(selected ? null : id)}
+                      >
+                        <EmotionImage emotion={id} size={appRem * 2.25} />
+                        <Text
+                          className={`text-xs font-normal ${selected ? 'text-theme-accent' : ''}`}
+                        >
+                          {item.name}
+                        </Text>
+                      </PickerOption>
+                    </View>
+                  );
+                })}
+              </View>
+            ))}
+          </View>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="선택 초기화"
+          onPress={() => {
+            setYear(null);
+            setMonth(0);
+            setEmotion(null);
+            setDisplayYear(currentYear);
+          }}
+          className="h-10 self-center flex-row items-center justify-center gap-1.5 px-4 active:opacity-70"
+        >
+          <AppIcon name="restart-alt" size={iconSizes.md} color={colors.accent} />
+          <Text className="text-sm text-theme-accent">선택 초기화</Text>
+        </Pressable>
+      </View>
     </BottomSheetModal>
   );
 }

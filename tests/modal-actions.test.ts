@@ -41,13 +41,13 @@ function renderConfirm(onConfirm: () => void, onCancel: () => void) {
   });
   let closing = false;
   let accepted = 0;
-  const body = shell.props.children(() => {
+  const body = shell.props.footer(() => {
     if (closing) return false;
     closing = true;
     accepted += 1;
     return true;
   });
-  const [cancel, confirm] = body.props.children[1].props.children;
+  const [cancel, confirm] = body.props.children;
   return {
     shell,
     cancel,

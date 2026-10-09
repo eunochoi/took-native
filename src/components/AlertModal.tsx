@@ -19,16 +19,16 @@ export function AlertModal({
   onConfirm: () => void;
 }) {
   return (
-    <BottomSheetModal visible={visible} title={title} onClose={onConfirm}>
-      {(close) => (
-        <>
-          {message && (
-            <Text accessibilityRole="alert" className="mb-3 text-center text-sm leading-relaxed">
-              {message}
-            </Text>
-          )}
-          <Button label={confirmLabel} onPress={() => close()} />
-        </>
+    <BottomSheetModal
+      visible={visible}
+      title={title}
+      onClose={onConfirm}
+      footer={(close) => <Button label={confirmLabel} onPress={() => close()} />}
+    >
+      {message && (
+        <Text accessibilityRole="alert" className="text-center text-sm leading-relaxed">
+          {message}
+        </Text>
       )}
     </BottomSheetModal>
   );

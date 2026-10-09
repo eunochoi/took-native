@@ -50,7 +50,7 @@ function render(mode: 'start' | 'restart', memo?: string) {
     onClose: () => {},
     onApply: () => {},
   });
-  const tree = modal.props.children(() => {});
+  const tree = modal.props.children;
   const nodes: any[] = [];
   function visit(node: any) {
     if (!node || typeof node !== 'object') return;
@@ -58,6 +58,7 @@ function render(mode: 'start' | 'restart', memo?: string) {
     [node.props?.children].flat().forEach(visit);
   }
   visit(tree);
+  visit(modal.props.footer(() => {}));
   return nodes;
 }
 

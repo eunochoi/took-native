@@ -47,7 +47,7 @@ export function BottomSheetModal({
   menuAction?: ReactNode;
   dismissOnBack?: boolean;
   onBeforeClose?: () => boolean;
-  footer?: ReactNode;
+  footer?: ReactNode | ((closeSheet: CloseBottomSheet) => ReactNode);
   scrollEnabled?: boolean;
   scrollRef?: AnimatedRef<ScrollView>;
 }) {
@@ -141,7 +141,7 @@ export function BottomSheetModal({
                     className="pb-4"
                     style={insets.bottom > 0 ? { paddingBottom: appRem + insets.bottom } : undefined}
                   >
-                    {footer}
+                    {typeof footer === 'function' ? footer(closeSheet) : footer}
                   </View>
                 )}
               </View>

@@ -64,7 +64,7 @@ function picker(mode: 'AUTO' | 'MANUAL', days: number | null) {
       onClose: () => undefined,
       onApply: (...args: unknown[]) => applied.push(args),
     });
-    const body = shell.props.children((afterClose: () => void) => afterClose());
+    const body = [shell.props.children, shell.props.footer((afterClose: () => void) => afterClose())];
     const nodes: Node[] = [];
     const walk = (value: any) => {
       if (Array.isArray(value)) value.forEach(walk);

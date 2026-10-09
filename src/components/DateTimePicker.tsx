@@ -46,91 +46,12 @@ export function DateTimePicker({
   const [error, setError] = useState('');
   const [dateExpanded, setDateExpanded] = useState(mode === 'start');
   return (
-    <BottomSheetModal visible title={title} onClose={onClose}>
-      {(close) => (
-        <View className="gap-5">
-          {!!description && (
-            <Text className="text-center text-sm leading-relaxed text-theme-text-secondary mb-2">
-              {description}
-            </Text>
-          )}
-          {mode === 'restart' && (
-            <View className="gap-2">
-              <Text className="text-base">시작 시간</Text>
-              <FormPickerRow
-                label={`${format(parseISO(draft.date), 'yyyy년 M월 d일')} ${draft.hour}:${draft.minute}`}
-                accessibilityLabel="다시 시작 시간 선택"
-                disabled={false}
-                leading={<AppIcon name="date" size={iconSizes.md} color={colors.textSecondary} />}
-                onPress={() => setDateExpanded(!dateExpanded)}
-              />
-            </View>
-          )}
-          {dateExpanded && (
-            <View className="gap-5">
-              <DatePickerCalendar
-                month={month}
-                selected={draft.date}
-                today={today}
-                onMonthChange={setMonth}
-                minDate={minTime ? format(new Date(minTime), 'yyyy-MM-dd') : undefined}
-                onSelect={(date) => {
-                  setDraft({ ...draft, date });
-                  setMonth(date.slice(0, 7));
-                  setError('');
-                }}
-              />
-              <View className="flex-row items-center justify-center gap-3">
-                <Text className="text-base">시간</Text>
-                <TextInput
-                  accessibilityLabel="시 (0~23)"
-                  keyboardType="number-pad"
-                  maxLength={2}
-                  value={draft.hour}
-                  onChangeText={(hour) => {
-                    setDraft({ ...draft, hour });
-                    setError('');
-                  }}
-                  className={TIME_INPUT_CLASS_NAME}
-                />
-                <Text>:</Text>
-                <TextInput
-                  accessibilityLabel="분 (0~59)"
-                  keyboardType="number-pad"
-                  maxLength={2}
-                  value={draft.minute}
-                  onChangeText={(minute) => {
-                    setDraft({ ...draft, minute });
-                    setError('');
-                  }}
-                  className={TIME_INPUT_CLASS_NAME}
-                />
-              </View>
-            </View>
-          )}
-          {mode === 'restart' && (
-            <View className="gap-2">
-              <Text className="text-base font-normal">메모 (선택)</Text>
-              <TextInput
-                accessibilityLabel="다시 시작 메모"
-                value={text}
-                onChangeText={setText}
-                multiline
-                scrollEnabled
-                maxLength={SOBER_MEMO_MAX_LENGTH}
-                textAlignVertical="top"
-                placeholder="다시 거리를 두고 싶은 이유나 지금의 마음을 남겨보세요."
-                placeholderTextColor={colors.textTertiary}
-                className="h-28 rounded-2xl bg-transparent border border-theme-border p-4 text-base text-theme-text-primary font-normal"
-              />
-              <CharacterCount length={text.length} maxLength={SOBER_MEMO_MAX_LENGTH} />
-            </View>
-          )}
-          {!!error && (
-            <Text accessibilityRole="alert" className="text-sm text-theme-danger">
-              {error}
-            </Text>
-          )}
+    <BottomSheetModal
+      visible
+      title={title}
+      onClose={onClose}
+      footer={(close) => (
+        <View className="gap-3">
           <Button
             labelWeight="normal"
             label={confirmLabel ?? (mode === 'restart' ? '기록 저장하기' : '선택 완료')}
@@ -150,6 +71,91 @@ export function DateTimePicker({
           )}
         </View>
       )}
+    >
+      <View className="gap-5">
+        {!!description && (
+          <Text className="text-center text-sm leading-relaxed text-theme-text-secondary mb-2">
+            {description}
+          </Text>
+        )}
+        {mode === 'restart' && (
+          <View className="gap-2">
+            <Text className="text-base">시작 시간</Text>
+            <FormPickerRow
+              label={`${format(parseISO(draft.date), 'yyyy년 M월 d일')} ${draft.hour}:${draft.minute}`}
+              accessibilityLabel="다시 시작 시간 선택"
+              disabled={false}
+              leading={<AppIcon name="date" size={iconSizes.md} color={colors.textSecondary} />}
+              onPress={() => setDateExpanded(!dateExpanded)}
+            />
+          </View>
+        )}
+        {dateExpanded && (
+          <View className="gap-5">
+            <DatePickerCalendar
+              month={month}
+              selected={draft.date}
+              today={today}
+              onMonthChange={setMonth}
+              minDate={minTime ? format(new Date(minTime), 'yyyy-MM-dd') : undefined}
+              onSelect={(date) => {
+                setDraft({ ...draft, date });
+                setMonth(date.slice(0, 7));
+                setError('');
+              }}
+            />
+            <View className="flex-row items-center justify-center gap-3">
+              <Text className="text-base">시간</Text>
+              <TextInput
+                accessibilityLabel="시 (0~23)"
+                keyboardType="number-pad"
+                maxLength={2}
+                value={draft.hour}
+                onChangeText={(hour) => {
+                  setDraft({ ...draft, hour });
+                  setError('');
+                }}
+                className={TIME_INPUT_CLASS_NAME}
+              />
+              <Text>:</Text>
+              <TextInput
+                accessibilityLabel="분 (0~59)"
+                keyboardType="number-pad"
+                maxLength={2}
+                value={draft.minute}
+                onChangeText={(minute) => {
+                  setDraft({ ...draft, minute });
+                  setError('');
+                }}
+                className={TIME_INPUT_CLASS_NAME}
+              />
+            </View>
+          </View>
+        )}
+        {mode === 'restart' && (
+          <View className="gap-2">
+            <Text className="text-base font-normal">메모 (선택)</Text>
+            <TextInput
+              accessibilityLabel="다시 시작 메모"
+              value={text}
+              onChangeText={setText}
+              multiline
+              scrollEnabled
+              maxLength={SOBER_MEMO_MAX_LENGTH}
+              textAlignVertical="top"
+              placeholder="다시 거리를 두고 싶은 이유나 지금의 마음을 남겨보세요."
+              placeholderTextColor={colors.textTertiary}
+              className="h-28 rounded-2xl bg-transparent border border-theme-border p-4 text-base text-theme-text-primary font-normal"
+            />
+            <CharacterCount length={text.length} maxLength={SOBER_MEMO_MAX_LENGTH} />
+          </View>
+        )}
+        {!!error && (
+          <Text accessibilityRole="alert" className="text-sm text-theme-danger">
+            {error}
+          </Text>
+        )}
+      </View>
     </BottomSheetModal>
   );
 }

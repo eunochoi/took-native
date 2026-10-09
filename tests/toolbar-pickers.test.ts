@@ -65,16 +65,16 @@ function picker(path: string, name: string, initial: Record<string, unknown>) {
       },
       onApply: (...values: unknown[]) => applied.push(values),
     });
+    const close = (action?: () => void) => {
+      closed++;
+      deferred = action;
+    };
     return {
       shell,
-      content: nodes(
-        typeof shell.props.children === 'function'
-          ? shell.props.children((action?: () => void) => {
-              closed++;
-              deferred = action;
-            })
-          : shell,
-      ),
+      content: nodes([
+        typeof shell.props.children === 'function' ? shell.props.children(close) : shell,
+        typeof shell.props.footer === 'function' ? shell.props.footer(close) : shell.props.footer,
+      ]),
     };
   };
   return {
@@ -111,6 +111,30 @@ const filterPicker = (props: Record<string, unknown> = {}) =>
     currentYear: 2026,
     ...props,
   });
+
+test('year picker keeps its final action in the footer and applies only after closing', () => {
+  const ui = picker('src/screens/home/HomeYearPicker.tsx', 'HomeYearPicker', {
+    year: 2026,
+    currentYear: 2026,
+    query: { data: [2025, 2026], isError: false, isPending: false },
+  });
+  assert(!nodes(ui.render().shell.props.children).some((node) => node.type === 'Button'));
+  assert.equal(typeof ui.render().shell.props.footer, 'function');
+  ui.press('2025년');
+  ui.press('적용하기');
+  assert.equal(ui.closed, 1);
+  assert.equal(ui.applied.length, 0);
+  ui.finish();
+  assert.deepEqual(ui.applied, [[2025]]);
+  for (const query of [{ isPending: true }, { isError: true }]) {
+    const unavailable = picker('src/screens/home/HomeYearPicker.tsx', 'HomeYearPicker', {
+      year: 2026,
+      currentYear: 2026,
+      query,
+    });
+    assert.equal(unavailable.render().shell.props.footer, undefined);
+  }
+});
 
 test('sort and priority are drafts and commit together only after the sheet closes', () => {
   const ui = sortPicker({ priorityFirst: false });
