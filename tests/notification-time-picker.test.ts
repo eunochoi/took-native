@@ -75,9 +75,14 @@ test('time picker rejects invalid input, stays open on failure and closes after 
     });
     return {
       modal,
+      body: modal.props.children(() => {
+        closes++;
+      }),
       tree: jsx('Fragment', {
         children: [
-          modal.props.children,
+          modal.props.children(() => {
+            closes++;
+          }),
           modal.props.footer(() => {
             closes++;
           }),
@@ -85,22 +90,32 @@ test('time picker rejects invalid input, stays open on failure and closes after 
       }),
     };
   }
+  assert.equal(render().modal.props.footer(() => {}).type, 'Button');
+  assert.equal(nodes(render().body, 'Button')[0].props.label, '알림 해제');
   nodes(render().tree, 'TextInput')[0].props.onChangeText('24');
-  nodes(render().tree, 'Button')[0].props.onPress();
+  nodes(render().tree, 'Button')
+    .find((node) => node.props.label !== '알림 해제')!
+    .props.onPress();
   assert.equal(applied.length, 0);
   assert(nodes(render().tree, 'Text').some((node) => node.props.accessibilityRole === 'alert'));
   nodes(render().tree, 'TextInput')[0].props.onChangeText('9');
-  nodes(render().tree, 'Button')[0].props.onPress();
+  nodes(render().tree, 'Button')
+    .find((node) => node.props.label !== '알림 해제')!
+    .props.onPress();
   assert.equal(render().modal.props.onBeforeClose(), false);
   await new Promise<void>((resolve) => setImmediate(resolve));
   assert.deepEqual(applied, ['09:00']);
   assert.equal(closes, 0);
   assert(nodes(render().tree, 'Text').some((node) => node.props.children === '예약 실패'));
   fail = false;
-  nodes(render().tree, 'Button')[0].props.onPress();
+  nodes(render().tree, 'Button')
+    .find((node) => node.props.label !== '알림 해제')!
+    .props.onPress();
   await new Promise<void>((resolve) => setImmediate(resolve));
   assert.equal(closes, 1);
-  nodes(render().tree, 'Button')[1].props.onPress();
+  nodes(render().tree, 'Button')
+    .find((node) => node.props.label === '알림 해제')!
+    .props.onPress();
   await new Promise<void>((resolve) => setImmediate(resolve));
   assert.equal(applied.at(-1), null);
   assert.equal(closes, 2);
