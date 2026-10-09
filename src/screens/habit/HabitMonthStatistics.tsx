@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Text } from '../../components/Text';
 import type { Habit } from '../../db/types';
 import { calendarDays } from '../../domain/calendar';
-import { localDate, shiftDate } from '../../domain/date';
+import { localDate } from '../../domain/date';
 import type { getHabitMonthSummary } from '../../domain/habitStats';
 import { useCalendarNavigation } from '../../hooks/useCalendarNavigation';
 import { useMonthSwipe } from '../../hooks/useMonthSwipe';
@@ -34,11 +34,12 @@ export function HabitMonthStatistics({
   const navigation = useCalendarNavigation(month, onMonthChange, startedDate, today);
   const swipe = useMonthSwipe(navigation.changeMonth);
   const completedDates = useMemo(() => new Set(dates), [dates]);
-  const lockedBefore = shiftDate(today, -3);
   return (
     <View className="gap-4">
-      <Text accessibilityRole="header" className="text-xl font-semibold">월간 기록</Text>
-      <View className='px-2 gap-4'>
+      <Text accessibilityRole="header" className="text-xl font-semibold">
+        월간 기록
+      </Text>
+      <View className="px-2 gap-4">
         <HabitStatisticsSummary
           stats={[
             { label: '실천 횟수', value: summary.completed, unit: '회' },
@@ -55,9 +56,9 @@ export function HabitMonthStatistics({
         <CalendarGrid {...swipe.panHandlers} accessibilityLabel={`${month} 습관 실천 달력`}>
           {days.map((date) => {
             const outside = date.slice(0, 7) !== month;
-            const completed = !outside && completedDates.has(date);
-            const missed =
-              !unavailable && !outside && date >= startedDate && date < lockedBefore && !completed;
+            const available = navigation.isDateAvailable(date);
+            const completed = !outside && available && completedDates.has(date);
+            const empty = !unavailable && !outside && available && !completed;
             return (
               <CalendarDay
                 key={date}
@@ -65,23 +66,17 @@ export function HabitMonthStatistics({
                 month={month}
                 today={today}
                 onMonthChange={navigation.changeToMonth}
-                disabled={!outside || !navigation.isDateAvailable(date)}
-                dimmed={!navigation.isDateAvailable(date)}
-                label={`${date}${completed ? ', 완료 기록 있음' : ''}${missed ? ', 놓친 횟수' : ''}`}
+                disabled={!outside || !available}
+                dimmed={!available}
+                label={`${date}${completed ? ', 완료 기록 있음' : ''}${empty ? ', 실천 기록 없음' : ''}`}
                 contentClassName={
                   completed
                     ? 'rounded-full bg-theme-accent'
-                    : missed
-                      ? 'rounded-full bg-theme-border'
+                    : empty
+                      ? 'rounded-full bg-theme-calendar-empty'
                       : undefined
                 }
-                textClassName={
-                  completed
-                    ? 'text-theme-text-on-accent'
-                    : missed
-                      ? 'text-theme-text-secondary'
-                      : undefined
-                }
+                textClassName={completed ? 'font-medium text-theme-text-on-accent' : 'font-medium'}
               />
             );
           })}

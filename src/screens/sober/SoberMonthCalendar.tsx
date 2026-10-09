@@ -39,8 +39,9 @@ export function SoberMonthCalendar({
         <CalendarGrid {...swipe.panHandlers} accessibilityLabel={`${month} 거리두기 기록 달력`}>
           {days.map((date) => {
             const outside = date.slice(0, 7) !== month;
-            const count = outside ? 0 : (recordsByDate.get(date)?.length ?? 0);
             const unavailable = !navigation.isDateAvailable(date);
+            const count = outside || unavailable ? 0 : (recordsByDate.get(date)?.length ?? 0);
+            const noRestart = !outside && !unavailable && count === 0;
             return (
               <CalendarDay
                 key={date}
@@ -52,11 +53,22 @@ export function SoberMonthCalendar({
                 disabled={unavailable}
                 dimmed={unavailable}
                 onSelect={onSelect}
-                label={[date, count ? `다시 시작 ${count}회` : ''].filter(Boolean).join(', ')}
+                label={[
+                  date,
+                  count
+                    ? `다시 시작 ${count}회`
+                    : !outside && !unavailable
+                      ? '리셋 없이 지낸 날'
+                      : '',
+                ]
+                  .filter(Boolean)
+                  .join(', ')}
+                contentClassName={noRestart ? 'rounded-full bg-theme-calendar-empty' : undefined}
+                textClassName="font-medium"
               >
                 {count > 0 ? (
                   <View className="w-3/5 aspect-square items-center justify-center rounded-full bg-theme-accent">
-                    <Text className="text-xs font-semibold text-theme-text-on-accent">{count}</Text>
+                    <Text className="text-xs font-medium text-theme-text-on-accent">{count}</Text>
                   </View>
                 ) : undefined}
               </CalendarDay>

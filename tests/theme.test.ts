@@ -43,3 +43,13 @@ test('all six accents resolve their shared tokens and preserve dark surfaces', (
     assert.notEqual(dark.accentText, light.accentText);
   }
 });
+
+test('calendar empty color stays neutral and visible across accents and modes', () => {
+  for (const accent of Object.keys(ACCENT_PALETTES) as (keyof typeof ACCENT_PALETTES)[]) {
+    for (const mode of ['light', 'dark'] as const) {
+      const colors = themeColors(accent, mode);
+      assert.equal(colors.calendarEmpty, colors.border);
+      assert.notEqual(colors.calendarEmpty, colors.surface);
+    }
+  }
+});

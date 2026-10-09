@@ -154,7 +154,7 @@ test('diary calendar owns decorations and future-date limits while using the def
   assert.equal(cell(tree, '2026-09-30').props.children, undefined);
 });
 
-test('habit calendar fills completed and missed dates while keeping locked history legible', () => {
+test('habit calendar colors completed and empty history without enabling record changes', () => {
   const { HabitMonthStatistics } = load('src/screens/habit/HabitMonthStatistics.tsx');
   const tree = HabitMonthStatistics({
     habit: { initial_started_at: '2026-09-01T00:00:00.000Z' },
@@ -174,20 +174,26 @@ test('habit calendar fills completed and missed dates while keeping locked histo
     assert.match(rendered.props.className, /opacity-100/);
     assert.equal(
       nodes(rendered).find((node) => node.type === 'Text').props.className,
-      'text-xs text-theme-text-on-accent',
+      'text-xs font-medium text-theme-text-on-accent',
     );
   }
-  const missed = cell(tree, '2026-09-11');
-  assert.match(missed.props.contentClassName, /bg-theme-border/);
-  assert.equal(
-    nodes(CalendarDay(missed.props)).find((node) => node.type === 'Text').props.className,
-    'text-xs text-theme-text-secondary',
-  );
+  for (const [date, color] of [
+    ['2026-09-11', 'text-theme-text-secondary'],
+    ['2026-09-19', 'text-theme-calendar-saturday'],
+    ['2026-09-20', 'text-theme-calendar-sunday'],
+  ]) {
+    const empty = cell(tree, date);
+    assert.match(empty.props.contentClassName, /bg-theme-calendar-empty/);
+    assert.equal(
+      nodes(CalendarDay(empty.props)).find((node) => node.type === 'Text').props.className,
+      `text-xs ${color} font-medium`,
+    );
+  }
   assert.equal(cell(tree, '2026-08-31').props.children, undefined);
   assert.equal(cell(tree, '2026-08-31').props.dimmed, true);
 });
 
-test('habit calendar does not mark missing records as missed while data is unavailable', () => {
+test('habit calendar does not mark missing records as empty while data is unavailable', () => {
   const { HabitMonthStatistics } = load('src/screens/habit/HabitMonthStatistics.tsx');
   const tree = HabitMonthStatistics({
     habit: { initial_started_at: '2026-09-01T00:00:00.000Z' },
@@ -200,8 +206,8 @@ test('habit calendar does not mark missing records as missed while data is unava
   });
   const past = cell(tree, '2026-09-11');
   assert.equal(past.props.contentClassName, undefined);
-  assert.equal(past.props.textClassName, undefined);
-  assert(!past.props.label.includes('놓친'));
+  assert.equal(past.props.textClassName, 'font-medium');
+  assert(!past.props.label.includes('실천 기록 없음'));
   assert.equal(CalendarDay(past.props).props.disabled, true);
   assert.match(CalendarDay(past.props).props.className, /opacity-100/);
 });
@@ -222,7 +228,24 @@ test('sober calendar owns restart counts and permits only dates inside its recor
   assert.equal(recorded.props.children.props.children.props.children, 2);
   assert.equal(recorded.props.label, `${day.date}, 다시 시작 2회`);
   assert.equal(recorded.props.showSelectedIndicator, false);
-  assert.equal(cell(tree, '2026-10-06').props.children, undefined);
+  assert.match(recorded.props.children.props.className, /bg-theme-accent/);
+  assert.equal(
+    recorded.props.children.props.children.props.className,
+    'text-xs font-medium text-theme-text-on-accent',
+  );
+  for (const [date, color] of [
+    ['2026-10-06', 'text-theme-text-secondary'],
+    ['2026-10-03', 'text-theme-calendar-saturday'],
+    ['2026-10-04', 'text-theme-calendar-sunday'],
+  ]) {
+    const noRestart = cell(tree, date);
+    assert.equal(noRestart.props.children, undefined);
+    assert.match(noRestart.props.contentClassName, /bg-theme-calendar-empty/);
+    const renderedText = nodes(CalendarDay(noRestart.props)).find((node) => node.type === 'Text');
+    assert.equal(renderedText.props.children, Number(date.slice(-2)));
+    assert.equal(renderedText.props.className, `text-xs ${color} font-medium`);
+  }
+  assert.equal(cell(tree, '2026-10-08').props.contentClassName, undefined);
   assert.equal(cell(tree, '2026-09-30').props.children, undefined);
   for (const item of nodes(tree).filter((node) => node.type === 'CalendarDay')) {
     CalendarDay(item.props).props.onPress();
@@ -292,7 +315,6 @@ test('day detail falls back to today for a direct future-date route', () => {
   }
 });
 
-
 test('habit start and future boundaries block adjacent cells and share guarded month navigation', () => {
   const { HabitMonthStatistics } = load('src/screens/habit/HabitMonthStatistics.tsx');
   const months: string[] = [];
@@ -336,6 +358,8 @@ test('habit start and future boundaries block adjacent cells and share guarded m
       CalendarDay(item.props).props.onPress();
     }
   }
+  assert.match(cell(current, props.today).props.contentClassName, /bg-theme-calendar-empty/);
+  assert.match(cell(current, '2026-10-05').props.contentClassName, /bg-theme-calendar-empty/);
 });
 
 test('habit detail only queries completion records and exposes no write action to its statistics', () => {
