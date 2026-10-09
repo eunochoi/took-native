@@ -524,3 +524,41 @@ test('year navigation includes start and current years and blocks requests outsi
   }
   assert.deepEqual(changes, [2024, 2023, 2025]);
 });
+
+
+
+test('yearly habit summary uses monthly label order and refreshes missed counts when today changes', () => {
+  const ui = section('src/screens/habit/HabitYearStatistics.tsx', 'HabitYearStatistics', {
+    dates: ['2024-03-07', '2024-03-10'],
+    startedDate: '2023-03-01',
+    today: '2024-03-10',
+    unavailable: false,
+  });
+  const view = ui.render().nodes;
+  assert.deepEqual(
+    view.filter((node) => node.props.className === 'text-sm text-theme-text-secondary')
+      .map((node) => node.props.children),
+    ['실천 횟수', '놓친 횟수', '실천율'],
+  );
+  const values = (nodes: any[]) => nodes
+    .filter((node) => node.props.className === 'text-2xl font-bold text-theme-accent')
+    .map((node) => node.props.children[0]);
+  assert.deepEqual(values(view), [2, 66, '2.9']);
+  assert.deepEqual(values(ui.render({ today: '2024-03-12' }).nodes), [2, 67, '2.8']);
+  assert.equal(ui.calls.year, 2);
+  assert.deepEqual(values(ui.render({ unavailable: true }).nodes), ['—', '—', '—']);
+});
+
+
+test('yearly habit rate displays a dash when the habit has not started yet', () => {
+  const ui = section('src/screens/habit/HabitYearStatistics.tsx', 'HabitYearStatistics', {
+    dates: [],
+    startedDate: '2024-03-21',
+    today: '2024-03-20',
+    unavailable: false,
+  });
+  const values = ui.render().nodes
+    .filter((node) => node.props.className === 'text-2xl font-bold text-theme-accent')
+    .map((node) => node.props.children[0]);
+  assert.deepEqual(values, [0, 0, '—']);
+});
