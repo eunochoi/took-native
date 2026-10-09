@@ -110,7 +110,7 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
         title="일기 수정"
       >
         <QueryState query={query} />
-        {!query.isPending && !query.error && <Text className="p-6">일기를 찾을 수 없습니다.</Text>}
+        {!query.isPending && !query.error && <Text className="px-6">일기를 찾을 수 없습니다.</Text>}
       </BottomSheetPage>
     );
   return (
@@ -223,7 +223,7 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
             {images.length} / {DIARY_IMAGE_MAX_COUNT}장
           </Text>
         </View>
-        <View className="p-2 gap-1">
+        <View className="px-2 pt-2 gap-1">
           <Text className={BODY_DESCRIPTION_CLASS_NAME}>기억하고 싶은 장면을 남겨보세요.</Text>
           <DiaryFormImages
             images={images}

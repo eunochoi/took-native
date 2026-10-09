@@ -22,7 +22,7 @@ export function BottomSheetScrollViewport({
   scrollEnabled: boolean;
   scrollFade: boolean;
   contentKey?: string | number;
-  bottomPadding: number;
+  bottomPadding?: number;
   children: ReactNode;
 }) {
   return (
@@ -36,13 +36,11 @@ export function BottomSheetScrollViewport({
           onContentSizeChange={fade.onContentSizeChange}
           onScroll={motion.onScroll}
           scrollEventThrottle={16}
-          contentContainerStyle={{
-            paddingBottom: bottomPadding,
-          }}
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
           className={`${fixedHeight ? 'flex-1' : 'shrink'} min-h-0`}
-          contentContainerClassName="gap-6"
+          contentContainerClassName="gap-6 pt-6 pb-12"
+          contentContainerStyle={bottomPadding === undefined ? undefined : { paddingBottom: bottomPadding }}
           nestedScrollEnabled
           bounces={false}
           overScrollMode="never"

@@ -194,7 +194,7 @@ test('year picker closes independently and analysis queries follow the selected 
   const ui = records();
   let view = ui.render();
   const content = sheet(view).props.children;
-  assert.equal(content.props.className, 'gap-6 pt-1 pb-6');
+  assert.equal(content.props.className, 'gap-6');
   assert(nodes(content).some((node) => node.type === 'DiaryAnalysis'));
   const footer = nodes(content).find(
     (node: any) => node.props?.children?.[0]?.props?.children === '다른 연도도 확인해 볼까요?',

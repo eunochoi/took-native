@@ -87,7 +87,7 @@ export function HabitForm({ id }: { id?: number }) {
         title={title}
       >
         <QueryState query={query} />
-        {!query.isPending && !query.error && <Text className="p-6">습관을 찾을 수 없습니다.</Text>}
+        {!query.isPending && !query.error && <Text className="px-6">습관을 찾을 수 없습니다.</Text>}
       </BottomSheetPage>
     );
   return (

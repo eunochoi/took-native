@@ -545,7 +545,8 @@ test('sheet delegates keyboard avoidance to its native container without measure
   assert.equal(surface.props.style.paddingBottom, undefined);
   assert.equal(surface.props.style.maxHeight, 800 * 0.85);
   assert.ok(scroll.props.ref);
-  assert.equal(scroll.props.contentContainerStyle.paddingBottom, 60);
+  assert.equal(scroll.props.contentContainerStyle.paddingBottom, 75);
+  assert.equal(scroll.props.contentContainerClassName, 'gap-6 pt-6 pb-12');
   assert.equal(scroll.props.keyboardShouldPersistTaps, 'handled');
   assert.equal(scroll.props.keyboardDismissMode, 'none');
 });
@@ -796,8 +797,10 @@ test('form drag lock disables the sheet pan and the footer stays outside the scr
   assert.equal(h.scroll().props.scrollEnabled, false);
   const footer = h.sheet().props.children.props.children.at(-1);
   assert.equal(footer.props.children, 'save');
-  assert.equal(footer.props.style.paddingBottom, 30);
-  assert.equal(h.scroll().props.contentContainerStyle.paddingBottom, 30);
+  assert.equal(footer.props.style.paddingBottom, 45);
+  assert.equal(footer.props.className, 'pb-4');
+  assert.equal(h.scroll().props.contentContainerStyle, undefined);
+  assert.equal(h.scroll().props.contentContainerClassName, 'gap-6 pt-6 pb-12');
 });
 
 test('saved route sheet remains mounted until the controlled closing animation completes', () => {

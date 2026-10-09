@@ -9,7 +9,7 @@ export function QueryState({
   if (query.error) {
     return (
       <QueryError
-        className="p-6"
+        className="px-6"
         message={query.error.message}
         onRetry={() => {
           void query.refetch();
@@ -19,7 +19,7 @@ export function QueryState({
   }
   if (!query.isPending) return null;
   return (
-    <View className="p-6 items-center">
+    <View className="px-6 items-center">
       <ActivityIndicator accessibilityLabel="기록 불러오는 중" />
     </View>
   );

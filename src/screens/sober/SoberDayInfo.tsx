@@ -61,7 +61,7 @@ export function SoberDayInfo({
           </View>
         ))
       ) : (
-        <View className="items-center gap-3 py-8">
+        <View className={`items-center gap-3 ${canAdd ? 'pt-8' : ''}`}>
           <AppIcon name="description" size={iconSizes.lg} color={colors.accent} />
           <Text className="text-center text-base">이날은 다시 시작한 기록이 없어요.</Text>
           <Text className="text-center text-sm text-theme-text-tertiary">

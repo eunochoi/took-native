@@ -112,7 +112,7 @@ export default function HabitOrder() {
           />
         }
       >
-        <View className="py-6">
+        <View>
           <View className="gap-4 mb-4">
             <Text className="text-sm text-center text-theme-text-secondary">
               드래그하거나 방향키로 습관 순서를 변경하세요.

@@ -96,7 +96,7 @@ export function DiaryFormImages({
   const [dragging, setDragging] = useState(false);
   return (
     <AnimatedScrollView ref={scrollRef} horizontal showsHorizontalScrollIndicator={false}>
-      <View className="flex-row gap-3 py-2">
+      <View className="flex-row gap-3 pt-2">
         {images.length > 0 && (
           <Sortable.Grid
             data={images}

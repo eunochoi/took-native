@@ -69,7 +69,7 @@ export function DayInfoHabitSection({
     );
   };
   return (
-    <View className="p-1 shrink-0">
+    <View className="px-1 pt-1 shrink-0">
       <View className="flex-row items-center justify-between gap-2 py-2">
         <Text accessibilityRole="header" className="text-base font-semibold">
           습관 목록
@@ -86,7 +86,7 @@ export function DayInfoHabitSection({
             </View>
           ))}
       </View>
-      <View className="px-2 py-3">
+      <View className="px-2 pt-3">
         {habits.length ? (
           <View className="min-h-56 gap-2">
             {!editable && (

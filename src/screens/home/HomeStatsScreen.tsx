@@ -61,7 +61,7 @@ export function HomeStatsScreen({
   return (
     <>
       <BottomSheetPage backRoute="/" title="모아보기" scrollFade contentKey={year}>
-        <View className="gap-6 pt-1 pb-6">
+        <View className="gap-6">
           <View className="gap-14">
             {sections.map((section) => (
               <View key={section.label}>

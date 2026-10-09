@@ -91,7 +91,7 @@ export default function SoberDetail() {
         <QueryState query={query} />
         <QueryState query={restarts} />
         {!query.isPending && !query.error && !sober && (
-          <Text className="p-6">거리두기 항목을 찾을 수 없어요.</Text>
+          <Text className="px-6">거리두기 항목을 찾을 수 없어요.</Text>
         )}
       </BottomSheetPage>
     );
@@ -121,7 +121,7 @@ export default function SoberDetail() {
           />
         }
       >
-        <View className="gap-12 pt-6">
+        <View className="gap-12">
           <View className="gap-5 items-center">
             <SoberGauge
               progress={summary.progress}

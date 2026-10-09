@@ -19,7 +19,7 @@ export default function CalendarDayInfo() {
       }
       contentKey={selected}
     >
-      <View className="pb-6">
+      <View>
         <DayInfo key={selected} date={selected} today={today} />
       </View>
     </BottomSheetPage>

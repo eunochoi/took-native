@@ -70,7 +70,7 @@ export function SoberForm({ id }: { id?: number }) {
       >
         <QueryState query={query} />
         {!query.isPending && !query.error && (
-          <Text className="p-6">거리두기 항목을 찾을 수 없어요.</Text>
+          <Text className="px-6">거리두기 항목을 찾을 수 없어요.</Text>
         )}
       </BottomSheetPage>
     );

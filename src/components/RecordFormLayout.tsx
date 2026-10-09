@@ -32,7 +32,7 @@ export function RecordFormLayout({
         footer={footer}
         scrollEnabled={scrollEnabled}
       >
-        <View className="gap-6 pt-6">{children}</View>
+        <View className="gap-6">{children}</View>
       </BottomSheetPage>
       {overlays}
     </>

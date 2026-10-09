@@ -38,7 +38,7 @@ export default function DiaryDetail() {
         ) : undefined
       }
     >
-      <View className="pt-6 gap-12">
+      <View className="gap-12">
         <QueryState query={query} />
         {diary ? (
           <>

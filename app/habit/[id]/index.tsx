@@ -45,7 +45,7 @@ export default function HabitDetail() {
           ) : undefined
         }
       >
-        <View className="gap-12 pt-6">
+        <View className="gap-12">
           <QueryState query={query} />
           <QueryState query={records} />
           {habit ? (

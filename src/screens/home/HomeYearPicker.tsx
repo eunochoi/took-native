@@ -28,14 +28,13 @@ export function HomeYearPicker({
         <>
           {query.isError ? (
             <QueryError
-              className="py-8"
               message="선택할 수 있는 연도를 불러오지 못했어요."
               onRetry={() => {
                 void query.refetch();
               }}
             />
           ) : query.isPending ? (
-            <Text className="py-8 text-center text-theme-text-secondary">
+            <Text className="text-center text-theme-text-secondary">
               연도를 불러오는 중이에요.
             </Text>
           ) : (
