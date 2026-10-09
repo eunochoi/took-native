@@ -63,7 +63,7 @@ export function BottomSheetModal({
   const fade = useScrollFade();
   const { onScrollOffset } = fade;
   useEffect(() => onScrollOffset(0), [contentKey, onScrollOffset]);
-  const sheetHeight = Math.max(0, Math.min(maxHeight ?? height * 0.85, height - insets.top));
+  const sheetHeight = Math.max(0, Math.min(maxHeight ?? height * 0.9, height - insets.top));
   const { present, bodyVisible, closingBody, session, motion, closeSheet, onShow } =
     useBottomSheetLifecycle({
       visible,
@@ -120,7 +120,7 @@ export function BottomSheetModal({
               <View
                 onLayout={motion.onSheetLayout}
                 accessibilityViewIsModal
-                className="w-full shrink rounded-t-3xl bg-theme-surface px-[5%] pt-2 shadow-xl"
+                className="w-full shrink rounded-t-3xl border-[1px] border-theme-border bg-theme-surface px-[5%] pt-2 shadow-2xl shadow-theme-overlay/60"
                 style={{
                   maxHeight: sheetHeight,
                   height: fixedHeight ? sheetHeight : undefined,

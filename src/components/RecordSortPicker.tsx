@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import { View } from 'react-native';
 import { useAppTheme } from '../theme/AppThemeProvider';
 import { Button } from './Button';
 import { BottomSheetModal } from './BottomSheetModal';
@@ -25,7 +25,6 @@ export function RecordSortPicker({
   onApply: (sort: 'ASC' | 'DESC' | 'CUSTOM', priorityFirst: boolean) => void;
 }) {
   const { colors, iconSizes } = useAppTheme();
-  const { height } = useWindowDimensions();
   const [draftSort, setSort] = useState(sort);
   const [draftPriority, setPriority] = useState(
     sort === 'CUSTOM' ? false : (priorityFirst ?? false),
@@ -39,7 +38,6 @@ export function RecordSortPicker({
     <BottomSheetModal
       visible
       title={title}
-      maxHeight={height * 0.9}
       onClose={onClose}
       footer={(closePicker) => (
         <Button

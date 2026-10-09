@@ -209,7 +209,6 @@ test('deselecting filter conditions is a draft; dismissing preserves saved condi
 test('filter resets period and emotion drafts without applying them and caps height at 90 percent', () => {
   const ui = filterPicker({ year: 2025, month: 0, emotion: 2 });
   const view = ui.render();
-  assert.equal(view.shell.props.maxHeight, 810);
   assert(
     !view.content.some((node) =>
       ['전체 기간', '전체 감정'].includes(node.props.accessibilityLabel),
@@ -235,7 +234,6 @@ test('filter resets period and emotion drafts without applying them and caps hei
 
 test('sort hint reserves the same space for date and custom order', () => {
   const ui = sortPicker({ priorityFirst: false, allowCustom: true });
-  assert.equal(ui.render().shell.props.maxHeight, 810);
   const initial = ui
     .render()
     .content.find((node) => node.props.className === 'h-10 justify-center');

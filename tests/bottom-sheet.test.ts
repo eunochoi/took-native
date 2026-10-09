@@ -546,7 +546,7 @@ test('sheet delegates keyboard avoidance to its native container without measure
   assert(h.sheet().props.className.includes('shrink'));
   assert(surface.props.className.includes('shrink'));
   assert.equal(surface.props.style.paddingBottom, undefined);
-  assert.equal(surface.props.style.maxHeight, 800 * 0.85);
+  assert.equal(surface.props.style.maxHeight, 800 * 0.9);
   assert.ok(scroll.props.ref);
   assert.equal(scroll.props.contentContainerStyle.paddingBottom, 75);
   assert.equal(scroll.props.contentContainerClassName, 'gap-6 pt-6 pb-12');
@@ -554,8 +554,8 @@ test('sheet delegates keyboard avoidance to its native container without measure
   assert.equal(scroll.props.keyboardDismissMode, 'none');
 });
 
-test('fixed-height sheets retain their requested height and a shrinking scroll viewport', () => {
-  const h = harness(true, false, 720, { fixedHeight: true });
+test('fixed-height sheets use the common 90-percent height and a shrinking scroll viewport', () => {
+  const h = harness(true, false, undefined, { fixedHeight: true });
   h.show();
   const surface = h.sheet().props.children;
   assert.equal(surface.props.style.height, 720);

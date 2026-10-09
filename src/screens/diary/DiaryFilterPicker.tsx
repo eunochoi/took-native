@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, useWindowDimensions, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { Button } from '../../components/Button';
@@ -25,7 +25,6 @@ export function DiaryFilterPicker({
   onApply: (year: number | null, month: number, emotion: number | null) => void;
 }) {
   const { colors, iconSizes, rem: appRem } = useAppTheme();
-  const { height } = useWindowDimensions();
   const [draftEmotion, setEmotion] = useState(emotion);
   const [draftYear, setYear] = useState(year);
   const [draftMonth, setMonth] = useState(month);
@@ -49,16 +48,13 @@ export function DiaryFilterPicker({
       visible
       title="일기 필터"
       scrollFade
-      maxHeight={height * 0.9}
       onClose={onClose}
       footer={(closePicker) => (
         <Button
           label={applyLabel}
           accessibilityLabel="일기 필터 적용"
           onPress={() =>
-            closePicker(() =>
-              onApply(draftYear, draftYear === null ? 0 : draftMonth, draftEmotion),
-            )
+            closePicker(() => onApply(draftYear, draftYear === null ? 0 : draftMonth, draftEmotion))
           }
         />
       )}

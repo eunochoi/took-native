@@ -2,7 +2,6 @@ import type { ComponentProps } from 'react';
 import { useLayoutEffect, useRef } from 'react';
 import { useRouter, type Href } from 'expo-router';
 import { useIsFocused, useRoute } from 'expo-router/react-navigation';
-import { useWindowDimensions } from 'react-native';
 import { BottomSheetModal } from './BottomSheetModal';
 import { useModalTransition } from '../navigation/ModalNavigationProvider';
 
@@ -43,14 +42,12 @@ export function BottomSheetPage({
     },
     [key, finishTransition],
   );
-  const { height } = useWindowDimensions();
   return (
     <BottomSheetModal
       {...props}
       visible={!closeRequested}
       presentation="screen"
       dismissOnBack={focused}
-      maxHeight={height * 0.9}
       fixedHeight
       scrollFade={scrollFade}
       onOpening={() => {
