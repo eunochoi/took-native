@@ -1,8 +1,7 @@
-import { MUTED_DESCRIPTION_CLASS_NAME } from '../../theme/classes';
 import { Pressable, View } from 'react-native';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { AppIcon } from '../../components/AppIcon';
-import { RecordMenuButton } from '../../components/RecordMenuButton';
+import { SoberRestartCard } from './SoberRestartCard';
 import type { SoberRestart } from '../../db/types';
 import { Text } from '../../components/Text';
 import { useAppTheme } from '../../theme/AppThemeProvider';
@@ -39,26 +38,7 @@ export function SoberDayInfo({
       )}
       {records.length ? (
         records.map((item) => (
-          <View
-            key={item.id}
-            className="gap-2 rounded-2xl bg-transparent border border-theme-border p-4"
-          >
-            <View className="flex-row items-center gap-3">
-              <View className="flex-1 gap-1">
-                <Text className="text-base">
-                  다시 시작 · {format(parseISO(item.restarted_at), 'HH:mm')}
-                </Text>
-              </View>
-              <RecordMenuButton
-                muted
-                accessibilityLabel={`${format(parseISO(item.restarted_at), 'HH:mm')} 다시 시작 기록 메뉴`}
-                disabled={pending}
-                onPress={() => onMenu(item)}
-                className={`h-11 w-11 items-center justify-center ${pending ? 'opacity-40' : 'opacity-100'}`}
-              />
-            </View>
-            {!!item.memo && <Text className={MUTED_DESCRIPTION_CLASS_NAME}>{item.memo}</Text>}
-          </View>
+          <SoberRestartCard key={item.id} record={item} pending={pending} onMenu={onMenu} />
         ))
       ) : (
         <View className={`items-center gap-3 ${canAdd ? 'pt-8' : ''}`}>

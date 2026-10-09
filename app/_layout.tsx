@@ -43,6 +43,9 @@ const sheetRoutes = [
   'sober/new',
   'sober/[id]/index',
   'sober/[id]/edit',
+  'sober/[id]/day/[date]',
+  'sober/[id]/restart/new',
+  'sober/[id]/restart/[restartId]/edit',
   'privacy',
   'image',
 ];
