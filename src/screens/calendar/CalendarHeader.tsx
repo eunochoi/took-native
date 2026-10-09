@@ -9,28 +9,14 @@ export function CalendarHeader({
   month,
   today,
   navigation,
-  titleAlign = 'center',
+  centerTitle = false,
 }: {
   month: string;
   today: string;
   navigation: ReturnType<typeof useCalendarNavigation>;
-  titleAlign?: 'left' | 'center' | 'right';
+  centerTitle?: boolean;
 }) {
   const { colors, rem: appRem } = useAppTheme();
-  const title = (
-    <Pressable
-      key="month"
-      accessibilityRole="button"
-      accessibilityLabel={`${month}, 이번 달로 이동`}
-      disabled={!navigation.isDateAvailable(today)}
-      onPress={() => navigation.changeToMonth(today.slice(0, 7))}
-      className={`justify-center ${titleAlign === 'center' ? 'flex-1 items-center' : ''}`}
-    >
-      <Text accessibilityRole="header" className="text-base">
-        {format(parseISO(`${month}-01`), 'yyyy년 M월')}
-      </Text>
-    </Pressable>
-  );
   const arrows = ([-1, 1] as const).map((amount) => {
     const enabled = amount === -1 ? navigation.canGoPrevious : navigation.canGoNext;
     return (
@@ -50,18 +36,21 @@ export function CalendarHeader({
       </Pressable>
     );
   });
-  const arrowGroup = (
-    <View key="arrows" className="flex-row items-center">
-      {arrows}
-    </View>
-  );
   return (
     <View className="flex-row items-center justify-between">
-      {titleAlign === 'center'
-        ? [arrows[0], title, arrows[1]]
-        : titleAlign === 'left'
-          ? [title, arrowGroup]
-          : [arrowGroup, title]}
+      {centerTitle && arrows[0]}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${month}, 이번 달로 이동`}
+        disabled={!navigation.isDateAvailable(today)}
+        onPress={() => navigation.changeToMonth(today.slice(0, 7))}
+        className={`flex-1 justify-center ${centerTitle ? 'items-center' : 'items-start'}`}
+      >
+        <Text accessibilityRole="header" className="text-lg font-semibold">
+          {format(parseISO(`${month}-01`), 'yyyy년 M월')}
+        </Text>
+      </Pressable>
+      {centerTitle ? arrows[1] : <View className="flex-row items-center -mr-2">{arrows}</View>}
     </View>
   );
 }

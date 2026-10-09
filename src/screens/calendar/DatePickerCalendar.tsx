@@ -31,6 +31,7 @@ export function DatePickerCalendar({
         month={month}
         today={today}
         navigation={navigation}
+        centerTitle
       />
       <CalendarGrid {...swipe.panHandlers} accessibilityLabel={`${month} 날짜 선택 달력`}>
         {days.map((date) => {

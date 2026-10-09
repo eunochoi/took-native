@@ -265,6 +265,8 @@ test('date picker owns its min/future range and default selection indicator', ()
     onMonthChange: () => {},
     onSelect: (date: string) => selected.push(date),
   });
+  const header = nodes(tree).find((node) => node.type === 'CalendarHeader');
+  assert.equal(header.props.centerTitle, true);
   for (const item of nodes(tree).filter((node) => node.type === 'CalendarDay'))
     CalendarDay(item.props).props.onPress();
   assert.deepEqual(selected, [

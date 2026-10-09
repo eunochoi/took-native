@@ -39,7 +39,8 @@ export function HabitMonthStatistics({
       <Text accessibilityRole="header" className="text-xl font-semibold">
         월간 기록
       </Text>
-      <View className="px-2 gap-4">
+      <View className="px-2 gap-3">
+        <CalendarHeader month={month} today={today} navigation={navigation} />
         <HabitStatisticsSummary
           stats={[
             { label: '실천 횟수', value: summary.completed, unit: '회' },
@@ -48,11 +49,7 @@ export function HabitMonthStatistics({
           ]}
           unavailable={unavailable}
         />
-        <CalendarHeader
-          month={month}
-          today={today}
-          navigation={navigation}
-        />
+
         <CalendarGrid {...swipe.panHandlers} accessibilityLabel={`${month} 습관 실천 달력`}>
           {days.map((date) => {
             const outside = date.slice(0, 7) !== month;

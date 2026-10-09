@@ -275,39 +275,57 @@ test('month title returns to the current month without selecting a date', () => 
   assert.deepEqual(changed, ['2026-10', '2026-10']);
 });
 
-test('title alignment places grouped arrows at the opposite edge and preserves navigation', () => {
+test('month header places the title before grouped arrows and preserves navigation', () => {
   const render = load('src/screens/calendar/CalendarHeader.tsx', []);
   const titleLabel = '2026-09, 이번 달로 이동';
-  for (const [titleAlign, labels] of [
-    ['left', [titleLabel, '이전 달', '다음 달']],
-    ['center', ['이전 달', titleLabel, '다음 달']],
-    ['right', ['이전 달', '다음 달', titleLabel]],
-  ] as const) {
-    const changes: string[] = [];
-    const tree = render('CalendarHeader', {
-      month: '2026-09',
-      today: '2026-10-08',
-      titleAlign,
-      navigation: useCalendarNavigation(
-        '2026-09',
-        (month) => changes.push(month),
-        undefined,
-        '2026-10-08',
-      ),
-    });
-    const buttons = nodes(tree).filter((node) => node.props.accessibilityRole === 'button');
-    assert.deepEqual(
-      buttons.map((node) => node.props.accessibilityLabel),
-      [...labels],
-    );
-    if (titleAlign !== 'center') {
-      const group = nodes(tree).find((node) => node.type === 'View' && node.key === 'arrows');
-      assert(group);
-      assert.equal(group.props.children.length, 2);
-    }
-    buttons.find((node) => node.props.accessibilityLabel === '이전 달').props.onPress();
-    buttons.find((node) => node.props.accessibilityLabel === '다음 달').props.onPress();
-    buttons.find((node) => node.props.accessibilityLabel === titleLabel).props.onPress();
-    assert.deepEqual(changes, ['2026-08', '2026-10', '2026-10']);
-  }
+  const changes: string[] = [];
+  const tree = render('CalendarHeader', {
+    month: '2026-09',
+    today: '2026-10-08',
+    navigation: useCalendarNavigation(
+      '2026-09',
+      (month) => changes.push(month),
+      undefined,
+      '2026-10-08',
+    ),
+  });
+  const buttons = nodes(tree).filter((node) => node.props.accessibilityRole === 'button');
+  assert.deepEqual(
+    buttons.map((node) => node.props.accessibilityLabel),
+    [titleLabel, '이전 달', '다음 달'],
+  );
+  const group = tree.props.children[2];
+  assert.equal(group.type, 'View');
+  assert.equal(group.props.children.length, 2);
+  buttons.find((node) => node.props.accessibilityLabel === '이전 달').props.onPress();
+  buttons.find((node) => node.props.accessibilityLabel === '다음 달').props.onPress();
+  buttons.find((node) => node.props.accessibilityLabel === titleLabel).props.onPress();
+  assert.deepEqual(changes, ['2026-08', '2026-10', '2026-10']);
+});
+
+test('centered month header keeps navigation on either side of the title', () => {
+  const render = load('src/screens/calendar/CalendarHeader.tsx', []);
+  const changes: string[] = [];
+  const titleLabel = '2026-09, 이번 달로 이동';
+  const tree = render('CalendarHeader', {
+    month: '2026-09',
+    today: '2026-10-08',
+    centerTitle: true,
+    navigation: useCalendarNavigation(
+      '2026-09',
+      (month) => changes.push(month),
+      undefined,
+      '2026-10-08',
+    ),
+  });
+  const buttons = nodes(tree).filter((node) => node.props.accessibilityRole === 'button');
+  assert.deepEqual(
+    buttons.map((node) => node.props.accessibilityLabel),
+    ['이전 달', titleLabel, '다음 달'],
+  );
+  assert.match(buttons[1].props.className, /items-center/);
+  buttons[0].props.onPress();
+  buttons[2].props.onPress();
+  buttons[1].props.onPress();
+  assert.deepEqual(changes, ['2026-08', '2026-10', '2026-10']);
 });

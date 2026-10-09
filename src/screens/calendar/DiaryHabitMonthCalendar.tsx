@@ -52,11 +52,13 @@ export function DiaryHabitMonthCalendar(props: {
           }}
         />
       )}
-      <CalendarHeader
-        month={props.month}
-        today={props.today}
-        navigation={navigation}
-      />
+      <View className='px-2'>
+        <CalendarHeader
+          month={props.month}
+          today={props.today}
+          navigation={navigation}
+        />
+      </View>
       <CalendarGrid
         fillHeight={props.fillHeight}
         {...swipe.panHandlers}

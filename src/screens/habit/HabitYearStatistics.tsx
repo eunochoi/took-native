@@ -28,6 +28,12 @@ export function HabitYearStatistics({
         연간 기록
       </Text>
       <View className="px-2 gap-4">
+        <HabitYearHeader
+          year={year}
+          startedDate={startedDate}
+          today={today}
+          onYearChange={setYear}
+        />
         <HabitStatisticsSummary
           stats={[
             { label: '실천 횟수', value: yearly.completed, unit: '회' },
@@ -35,12 +41,6 @@ export function HabitYearStatistics({
             { label: '실천율', value: yearly.rate ?? '—', unit: '%' },
           ]}
           unavailable={unavailable}
-        />
-        <HabitYearHeader
-          year={year}
-          startedDate={startedDate}
-          today={today}
-          onYearChange={setYear}
         />
         <HabitYearChart monthly={yearly.monthly} />
       </View>

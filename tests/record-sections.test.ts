@@ -484,8 +484,14 @@ test('yearly statistics refresh records, return to this year and preserve disabl
     onYearChange: () => undefined,
   }).render().result;
   assert.deepEqual(
-    Array.from(header.props.children, (node: any) => node.props.accessibilityLabel),
-    ['이전 연도', '2024년, 올해로 이동', '다음 연도'],
+    [
+      header.props.children[0].props.accessibilityLabel,
+      ...Array.from(
+        header.props.children[1].props.children,
+        (node: any) => node.props.accessibilityLabel,
+      ),
+    ],
+    ['2024년, 올해로 이동', '이전 연도', '다음 연도'],
   );
   const hidden = ui.render({ unavailable: true }).nodes;
   assert(

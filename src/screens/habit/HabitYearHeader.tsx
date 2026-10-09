@@ -33,7 +33,7 @@ export function HabitYearHeader({
       >
         <AppIcon
           name={amount === -1 ? 'chevron-left' : 'chevron-right'}
-          size={appRem * 1.5}
+          size={appRem * 1.1}
           color={colors.tertiary}
         />
       </Pressable>
@@ -41,18 +41,17 @@ export function HabitYearHeader({
   });
   return (
     <View className="flex-row items-center justify-between">
-      {arrows[0]}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${year}년, 올해로 이동`}
         onPress={() => onYearChange(maxYear)}
-        className="flex-1 items-center justify-center"
+        className="flex-1 items-start justify-center"
       >
-        <Text accessibilityRole="header" className="text-base">
+        <Text accessibilityRole="header" className="text-lg font-semibold">
           {year}년
         </Text>
       </Pressable>
-      {arrows[1]}
+      <View className="flex-row items-center -mr-2">{arrows}</View>
     </View>
   );
 }
