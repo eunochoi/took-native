@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
-import { FlatList, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { QueryError } from '../../src/components/QueryError';
 import { useNotice } from '../../src/components/NoticeProvider';
 import { RecordSortPicker } from '../../src/components/RecordSortPicker';
@@ -126,50 +126,41 @@ export default function HabitList() {
             />
           </Toolbar>
         </HabitTopSection>
-        <FlatList
-          data={gridItems}
-          numColumns={2}
-          keyExtractor={(_habit, index) => String(index)}
-          scrollEnabled={false}
-          initialNumToRender={MAX_HABIT_COUNT}
-          removeClippedSubviews={false}
-          contentContainerClassName="pt-8"
-          contentContainerStyle={{ paddingHorizontal: '5%' }}
-          ListHeaderComponent={
-            ready && sorted.length > 0 ? (
-              <HabitTodayProgress done={done} total={sorted.length} />
-            ) : null
-          }
-          ListEmptyComponent={emptyContent}
-          renderItem={({ item, index }) => (
-            <View
-              className={`w-1/2 border-theme-border/60 ${index < gridItems.length - 2 ? 'border-b' : 'border-b-0'} ${index % 2 === 0 ? 'border-r' : 'border-r-0'}`}
-            >
-              {item && (
-                <HabitBox
-                  key={item.id}
-                  habit={item}
-                  today={today}
-                  records={completions.data ?? []}
-                  disabled={pendingIds.has(item.id) || failed}
-                  onToggle={toggle}
-                />
-              )}
+        <View className="pt-8" style={{ paddingHorizontal: '5%' }}>
+          {ready && sorted.length > 0 && <HabitTodayProgress done={done} total={sorted.length} />}
+          {gridItems.length === 0 ? (
+            emptyContent
+          ) : (
+            <View className="flex-row flex-wrap">
+              {gridItems.map((item, index) => (
+                <View
+                  key={item?.id ?? 'empty'}
+                  className={`w-1/2 border-theme-border/60 ${index < gridItems.length - 2 ? 'border-b' : 'border-b-0'} ${index % 2 === 0 ? 'border-r' : 'border-r-0'}`}
+                >
+                  {item && (
+                    <HabitBox
+                      habit={item}
+                      today={today}
+                      records={completions.data ?? []}
+                      disabled={pendingIds.has(item.id) || failed}
+                      onToggle={toggle}
+                    />
+                  )}
+                </View>
+              ))}
             </View>
           )}
-          ListFooterComponent={
-            ready && failed ? (
-              <QueryError
-                className="pt-4"
-                message="습관 목록을 불러오지 못했어요."
-                onRetry={() => {
-                  void list.refetch();
-                  void completions.refetch();
-                }}
-              />
-            ) : null
-          }
-        />
+          {ready && failed && (
+            <QueryError
+              className="pt-4"
+              message="습관 목록을 불러오지 못했어요."
+              onRetry={() => {
+                void list.refetch();
+                void completions.refetch();
+              }}
+            />
+          )}
+        </View>
         <TabBottomSpacer />
       </ScrollView>
       <ScrollEdgeFade edge="top" visible={fade.topVisible} />
