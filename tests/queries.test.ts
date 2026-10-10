@@ -140,6 +140,88 @@ for (const [scope, affected] of Object.entries({
   });
 }
 
+for (const refetchFails of [false, true]) {
+  test(`failed habit saves refresh dependent caches and preserve the save error when refetch ${refetchFails ? 'fails' : 'succeeds'}`, async () => {
+    const client = new query.QueryClient({
+      defaultOptions: {
+        queries: { staleTime: Infinity, retry: false },
+        mutations: { retry: false },
+      },
+    });
+    const module = loadQueries(client);
+    const entries = cacheEntries(module);
+    const affected = [
+      'habitList',
+      'habitId',
+      'completions',
+      'completionsByHabit',
+      ...habitDiary,
+      'habitStats',
+      'years',
+    ];
+    const saveError = new Error('NativeDatabase.execAsync rejected');
+    const readError = new Error('connection still unavailable');
+    const calls: Record<string, number> = {};
+    const unsubscribe: (() => void)[] = [];
+    let writes = 0;
+    let reported: Error | undefined;
+    let succeeded = false;
+    try {
+      for (const [name, options] of Object.entries(entries)) {
+        calls[name] = 0;
+        client.setQueryData(options.queryKey, 'cached');
+        unsubscribe.push(
+          new query.QueryObserver(client, {
+            queryKey: options.queryKey,
+            queryFn: async () => {
+              calls[name]++;
+              if (refetchFails) throw readError;
+              return 'database';
+            },
+          }).subscribe(() => undefined),
+        );
+      }
+      const inactive = module.habitQueries.byId({}, 99).queryKey;
+      client.setQueryData(inactive, 'cached');
+      const mutation = new query.MutationObserver(
+        client,
+        module.useRecordMutation(
+          async () => {
+            writes++;
+            throw saveError;
+          },
+          'habit',
+          () => {
+            succeeded = true;
+          },
+          (error: Error) => {
+            reported = error;
+          },
+        ),
+      );
+      await assert.rejects(mutation.mutate(undefined), (error) => error === saveError);
+      assert.equal(writes, 1);
+      assert.equal(reported, saveError);
+      assert.equal(succeeded, false);
+      for (const [name, options] of Object.entries(entries)) {
+        assert.equal(calls[name], affected.includes(name) ? 1 : 0, name);
+        assert.equal(
+          client.getQueryData(options.queryKey),
+          affected.includes(name) && !refetchFails ? 'database' : 'cached',
+          name,
+        );
+        if (affected.includes(name) && refetchFails)
+          assert.equal(client.getQueryState(options.queryKey)?.error, readError);
+      }
+      assert.equal(client.getQueryState(inactive)?.isInvalidated, true);
+      assert.equal(client.getQueryData(inactive), 'cached');
+    } finally {
+      unsubscribe.forEach((stop) => stop());
+      client.clear();
+    }
+  });
+}
+
 test('habit check, rename and deletion refresh the actual diary joins and statistics', async () => {
   const { db, raw } = await database();
   const client = new query.QueryClient({

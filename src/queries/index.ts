@@ -163,7 +163,15 @@ export function useRecordMutation<T, V>(
       );
       onSuccess?.(data);
     },
-    onError,
+    onError: async (error) => {
+      onError?.(error);
+      if (scope === 'habit') {
+        // A rejected save can leave its outcome uncertain. Refresh reads without retrying writes.
+        await Promise.allSettled(
+          recordMutationKeys.habit.map((queryKey) => client.invalidateQueries({ queryKey })),
+        );
+      }
+    },
   });
 }
 export function useToday() {
