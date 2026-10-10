@@ -51,8 +51,8 @@ const sheetRoutes = [
   'image',
 ];
 
-// Fast Refresh can overlap the old connection's cleanup with the new setup.
-const databaseOptions: SQLiteOpenOptions = { useNewConnection: __DEV__ };
+// This Android-only app must not share native handles, including in release builds.
+const databaseOptions: SQLiteOpenOptions = { useNewConnection: true };
 async function initializeAppDatabase(db: SQLiteDatabase) {
   await initializeDatabase(db);
   await initializeMedia(db);
