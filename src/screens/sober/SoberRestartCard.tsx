@@ -1,5 +1,5 @@
-import { View } from 'react-native';
 import { format, parseISO } from 'date-fns';
+import { View } from 'react-native';
 import { RecordMenuButton } from '../../components/RecordMenuButton';
 import { Text } from '../../components/Text';
 import type { SoberRestart } from '../../db/types';
@@ -18,16 +18,14 @@ export function SoberRestartCard({
   return (
     <View className="gap-2 rounded-2xl bg-transparent border border-theme-border p-4">
       <View className="flex-row items-center gap-3">
-        <View className="flex-1 gap-1">
-          <Text className="text-base">{time}</Text>
-        </View>
+        <Text className="text-base">{time}</Text>
         {onMenu && (
           <RecordMenuButton
             muted
             accessibilityLabel={`${time} 다시 시작 기록 메뉴`}
             disabled={pending}
             onPress={() => onMenu(record)}
-            className={`h-11 w-11 items-center justify-center ${pending ? 'opacity-40' : 'opacity-100'}`}
+            className={`-mr-4 w-11 items-center justify-center ${pending ? 'opacity-40' : 'opacity-100'}`}
           />
         )}
       </View>
