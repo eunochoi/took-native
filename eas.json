@@ -4,12 +4,14 @@
   },
   "build": {
     "production": {
+      "channel": "production",
       "credentialsSource": "local",
       "android": {
         "buildType": "app-bundle"
       }
     },
     "preview": {
+      "channel": "preview",
       "distribution": "internal",
       "credentialsSource": "local",
       "android": {

@@ -61,7 +61,14 @@ for (const file of source) {
 const settings = fs.readFileSync(path.join(root, 'src/settings/model.ts'), 'utf8');
 assert(!/\bmode:|\baccent:|\bfont:/.test(settings));
 assert.equal(config.android.allowBackup, false);
-assert.equal(config.updates.enabled, false);
+assert(pkg.dependencies['expo-updates']);
+assert.equal(config.updates.enabled, true);
+assert.equal(config.updates.url, `https://u.expo.dev/${config.extra.eas.projectId}`);
+assert.deepEqual(config.runtimeVersion, { policy: 'appVersion' });
+assert.equal(config.updates.requestHeaders['expo-channel-name'], 'production');
+const eas = JSON.parse(fs.readFileSync(path.join(root, 'eas.json'), 'utf8'));
+assert.equal(eas.build.production.channel, 'production');
+assert.equal(eas.build.preview.channel, 'preview');
 console.log(
   `Boundary checks passed: ${source.length} source files; no web/account routes, networking calls, or sibling imports.`,
 );
