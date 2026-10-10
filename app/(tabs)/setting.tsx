@@ -1,35 +1,35 @@
-import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { useQueryClient } from '@tanstack/react-query';
 import { useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, ScrollView, View } from 'react-native';
-import { refreshSoberWidgets } from '../../src/widgets/sober';
 import {
   chooseBackup,
   discardBackupSelection,
   exportBackup,
   restoreBackup,
 } from '../../src/backup';
-import { useNotice } from '../../src/components/NoticeProvider';
 import { AppIcon } from '../../src/components/AppIcon';
 import { ColorView } from '../../src/components/ColorTransition';
 import { ConfirmModal } from '../../src/components/ConfirmModal';
+import { useNotice } from '../../src/components/NoticeProvider';
 import { ScrollEdgeFade } from '../../src/components/ScrollEdgeFade';
 import { TabBottomSpacer } from '../../src/components/TabBottomSpacer';
 import { Text } from '../../src/components/Text';
 import { Toolbar } from '../../src/components/Toolbar';
 import { useScrollFade } from '../../src/hooks/useScrollFade';
+import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { AppearanceSettingsSection } from '../../src/screens/settings/AppearanceSettingsSection';
 import { BackupDestinationPicker } from '../../src/screens/settings/BackupDestinationPicker';
 import { BackupSection } from '../../src/screens/settings/BackupSection';
 import { EmotionIconStyleSelector } from '../../src/screens/settings/EmotionIconStyleSelector';
-import { SettingsTopSection } from '../../src/screens/settings/SettingsTopSection';
 import { NotificationSettingsSection } from '../../src/screens/settings/NotificationSettingsSection';
+import { SettingsTopSection } from '../../src/screens/settings/SettingsTopSection';
 import type { Settings } from '../../src/settings/model';
 import { useSettings } from '../../src/settings/SettingsProvider';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
 import { PAGE_CLASS_NAME } from '../../src/theme/classes';
+import { refreshSoberWidgets } from '../../src/widgets/sober';
 
 export default function SettingsScreen() {
   const { showNotice } = useNotice();
@@ -193,16 +193,6 @@ export default function SettingsScreen() {
         <SettingsTopSection>
           <Toolbar>
             <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled }}
-              disabled={disabled}
-              onPress={() => openModal('/privacy')}
-              className={`h-11 shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
-            >
-              <AppIcon name="privacy-tip" size={appRem * 1.2} className="text-theme-accent" />
-              <Text className="text-sm leading-snug text-theme-text-secondary">Privacy Policy</Text>
-            </Pressable>
-            <Pressable
               accessibilityRole="link"
               accessibilityState={{ disabled }}
               disabled={disabled}
@@ -219,6 +209,15 @@ export default function SettingsScreen() {
             >
               <AppIcon name="info" size={appRem * 1.2} className="text-theme-accent" />
               <Text className="text-sm leading-snug text-theme-text-secondary">앱 소개</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled }}
+              disabled={disabled}
+              onPress={() => openModal('/privacy')}
+              className={`h-11 shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
+            >
+              <AppIcon name="privacy-tip" size={appRem * 1.2} className="text-theme-accent" />
             </Pressable>
           </Toolbar>
         </SettingsTopSection>
