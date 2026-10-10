@@ -2,8 +2,8 @@ import { useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { Button } from '../../components/Button';
-import type { CloseBottomSheet } from '../../hooks/useBottomSheetLifecycle';
 import { Text } from '../../components/Text';
+import type { CloseBottomSheet } from '../../hooks/useBottomSheetLifecycle';
 
 const TIME_INPUT_CLASS_NAME =
   'h-12 w-16 rounded-2xl bg-transparent border border-theme-border text-center text-lg text-theme-text-primary font-normal';
@@ -67,9 +67,6 @@ export function NotificationTimePicker({
     >
       {(close) => (
         <View className="gap-5">
-          <Text className="text-center text-sm text-theme-text-secondary">
-            매일 이 시간에 알려드려요.
-          </Text>
           <View className="flex-row items-center justify-center gap-3">
             <TextInput
               accessibilityLabel="시 (0~23)"
