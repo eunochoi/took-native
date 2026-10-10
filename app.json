@@ -5,7 +5,9 @@
     "version": "2.1.1",
     "scheme": "took-local",
     "orientation": "portrait",
-    "platforms": ["android"],
+    "platforms": [
+      "android"
+    ],
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
     "android": {
