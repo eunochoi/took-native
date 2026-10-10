@@ -109,6 +109,16 @@ export function useBottomSheetMotion({
     [motionPolicy, session, openingSession, phase, onOpened],
   );
 
+  const completeOpening = useCallback(
+    (currentSession: number) => {
+      if (session.value !== currentSession || phase.value !== 'opening') return;
+      phase.value = 'idle';
+      backdrop.value = 1;
+      onOpened(currentSession);
+    },
+    [session, phase, backdrop, onOpened],
+  );
+
   const animateClose = useCallback(
     (closingSession: number) => {
       phase.value = 'closing';
@@ -265,6 +275,7 @@ export function useBottomSheetMotion({
   return {
     ...entering,
     prepareOpen,
+    completeOpening,
     animateBackdropOpen,
     animateClose,
     restoreAfterBlockedClose,

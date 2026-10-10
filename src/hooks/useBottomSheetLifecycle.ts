@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, BackHandler, Keyboard, type ScrollView } from 'react-native';
 import type { AnimatedRef } from 'react-native-reanimated';
+import tokens from '../theme/tokens.json';
 import { useBottomSheetMotion } from './useBottomSheetMotion';
 
 export type CloseBottomSheet = (afterClose?: () => void) => boolean;
@@ -88,7 +89,7 @@ export function useBottomSheetLifecycle({
         if (generation.current === closingSession) action();
       });
   }, []);
-  const dismissRef = useRef<(session: number) => void>(() => {});
+  const dismissRef = useRef<(session: number) => void>(() => { });
   const dismiss = useCallback((currentSession: number) => dismissRef.current(currentSession), []);
   const finishOpen = useCallback((openingSession: number) => {
     if (!alive.current || generation.current !== openingSession || closing.current) return;
@@ -162,6 +163,15 @@ export function useBottomSheetLifecycle({
     // Start after the backdrop mounts at opacity zero. Its opacity has a single animated owner.
     if (bodyVisible && !closing.current) motionRef.current.animateBackdropOpen();
   }, [bodyVisible, session]);
+
+  useEffect(() => {
+    if (presentation !== 'screen' || !bodyVisible || closingBody) return;
+    const timer = setTimeout(
+      () => motionRef.current.completeOpening(session),
+      tokens.motion.pickerOpen + tokens.motion.fade,
+    );
+    return () => clearTimeout(timer);
+  }, [presentation, bodyVisible, closingBody, session]);
 
   const onShow = useCallback(() => {
     Keyboard.dismiss();

@@ -57,6 +57,8 @@ function harness(
     }
   };
   const animations: any[] = [];
+  const timers = new Map<number, () => void>();
+  let timerSequence = 0;
   const scrollCommands: number[] = [];
   function shared(initial: any) {
     const index = cursor++;
@@ -139,6 +141,12 @@ function harness(
   const sheetModules: Record<string, any> = {};
   const context: any = {
     exports,
+    setTimeout: (fn: () => void) => {
+      const id = ++timerSequence;
+      timers.set(id, fn);
+      return id;
+    },
+    clearTimeout: (id: number) => timers.delete(id),
     requestAnimationFrame: (fn: () => void) => {
       frames.push(fn);
       return frames.length;
@@ -401,6 +409,15 @@ function harness(
     },
     sheet() {
       return find(tree, (node) => node.key?.startsWith('sheet-'));
+    },
+    openingFallback() {
+      const pending = [...timers.values()];
+      timers.clear();
+      pending.forEach((fn) => fn());
+      render();
+    },
+    pendingOpeningFallback() {
+      return [...timers.values()].at(-1)!;
     },
     flushFrames() {
       frames.splice(0).forEach((fn) => fn());
@@ -868,6 +885,57 @@ test('saved route sheet remains mounted until the controlled closing animation c
   h.completeAnimation();
   assert.equal(h.closes, 1);
   assert.equal(h.tree, null);
+});
+
+test('cold-start route recovers movement and closing without any native animation callback', () => {
+  let opening = true;
+  let opened = 0;
+  const h = harness(true, false, 720, {
+    presentation: 'screen',
+    onBeforeClose: () => !opening,
+    onOpened: () => {
+      opening = false;
+      opened++;
+    },
+  });
+  assert.equal(h.close(), false);
+  h.openingFallback();
+  assert.equal(opened, 1);
+  h.begin();
+  h.move(0, 20);
+  assert.equal(h.gestureState, 'active');
+  h.end(false);
+  h.completeAnimation();
+  h.completeEnter();
+  assert.equal(opened, 1);
+  assert.equal(h.close(), true);
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
+});
+
+test('opening fallback cannot complete a closed, unmounted or newer route session', () => {
+  let opened = 0;
+  const h = harness(true, false, 720, {
+    presentation: 'screen',
+    onOpened: () => opened++,
+  });
+  const oldFallback = h.pendingOpeningFallback();
+  h.setVisible(false);
+  oldFallback();
+  assert.equal(opened, 0);
+  h.completeAnimation();
+  h.setVisible(true);
+  oldFallback();
+  assert.equal(opened, 0);
+  h.openingFallback();
+  assert.equal(opened, 1);
+  const unmounted = harness(true, false, 720, {
+    presentation: 'screen',
+    onOpened: () => opened++,
+  });
+  unmounted.unmount();
+  unmounted.openingFallback();
+  assert.equal(opened, 1);
 });
 
 test('route opening callbacks follow the sheet entry rather than backdrop completion', () => {
