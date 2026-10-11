@@ -2,7 +2,7 @@
   "expo": {
     "name": "took",
     "slug": "took-native",
-    "version": "2.1.1",
+    "version": "2.1.2",
     "scheme": "took-local",
     "orientation": "portrait",
     "platforms": [
@@ -21,7 +21,7 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
-      "versionCode": 21
+      "versionCode": 22
     },
     "plugins": [
       "./plugins/withAndroidDevApp.cjs",

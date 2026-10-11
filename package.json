@@ -1,6 +1,6 @@
 {
   "name": "took-native",
-  "version": "2.1.0",
+  "version": "2.1.2",
   "private": true,
   "packageManager": "pnpm@9.3.0",
   "main": "index.ts",
@@ -14,7 +14,8 @@
     "android:dev": "EXPO_NO_TELEMETRY=1 expo run:android --variant debug --app-id com.everstamp.dev",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
-    "check:boundaries": "node scripts/check-boundaries.cjs"
+    "check:boundaries": "node scripts/check-boundaries.cjs",
+    "version:bump": "node scripts/bump-version.cjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
