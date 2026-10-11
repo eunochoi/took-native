@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { Text } from '../../components/Text';
 import type { CloseBottomSheet } from '../../hooks/useBottomSheetLifecycle';
@@ -7,6 +8,7 @@ import { completeOnboarding, hasCompletedOnboarding } from '../../onboarding/sto
 import type { Settings } from '../../settings/model';
 import { useSettings } from '../../settings/SettingsProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
+import tokens from '../../theme/tokens.json';
 import { BackupPage } from './BackupPage';
 import { ThemePage } from './ThemePage';
 import { UsagePage } from './UsagePage';
@@ -139,8 +141,14 @@ export function OnboardingSheet({
                 onPress={() => selectStep(index)}
                 className="items-center justify-center"
               >
-                <View
-                  className={`h-3 w-3 rounded-full ${index === step ? 'bg-theme-accent w-6' : 'bg-theme-text-disabled'}`}
+                <Animated.View
+                  className={`h-3 rounded-full ${index === step ? 'bg-theme-accent' : 'bg-theme-text-disabled'}`}
+                  style={{
+                    width: rem * (index === step ? 1.5 : 0.75),
+                    transitionProperty: ['width', 'backgroundColor'],
+                    transitionDuration: `${reducedMotion ? 0 : tokens.motion.fade}ms`,
+                    transitionTimingFunction: 'ease-in-out',
+                  }}
                 />
               </Pressable>
             ))}

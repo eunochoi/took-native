@@ -90,6 +90,8 @@ function harness(values = new Map<string, string>()) {
       ScrollView: 'ScrollView',
       useWindowDimensions: () => ({ height: 800 }),
     },
+    'react-native-reanimated': { default: { View: 'View' }, __esModule: true },
+    '../../theme/tokens.json': { motion: { fade: 200 } },
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 24, bottom: 24 }) },
     '../../components/BottomSheetModal': { BottomSheetModal: 'Sheet' },
     '../../components/Text': { Text: 'Text' },
