@@ -72,14 +72,6 @@ export default function HabitDetail() {
                     실천 횟수 ÷ 실천 가능일 × 100
                   </Text>
                 </View>
-                <View className="gap-1">
-                  <Text className="text-sm leading-5 font-semibold text-theme-accent">
-                    놓친 횟수
-                  </Text>
-                  <Text className="text-sm leading-5 text-theme-accent">
-                    최근 4일을 제외한 미실천 횟수
-                  </Text>
-                </View>
               </View>
             </>
           ) : !query.isPending && !query.error ? (

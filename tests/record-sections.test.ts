@@ -584,8 +584,8 @@ test('yearly habit summary uses monthly label order and refreshes missed counts 
     nodes
       .filter((node) => node.props.className === 'text-2xl font-bold text-theme-accent')
       .map((node) => node.props.children[0]);
-  assert.deepEqual(values(view), [2, 66, '2.9']);
-  assert.deepEqual(values(ui.render({ today: '2024-03-12' }).nodes), [2, 67, '2.8']);
+  assert.deepEqual(values(view), [2, 68, '2.9']);
+  assert.deepEqual(values(ui.render({ today: '2024-03-12' }).nodes), [2, 70, '2.8']);
   assert.equal(ui.calls.year, 2);
   assert.deepEqual(values(ui.render({ unavailable: true }).nodes), ['—', '—', '—']);
 });
