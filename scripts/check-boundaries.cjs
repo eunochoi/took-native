@@ -14,14 +14,14 @@ const forbidden =
   /next-auth|@prisma|react-native-webview|ReactNativeWebView|account-deletion|authAction|useCurrentUser|PanelDialog|AppPageLayout|ScrollContainer|https?:\/\/to-ok\.me/;
 for (const file of source) {
   const text = fs.readFileSync(file, 'utf8');
-  // The settings link opens the public introduction in an external browser.
-  const boundaryText =
-    path.relative(root, file) === 'app/(tabs)/setting.tsx'
-      ? text.replace(
-          /Linking\.openURL\('https:\/\/to-ok\.me\/intro'\)/g,
-          'Linking.openURL(externalIntro)',
-        )
-      : text;
+  // Only these public links may open TOOK in an external browser; no embedded web/account code.
+  const externalLinkFiles = [
+    'app/(tabs)/setting.tsx',
+    'src/screens/onboarding/OnboardingSheet.tsx',
+  ];
+  const boundaryText = externalLinkFiles.includes(path.relative(root, file))
+    ? text.replace(/Linking\.openURL\('https:\/\/to-ok\.me'\)/g, 'Linking.openURL(externalWeb)')
+    : text;
   assert(!forbidden.test(boundaryText), `Forbidden web/account dependency: ${file}`);
   assert(!/from ['"][^'"]*(?:took\/next|took-expo-app)/.test(text), `Sibling dependency: ${file}`);
   assert(!/\bfetch\s*\(|XMLHttpRequest|axios/.test(text), `Unexpected networking: ${file}`);

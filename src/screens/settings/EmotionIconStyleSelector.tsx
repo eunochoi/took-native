@@ -6,11 +6,13 @@ import type { Settings } from '../../settings/model';
 
 export function EmotionIconStyleSelector({
   value,
+  compact = false,
   disabled,
   dimmed = disabled,
   onChange,
 }: {
   value: Settings['emotionStyle'];
+  compact?: boolean;
   disabled: boolean;
   dimmed?: boolean;
   onChange: (value: Settings['emotionStyle']) => void;
@@ -30,13 +32,17 @@ export function EmotionIconStyleSelector({
           accessibilityState={{ checked: value === style, disabled }}
           disabled={disabled}
           onPress={() => onChange(style)}
-          className={`flex-1 items-center gap-3 px-2 py-6 rounded-theme ${dimmed ? 'opacity-40' : ''} ${value === style ? 'border border-theme-accent bg-theme-accent/10' : 'border border-transparent'}`}
+          className={`flex-1 items-center px-2 rounded-theme ${compact ? 'gap-1 py-2' : 'gap-3 py-6'} ${dimmed ? 'opacity-40' : ''} ${value === style ? `border border-theme-accent ${compact ? 'bg-transparent' : 'bg-theme-accent/10'}` : 'border border-transparent'}`}
         >
           <View className="flex-row items-center gap-1">
             <EmotionImage emotion={0} iconStyle={style} size={appRem * 1.75} />
             <EmotionImage emotion={6} iconStyle={style} size={appRem * 1.75} />
           </View>
-          <Text className="text-sm font-medium">{['기본형', '단순형', '이모지'][index]}</Text>
+          <Text
+            className={`text-center text-sm font-medium ${compact && value === style ? 'text-theme-accent' : 'text-theme-text-primary'}`}
+          >
+            {['기본형', '단순형', '이모지'][index]}
+          </Text>
         </Pressable>
       ))}
     </View>

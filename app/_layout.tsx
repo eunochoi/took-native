@@ -2,7 +2,7 @@
 import { themeColors } from '../src/theme/colors';
 import { AppThemeProvider, useAppTheme } from '../src/theme/AppThemeProvider';
 import '../global.css';
-import { useCallback, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { AppState, Pressable, Text as NativeText, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -21,6 +21,7 @@ import { refreshSoberWidgets } from '../src/widgets/sober';
 import { NotificationController } from '../src/notifications/NotificationController';
 import { ModalNavigationProvider } from '../src/navigation/ModalNavigationProvider';
 import { NoticeProvider } from '../src/components/NoticeProvider';
+import { FirstRunOnboarding } from '../src/screens/onboarding/OnboardingSheet';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 const queryClient = new QueryClient({
@@ -58,7 +59,12 @@ async function initializeAppDatabase(db: SQLiteDatabase) {
   await initializeMedia(db);
 }
 
+// SQLiteProvider intentionally ignores children in its memo comparison. Context keeps
+// readiness updates flowing to descendants without reopening the records database.
+const AppReadyContext = createContext(false);
+
 function Navigation({ onReady }: { onReady: () => void }) {
+  const ready = useContext(AppReadyContext);
   const { colors, mode, reducedMotion } = useAppTheme();
   useEffect(() => {
     refreshSoberWidgets();
@@ -109,6 +115,7 @@ function Navigation({ onReady }: { onReady: () => void }) {
               />
             ))}
           </Stack>
+          <FirstRunOnboarding ready={ready} />
         </View>
       </ModalNavigationProvider>
     </ThemeProvider>
@@ -169,23 +176,25 @@ export default function RootLayout() {
               </Pressable>
             </SafeAreaView>
           ) : (
-            <SQLiteProvider
-              key={attempt}
-              databaseName="took.db"
-              options={databaseOptions}
-              onInit={initializeAppDatabase}
-              onError={onError}
-            >
-              <SettingsProvider onError={onError}>
-                <AppThemeProvider>
-                  <GestureHandlerRootView style={{ flex: 1 }}>
-                    <NoticeProvider>
-                      <Navigation onReady={onNavigationReady} />
-                    </NoticeProvider>
-                  </GestureHandlerRootView>
-                </AppThemeProvider>
-              </SettingsProvider>
-            </SQLiteProvider>
+            <AppReadyContext.Provider value={navigationReady && imagesReady}>
+              <SQLiteProvider
+                key={attempt}
+                databaseName="took.db"
+                options={databaseOptions}
+                onInit={initializeAppDatabase}
+                onError={onError}
+              >
+                <SettingsProvider onError={onError}>
+                  <AppThemeProvider>
+                    <GestureHandlerRootView style={{ flex: 1 }}>
+                      <NoticeProvider>
+                        <Navigation onReady={onNavigationReady} />
+                      </NoticeProvider>
+                    </GestureHandlerRootView>
+                  </AppThemeProvider>
+                </SettingsProvider>
+              </SQLiteProvider>
+            </AppReadyContext.Provider>
           )}
           {!error && (!navigationReady || !imagesReady) && (
             <AppLoadingScreen onReady={onImagesReady} />

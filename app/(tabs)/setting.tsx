@@ -19,6 +19,7 @@ import { Text } from '../../src/components/Text';
 import { Toolbar } from '../../src/components/Toolbar';
 import { useScrollFade } from '../../src/hooks/useScrollFade';
 import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
+import { OnboardingSheet } from '../../src/screens/onboarding/OnboardingSheet';
 import { AppearanceSettingsSection } from '../../src/screens/settings/AppearanceSettingsSection';
 import { BackupDestinationPicker } from '../../src/screens/settings/BackupDestinationPicker';
 import { BackupSection } from '../../src/screens/settings/BackupSection';
@@ -44,6 +45,7 @@ export default function SettingsScreen() {
   const [activity, setActivity] = useState<'export' | 'restore' | 'settings' | null>(null);
   const active = useRef(false);
   const [backupPicker, setBackupPicker] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<string[] | null>(null);
   // Own selected cache files until cancel/confirm; consume once even before React re-renders.
   const restoreSelection = useRef<string[] | null>(null);
@@ -193,22 +195,16 @@ export default function SettingsScreen() {
         <SettingsTopSection>
           <Toolbar>
             <Pressable
-              accessibilityRole="link"
+              accessibilityRole="button"
               accessibilityState={{ disabled }}
               disabled={disabled}
-              onPress={() => {
-                void Linking.openURL('https://to-ok.me/intro').catch(() =>
-                  showNotice({
-                    tone: 'error',
-                    title: '앱 소개를 열지 못했어요',
-                    message: '다시 시도해주세요.',
-                  }),
-                );
-              }}
+              onPress={() => setOnboardingOpen(true)}
               className={`h-11 shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
             >
               <AppIcon name="info" size={appRem * 1.2} className="text-theme-accent" />
-              <Text className="text-sm leading-snug text-theme-text-secondary">앱 소개</Text>
+              <Text className="text-sm leading-snug text-theme-text-secondary">
+                앱 가이드
+              </Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -222,6 +218,24 @@ export default function SettingsScreen() {
           </Toolbar>
         </SettingsTopSection>
         <View className="pt-6 gap-12" style={{ paddingHorizontal: '5%' }}>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityState={{ disabled }}
+            disabled={disabled}
+            onPress={() => {
+              void Linking.openURL('https://to-ok.me').catch(() =>
+                showNotice({
+                  tone: 'error',
+                  title: 'TOOK 웹을 열지 못했어요',
+                  message: '인터넷 연결을 확인하고 다시 시도해주세요.',
+                }),
+              );
+            }}
+            className={`p-2 flex-row items-center justify-between gap-2 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
+          >
+            <Text className="text-base text-theme-text-secondary">TOOK 웹 이용하기</Text>
+            <Text className="text-base text-theme-accent">↗</Text>
+          </Pressable>
           <NotificationSettingsSection disabled={disabled} />
           <View className="gap-3">
             <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
@@ -273,6 +287,7 @@ export default function SettingsScreen() {
       </ScrollView>
       <ScrollEdgeFade edge="top" visible={fade.topVisible} />
       <ScrollEdgeFade edge="bottom" visible={fade.bottomVisible} />
+      {onboardingOpen && <OnboardingSheet onClose={() => setOnboardingOpen(false)} />}
       {backupPicker && (
         <BackupDestinationPicker
           onClose={() => setBackupPicker(false)}
