@@ -15,6 +15,7 @@ type Options = {
   onOpened?: () => void;
   presentation: 'modal' | 'screen';
   dismissOnBack: boolean;
+  dismissible: boolean;
   height: number;
   rem: number;
   reducedMotion: boolean;
@@ -35,6 +36,7 @@ export function useBottomSheetLifecycle({
   onOpened,
   presentation,
   dismissOnBack,
+  dismissible,
   height,
   rem,
   reducedMotion,
@@ -89,7 +91,7 @@ export function useBottomSheetLifecycle({
         if (generation.current === closingSession) action();
       });
   }, []);
-  const dismissRef = useRef<(session: number) => void>(() => { });
+  const dismissRef = useRef<(session: number) => void>(() => {});
   const dismiss = useCallback((currentSession: number) => dismissRef.current(currentSession), []);
   const finishOpen = useCallback((openingSession: number) => {
     if (!alive.current || generation.current !== openingSession || closing.current) return;
@@ -108,6 +110,7 @@ export function useBottomSheetLifecycle({
     onClosed: finishClose,
     onOpened: finishOpen,
     scrollEnabled,
+    dismissible,
     externalScrollRef: scrollRef,
   });
   const motionRef = useRef(motion);
@@ -152,13 +155,13 @@ export function useBottomSheetLifecycle({
     }
   }, [visible, closeSheet, onScrollOffset, presentation]);
   useEffect(() => {
-    if (presentation !== 'screen' || !visible || !dismissOnBack) return;
+    if (presentation !== 'screen' || !visible || !dismissOnBack || !dismissible) return;
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
       closeSheet();
       return true;
     });
     return () => subscription.remove();
-  }, [presentation, visible, dismissOnBack, closeSheet]);
+  }, [presentation, visible, dismissOnBack, dismissible, closeSheet]);
   useLayoutEffect(() => {
     // Start after the backdrop mounts at opacity zero. Its opacity has a single animated owner.
     if (bodyVisible && !closing.current) motionRef.current.animateBackdropOpen();
@@ -175,7 +178,7 @@ export function useBottomSheetLifecycle({
 
   const onShow = useCallback(() => {
     Keyboard.dismiss();
-    AccessibilityInfo.announceForAccessibility(title);
+    if (title) AccessibilityInfo.announceForAccessibility(title);
     if (!active.current || closing.current) return;
     shown.current = true;
     bodyMounted.current = true;

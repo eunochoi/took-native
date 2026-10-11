@@ -27,6 +27,7 @@ export function BottomSheetModal({
   onClose,
   children,
   renderScrollView,
+  renderBody,
   maxHeight,
   fixedHeight = false,
   scrollFade = false,
@@ -35,6 +36,7 @@ export function BottomSheetModal({
   dimBackdrop = true,
   menuAction,
   dismissOnBack = true,
+  dismissible = true,
   onBeforeClose,
   onOpening,
   onOpened,
@@ -43,7 +45,7 @@ export function BottomSheetModal({
   scrollRef,
 }: {
   visible: boolean;
-  title: string;
+  title?: string;
   titleIcon?: ReactNode;
   onClose: () => void;
   children?: ReactNode | ((closeSheet: CloseBottomSheet) => ReactNode);
@@ -55,6 +57,7 @@ export function BottomSheetModal({
   dimBackdrop?: boolean;
   menuAction?: ReactNode;
   dismissOnBack?: boolean;
+  dismissible?: boolean;
   onBeforeClose?: () => boolean;
   onOpening?: () => void;
   onOpened?: () => void;
@@ -62,6 +65,7 @@ export function BottomSheetModal({
   scrollEnabled?: boolean;
   scrollRef?: AnimatedRef<ScrollView>;
   renderScrollView?: (props: BottomSheetScrollProps) => ReactNode;
+  renderBody?: (closeSheet: CloseBottomSheet) => ReactNode;
 }) {
   const { rem: appRem, reducedMotion: reduceMotion } = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -74,13 +78,14 @@ export function BottomSheetModal({
   const { present, bodyVisible, closingBody, session, motion, closeSheet, onShow } =
     useBottomSheetLifecycle({
       visible,
-      title,
+      title: title ?? '',
       onClose,
       onBeforeClose,
       onOpening,
       onOpened,
       presentation,
       dismissOnBack,
+      dismissible,
       height,
       rem: appRem,
       reducedMotion: reduceMotion,
@@ -107,6 +112,8 @@ export function BottomSheetModal({
             className="absolute inset-0"
           >
             <Pressable
+              accessible={dismissible}
+              disabled={!dismissible}
               accessibilityRole="button"
               accessibilityLabel="닫기"
               onPress={() => closeSheet()}
@@ -127,7 +134,7 @@ export function BottomSheetModal({
               <View
                 onLayout={motion.onSheetLayout}
                 accessibilityViewIsModal
-                className="w-full shrink rounded-t-3xl border-[1px] border-theme-border bg-theme-surface px-[5%] pt-2 shadow-2xl shadow-theme-overlay/60"
+                className={`w-full shrink rounded-t-3xl border-[1px] border-theme-border bg-theme-surface ${renderBody ? '' : 'px-[5%]'} pt-2 shadow-2xl shadow-theme-overlay/60`}
                 style={{
                   maxHeight: sheetHeight,
                   height: fixedHeight ? sheetHeight : undefined,
@@ -137,22 +144,26 @@ export function BottomSheetModal({
                   title={title}
                   titleIcon={titleIcon}
                   menuAction={menuAction}
-                  onClose={() => closeSheet()}
+                  onClose={dismissible ? () => closeSheet() : undefined}
                 />
-                <BottomSheetScrollViewport
-                  motion={motion}
-                  renderScrollView={renderScrollView}
-                  fade={fade}
-                  fixedHeight={fixedHeight}
-                  scrollEnabled={scrollEnabled}
-                  scrollFade={scrollFade}
-                  contentKey={contentKey}
-                  bottomPadding={
-                    !footer && insets.bottom > 0 ? appRem * 3 + insets.bottom : undefined
-                  }
-                >
-                  {typeof children === 'function' ? children(closeSheet) : children}
-                </BottomSheetScrollViewport>
+                {renderBody ? (
+                  renderBody(closeSheet)
+                ) : (
+                  <BottomSheetScrollViewport
+                    motion={motion}
+                    renderScrollView={renderScrollView}
+                    fade={fade}
+                    fixedHeight={fixedHeight}
+                    scrollEnabled={scrollEnabled}
+                    scrollFade={scrollFade}
+                    contentKey={contentKey}
+                    bottomPadding={
+                      !footer && insets.bottom > 0 ? appRem * 3 + insets.bottom : undefined
+                    }
+                  >
+                    {typeof children === 'function' ? children(closeSheet) : children}
+                  </BottomSheetScrollViewport>
+                )}
                 {footer && (
                   <View
                     className="pb-4"
@@ -179,7 +190,9 @@ export function BottomSheetModal({
       animationType="none"
       statusBarTranslucent
       navigationBarTranslucent
-      onRequestClose={() => closeSheet()}
+      onRequestClose={() => {
+        if (dismissOnBack && dismissible) closeSheet();
+      }}
       onShow={onShow}
     >
       {content}

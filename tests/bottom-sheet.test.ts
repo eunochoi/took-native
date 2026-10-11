@@ -19,12 +19,14 @@ function harness(
     presentation?: 'modal' | 'screen';
     dimBackdrop?: boolean;
     dismissOnBack?: boolean;
+    dismissible?: boolean;
     onBeforeClose?: () => boolean;
     onOpening?: () => void;
     onOpened?: () => void;
     scrollEnabled?: boolean;
     footer?: unknown;
     renderScrollView?: (props: any) => unknown;
+    renderBody?: (close: any) => unknown;
   } = {},
 ) {
   const slots: any[] = [];
@@ -1023,4 +1025,44 @@ test('a nested route sheet keeps a transparent dismiss target without adding a s
     h.completeAnimation();
     assert.equal(h.closes, 1);
   }
+});
+
+test('first-run sheets disable user dismissal while retaining scroll and completion close', () => {
+  let completed = false;
+  const h = harness(true, false, 720, {
+    dismissible: false,
+    fixedHeight: true,
+    onBeforeClose: () => completed,
+  });
+  h.show();
+  h.completeOpen();
+  assert.equal(h.pan.config.enabled, false);
+  assert.equal(h.scroll().props.scrollEnabled, true);
+  const header = h.sheet().props.children.props.children[0];
+  assert.equal(header.props.children[0], undefined);
+  h.tree.props.onRequestClose();
+  assert.equal(h.closes, 0);
+  assert.equal(h.close(), false);
+  completed = true;
+  assert.equal(h.close(), true);
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
+});
+
+test('custom carousel body bypasses the vertical viewport and shares the sheet close lifecycle', () => {
+  const h = harness(true, false, 720, {
+    scrollEnabled: false,
+    renderBody: (close) => ({ type: 'Carousel', props: { onConfirm: close } }),
+    footer: 'dots',
+  });
+  h.show();
+  h.completeOpen();
+  const children = h.sheet().props.children.props.children;
+  const body = children.find((node: any) => node?.type === 'Carousel');
+  assert.ok(body);
+  assert.equal(children.at(-1).props.children, 'dots');
+  assert.equal(body.props.onConfirm(), true);
+  assert.equal(h.closes, 0);
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
 });

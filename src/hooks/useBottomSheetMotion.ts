@@ -30,6 +30,7 @@ export function useBottomSheetMotion({
   onClosed,
   onOpened,
   scrollEnabled = true,
+  dismissible = true,
   externalScrollRef,
 }: {
   rem: number;
@@ -42,6 +43,7 @@ export function useBottomSheetMotion({
   onClosed: (session: number, finished: boolean) => void;
   onOpened: (session: number) => void;
   scrollEnabled?: boolean;
+  dismissible?: boolean;
   externalScrollRef?: ReturnType<typeof useAnimatedRef<ScrollView>>;
 }) {
   const ownScrollRef = useAnimatedRef<ScrollView>();
@@ -177,7 +179,7 @@ export function useBottomSheetMotion({
       );
     };
     const pan = Gesture.Pan()
-      .enabled(scrollEnabled)
+      .enabled(scrollEnabled && dismissible)
       .manualActivation(true)
       .maxPointers(1)
       .shouldCancelWhenOutside(false)
@@ -263,6 +265,7 @@ export function useBottomSheetMotion({
     motionPolicy,
     onDismiss,
     scrollEnabled,
+    dismissible,
   ]);
 
   const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: sheetY.value }] }));

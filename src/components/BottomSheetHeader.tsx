@@ -10,36 +10,40 @@ export function BottomSheetHeader({
   menuAction,
   onClose,
 }: {
-  title: string;
+  title?: string;
   titleIcon?: ReactNode;
   menuAction?: ReactNode;
-  onClose: () => void;
+  onClose?: () => void;
 }) {
   const { colors, iconSizes } = useAppTheme();
   return (
     <View className="shrink-0 items-center ">
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="닫기"
-        onPress={() => onClose()}
-        className="h-9 w-9 items-center justify-center rounded-full"
-        hitSlop={4}
-      >
-        <AppIcon name="chevron-down" size={iconSizes.lg} color={colors.accent} />
-      </Pressable>
-      <View className="self-stretch flex-row items-center gap-2 py-1">
-        {menuAction && <View className="-ml-2 w-11 shrink-0" />}
-        <View className="flex-1 min-w-0 flex-row items-center justify-center gap-2">
-          {titleIcon}
-          <Text
-            accessibilityRole="header"
-            className="shrink text-center text-lg font-semibold tracking-tight"
-          >
-            {title}
-          </Text>
+      {onClose && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="닫기"
+          onPress={() => onClose()}
+          className="h-9 w-9 items-center justify-center rounded-full"
+          hitSlop={4}
+        >
+          <AppIcon name="chevron-down" size={iconSizes.lg} color={colors.accent} />
+        </Pressable>
+      )}
+      {(title || titleIcon || menuAction) && (
+        <View className="self-stretch flex-row items-center gap-2 py-1">
+          {menuAction && <View className="-ml-2 w-11 shrink-0" />}
+          <View className="flex-1 min-w-0 flex-row items-center justify-center gap-2">
+            {titleIcon}
+            <Text
+              accessibilityRole="header"
+              className="shrink text-center text-lg font-semibold tracking-tight"
+            >
+              {title}
+            </Text>
+          </View>
+          {menuAction && <View className="-mr-2 w-11 shrink-0 items-center">{menuAction}</View>}
         </View>
-        {menuAction && <View className="-mr-2 w-11 shrink-0 items-center">{menuAction}</View>}
-      </View>
+      )}
     </View>
   );
 }
