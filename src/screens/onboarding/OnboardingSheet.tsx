@@ -115,7 +115,7 @@ export function OnboardingSheet({
       visible
       maxHeight={height * 0.85}
       fixedHeight
-      scrollEnabled={false}
+      scrollEnabled={!firstRun && !busy}
       dismissible={!firstRun}
       onClose={onClose}
       onBeforeClose={() => allowClose.current && !saving.current}

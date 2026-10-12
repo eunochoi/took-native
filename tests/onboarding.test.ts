@@ -245,9 +245,20 @@ test('failed completion stays on the last page and can be retried', async () => 
 test('settings replay can close without setting or clearing completion', async () => {
   const h = harness();
   assert.equal(h.renderSheet(false).sheet.props.dismissible, true);
+  assert.equal(h.renderSheet(false).sheet.props.scrollEnabled, true);
+  assert.equal(h.renderSheet(false).body.props.horizontal, true);
   assert.equal(h.renderSheet(false).sheet.props.onBeforeClose(), true);
   await (await lastPage(h, false)).buttons.at(-1).props.onPress();
   assert.equal(h.closes(), 1);
   assert.deepEqual(h.writes, []);
   assert.equal(await h.storage.hasCompletedOnboarding(), false);
+});
+
+test('first-run onboarding keeps drag dismissal disabled before completion', () => {
+  const h = harness();
+  const { sheet, body } = h.renderSheet();
+  assert.equal(sheet.props.scrollEnabled, false);
+  assert.equal(sheet.props.dismissible, false);
+  assert.equal(sheet.props.onBeforeClose(), false);
+  assert.equal(body.props.scrollEnabled, true);
 });
