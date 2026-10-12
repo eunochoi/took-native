@@ -13,7 +13,7 @@ export function PageTopSection({
   image,
   imageLabel,
   imageAspectRatio,
-  imageClassName = 'w-[28.5%]',
+  imageClassName = 'w-[30%]',
   children,
 }: {
   title: string;
@@ -27,7 +27,7 @@ export function PageTopSection({
 }) {
   return (
     <ColorView
-      className={`relative h-[200px] shrink-0 bg-theme-accent-light ${TOP_SECTION_BORDER_CLASS_NAME}`}
+      className={`relative h-[180px] shrink-0 bg-theme-accent-light ${TOP_SECTION_BORDER_CLASS_NAME}`}
     >
       <View className="z-10 px-[5%] min-w-0 flex-1 gap-6 justify-center">
         <View className='gap-2 items-start'>
