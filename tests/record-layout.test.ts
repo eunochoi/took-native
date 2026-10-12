@@ -141,3 +141,26 @@ test('shared header respects custom back guards, history and per-screen fallback
   }).props.children[0].props.onPress();
   assert.deepEqual(calls.slice(-2), ['back', 'guard']);
 });
+
+test('diary photo picker guards dismissal and scrolling while preparing or dragging photos', () => {
+  const { DiaryImagesPicker } = load('../src/screens/diary/DiaryImagesPicker.tsx', {
+    '../../components/BottomSheetModal': { BottomSheetModal: 'BottomSheetModal' },
+    '../../components/Button': { Button: 'Button' },
+    '../../components/Text': { Text: 'Text' },
+    '../../domain/limits': { DIARY_IMAGE_MAX_COUNT: 5 },
+    './DiaryFormImages': { DiaryFormImages: 'DiaryFormImages' },
+  });
+  for (const busy of [true, false]) {
+    for (const dragging of [true, false]) {
+      const onRemove = () => {};
+      const onReorder = () => {};
+      const tree = DiaryImagesPicker({ images: [], busy, dragging, onRemove, onReorder });
+      assert.equal(tree.props.onBeforeClose(), !busy && !dragging);
+      assert.equal(tree.props.scrollEnabled, !dragging);
+      assert.equal(tree.props.footer(() => {}).props.disabled, busy || dragging);
+      const images = tree.props.children.props.children[2];
+      assert.equal(images.props.onRemove, onRemove);
+      assert.equal(images.props.onReorder, onReorder);
+    }
+  }
+});

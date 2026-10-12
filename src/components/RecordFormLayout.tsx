@@ -13,6 +13,7 @@ export function RecordFormLayout({
   overlays,
   children,
   scrollEnabled = true,
+  fillContent = false,
 }: {
   title: string;
   backRoute: Href;
@@ -23,6 +24,7 @@ export function RecordFormLayout({
   overlays?: ReactNode;
   children: ReactNode;
   scrollEnabled?: boolean;
+  fillContent?: boolean;
 }) {
   return (
     <>
@@ -34,8 +36,9 @@ export function RecordFormLayout({
         onClosed={onClosed}
         footer={footer}
         scrollEnabled={scrollEnabled}
+        fillContent={fillContent}
       >
-        <View className="gap-6">{children}</View>
+        <View className={fillContent ? 'flex-1 min-h-0 gap-3' : 'gap-6'}>{children}</View>
       </BottomSheetPage>
       {overlays}
     </>

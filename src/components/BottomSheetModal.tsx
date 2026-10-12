@@ -42,6 +42,7 @@ export function BottomSheetModal({
   onOpened,
   footer,
   scrollEnabled = true,
+  fillContent = false,
   scrollRef,
 }: {
   visible: boolean;
@@ -63,6 +64,7 @@ export function BottomSheetModal({
   onOpened?: () => void;
   footer?: ReactNode | ((closeSheet: CloseBottomSheet) => ReactNode);
   scrollEnabled?: boolean;
+  fillContent?: boolean;
   scrollRef?: AnimatedRef<ScrollView>;
   renderScrollView?: (props: BottomSheetScrollProps) => ReactNode;
   renderBody?: (closeSheet: CloseBottomSheet) => ReactNode;
@@ -93,8 +95,73 @@ export function BottomSheetModal({
       contentKey,
       onScrollOffset,
       scrollEnabled,
+      headerOnlyDrag: fillContent,
       scrollRef,
     });
+  const header = (
+    <BottomSheetHeader
+      title={title}
+      titleIcon={titleIcon}
+      menuAction={menuAction}
+      onClose={dismissible ? () => closeSheet() : undefined}
+    />
+  );
+  const sheet = (
+    <Animated.View
+      key={`sheet-${session}`}
+      entering={motion.sheetEnter}
+      style={motion.sheetStyle}
+      pointerEvents={closingBody ? 'none' : 'auto'}
+      collapsable={false}
+      className="w-full shrink"
+    >
+      <View
+        onLayout={motion.onSheetLayout}
+        accessibilityViewIsModal
+        className={`w-full shrink rounded-t-3xl border-[1px] border-theme-border bg-theme-surface ${renderBody ? '' : 'px-[5%]'} pt-2 shadow-2xl shadow-theme-overlay/60`}
+        style={{
+          maxHeight: sheetHeight,
+          height: fixedHeight ? sheetHeight : undefined,
+        }}
+      >
+        {fillContent ? (
+          <GestureDetector gesture={motion.panGesture}>
+            <View collapsable={false}>{header}</View>
+          </GestureDetector>
+        ) : (
+          header
+        )}
+        {renderBody ? (
+          renderBody(closeSheet)
+        ) : fillContent ? (
+          <View className="flex-1 min-h-0 pt-6 pb-4">
+            {typeof children === 'function' ? children(closeSheet) : children}
+          </View>
+        ) : (
+          <BottomSheetScrollViewport
+            motion={motion}
+            renderScrollView={renderScrollView}
+            fade={fade}
+            fixedHeight={fixedHeight}
+            scrollEnabled={scrollEnabled}
+            scrollFade={scrollFade}
+            contentKey={contentKey}
+            bottomPadding={!footer && insets.bottom > 0 ? appRem * 3 + insets.bottom : undefined}
+          >
+            {typeof children === 'function' ? children(closeSheet) : children}
+          </BottomSheetScrollViewport>
+        )}
+        {footer && (
+          <View
+            className="pb-4"
+            style={insets.bottom > 0 ? { paddingBottom: appRem + insets.bottom } : undefined}
+          >
+            {typeof footer === 'function' ? footer(closeSheet) : footer}
+          </View>
+        )}
+      </View>
+    </Animated.View>
+  );
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardAvoidingView
@@ -121,63 +188,12 @@ export function BottomSheetModal({
             />
           </Animated.View>
         )}
-        {bodyVisible && (
-          <GestureDetector gesture={motion.panGesture}>
-            <Animated.View
-              key={`sheet-${session}`}
-              entering={motion.sheetEnter}
-              style={motion.sheetStyle}
-              pointerEvents={closingBody ? 'none' : 'auto'}
-              collapsable={false}
-              className="w-full shrink"
-            >
-              <View
-                onLayout={motion.onSheetLayout}
-                accessibilityViewIsModal
-                className={`w-full shrink rounded-t-3xl border-[1px] border-theme-border bg-theme-surface ${renderBody ? '' : 'px-[5%]'} pt-2 shadow-2xl shadow-theme-overlay/60`}
-                style={{
-                  maxHeight: sheetHeight,
-                  height: fixedHeight ? sheetHeight : undefined,
-                }}
-              >
-                <BottomSheetHeader
-                  title={title}
-                  titleIcon={titleIcon}
-                  menuAction={menuAction}
-                  onClose={dismissible ? () => closeSheet() : undefined}
-                />
-                {renderBody ? (
-                  renderBody(closeSheet)
-                ) : (
-                  <BottomSheetScrollViewport
-                    motion={motion}
-                    renderScrollView={renderScrollView}
-                    fade={fade}
-                    fixedHeight={fixedHeight}
-                    scrollEnabled={scrollEnabled}
-                    scrollFade={scrollFade}
-                    contentKey={contentKey}
-                    bottomPadding={
-                      !footer && insets.bottom > 0 ? appRem * 3 + insets.bottom : undefined
-                    }
-                  >
-                    {typeof children === 'function' ? children(closeSheet) : children}
-                  </BottomSheetScrollViewport>
-                )}
-                {footer && (
-                  <View
-                    className="pb-4"
-                    style={
-                      insets.bottom > 0 ? { paddingBottom: appRem + insets.bottom } : undefined
-                    }
-                  >
-                    {typeof footer === 'function' ? footer(closeSheet) : footer}
-                  </View>
-                )}
-              </View>
-            </Animated.View>
-          </GestureDetector>
-        )}
+        {bodyVisible &&
+          (fillContent ? (
+            sheet
+          ) : (
+            <GestureDetector gesture={motion.panGesture}>{sheet}</GestureDetector>
+          ))}
         {presentation === 'modal' && <NoticeHost modal active={present} />}
       </KeyboardAvoidingView>
     </GestureHandlerRootView>

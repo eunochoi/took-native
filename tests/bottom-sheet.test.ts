@@ -16,6 +16,7 @@ function harness(
   options: {
     scrollFade?: boolean;
     fixedHeight?: boolean;
+    fillContent?: boolean;
     presentation?: 'modal' | 'screen';
     dimBackdrop?: boolean;
     dismissOnBack?: boolean;
@@ -1063,6 +1064,25 @@ test('custom carousel body bypasses the vertical viewport and shares the sheet c
   assert.equal(children.at(-1).props.children, 'dots');
   assert.equal(body.props.onConfirm(), true);
   assert.equal(h.closes, 0);
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
+});
+
+test('filled diary content scrolls independently while only its header drags to close', () => {
+  const h = harness(true, false, 720, { fixedHeight: true, fillContent: true, footer: 'save' });
+  h.show();
+  h.completeOpen();
+  assert.equal(h.scroll(), undefined);
+  assert.equal(h.pan.config.enabled, true);
+  const children = h.sheet().props.children.props.children;
+  assert.equal(children[0].props.gesture, h.pan);
+  assert.equal(children[1].props.gesture, undefined);
+  assert.equal(children.at(-1).props.children, 'save');
+  h.begin();
+  h.move(0, 100);
+  h.end();
+  assert.equal(h.closes, 0);
+  assert.deepEqual(h.scrollCommands, []);
   h.completeAnimation();
   assert.equal(h.closes, 1);
 });

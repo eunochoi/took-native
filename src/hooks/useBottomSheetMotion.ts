@@ -30,6 +30,7 @@ export function useBottomSheetMotion({
   onClosed,
   onOpened,
   scrollEnabled = true,
+  headerOnlyDrag = false,
   dismissible = true,
   externalScrollRef,
 }: {
@@ -43,6 +44,7 @@ export function useBottomSheetMotion({
   onClosed: (session: number, finished: boolean) => void;
   onOpened: (session: number) => void;
   scrollEnabled?: boolean;
+  headerOnlyDrag?: boolean;
   dismissible?: boolean;
   externalScrollRef?: ReturnType<typeof useAnimatedRef<ScrollView>>;
 }) {
@@ -229,7 +231,7 @@ export function useBottomSheetMotion({
         startSheetY.value = sheetY.value;
         phase.value = 'dragging';
         scrollY.value = 0;
-        scrollTo(scrollRef, 0, 0, false);
+        if (!headerOnlyDrag) scrollTo(scrollRef, 0, 0, false);
       })
       .onUpdate((event) => {
         if (phase.value !== 'dragging') return;
@@ -265,6 +267,7 @@ export function useBottomSheetMotion({
     motionPolicy,
     onDismiss,
     scrollEnabled,
+    headerOnlyDrag,
     dismissible,
   ]);
 

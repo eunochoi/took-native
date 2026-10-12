@@ -1,19 +1,22 @@
-import {
-  SECTION_TITLE_CLASS_NAME,
-  BODY_DESCRIPTION_CLASS_NAME,
-  FORM_TEXT_INPUT_CLASS_NAME,
-} from '../theme/classes';
-import { FormSubmitButton } from '../components/FormSubmitButton';
-import { CharacterCount } from '../components/CharacterCount';
-import { RecordFormLayout } from '../components/RecordFormLayout';
-import { useNotice } from '../components/NoticeProvider';
-import { DIARY_TEXT_MAX_LENGTH, DIARY_IMAGE_MAX_COUNT } from '../domain/limits';
-import { useAppTheme } from '../theme/AppThemeProvider';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, View, TextInput } from 'react-native';
-import { useSQLiteContext } from 'expo-sqlite';
 import { useQuery } from '@tanstack/react-query';
-import { diaryQueries, useRecordMutation, useToday } from '../queries';
+import { format, parseISO } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { usePreventRemove } from 'expo-router/react-navigation';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Keyboard, Pressable, TextInput, View } from 'react-native';
+import { AppIcon } from '../components/AppIcon';
+import { BottomSheetPage } from '../components/BottomSheetPage';
+import { RecordFormLayout } from '../components/RecordFormLayout';
+import { CharacterCount } from '../components/CharacterCount';
+import { EmotionImage } from '../components/EmotionImage';
+import { FormSubmitButton } from '../components/FormSubmitButton';
+import { useNotice } from '../components/NoticeProvider';
+import { QueryState } from '../components/QueryState';
+import { Text } from '../components/Text';
+import { EMOTIONS } from '../domain/constants';
+import { isDate } from '../domain/date';
+import { DIARY_IMAGE_MAX_COUNT, DIARY_TEXT_MAX_LENGTH } from '../domain/limits';
 import {
   discardDraftImages,
   mediaUri,
@@ -21,32 +24,28 @@ import {
   saveDiaryImages,
   type DraftImage,
 } from '../media';
-import { usePreventRemove } from 'expo-router/react-navigation';
-import { format, parseISO } from 'date-fns';
-import { ko } from 'date-fns/locale';
-import { AppIcon } from '../components/AppIcon';
-import { BottomSheetPage } from '../components/BottomSheetPage';
+import { diaryQueries, useRecordMutation, useToday } from '../queries';
+import { useAppTheme } from '../theme/AppThemeProvider';
+import { FORM_TEXT_INPUT_CLASS_NAME, SECTION_TITLE_CLASS_NAME } from '../theme/classes';
 import { DiaryEmotionPicker } from './diary/DiaryEmotionPicker';
-import { DiaryFormImages } from './diary/DiaryFormImages';
-import { Text } from '../components/Text';
-import { EmotionImage } from '../components/EmotionImage';
-import { QueryState } from '../components/QueryState';
-import { EMOTIONS } from '../domain/constants';
-import { isDate } from '../domain/date';
+import { DiaryImagesPicker } from './diary/DiaryImagesPicker';
 
 export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: string }) {
   const { showNotice } = useNotice();
   const { colors, rem: appRem, iconSizes } = useAppTheme();
   const db = useSQLiteContext();
   const today = useToday();
-  const query = useQuery({ ...diaryQueries.byId(db, id ?? 0), enabled: id !== undefined });
+  const query = useQuery({
+    ...diaryQueries.byId(db, id ?? 0),
+    enabled: id !== undefined,
+  });
   const [date, setDate] = useState(
     isDate(initialDate) && initialDate <= today ? initialDate : today,
   );
   const [text, setText] = useState('');
   const [emotion, setEmotion] = useState<number | null>(null);
   const [images, setImages] = useState<DraftImage[]>([]);
-  const [picker, setPicker] = useState<'emotion' | null>(null);
+  const [picker, setPicker] = useState<'emotion' | 'images' | null>(null);
   const [picking, setPicking] = useState(false);
   const [saved, setSaved] = useState(false);
   const drafts = useRef<DraftImage[]>([]);
@@ -82,7 +81,12 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
     },
     'diary',
     () => setSaved(true),
-    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
+    (error) =>
+      showNotice({
+        tone: 'error',
+        title: '처리하지 못했어요',
+        message: error.message,
+      }),
   );
   const busy = mutation.isPending || picking;
   usePreventRemove(busy, () =>
@@ -113,22 +117,24 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
   if (id !== undefined && (query.isPending || query.error || !query.data))
     return (
       <BottomSheetPage
+        title="일기 수정"
+        backRoute="/diary"
         closeRequested={saved && !mutation.isPending}
         onClosed={onClosed}
-        backRoute="/diary"
-        title="일기 수정"
       >
-        <QueryState query={query} />
-        {!query.isPending && !query.error && <Text className="px-6">일기를 찾을 수 없습니다.</Text>}
+        <View className="flex-1 justify-center">
+          <QueryState query={query} />
+          {!query.isPending && !query.error && <Text>일기를 찾을 수 없습니다.</Text>}
+        </View>
       </BottomSheetPage>
     );
   return (
     <RecordFormLayout
+      backRoute="/diary"
+      fillContent
       closeRequested={saved && !mutation.isPending}
       onClosed={onClosed}
-      scrollEnabled={!dragging}
       title={title}
-      backRoute="/diary"
       onBeforeClose={() => {
         if (!busy) return true;
         showNotice({
@@ -160,111 +166,119 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
               }}
             />
           )}
+          {picker === 'images' && (
+            <DiaryImagesPicker
+              onClose={() => setPicker(null)}
+              images={images}
+              busy={busy}
+              picking={picking}
+              dragging={dragging}
+              onDragging={setDragging}
+              onReorder={onReorder}
+              onRemove={(file) =>
+                setImages((previous) => previous.filter((image) => image.file !== file))
+              }
+              onPick={() => {
+                setPicking(true);
+                void pickImages(DIARY_IMAGE_MAX_COUNT - images.length)
+                  .then((added) => {
+                    if (!mounted.current) {
+                      discardDraftImages(added);
+                      return;
+                    }
+                    drafts.current.push(...added);
+                    setImages((previous) => [...previous, ...added]);
+                  })
+                  .catch((error: Error) => {
+                    if (mounted.current)
+                      showNotice({
+                        tone: 'error',
+                        title: '사진을 추가하지 못했어요',
+                        message: error.message,
+                      });
+                  })
+                  .finally(() => {
+                    if (mounted.current) setPicking(false);
+                  });
+              }}
+            />
+          )}
         </>
       }
     >
-      <View>
-        <View className="border-b border-theme-border-muted pb-4">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="오늘의 감정 선택"
-            accessibilityState={{ expanded: picker === 'emotion', disabled: busy }}
-            disabled={busy}
-            onPress={() => {
-              setDraftEmotion(emotion);
-              setPicker('emotion');
-            }}
-            className="min-h-12 flex-row items-center gap-3 bg-transparent px-2 py-2 active:opacity-70"
-          >
-            <View className="h-14 w-14 items-center justify-center">
-              {emotion !== null ? (
-                <EmotionImage emotion={emotion} size={appRem * 3} />
-              ) : (
-                <AppIcon name="emoji-emotions" size={appRem * 2.75} color={colors.tertiary} />
-              )}
-            </View>
-            <View className="flex-1 min-w-0 gap-1">
-              <Text className={SECTION_TITLE_CLASS_NAME}>오늘의 감정</Text>
-              <Text className="text-sm text-theme-text-secondary">
-                {emotion !== null ? EMOTIONS[emotion].name : '감정을 골라주세요'}
-              </Text>
-            </View>
-            <View className="flex-row items-center gap-0.5">
-              <Text className="text-base text-theme-text-secondary">
-                {emotion !== null ? '변경' : '선택'}
-              </Text>
-              <AppIcon name="chevron-right" size={iconSizes.md} color={colors.secondary} />
-            </View>
-          </Pressable>
-        </View>
-        <View className="gap-3 pt-5">
-          <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-            오늘의 이야기
-          </Text>
-          <View className="gap-3 p-2">
-            <TextInput
-              accessibilityLabel="일기 내용"
-              multiline
-              scrollEnabled
-              value={text}
-              onChangeText={setText}
-              editable={!busy}
-              maxLength={DIARY_TEXT_MAX_LENGTH}
-              placeholder="기억하고 싶은 순간을 남겨보세요."
-              placeholderTextColor={colors.tertiary}
-              textAlignVertical="top"
-              className={`h-[170px] ${FORM_TEXT_INPUT_CLASS_NAME}`}
-            />
-            <CharacterCount length={text.length} maxLength={DIARY_TEXT_MAX_LENGTH} />
+      <View className="shrink-0 border-b border-theme-border-muted pb-4">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="오늘의 감정 선택"
+          accessibilityState={{
+            expanded: picker === 'emotion',
+            disabled: busy,
+          }}
+          disabled={busy}
+          onPress={() => {
+            Keyboard.dismiss();
+            setDraftEmotion(emotion);
+            setPicker('emotion');
+          }}
+          className="min-h-12 flex-row items-center gap-3 bg-transparent px-2 py-2 active:opacity-70"
+        >
+          <View className="h-14 w-14 items-center justify-center">
+            {emotion !== null ? (
+              <EmotionImage emotion={emotion} size={appRem * 3} />
+            ) : (
+              <AppIcon name="emoji-emotions" size={appRem * 2.75} color={colors.tertiary} />
+            )}
           </View>
-        </View>
+          <View className="flex-1 min-w-0 gap-1">
+            <Text className={SECTION_TITLE_CLASS_NAME}>오늘의 감정</Text>
+            <Text className="text-sm text-theme-text-secondary">
+              {emotion !== null ? EMOTIONS[emotion].name : '감정을 골라주세요'}
+            </Text>
+          </View>
+          <View className="flex-row items-center gap-0.5">
+            <Text className="text-base text-theme-text-secondary">
+              {emotion !== null ? '변경' : '선택'}
+            </Text>
+            <AppIcon name="chevron-right" size={iconSizes.md} color={colors.secondary} />
+          </View>
+        </Pressable>
       </View>
-      <View className="gap-3">
-        <View className="flex-row items-center justify-between">
-          <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-            오늘의 장면
-          </Text>
-          <Text className="text-xs text-theme-text-secondary">
-            {images.length} / {DIARY_IMAGE_MAX_COUNT}장
-          </Text>
-        </View>
-        <View className="px-2 pt-2 gap-1">
-          <Text className={BODY_DESCRIPTION_CLASS_NAME}>기억하고 싶은 장면을 남겨보세요.</Text>
-          <DiaryFormImages
-            images={images}
-            busy={busy}
-            picking={picking}
-            onDragging={setDragging}
-            onReorder={onReorder}
-            onRemove={(file) =>
-              setImages((previous) => previous.filter((image) => image.file !== file))
-            }
-            onPick={() => {
-              setPicking(true);
-              void pickImages(DIARY_IMAGE_MAX_COUNT - images.length)
-                .then((added) => {
-                  if (!mounted.current) {
-                    discardDraftImages(added);
-                    return;
-                  }
-                  drafts.current.push(...added);
-                  setImages((previous) => [...previous, ...added]);
-                })
-                .catch((error: Error) => {
-                  if (mounted.current)
-                    showNotice({
-                      tone: 'error',
-                      title: '사진을 추가하지 못했어요',
-                      message: error.message,
-                    });
-                })
-                .finally(() => {
-                  if (mounted.current) setPicking(false);
-                });
-            }}
+      <View className="flex-1 min-h-0 gap-3 pt-2">
+        <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
+          오늘의 이야기
+        </Text>
+        <View className="flex-1 min-h-0 gap-3 p-2">
+          <TextInput
+            accessibilityLabel="일기 내용"
+            multiline
+            scrollEnabled
+            value={text}
+            onChangeText={setText}
+            editable={!busy && picker === null}
+            maxLength={DIARY_TEXT_MAX_LENGTH}
+            placeholder="기억하고 싶은 순간을 남겨보세요."
+            placeholderTextColor={colors.tertiary}
+            textAlignVertical="top"
+            className={`flex-1 min-h-0 pb-6 ${FORM_TEXT_INPUT_CLASS_NAME}`}
           />
+          <CharacterCount length={text.length} maxLength={DIARY_TEXT_MAX_LENGTH} />
         </View>
       </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`사진 관리, ${images.length}장`}
+        accessibilityState={{ expanded: picker === 'images', disabled: busy }}
+        disabled={busy}
+        onPress={() => {
+          Keyboard.dismiss();
+          setPicker('images');
+        }}
+        className="shrink-0 min-h-12 flex-row items-center gap-2 rounded-2xl px-2 active:opacity-70"
+      >
+        <AppIcon name="image" size={iconSizes.md} className="text-theme-accent" />
+        <Text className="flex-1 text-base text-theme-text-secondary">사진 {images.length}장</Text>
+        <AppIcon name="chevron-right" size={iconSizes.md} className="text-theme-text-secondary" />
+      </Pressable>
     </RecordFormLayout>
   );
 }
