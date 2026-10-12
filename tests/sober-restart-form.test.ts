@@ -165,7 +165,7 @@ function form(props: { soberId: number; restartId?: number; initialDate?: string
 }
 const tick = () => new Promise<void>((resolve) => setImmediate(resolve));
 
-test('create uses the selected local date, a collapsed shared field and one submit button', () => {
+test('create uses the selected local date, an expanded shared field and one submit button', () => {
   const ui = form({ soberId: 1, initialDate: '2024-02-03' });
   assert.equal(ui.fields().props.draft.date, '2024-02-03');
   const current = dates.dateTimeDraft(
@@ -173,9 +173,10 @@ test('create uses the selected local date, a collapsed shared field and one subm
   );
   assert.equal(ui.fields().props.draft.hour, current.hour);
   assert.equal(ui.fields().props.draft.minute, current.minute);
-  assert.equal(ui.fields().props.collapsible, true);
+  assert.equal(ui.fields().props.collapsible ?? false, false);
   assert.equal(ui.render().props.backRoute, '/sober/1/day/2024-02-03');
   assert.equal(ui.render().props.footer.props.label, '다시 시작 기록하기');
+  assert.equal(ui.render().props.footer.type, 'Button');
   assert.equal(nodes(ui.render()).filter((node) => node.type === 'Button').length, 0);
   assert.equal(ui.writes.length, 0);
   assert.equal(form({ soberId: 1 }).render().props.backRoute, '/sober/1');
