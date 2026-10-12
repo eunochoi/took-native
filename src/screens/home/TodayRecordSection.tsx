@@ -130,16 +130,14 @@ export function TodayRecordSection({ today }: { today: string }) {
           )}
         </View>
         <View className={recordContentClass}>
-          {sober ? (
-            <Text
-              numberOfLines={1}
-              ellipsizeMode="tail"
-              className={`min-w-0 flex-1 ${recordTitleClass}`}
-              style={recordTextStyle}
-            >
-              {sober.name}
-            </Text>
-          ) : null}
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            className={recordTitleClass}
+            style={recordTextStyle}
+          >
+            {sober?.name ?? '거리두기'}
+          </Text>
           {soberPending ? (
             <View accessibilityLabel="거리두기 확인 중" className={recordLoadingClass} />
           ) : (
