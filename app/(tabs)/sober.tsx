@@ -55,7 +55,7 @@ export default function SoberList() {
   }, [restarts.data]);
   const ready = !!list.data && !!restarts.data;
   const failed = list.isError || restarts.isError;
-  const disabledAdd = !ready || failed || sorted.length >= MAX_SOBER_COUNT;
+  const disabledAdd = !ready || failed;
   const rows: Row[] =
     ready && sorted.length
       ? sorted.map((sober): Row => ({ kind: 'sober', sober }))
@@ -90,7 +90,19 @@ export default function SoberList() {
                 accessibilityLabel="거리두기 항목 정렬"
                 onPress={() => setSortOpen(true)}
               />
-              <ToolbarAddButton disabled={disabledAdd} onPress={() => openModal('/sober/new')} />
+              <ToolbarAddButton
+                disabled={disabledAdd}
+                onPress={() => {
+                  if (sorted.length >= MAX_SOBER_COUNT) {
+                    showNotice({
+                      tone: 'info',
+                      title: `거리두기는 최대 ${MAX_SOBER_COUNT}개까지 만들 수 있어요.`,
+                    });
+                    return;
+                  }
+                  openModal('/sober/new');
+                }}
+              />
             </Toolbar>
           </SoberTopSection>
         }

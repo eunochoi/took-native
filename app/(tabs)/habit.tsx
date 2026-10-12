@@ -121,8 +121,17 @@ export default function HabitList() {
               onPress={() => setSortOpen(true)}
             />
             <ToolbarAddButton
-              disabled={!list.data || sorted.length >= MAX_HABIT_COUNT}
-              onPress={() => openModal('/habit/new')}
+              disabled={!ready || failed}
+              onPress={() => {
+                if (sorted.length >= MAX_HABIT_COUNT) {
+                  showNotice({
+                    tone: 'info',
+                    title: `습관은 최대 ${MAX_HABIT_COUNT}개까지 만들 수 있어요.`,
+                  });
+                  return;
+                }
+                openModal('/habit/new');
+              }}
             />
           </Toolbar>
         </HabitTopSection>
