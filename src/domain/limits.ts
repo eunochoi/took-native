@@ -1,6 +1,6 @@
 export const DIARY_TEXT_MAX_LENGTH = 500;
 export const DIARY_IMAGE_MAX_COUNT = 5;
-export const MAX_HABIT_COUNT = 10;
+export const MAX_HABIT_COUNT = 20;
 export const HABIT_NAME_MAX_LENGTH = 10;
 export const PAGE_SIZE = 5;
 export const IMAGE_SOURCE_MAX_BYTES = 5 * 1024 * 1024;
