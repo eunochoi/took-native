@@ -154,6 +154,27 @@ export function TodayRecordSection({ today }: { today: string }) {
         </View>
         <AppIcon name="chevron-right" size={iconSizes.md} className={recordChevronClass} />
       </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="모아보기"
+        onPress={() =>
+          openModal({ pathname: '/home/[year]/stats', params: { year: today.slice(0, 4) } })
+        }
+        className={recordCardClass}
+      >
+        <View className={recordIconContainerClass}>
+          <AppIcon name="description" size={appRem * 2.25} className={recordIconClass} />
+        </View>
+        <View className={recordContentClass}>
+          <Text numberOfLines={1} className={recordTitleClass} style={recordTextStyle}>
+            모아보기
+          </Text>
+          <Text numberOfLines={1} className={recordStatusClass} style={recordTextStyle}>
+            쌓인 기록을 한눈에 살펴봐요.
+          </Text>
+        </View>
+        <AppIcon name="chevron-right" size={iconSizes.md} className={recordChevronClass} />
+      </Pressable>
     </View>
   );
 }

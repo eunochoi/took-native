@@ -59,9 +59,16 @@ function harness(path: string, name: string) {
               },
             }),
           };
+        if (dependency === 'date-fns') return require('date-fns');
+        if (dependency === 'date-fns/locale') return require('date-fns/locale');
+        if (dependency.endsWith('wordmark.json')) return require('../assets/ui/wordmark.json');
+        if (dependency === 'expo-router/react-navigation') return { useIsFocused: () => true };
+        if (dependency === 'react-native-reanimated')
+          return { __esModule: true, default: { View: 'AnimatedView' } };
         if (dependency === 'react-native')
           return {
             View: 'View',
+            Image: { resolveAssetSource: () => ({ width: 100, height: 100 }) },
             Pressable: 'Pressable',
             useWindowDimensions: () => ({ height: 900 }),
           };
@@ -125,25 +132,20 @@ const records = () => harness('src/screens/home/HomeStatsScreen.tsx', 'HomeStats
 const sheet = (view: ReturnType<ReturnType<typeof records>['render']>) =>
   view.nodes.find((node) => node.type === 'BottomSheetPage');
 
-test('home launcher pushes the current year stats route without mounting a local modal', () => {
-  const home = harness('app/(tabs)/index.tsx', 'default');
-  const view = home.render();
+test('home integrates its greeting and records without a scroll or local stats modal', () => {
+  const view = harness('app/(tabs)/index.tsx', 'default').render();
   assert.equal(view.tree.type, 'ColorView');
-  assert(view.tree.props.className.includes('bg-theme-surface'));
-  assert(view.nodes.some((node) => node.type === 'HomeTopSection'));
+  assert(view.tree.props.className.includes('bg-theme-accent-light'));
+  assert.equal(view.nodes.filter((node) => node.type === 'TodayRecordSection').length, 1);
+  assert.equal(
+    view.nodes.find((node) => node.type === 'TodayRecordSection').props.today,
+    '2026-10-05',
+  );
   assert(
     !view.nodes.some((node) =>
       ['ScrollView', 'HomeStatsScreen', 'HomeRecordsModal'].includes(node.type),
     ),
   );
-  const bottom = view.tree.props.children[1];
-  assert.equal(bottom.props.style.paddingBottom, 124.5);
-  const launcher = nodes(bottom).find((node) => node.props.accessibilityLabel === '모아보기');
-  assert.equal(launcher.props.children[1].props.name, 'arrow-forward');
-  launcher.props.onPress();
-  const href = home.pushes[0] as any;
-  assert.equal(href.pathname, '/home/[year]/stats');
-  assert.equal(href.params.year, '2026');
 });
 
 test('stats use the common route sheet and keep all four analysis sections', () => {

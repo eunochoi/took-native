@@ -33,6 +33,7 @@ function load(
         if (name === './ColorTransition')
           return load('../src/components/ColorTransition.tsx', reducedMotion);
         if (name === 'nativewind') return { cssInterop: (component: unknown) => component };
+        if (name.endsWith('/queries')) return { useToday: () => '2026-10-05' };
         if (name.includes('tokens.json')) return { __esModule: true, default: tokens };
         if (name.includes('AppThemeProvider'))
           return {
@@ -127,21 +128,9 @@ test('home focus remounts the greeting and reduced motion retains the resting ro
       if (result) return result;
     }
   }
-  const on = emotion(
-    load('../src/screens/home/HomeTopSection.tsx', false, true).HomeTopSection({
-      today: '2026-10-05',
-    }),
-  );
-  const off = emotion(
-    load('../src/screens/home/HomeTopSection.tsx', false, false).HomeTopSection({
-      today: '2026-10-05',
-    }),
-  );
-  const reduced = emotion(
-    load('../src/screens/home/HomeTopSection.tsx', true, true).HomeTopSection({
-      today: '2026-10-05',
-    }),
-  );
+  const on = emotion(load('../app/(tabs)/index.tsx', false, true).default());
+  const off = emotion(load('../app/(tabs)/index.tsx', false, false).default());
+  const reduced = emotion(load('../app/(tabs)/index.tsx', true, true).default());
   assert(on.props.style.animationName);
   assert.equal(on.props.style.animationDuration, `${tokens.motion.greeting}ms`);
   assert.equal(off.props.style.animationName, undefined);
@@ -157,30 +146,21 @@ test('home keeps its decoration in a fixed layout without main scrolling', () =>
     if (!node || typeof node !== 'object') return [];
     return [node, ...[node.props?.children].flat().flatMap(nodes)];
   }
-  for (const available of [1100, 500]) {
-    const tree = load('../src/screens/home/HomeTopSection.tsx', false, true, [
-      available,
-      400,
-    ]).HomeTopSection({
-      today: '2026-10-05',
-    });
-    const rendered = nodes(tree);
-    assert(rendered.some((node) => node.props.accessibilityLabel === 'hiding-cat'));
-    assert.equal(
-      rendered.some((node) => node.type === 'ScrollView'),
-      false,
-    );
-    assert.equal(rendered.filter((node) => node.type === 'TodayRecordSection').length, 1);
-    assert(tree.props.className.includes('border-b-[1px]'));
-    assert.equal(tree.props.style, undefined);
-    const cat = rendered.find((node) => node.props.accessibilityLabel === 'hiding-cat');
-    assert(cat.props.className.includes('max-h-full'));
-    assert(
-      rendered.some(
-        (node) => node.props.className === 'flex-1 min-h-0 justify-end overflow-hidden',
-      ),
-    );
-  }
+  const tree = load('../app/(tabs)/index.tsx', false, true).default();
+  const rendered = nodes(tree);
+  assert(rendered.some((node) => node.props.accessibilityLabel === 'hiding-cat'));
+  assert.equal(
+    rendered.some((node) => node.type === 'ScrollView'),
+    false,
+  );
+  assert.equal(rendered.filter((node) => node.type === 'TodayRecordSection').length, 1);
+  assert(!tree.props.className.includes('border-b'));
+  assert.equal(tree.props.style, undefined);
+  const cat = rendered.find((node) => node.props.accessibilityLabel === 'hiding-cat');
+  assert(cat.props.className.includes('max-h-full'));
+  assert(
+    rendered.some((node) => node.props.className === 'flex-1 min-h-0 justify-end overflow-hidden'),
+  );
 });
 
 test('Tailwind cannot reintroduce the NativeWind animation engine', async () => {

@@ -116,9 +116,9 @@ const emptyStats = () => ({
 test('today diary and habit share one card with separate navigation and loading states', () => {
   const routes: unknown[] = [];
   const tree = render('TodayRecordSection', { today: '2026-10-05' }, undefined, { routes });
-  assert.equal(tree.props.children.length, 2);
+  assert.equal(tree.props.children.length, 3);
   const buttons = nodes(tree).filter((node) => node.type === 'Pressable');
-  assert.equal(buttons.length, 3);
+  assert.equal(buttons.length, 4);
   assert(text(buttons[0]).includes('아직 기록 없음'));
   assert(text(buttons[1]).includes('0개 중 0개 완료'));
   buttons.forEach((button) => button.props.onPress());
@@ -126,6 +126,7 @@ test('today diary and habit share one card with separate navigation and loading 
     { pathname: '/diary/new', params: { date: '2026-10-05' } },
     '/habit',
     '/sober',
+    { pathname: '/home/[year]/stats', params: { year: '2026' } },
   ]);
   for (const result of [{ isPending: true }, { isError: true }]) {
     const pending = render('TodayRecordSection', { today: '2026-10-05' }, undefined, {

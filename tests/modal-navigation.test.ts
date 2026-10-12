@@ -354,7 +354,6 @@ test('all card and menu modal launches use the shared gate', () => {
     'app/(tabs)/habit.tsx',
     'app/(tabs)/sober.tsx',
     'app/(tabs)/calendar.tsx',
-    'app/(tabs)/index.tsx',
     'app/(tabs)/setting.tsx',
   ]) {
     const source = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
