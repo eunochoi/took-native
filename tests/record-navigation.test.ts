@@ -88,6 +88,17 @@ function form(kind: string, router: unknown, isNew = false) {
       require: (dependency: string) => {
         if (dependency.endsWith('/NoticeProvider'))
           return { useNotice: () => ({ showNotice: (notice: any) => notices.push(notice) }) };
+        if (dependency === 'react-native')
+          return {
+            View: 'View',
+            Pressable: 'Pressable',
+            TextInput: 'TextInput',
+            Keyboard: {
+              isVisible: () => false,
+              addListener: () => ({ remove: () => {} }),
+              dismiss: () => {},
+            },
+          };
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (dependency === 'react')
           return {

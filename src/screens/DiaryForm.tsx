@@ -35,14 +35,12 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
   const { colors, rem: appRem, iconSizes } = useAppTheme();
   const db = useSQLiteContext();
   const today = useToday();
-  const query = useQuery({
-    ...diaryQueries.byId(db, id ?? 0),
-    enabled: id !== undefined,
-  });
+  const query = useQuery({ ...diaryQueries.byId(db, id ?? 0), enabled: id !== undefined });
   const [date, setDate] = useState(
     isDate(initialDate) && initialDate <= today ? initialDate : today,
   );
   const [text, setText] = useState('');
+  const [keyboardVisible, setKeyboardVisible] = useState(() => Keyboard.isVisible());
   const [emotion, setEmotion] = useState<number | null>(null);
   const [images, setImages] = useState<DraftImage[]>([]);
   const [picker, setPicker] = useState<'emotion' | 'images' | null>(null);
@@ -53,6 +51,14 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
   const [draftEmotion, setDraftEmotion] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
   const loaded = useRef(false);
+  useEffect(() => {
+    const shown = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hidden = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => {
+      shown.remove();
+      hidden.remove();
+    };
+  }, []);
   useEffect(() => {
     if (query.data && !loaded.current) {
       loaded.current = true;
@@ -81,12 +87,7 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
     },
     'diary',
     () => setSaved(true),
-    (error) =>
-      showNotice({
-        tone: 'error',
-        title: '처리하지 못했어요',
-        message: error.message,
-      }),
+    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
   );
   const busy = mutation.isPending || picking;
   usePreventRemove(busy, () =>
@@ -206,43 +207,42 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
         </>
       }
     >
-      <View className="shrink-0 border-b border-theme-border-muted pb-4">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="오늘의 감정 선택"
-          accessibilityState={{
-            expanded: picker === 'emotion',
-            disabled: busy,
-          }}
-          disabled={busy}
-          onPress={() => {
-            Keyboard.dismiss();
-            setDraftEmotion(emotion);
-            setPicker('emotion');
-          }}
-          className="min-h-12 flex-row items-center gap-3 bg-transparent px-2 py-2 active:opacity-70"
-        >
-          <View className="h-14 w-14 items-center justify-center">
-            {emotion !== null ? (
-              <EmotionImage emotion={emotion} size={appRem * 3} />
-            ) : (
-              <AppIcon name="emoji-emotions" size={appRem * 2.75} color={colors.tertiary} />
-            )}
-          </View>
-          <View className="flex-1 min-w-0 gap-1">
-            <Text className={SECTION_TITLE_CLASS_NAME}>오늘의 감정</Text>
-            <Text className="text-sm text-theme-text-secondary">
-              {emotion !== null ? EMOTIONS[emotion].name : '감정을 골라주세요'}
-            </Text>
-          </View>
-          <View className="flex-row items-center gap-0.5">
-            <Text className="text-base text-theme-text-secondary">
-              {emotion !== null ? '변경' : '선택'}
-            </Text>
-            <AppIcon name="chevron-right" size={iconSizes.md} color={colors.secondary} />
-          </View>
-        </Pressable>
-      </View>
+      {!keyboardVisible && (
+        <View className="shrink-0 border-b border-theme-border-muted pb-4">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="오늘의 감정 선택"
+            accessibilityState={{ expanded: picker === 'emotion', disabled: busy }}
+            disabled={busy}
+            onPress={() => {
+              Keyboard.dismiss();
+              setDraftEmotion(emotion);
+              setPicker('emotion');
+            }}
+            className="min-h-12 flex-row items-center gap-3 bg-transparent px-2 py-2 active:opacity-70"
+          >
+            <View className="h-14 w-14 items-center justify-center">
+              {emotion !== null ? (
+                <EmotionImage emotion={emotion} size={appRem * 3} />
+              ) : (
+                <AppIcon name="emoji-emotions" size={appRem * 2.75} color={colors.tertiary} />
+              )}
+            </View>
+            <View className="flex-1 min-w-0 gap-1">
+              <Text className={SECTION_TITLE_CLASS_NAME}>오늘의 감정</Text>
+              <Text className="text-sm text-theme-text-secondary">
+                {emotion !== null ? EMOTIONS[emotion].name : '감정을 골라주세요'}
+              </Text>
+            </View>
+            <View className="flex-row items-center gap-0.5">
+              <Text className="text-base text-theme-text-secondary">
+                {emotion !== null ? '변경' : '선택'}
+              </Text>
+              <AppIcon name="chevron-right" size={iconSizes.md} color={colors.secondary} />
+            </View>
+          </Pressable>
+        </View>
+      )}
       <View className="flex-1 min-h-0 gap-3 pt-2">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
           오늘의 이야기
@@ -264,21 +264,23 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
           <CharacterCount length={text.length} maxLength={DIARY_TEXT_MAX_LENGTH} />
         </View>
       </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`사진 관리, ${images.length}장`}
-        accessibilityState={{ expanded: picker === 'images', disabled: busy }}
-        disabled={busy}
-        onPress={() => {
-          Keyboard.dismiss();
-          setPicker('images');
-        }}
-        className="shrink-0 min-h-12 flex-row items-center gap-2 rounded-2xl px-2 active:opacity-70"
-      >
-        <AppIcon name="image" size={iconSizes.md} className="text-theme-accent" />
-        <Text className="flex-1 text-base text-theme-text-secondary">사진 {images.length}장</Text>
-        <AppIcon name="chevron-right" size={iconSizes.md} className="text-theme-text-secondary" />
-      </Pressable>
+      {!keyboardVisible && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`사진 관리, ${images.length}장`}
+          accessibilityState={{ expanded: picker === 'images', disabled: busy }}
+          disabled={busy}
+          onPress={() => {
+            Keyboard.dismiss();
+            setPicker('images');
+          }}
+          className="shrink-0 min-h-12 flex-row items-center gap-2 rounded-2xl px-2 active:opacity-70"
+        >
+          <AppIcon name="image" size={iconSizes.md} className="text-theme-accent" />
+          <Text className="flex-1 text-base text-theme-text-secondary">사진 {images.length}장</Text>
+          <AppIcon name="chevron-right" size={iconSizes.md} className="text-theme-text-secondary" />
+        </Pressable>
+      )}
     </RecordFormLayout>
   );
 }
