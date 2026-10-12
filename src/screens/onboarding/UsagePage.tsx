@@ -5,7 +5,7 @@ const diaryPreview = require('../../../assets/onboarding/diary-calendar-header.p
 
 export function UsagePage({ imageWidth }: { imageWidth: number }) {
   return (
-    <View className="w-full gap-5">
+    <View className="w-full gap-8">
       <View className="gap-2">
         <Text
           accessibilityRole="header"
@@ -17,7 +17,7 @@ export function UsagePage({ imageWidth }: { imageWidth: number }) {
           자주 쓰는 화면을 더 빠르게 오가세요.
         </Text>
       </View>
-      <View className="gap-4 rounded-2xl bg-theme-surface-muted p-4">
+      <View className="gap-6 rounded-2xl bg-theme-surface-muted p-6">
         <View className="items-center gap-2">
           <Text className="text-center text-sm font-semibold">맨 위로 이동하기</Text>
           <Image

@@ -6,7 +6,7 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 export function WelcomePage({ onOpenWeb }: { onOpenWeb: () => void }) {
   const { iconSizes } = useAppTheme();
   return (
-    <View className="w-full gap-5">
+    <View className="w-full gap-8">
       <View className="gap-2">
         <Text
           accessibilityRole="header"
@@ -18,7 +18,7 @@ export function WelcomePage({ onOpenWeb }: { onOpenWeb: () => void }) {
           일기와 습관, 거리두기 기록을{'\n'}한곳에서 관리해요.
         </Text>
       </View>
-      <View className="gap-4 rounded-2xl bg-theme-surface-muted p-5">
+      <View className="gap-6 rounded-2xl bg-theme-surface-muted p-6">
         <View className="gap-2">
           <Text className="text-center text-base font-semibold">기록은 이 기기에</Text>
           <Text className="text-center text-sm text-theme-text-secondary">

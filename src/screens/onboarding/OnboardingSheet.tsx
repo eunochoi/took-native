@@ -113,7 +113,7 @@ export function OnboardingSheet({
   return (
     <BottomSheetModal
       visible
-      maxHeight={height * 0.75}
+      maxHeight={height * 0.85}
       fixedHeight
       scrollEnabled={false}
       dismissible={!firstRun}
@@ -142,9 +142,9 @@ export function OnboardingSheet({
                 className="items-center justify-center"
               >
                 <Animated.View
-                  className={`h-3 rounded-full ${index === step ? 'bg-theme-accent' : 'bg-theme-text-disabled'}`}
+                  className={`h-2.5 rounded-full ${index === step ? 'bg-theme-accent' : 'bg-theme-text-disabled'}`}
                   style={{
-                    width: rem * (index === step ? 1.5 : 0.75),
+                    width: rem * (index === step ? 1.25 : 0.6),
                     transitionProperty: ['width', 'backgroundColor'],
                     transitionDuration: `${reducedMotion ? 0 : tokens.motion.fade}ms`,
                     transitionTimingFunction: 'ease-in-out',

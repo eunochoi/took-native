@@ -4,7 +4,7 @@ const widgetPreview = require('../../../assets/widgets/sober-preview.png');
 
 export function WidgetPage({ imageWidth }: { imageWidth: number }) {
   return (
-    <View className="w-full gap-5">
+    <View className="w-full gap-8">
       <View className="gap-2">
         <Text
           accessibilityRole="header"
@@ -16,7 +16,7 @@ export function WidgetPage({ imageWidth }: { imageWidth: number }) {
           앱을 열지 않아도, 기록을 가까이.
         </Text>
       </View>
-      <View className="items-center gap-5 rounded-2xl bg-theme-surface-muted px-4 py-6">
+      <View className="items-center gap-6 rounded-2xl bg-theme-surface-muted px-4 py-8">
         <Image
           source={widgetPreview}
           accessibilityLabel="TOOK 거리두기 홈 화면 위젯 예시"

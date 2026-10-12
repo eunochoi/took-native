@@ -7,7 +7,7 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 export function BackupPage({ busy, onConfirm }: { busy: boolean; onConfirm: () => void }) {
   const { iconSizes } = useAppTheme();
   return (
-    <View className="w-full gap-5">
+    <View className="w-full gap-8">
       <View className="gap-2">
         <Text
           accessibilityRole="header"
@@ -19,7 +19,7 @@ export function BackupPage({ busy, onConfirm }: { busy: boolean; onConfirm: () =
           앱 삭제나 기기 변경 전에는{'\n'}설정에서 기록을 백업해 주세요.
         </Text>
       </View>
-      <View className="items-center gap-3 rounded-2xl bg-theme-surface-muted p-5">
+      <View className="items-center gap-6 rounded-2xl bg-theme-surface-muted p-8">
         <View className="h-12 w-12 items-center justify-center rounded-full bg-theme-surface">
           <AppIcon name="save-alt" size={iconSizes.lg} className="text-theme-accent" />
         </View>

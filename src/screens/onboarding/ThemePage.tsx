@@ -19,7 +19,7 @@ export function ThemePage({
   onChange: (patch: Partial<Settings>) => Promise<void>;
 }) {
   return (
-    <View className="w-full gap-5">
+    <View className="w-full gap-8">
       <View className="gap-2">
         <Text
           accessibilityRole="header"
@@ -31,7 +31,7 @@ export function ThemePage({
           취향에 맞게 고르고, 언제든 다시 바꿔요.
         </Text>
       </View>
-      <View className="gap-3 rounded-2xl bg-theme-surface-muted p-4">
+      <View className="gap-6 rounded-2xl bg-theme-surface-muted p-4">
         <View className="gap-1">
           <Text className="text-center text-sm font-semibold">감정 아이콘</Text>
           <EmotionIconStyleSelector
