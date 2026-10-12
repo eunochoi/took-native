@@ -25,7 +25,7 @@
     },
     "plugins": [
       "./plugins/withAndroidDevApp.cjs",
-      "./plugins/withAndroidBuildMemory.cjs",
+      "./plugins/withAndroidBuildSettings.cjs",
       "expo-router",
       "expo-sqlite",
       [
