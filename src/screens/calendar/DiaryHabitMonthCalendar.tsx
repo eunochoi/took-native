@@ -41,7 +41,7 @@ export function DiaryHabitMonthCalendar(props: {
     return result;
   }, [completions.data]);
   return (
-    <View className={props.fillHeight ? 'flex-1 min-h-0 gap-4' : 'gap-4'}>
+    <View className={props.fillHeight ? 'flex-1 min-h-0 gap-2' : 'gap-2'}>
       {(diaries.isError || completions.isError) && (
         <QueryError
           className="flex-row gap-2"

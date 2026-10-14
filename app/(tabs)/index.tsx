@@ -51,7 +51,7 @@ export default function Home() {
       </View>
       <View className="mb-10 shrink-0 gap-5">
         <View className="gap-1">
-          <Text className="text-theme-accent font-semibold text-lg">
+          <Text className="text-theme-accent-deep font-semibold text-lg">
             {format(parseISO(today), 'M월 d일 EEEE', {
               locale: ko,
             })}

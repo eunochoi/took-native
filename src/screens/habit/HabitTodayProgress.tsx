@@ -7,7 +7,7 @@ export function HabitTodayProgress({ done, total }: { done: number; total: numbe
   return (
     <View className="gap-4 px-2 mb-8">
       <View className="flex-row items-center justify-between gap-3">
-        <View className="gap-2">
+        <View className="gap-1">
           <Text accessibilityRole="header" className="text-xl font-semibold">
             오늘의 습관
           </Text>
@@ -15,7 +15,7 @@ export function HabitTodayProgress({ done, total }: { done: number; total: numbe
             {total}개 중 {done}개 완료
           </Text>
         </View>
-        <Text className="text-5xl font-semibold text-theme-accent">{rate}%</Text>
+        <Text className="text-4xl font-semibold text-theme-accent">{rate}%</Text>
       </View>
       <ProgressBar
         value={rate}
