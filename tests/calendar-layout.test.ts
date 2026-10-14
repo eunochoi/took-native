@@ -32,6 +32,7 @@ function load(path: string, states: unknown[], date = '2026-09-30') {
         if (name === 'react')
           return {
             Children: { toArray: (children: unknown) => [children].flat() },
+            useMemo: (fn: Function) => fn(),
             useCallback: (fn: Function) => fn,
             useRef: (value: unknown) => {
               const index = cursor++;
@@ -328,4 +329,61 @@ test('centered month header keeps navigation on either side of the title', () =>
   buttons[2].props.onPress();
   buttons[1].props.onPress();
   assert.deepEqual(changes, ['2026-08', '2026-10', '2026-10']);
+});
+
+test('sober restart counts take precedence over achievements on the same day', () => {
+  const render = load('src/screens/sober/SoberMonthCalendar.tsx', []);
+  let selected = '';
+  const tree = render('SoberMonthCalendar', {
+    month: '2026-10',
+    today: '2026-10-10',
+    selected: '2026-10-04',
+    firstDate: '2026-10-01',
+    recordsByDate: new Map([['2026-10-04', [{ id: 1 }]]]),
+    achievements: [
+      { days: 3, achievedAt: '2026-10-04T12:00:00' },
+      { days: 7, achievedAt: '2026-10-08T12:00:00' },
+    ],
+    onMonthChange: () => {},
+    onSelect: (date: string) => {
+      selected = date;
+    },
+  });
+  const cell = nodes(tree).find(
+    (node) => node.type === 'CalendarDay' && node.props.date === '2026-10-04',
+  );
+  assert.doesNotMatch(cell.props.label, /3일 달성!/);
+  assert.match(cell.props.label, /다시 시작 1회/);
+  assert(!nodes(cell).some((node) => node.props.name === 'auto-awesome'));
+  assert(nodes(cell).some((node) => node.type === 'Text' && node.props.children === 1));
+  const achievementCell = nodes(tree).find(
+    (node) => node.type === 'CalendarDay' && node.props.date === '2026-10-08',
+  );
+  assert.match(achievementCell.props.label, /7일 달성!/);
+  assert(nodes(achievementCell).some((node) => node.props.name === 'auto-awesome'));
+  cell.props.onSelect(cell.props.date);
+  assert.equal(selected, '2026-10-04');
+});
+test('achievement-only day shows its message without an empty state or restart menu', () => {
+  const render = load('src/screens/sober/SoberDayInfo.tsx', []);
+  const tree = render('SoberDayInfo', {
+    date: '2026-10-04',
+    records: [],
+    canAdd: true,
+    pending: false,
+    achievements: [{ days: 7, achievedAt: '2026-10-04T12:30:00' }],
+    onAdd: () => {},
+    onMenu: () => {},
+  });
+  const all = nodes(tree);
+  assert(
+    all.some(
+      (node) =>
+        node.type === 'Text' &&
+        JSON.stringify(node.props.children) === JSON.stringify([7, '일 달성!']),
+    ),
+  );
+  assert(all.some((node) => node.type === 'Text' && node.props.children === '12:30'));
+  assert(!all.some((node) => node.type === 'SoberRestartCard'));
+  assert(!all.some((node) => node.props.children === '이날은 다시 시작한 기록이 없어요.'));
 });

@@ -165,6 +165,23 @@ export function getSoberStreaks(
     return { start, end, current, duration: Math.max(0, Date.parse(end) - Date.parse(start)) };
   });
 }
+export interface SoberAchievement {
+  days: number;
+  achievedAt: string;
+}
+// Achievements use fixed milestones, independently of the selected manual goal.
+export function getSoberAchievements(
+  sober: Pick<Sober, 'initial_started_at'>,
+  restarts: SoberRestart[],
+  now: number,
+): SoberAchievement[] {
+  return getSoberStreaks(sober, restarts, now).flatMap((streak) =>
+    SOBER_GOALS.filter((days) => days * SOBER_DAY_MS <= streak.duration).map((days) => ({
+      days,
+      achievedAt: new Date(Date.parse(streak.start) + days * SOBER_DAY_MS).toISOString(),
+    })),
+  );
+}
 export function getLongestSoberStreak(streaks: SoberStreak[]) {
   return streaks.reduce((longest, item) => Math.max(longest, item.duration), 0);
 }

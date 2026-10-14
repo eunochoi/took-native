@@ -6,6 +6,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { BottomSheetPage } from '../../../../src/components/BottomSheetPage';
 import { QueryState } from '../../../../src/components/QueryState';
 import { Text } from '../../../../src/components/Text';
+import { getSoberAchievements } from '../../../../src/domain/sober';
 import { isDate, localDate } from '../../../../src/domain/date';
 import { useCurrentMinute } from '../../../../src/hooks/useCurrentMinute';
 import { useModalNavigation } from '../../../../src/navigation/ModalNavigationProvider';
@@ -49,6 +50,13 @@ export default function SoberDay() {
             <SoberDayInfo
               date={date}
               records={records}
+              achievements={
+                records.length
+                  ? []
+                  : getSoberAchievements(sober.data, restarts.data ?? [], now).filter(
+                      (item) => localDate(item.achievedAt) === date,
+                    )
+              }
               pending={pending}
               canAdd={date >= localDate(sober.data.initial_started_at) && date <= today}
               onAdd={() =>

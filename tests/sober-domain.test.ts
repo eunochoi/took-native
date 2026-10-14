@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import {
   getAutoSoberGoal,
+  getSoberAchievements,
   getCurrentSoberStart,
   getSoberStreaks,
   getLongestSoberStreak,
@@ -241,4 +242,41 @@ test('all Sober registry entries exist in the selected native icon family', () =
     if (icon.family === 'badge') assert.equal(icon.name, '19');
     else assert(icon.name in maps[icon.family]);
   }
+});
+
+test('achievements use exact automatic boundaries regardless of selected goal', () => {
+  for (const days of SOBER_GOALS) {
+    const before = getSoberAchievements(sober, [], origin + days * day - 1);
+    assert(!before.some((item) => item.days === days));
+    const reached = getSoberAchievements(sober, [], origin + days * day);
+    assert.deepEqual(reached.at(-1), {
+      days,
+      achievedAt: new Date(origin + days * day).toISOString(),
+    });
+    const manual: Sober = { ...sober, goal_mode: 'MANUAL', goal_days: 100 };
+    assert.deepEqual(getSoberAchievements(manual, [], origin + days * day), reached);
+  }
+});
+test('achievements retain completed streaks and recalculate after restart edits and deletion', () => {
+  const events = [restart(1, 7 * day)];
+  const achieved = getSoberAchievements(sober, events, origin + 10 * day);
+  assert.deepEqual(
+    achieved.map((item) => item.days),
+    [3, 7, 3],
+  );
+  assert.equal(achieved[1].achievedAt, events[0].restarted_at);
+  assert.deepEqual(
+    getSoberAchievements(sober, [restart(1, 7 * day - 1)], origin + 10 * day).map(
+      (item) => item.days,
+    ),
+    [3, 3],
+  );
+  assert.deepEqual(
+    getSoberAchievements(sober, [], origin + 10 * day).map((item) => item.days),
+    [3, 7],
+  );
+  assert.deepEqual(
+    getSoberAchievements(sober, [restart(1, 7 * day), restart(2, 7 * day)], origin + 10 * day),
+    achieved,
+  );
 });

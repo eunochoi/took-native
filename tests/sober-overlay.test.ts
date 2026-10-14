@@ -3,7 +3,12 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { runInNewContext } from 'node:vm';
 import test from 'node:test';
-import { getSoberSummary, formatSoberDuration, formatSoberGoal } from '../src/domain/sober';
+import {
+  getSoberAchievements,
+  getSoberSummary,
+  formatSoberDuration,
+  formatSoberGoal,
+} from '../src/domain/sober';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
@@ -124,7 +129,7 @@ function scenario(file = '../app/sober/[id]/index.tsx') {
             };
           if (name.endsWith('/domain/date')) return require('../src/domain/date');
           if (name.endsWith('/domain/sober'))
-            return { getSoberSummary, formatSoberDuration, formatSoberGoal };
+            return { getSoberAchievements, getSoberSummary, formatSoberDuration, formatSoberGoal };
           if (name.endsWith('/useCurrentMinute'))
             return { useCurrentMinute: () => Date.parse('2026-10-05T12:00:00Z') };
           if (name.endsWith('/useScrollFade')) return { useScrollFade: () => ({}) };
@@ -353,4 +358,19 @@ test('memo deletion explains recalculation, prevents repeats and unlocks after s
   );
   assert.equal(memoCard(ui).props.pending, false);
   assert(ui.notices.some((notice) => notice.tone === 'success'));
+});
+
+test('day sheet hides achievements on restart dates while preserving achievement calculations', () => {
+  const detail = scenario();
+  const calendar = detail.render().find((node) => node.type === 'SoberMonthCalendar');
+  assert(
+    calendar.props.achievements.some(
+      (item: any) => item.days === 3 && item.achievedAt === detail.record.restarted_at,
+    ),
+  );
+  const day = scenario('../app/sober/[id]/day/[date].tsx');
+  const info = day.render().find((node) => node.type === 'SoberDayInfo');
+  assert.equal(info.props.achievements.length, 0);
+  assert.equal(info.props.records[0].id, day.record.id);
+  assert.equal(day.writes.length, 0);
 });

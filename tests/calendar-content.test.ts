@@ -28,6 +28,10 @@ function evaluate(
         if (name === 'react') return { useMemo: (factory: Function) => factory() };
         if (name === 'react-native') return { Pressable: 'Pressable', View: 'View' };
         if (name === 'date-fns' || name === 'tailwind-merge') return require(name);
+        if (name.endsWith('theme/AppThemeProvider'))
+          return {
+            useAppTheme: () => ({ colors: { achievement: '#DCC17D' }, iconSizes: { lg: 24 } }),
+          };
         if (name.endsWith('domain/calendar')) return require('../src/domain/calendar');
         if (name.endsWith('useCalendarNavigation')) return { useCalendarNavigation };
         if (name.endsWith('domain/date')) return require('../src/domain/date');

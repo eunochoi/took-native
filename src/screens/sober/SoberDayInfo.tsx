@@ -1,5 +1,6 @@
 import { Pressable, View } from 'react-native';
-import { format } from 'date-fns';
+import type { SoberAchievement } from '../../domain/sober';
+import { format, parseISO } from 'date-fns';
 import { AppIcon } from '../../components/AppIcon';
 import { SoberRestartCard } from './SoberRestartCard';
 import type { SoberRestart } from '../../db/types';
@@ -9,6 +10,7 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 export function SoberDayInfo({
   date,
   records,
+  achievements = [],
   canAdd,
   pending,
   onAdd,
@@ -16,6 +18,7 @@ export function SoberDayInfo({
 }: {
   date: string;
   records: SoberRestart[];
+  achievements?: SoberAchievement[];
   canAdd: boolean;
   pending: boolean;
   onAdd: () => void;
@@ -36,11 +39,25 @@ export function SoberDayInfo({
           <Text className="text-sm text-theme-accent">기록 추가</Text>
         </Pressable>
       )}
+      {achievements.map((item) => (
+        <View
+          key={item.achievedAt}
+          className="flex-row items-center gap-3 rounded-2xl border border-theme-border p-4"
+        >
+          <AppIcon name="auto-awesome" size={iconSizes.lg} color={colors.achievement} />
+          <View className="gap-1">
+            <Text className="text-base font-semibold">{item.days}일 달성!</Text>
+            <Text className="text-sm text-theme-text-tertiary">
+              {format(parseISO(item.achievedAt), 'HH:mm')}
+            </Text>
+          </View>
+        </View>
+      ))}
       {records.length ? (
         records.map((item) => (
           <SoberRestartCard key={item.id} record={item} pending={pending} onMenu={onMenu} />
         ))
-      ) : (
+      ) : achievements.length ? null : (
         <View className={`items-center gap-3 ${canAdd ? 'pt-8' : ''}`}>
           <AppIcon name="description" size={iconSizes.lg} color={colors.accent} />
           <Text className="text-center text-base">이날은 다시 시작한 기록이 없어요.</Text>

@@ -12,7 +12,7 @@ import { QueryState } from '../../../src/components/QueryState';
 import { Text } from '../../../src/components/Text';
 import { isDate } from '../../../src/domain/date';
 import type { SoberRestart } from '../../../src/db/types';
-import { getSoberSummary } from '../../../src/domain/sober';
+import { getSoberAchievements, getSoberSummary } from '../../../src/domain/sober';
 import { useCurrentMinute } from '../../../src/hooks/useCurrentMinute';
 import { soberQueries } from '../../../src/queries';
 import { SoberGauge } from '../../../src/screens/sober/SoberGauge';
@@ -112,6 +112,7 @@ export default function SoberDetail() {
           today={today}
           firstDate={firstDate}
           recordsByDate={grouped}
+          achievements={getSoberAchievements(sober, restarts.data ?? [], now)}
           onMonthChange={setMonth}
           onSelect={(date) => {
             if (!isDate(date)) return;
