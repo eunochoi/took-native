@@ -220,12 +220,6 @@ export default function SettingsScreen() {
               className={`min-w-0 shrink flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
             >
               <AppIcon name="open-in-new" size={appRem * 1.2} className="text-theme-accent" />
-              <Text
-                numberOfLines={1}
-                className="min-w-0 shrink text-sm leading-snug text-theme-text-secondary"
-              >
-                툭 웹
-              </Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"

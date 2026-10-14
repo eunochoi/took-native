@@ -301,10 +301,12 @@ test('record toolbar shows saved sorting and priority while keeping add separate
   const view = ui.render();
   assert(view.content.some((node) => node.type === 'Text' && node.props.children === '최신순'));
   assert.equal(view.content.filter((node) => node.type === 'StarIcon').length, 1);
-  ui.press('습관 정렬, 최신순 · 중요도 우선');
+  ui.press('습관 정렬, 중요도 우선 · 생성일 내림차순');
   const add = picker('src/components/ToolbarAddButton.tsx', 'ToolbarAddButton', {
     onPress: () => added++,
   });
+  assert(!add.render().content.some((node) => node.type === 'Text'));
+  assert.equal(add.render().content.find((node) => node.type === 'AppIcon').props.name, 'add');
   add.press('추가');
   assert.equal(opened, 1);
   assert.equal(added, 1);
@@ -314,6 +316,7 @@ test('record toolbar shows saved sorting and priority while keeping add separate
     disabledAdd: false,
   }).render();
   assert(!custom.content.some((node) => node.type === 'StarIcon'));
+  assert(!custom.content.some((node) => node.type === 'AppIcon'));
   assert(custom.content.some((node) => node.type === 'Text' && node.props.children === '커스텀'));
 });
 
@@ -321,12 +324,13 @@ test('diary toolbar shows current period and emotion and truncates a long label'
   const ui = picker('src/components/ToolbarFilterButton.tsx', 'ToolbarFilterButton', {
     sort: 'DESC',
     year: 2026,
+    currentYear: 2026,
     month: 4,
     emotion: 1,
   });
   const view = ui.render();
   const label = view.content.find(
-    (node) => node.type === 'Text' && node.props.children === '26년 4월 · 기쁨',
+    (node) => node.type === 'Text' && node.props.children === '4월 · 기쁨',
   );
   assert.equal(label.props.numberOfLines, 1);
   assert.equal(label.props.ellipsizeMode, 'tail');
@@ -336,12 +340,13 @@ test('diary toolbar shows current period and emotion and truncates a long label'
     month: 0,
     emotion: null,
   }).render();
-  assert(all.content.some((node) => node.type === 'Text' && node.props.children === '전체'));
+  assert(all.content.some((node) => node.type === 'Text' && node.props.children === '필터'));
   const sort = picker('src/components/ToolbarSortButton.tsx', 'ToolbarSortButton', {
     sort: 'ASC',
     accessibilityLabel: '일기 정렬',
+    sortLabel: '날짜',
   }).render();
-  assert(sort.content.some((node) => node.type === 'Text' && node.props.children === '과거순'));
+  assert(sort.content.some((node) => node.type === 'Text' && node.props.children === '오래된순'));
 });
 
 test('sober sorting shows priority, record, creation in order and applies drafts together', () => {
@@ -368,4 +373,92 @@ test('sober sorting shows priority, record, creation in order and applies drafts
   cancelled.render().shell.props.onClose();
   cancelled.finish();
   assert.equal(cancelled.applied.length, 0);
+});
+
+test('sober toolbar announces record direction and creation tie breaker', () => {
+  const ui = picker('src/components/ToolbarSortButton.tsx', 'ToolbarSortButton', {
+    sort: 'ASC',
+    recordSort: 'DESC',
+    priorityFirst: true,
+    accessibilityLabel: '거리두기 항목 정렬',
+    onPress: () => {},
+  });
+  assert.equal(
+    ui.render().shell.props.accessibilityLabel,
+    '거리두기 항목 정렬, 중요도 우선 · 기록 내림차순 · 생성일 오름차순',
+  );
+});
+
+test('toolbar indicators show priority and representative sorting without trailing icons', () => {
+  for (const priorityFirst of [false, true]) {
+    for (const sort of ['ASC', 'DESC']) {
+      for (const recordSort of [undefined, 'ASC', 'DESC']) {
+        const ui = picker('src/components/ToolbarSortButton.tsx', 'ToolbarSortButton', {
+          priorityFirst,
+          sort,
+          recordSort,
+          accessibilityLabel: '정렬',
+        }).render();
+        const indicators = ui.content.filter((node) =>
+          ['Text', 'StarIcon', 'AppIcon'].includes(node.type),
+        );
+        const labels = indicators.map((node) =>
+          node.type === 'StarIcon'
+            ? '★'
+            : node.type === 'AppIcon'
+              ? node.props.name
+              : node.props.children,
+        );
+        const isDefault =
+          !priorityFirst && sort === 'DESC' && (!recordSort || recordSort === 'DESC');
+        assert.deepEqual(
+          labels,
+          isDefault
+            ? ['sort', '정렬']
+            : [
+                ...(priorityFirst ? ['★'] : []),
+                recordSort
+                  ? recordSort === 'DESC'
+                    ? '긴 기록순'
+                    : '짧은 기록순'
+                  : sort === 'DESC'
+                    ? '최신순'
+                    : '오래된순',
+              ],
+        );
+      }
+    }
+  }
+});
+
+test('sort modal defaults are leftmost', () => {
+  const sort = sortPicker({ priorityFirst: false, recordSort: 'DESC', allowCustom: true }).render();
+  const choices = sort.content.filter((node) => node.type === 'PickerOption');
+  assert.deepEqual(
+    choices.map((node) => node.props.accessibilityLabel),
+    ['현재 기록 내림차순', '현재 기록 오름차순', '최신순', '과거순', '커스텀'],
+  );
+  assert.equal(choices[0].props.selected, true);
+  assert.equal(choices[2].props.selected, true);
+});
+
+test('filter labels shorten this year while retaining other years and full accessible dates', () => {
+  for (const [year, month, emotion, label] of [
+    [2026, 10, null, '10월'],
+    [2025, 10, 1, '25년 10월 · 기쁨'],
+    [2026, 0, null, '올해'],
+    [null, 0, 1, '기쁨'],
+    [null, 0, null, '필터'],
+  ] as const) {
+    const view = picker('src/components/ToolbarFilterButton.tsx', 'ToolbarFilterButton', {
+      year,
+      month,
+      emotion,
+      currentYear: 2026,
+    }).render();
+    const text = view.content.find((node) => node.type === 'Text');
+    assert.equal(text.props.children, label);
+    assert(text.props.className.includes('text-theme-text-secondary'));
+    if (year !== null) assert(view.shell.props.accessibilityLabel.includes(`${year}년`));
+  }
 });

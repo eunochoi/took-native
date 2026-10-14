@@ -8,7 +8,7 @@ export function ToolbarSortButton({
   sort,
   priorityFirst = false,
   recordSort,
-  ascendingLabel = '과거순',
+  sortLabel = '생성일',
   accessibilityLabel,
   onPress,
 }: {
@@ -16,27 +16,45 @@ export function ToolbarSortButton({
   priorityFirst?: boolean;
   recordSort?: 'ASC' | 'DESC';
   ascendingLabel?: string;
+  sortLabel?: string;
   accessibilityLabel: string;
   onPress: () => void;
 }) {
   const { rem: appRem } = useAppTheme();
-  const label = recordSort ? `기록 ${recordSort === 'DESC' ? '내림차순' : '오름차순'}` : sort === 'CUSTOM' ? '커스텀' : sort === 'DESC' ? '최신순' : ascendingLabel;
+  const isDefault = sort === 'DESC' && !priorityFirst && (!recordSort || recordSort === 'DESC');
   const showPriority = sort !== 'CUSTOM' && priorityFirst;
+  const displayLabel =
+    sort === 'CUSTOM'
+      ? '커스텀'
+      : recordSort
+        ? recordSort === 'DESC'
+          ? '긴 기록순'
+          : '짧은 기록순'
+        : sort === 'DESC'
+          ? '최신순'
+          : '오래된순';
+  const label =
+    sort === 'CUSTOM'
+      ? '커스텀'
+      : `${recordSort ? `기록 ${recordSort === 'DESC' ? '내림차순' : '오름차순'} · ` : ''}${sortLabel} ${sort === 'DESC' ? '내림차순' : '오름차순'}`;
   return (
     <GesturePressable
       accessibilityRole="button"
-      accessibilityLabel={`${accessibilityLabel}, ${label}${showPriority ? ' · 중요도 우선' : ''}`}
+      accessibilityLabel={`${accessibilityLabel}, ${showPriority ? '중요도 우선 · ' : ''}${label}`}
       onPress={onPress}
       className="shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65"
     >
-      <AppIcon name="sort" size={appRem * 1.2} className="text-theme-accent" />
-      <Text numberOfLines={1} className="text-sm leading-snug text-theme-text-secondary">
-        {label}
-      </Text>
-      {showPriority && (
+      {isDefault ? (
         <>
-          <Text className="text-sm text-theme-accent">·</Text>
-          <StarIcon size={appRem * 1.1} className="text-theme-accent" />
+          <AppIcon name="sort" size={appRem * 1.2} className="text-theme-accent" />
+          <Text className="text-sm leading-snug text-theme-text-secondary">정렬</Text>
+        </>
+      ) : (
+        <>
+          {showPriority && <StarIcon size={appRem * 1.1} className="text-theme-accent" />}
+          <Text numberOfLines={1} className="text-sm leading-snug text-theme-text-secondary">
+            {displayLabel}
+          </Text>
         </>
       )}
     </GesturePressable>

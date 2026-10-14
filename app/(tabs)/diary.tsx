@@ -90,10 +90,12 @@ export default function DiaryList() {
             <Toolbar>
               <ToolbarSortButton
                 sort={settings.diarySort}
+                sortLabel="날짜"
                 accessibilityLabel="일기 정렬"
                 onPress={() => setPicker('sort')}
               />
               <ToolbarFilterButton
+                currentYear={Number(today.slice(0, 4))}
                 year={year}
                 month={month}
                 emotion={emotion}
@@ -155,6 +157,7 @@ export default function DiaryList() {
       {picker === 'sort' && (
         <RecordSortPicker
           title="일기 정렬"
+          sortLabel="날짜 정렬"
           sort={settings.diarySort}
           onClose={() => setPicker(null)}
           onApply={(sort) => {
