@@ -34,13 +34,27 @@ export default function Home() {
 
   return (
     <ColorView className="flex-1 min-h-0 overflow-hidden bg-theme-accent-light px-[5%] pt-[5%]">
-      <Image
-        source={require('../../assets/ui/wordmark.png')}
-        accessibilityLabel="to:ok"
-        className="mb-8 shrink-0"
-        resizeMode="contain"
-        style={{ width: wordmarkSize.width, height: wordmarkSize.height }}
-      />
+      <View className="mb-8 shrink-0 flex-row items-center gap-2">
+        <Image
+          source={require('../../assets/ui/wordmark.png')}
+          accessibilityLabel="to:ok"
+          className="shrink-0"
+          resizeMode="contain"
+          style={{ width: wordmarkSize.width, height: wordmarkSize.height }}
+        />
+        <Animated.View
+          key={focused && !reducedMotion ? 'moving' : 'idle'}
+          className="h-9 w-9 shrink-0 items-center justify-center"
+          style={{
+            transform: [{ rotate: '5deg' }],
+            animationName: focused && !reducedMotion ? greeting : undefined,
+            animationDuration: `${tokens.motion.greeting}ms`,
+            animationTimingFunction: 'ease-in-out',
+          }}
+        >
+          <EmotionImage emotion={1} size={appRem * 2.25} />
+        </Animated.View>
+      </View>
       <View className="mb-10 shrink-0 gap-5">
         <View className="gap-1">
           <Text className="text-theme-accent-deep font-semibold text-base">
@@ -48,21 +62,7 @@ export default function Home() {
               locale: ko,
             })}
           </Text>
-          <View className="flex-row items-center gap-2">
-            <Text className="font-bold text-3xl">오늘을 툭,</Text>
-            <Animated.View
-              key={focused && !reducedMotion ? 'moving' : 'idle'}
-              className="h-9 w-9 shrink-0 items-center justify-center"
-              style={{
-                transform: [{ rotate: '5deg' }],
-                animationName: focused && !reducedMotion ? greeting : undefined,
-                animationDuration: `${tokens.motion.greeting}ms`,
-                animationTimingFunction: 'ease-in-out',
-              }}
-            >
-              <EmotionImage emotion={1} size={appRem * 2.25} />
-            </Animated.View>
-          </View>
+          <Text className="font-bold text-3xl">오늘을 툭,</Text>
           <Text className="font-bold text-3xl">나답게 쌓는 하루</Text>
         </View>
         <Text className="text-theme-text-secondary text-lg">감정도 습관도 내 속도로 남겨요.</Text>
