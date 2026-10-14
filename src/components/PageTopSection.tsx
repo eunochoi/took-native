@@ -16,17 +16,17 @@ export function PageTopSection({
   return (
     <ColorView className="h-[170px] shrink-0 bg-theme-surface">
       <View className="px-[5%] min-w-0 flex-1 gap-6 justify-end">
-        <View className="gap-1.5 items-start">
+        <View className="gap-1 items-start">
+          <Text numberOfLines={1} ellipsizeMode="tail" className={BODY_DESCRIPTION_CLASS_NAME}>
+            {description}
+          </Text>
           <Text
             accessibilityRole="header"
             numberOfLines={1}
             ellipsizeMode="tail"
-            className="text-3xl font-bold leading-tight tracking-tight"
+            className="text-4xl font-bold leading-tight tracking-tight"
           >
             {title}
-          </Text>
-          <Text numberOfLines={1} ellipsizeMode="tail" className={BODY_DESCRIPTION_CLASS_NAME}>
-            {description}
           </Text>
         </View>
         <View>{children}</View>

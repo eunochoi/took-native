@@ -10,7 +10,7 @@ export function Toolbar({ children }: { children: ReactNode }) {
             <View
               pointerEvents="none"
               accessible={false}
-              className="h-4 w-px shrink-0 bg-theme-accent/20"
+              className="h-3.5 shrink-0 bg-theme-accent/20"
             />
           )}
           {child}

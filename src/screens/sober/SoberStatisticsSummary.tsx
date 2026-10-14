@@ -36,7 +36,7 @@ export function SoberStatisticsSummary({
       ).map((stat, index) => (
         <View
           key={stat.label}
-          className={`${index === 1 ? 'flex-[0.65]' : 'flex-1'} min-w-0 items-center gap-2 px-1 py-4 border-theme-border-muted ${index < 2 ? 'border-r' : ''}`}
+          className={`flex-1 min-w-0 items-center gap-2 px-1 py-4 border-theme-border-muted ${index < 2 ? 'border-r' : ''}`}
         >
           <AppIcon name={stat.icon} size={appRem * 2} className="text-theme-accent" />
           <Text className="text-center text-sm text-theme-text-secondary">{stat.label}</Text>
