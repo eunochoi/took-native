@@ -152,11 +152,12 @@ test('day info diary menu waits for only its own close before pushing the edit f
 });
 
 for (const month of ['2021-02', '2026-10', '2026-03']) {
-  test(`calendar shares the available height across ${calendarDays(month).length / 7} rows`, () => {
+  test(`diary calendar reserves six equal rows for a ${calendarDays(month).length / 7}-row month`, () => {
     const render = load('src/screens/calendar/CalendarGrid.tsx', []);
     const dayRender = load('src/screens/calendar/CalendarDay.tsx', []);
     const props = {
       fillHeight: true,
+      minimumRows: 6,
       children: calendarDays(month).map((date) =>
         jsx('CalendarDay', {
           date,
@@ -169,7 +170,12 @@ for (const month of ['2021-02', '2026-10', '2026-03']) {
     };
     const tree = render('CalendarGrid', props);
     const rows = tree.props.children[1].props.children;
-    assert.equal(rows.length, calendarDays(month).length / 7);
+    assert.equal(rows.length, 6);
+    const populatedRows = calendarDays(month).length / 7;
+    assert(rows.slice(populatedRows).every((row: any) => row.props.children.length === 0));
+    assert.equal(rows.flatMap((row: any) => row.props.children).length, calendarDays(month).length);
+    const automatic = render('CalendarGrid', { ...props, minimumRows: undefined });
+    assert.equal(automatic.props.children[1].props.children.length, populatedRows);
     assert(rows.every((row: any) => row.props.className.includes('flex-1')));
     const cells = rows
       .flatMap((row: any) => row.props.children)

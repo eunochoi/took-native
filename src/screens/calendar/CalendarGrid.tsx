@@ -6,11 +6,13 @@ import { Text } from '../../components/Text';
 export function CalendarGrid({
   children,
   fillHeight = false,
+  minimumRows = 0,
   className,
   ...props
 }: ViewProps & {
   children: ReactNode;
   fillHeight?: boolean;
+  minimumRows?: number;
 }) {
   const days = Children.toArray(children);
   return (
@@ -26,7 +28,7 @@ export function CalendarGrid({
         ))}
       </View>
       <View className={fillHeight ? 'flex-1 min-h-0 gap-1' : 'gap-1'}>
-        {Array.from({ length: Math.ceil(days.length / 7) }, (_, row) => (
+        {Array.from({ length: Math.max(minimumRows, Math.ceil(days.length / 7)) }, (_, row) => (
           <View
             key={row}
             className={fillHeight ? 'flex-1 min-h-0 flex-row gap-1' : 'flex-row gap-1'}

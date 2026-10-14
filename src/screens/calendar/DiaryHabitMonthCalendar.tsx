@@ -60,6 +60,7 @@ export function DiaryHabitMonthCalendar(props: {
         />
       </View>
       <CalendarGrid
+        minimumRows={6}
         fillHeight={props.fillHeight}
         {...swipe.panHandlers}
         accessibilityLabel={`${props.month} 월간 달력`}

@@ -136,6 +136,7 @@ test('diary calendar owns decorations and future-date limits while using the def
     onMonthChange: () => {},
     onSelect: (date: string) => selected.push(date),
   });
+  assert.equal(nodes(tree).find((node) => node.type === 'CalendarGrid').props.minimumRows, 6);
   const cells = nodes(tree).filter((node) => node.type === 'CalendarDay');
   assert.equal(cells.length, calendarDays(day.month).length);
   assert(!nodes(tree).some((node) => node.type === 'CalendarFrame'));
