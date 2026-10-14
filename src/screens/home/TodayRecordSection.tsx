@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { useSQLiteContext } from 'expo-sqlite';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
@@ -10,6 +9,7 @@ import { sortSobers } from '../../db/sober';
 import { EMOTIONS } from '../../domain/constants';
 import { getSoberSummary, SOBER_DAY_MS } from '../../domain/sober';
 import { useCurrentMinute } from '../../hooks/useCurrentMinute';
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { diaryQueries, habitQueries, soberQueries } from '../../queries';
 import { useSettings } from '../../settings/SettingsProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';

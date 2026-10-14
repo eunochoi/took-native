@@ -1,12 +1,12 @@
-import tokens from '../../src/theme/tokens.json';
-import { useAppTheme } from '../../src/theme/AppThemeProvider';
-import { createRef, useRef, useState } from 'react';
-import type { RefObject } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { View } from 'react-native';
 import { BlurTargetView } from 'expo-blur';
 import { Tabs } from 'expo-router';
+import type { RefObject } from 'react';
+import { createRef, useRef, useState } from 'react';
+import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomNav } from '../../src/components/BottomNav';
+import { useAppTheme } from '../../src/theme/AppThemeProvider';
+import tokens from '../../src/theme/tokens.json';
 
 export default function TabLayout() {
   const { colors, reducedMotion } = useAppTheme();

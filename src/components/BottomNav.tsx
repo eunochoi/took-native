@@ -1,9 +1,9 @@
-import { AppIcon } from './AppIcon';
 import { BlurView } from 'expo-blur';
 import type { Tabs } from 'expo-router';
 import type { ComponentProps, RefObject } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useAppTheme } from '../theme/AppThemeProvider';
+import { AppIcon } from './AppIcon';
 
 type BottomNavProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 const items = [
