@@ -37,8 +37,8 @@ export default function Home() {
     <ColorView className="flex-1 min-h-0 overflow-hidden bg-theme-accent-light px-[5%] pt-[5%]">
       <LinearGradient
         pointerEvents="none"
-        colors={[`${colors.accent}20`, `${colors.accent}00`]}
-        start={{ x: 1, y: 1 }}
+        colors={[`${colors.surface}70`, `${colors.accent}00`]}
+        start={{ x: 0, y: 1 }}
         end={{ x: 0, y: 0 }}
         style={StyleSheet.absoluteFill}
       />
