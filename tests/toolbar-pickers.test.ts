@@ -27,6 +27,29 @@ function picker(path: string, name: string, initial: Record<string, unknown>) {
     {
       exports,
       require: (dependency: string) => {
+        if (dependency.endsWith('/FilterSheet')) {
+          const sheetExports: Record<string, Function> = {};
+          runInNewContext(
+            ts.transpileModule(
+              readFileSync(new URL('../src/components/FilterSheet.tsx', import.meta.url), 'utf8'),
+              {
+                compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+              },
+            ).outputText,
+            {
+              exports: sheetExports,
+              require: (name: string) => {
+                if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
+                if (name === 'react-native') return { View: 'View', Pressable: 'Pressable' };
+                if (name.endsWith('AppThemeProvider'))
+                  return { useAppTheme: () => ({ iconSizes: { md: 18 } }) };
+                const component = name.split('/').at(-1)!;
+                return { [component]: component };
+              },
+            },
+          );
+          return sheetExports;
+        }
         if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (dependency === 'react')
@@ -59,13 +82,14 @@ function picker(path: string, name: string, initial: Record<string, unknown>) {
   );
   const render = () => {
     cursor = 0;
-    const shell = exports[name]({
+    let shell = exports[name]({
       ...initial,
       onClose: () => {
         closed++;
       },
       onApply: (...values: unknown[]) => applied.push(values),
     });
+    if (typeof shell.type === 'function') shell = shell.type(shell.props);
     const close = (action?: () => void) => {
       closed++;
       deferred = action;
@@ -111,6 +135,7 @@ const filterPicker = (props: Record<string, unknown> = {}) =>
     month: 0,
     emotion: null,
     currentYear: 2026,
+    currentMonth: 10,
     ...props,
   });
 
@@ -218,7 +243,7 @@ test('filter resets period and emotion drafts without applying them', () => {
   );
   const reset = view.content.find((node) => node.props.accessibilityLabel === '선택 초기화');
   assert.equal(reset.props.accessibilityRole, 'button');
-  assert(reset.props.className.includes('h-10'));
+  assert(reset.props.className.includes('min-h-12'));
   assert(
     !view.content.some((node) => node.props.children === '선택한 항목을 다시 누르면 해제돼요.'),
   );
@@ -226,7 +251,7 @@ test('filter resets period and emotion drafts without applying them', () => {
   assert.equal(ui.closed, 0);
   assert.equal(ui.applied.length, 0);
   const cleared = ui.render().content;
-  assert(cleared.some((node) => node.props.label === '전체 일기 보기'));
+  assert(cleared.some((node) => node.props.label === '적용하기'));
   assert(cleared.some((node) => node.props.accessibilityLabel === '2026년 전체'));
   assert(!cleared.some((node) => node.type === 'PickerOption' && node.props.selected));
   ui.press('일기 필터 적용');
@@ -245,47 +270,6 @@ test('sort hint reserves the same space for date and custom order', () => {
   const custom = ui.render().content.find((node) => node.props.className === 'h-10 justify-center');
   assert.equal(custom.props.className, initial.props.className);
   assert.equal(custom.props.children.props.children, '직접 정한 순서로 보여드려요.');
-});
-
-test('only the apply button summarizes draft choices', () => {
-  const ui = filterPicker();
-  const label = () =>
-    ui.render().content.find((node) => node.props.accessibilityLabel === '일기 필터 적용').props
-      .label;
-  assert.equal(label(), '전체 일기 보기');
-  ui.press('2026년 4월');
-  ui.press(EMOTIONS[1].name);
-  assert.equal(label(), '2026년 4월 · 기쁨 보기');
-  assert(!ui.render().content.some((node) => node.props.className === 'h-6 justify-center'));
-  ui.press('2026년 4월');
-  assert.equal(label(), '2026년 전체 · 기쁨 보기');
-  ui.press('2026년 전체');
-  ui.press(EMOTIONS[1].name);
-  assert.equal(label(), '전체 일기 보기');
-  assert.equal(ui.applied.length, 0);
-});
-
-test('filter has one full-width action and compact emotion choices', () => {
-  const ui = filterPicker();
-  const view = ui.render();
-  const actions = view.content.filter((node) => node.type === 'Button');
-  assert.equal(actions.length, 1);
-  assert.equal(actions[0].props.label, '전체 일기 보기');
-  assert.equal(actions[0].props.className, undefined);
-  const choices = view.content.filter(
-    (node) =>
-      node.type === 'PickerOption' &&
-      EMOTIONS.some((item) => item.name === node.props.accessibilityLabel),
-  );
-  assert.equal(choices.length, 10);
-  assert(choices.every((node) => node.props.dense));
-  assert(
-    view.content
-      .filter((node) => node.type === 'EmotionImage')
-      .every((node) => node.props.size === 15 * 2.25),
-  );
-  ui.press(EMOTIONS[2].name);
-  assert.equal(ui.render().content.find((node) => node.type === 'Button').props.label, '사랑 보기');
 });
 
 test('record toolbar shows saved sorting and priority while keeping add separate', () => {
@@ -461,4 +445,55 @@ test('filter labels shorten this year while retaining other years and full acces
     assert(text.props.className.includes('text-theme-text-secondary'));
     if (year !== null) assert(view.shell.props.accessibilityLabel.includes(`${year}년`));
   }
+});
+
+test('diary sections summarize drafts while the common footer stays concise', () => {
+  const ui = filterPicker();
+  const apply = () =>
+    ui.render().content.find((node) => node.props.accessibilityLabel === '일기 필터 적용');
+  assert.equal(apply().props.label, '적용하기');
+  assert(ui.render().content.some((node) => node.props.children === '전체 기간'));
+  ui.press('2026년 4월');
+  ui.press(EMOTIONS[1].name);
+  assert.equal(apply().props.label, '적용하기');
+  assert(ui.render().content.some((node) => node.props.children === '2026년 4월'));
+  ui.press('2026년 4월');
+  assert(ui.render().content.some((node) => node.props.children === '2026년 전체'));
+  ui.press('2026년 전체');
+  ui.press(EMOTIONS[1].name);
+  assert(ui.render().content.some((node) => node.props.children === '전체 기간'));
+  assert.equal(ui.applied.length, 0);
+});
+
+test('filters share footer reset and apply while diary keeps ten compact emotion choices', () => {
+  const samples = [filterPicker()];
+  for (const ui of samples) {
+    const view = ui.render();
+    const footer = nodes(view.shell.props.footer(() => {}));
+    assert(footer.some((node) => node.props.accessibilityLabel === '선택 초기화'));
+    assert(footer.some((node) => node.props.label === '적용하기'));
+    assert(
+      !nodes(view.shell.props.children).some(
+        (node) => node.props.accessibilityLabel === '선택 초기화',
+      ),
+    );
+    assert(
+      view.content
+        .filter((node) => node.type === 'PickerOption')
+        .every((node) => node.props.variant === 'filter'),
+    );
+  }
+  const view = samples[0].render();
+  const choices = view.content.filter(
+    (node) =>
+      node.type === 'PickerOption' &&
+      EMOTIONS.some((item) => item.name === node.props.accessibilityLabel),
+  );
+  assert.equal(choices.length, 10);
+  assert(choices.every((node) => node.props.dense));
+  assert(
+    view.content
+      .filter((node) => node.type === 'EmotionImage')
+      .every((node) => node.props.size === 15 * 2.25),
+  );
 });

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 export function PickerOption({
   selected,
+  variant = 'default',
   compact = false,
   dense = false,
   selectionOnly = false,
@@ -12,6 +13,7 @@ export function PickerOption({
   children,
 }: {
   selected: boolean;
+  variant?: 'default' | 'filter';
   compact?: boolean;
   dense?: boolean;
   selectionOnly?: boolean;
@@ -27,7 +29,7 @@ export function PickerOption({
       accessibilityState={{ selected, disabled }}
       disabled={disabled}
       onPress={onPress}
-      className={`items-center justify-center ${dense ? 'gap-1' : 'gap-2'} border bg-transparent ${selectionOnly ? 'rounded-theme' : 'rounded-2xl'} active:opacity-70 ${disabled ? 'opacity-40' : 'opacity-100'} ${dense ? 'min-h-12 px-1 py-2' : compact ? 'min-h-12 px-1 py-3' : 'min-h-16 p-4'} ${selected ? 'border-theme-accent' : selectionOnly ? 'border-transparent' : 'border-theme-border'}`}
+      className={`items-center justify-center ${dense ? 'gap-1' : 'gap-2'} border ${variant === 'filter' ? `rounded-xl ${selected ? 'bg-theme-accent/10' : 'bg-transparent'}` : `bg-transparent ${selectionOnly ? 'rounded-theme' : 'rounded-2xl'}`} active:opacity-70 ${disabled ? 'opacity-40' : 'opacity-100'} ${dense ? 'min-h-12 px-1 py-2' : compact ? 'min-h-12 px-1 py-3' : 'min-h-16 p-4'} ${selected ? 'border-theme-accent' : variant === 'filter' ? 'border-transparent' : selectionOnly ? 'border-transparent' : 'border-theme-border'}`}
     >
       {children}
     </Pressable>

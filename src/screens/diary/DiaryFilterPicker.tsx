@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
-import { BottomSheetModal } from '../../components/BottomSheetModal';
-import { Button } from '../../components/Button';
+import { FilterSheet } from '../../components/FilterSheet';
 import { EmotionImage } from '../../components/EmotionImage';
 import { PickerOption } from '../../components/PickerOption';
 import { Text } from '../../components/Text';
@@ -34,34 +33,29 @@ export function DiaryFilterPicker({
       ? '전체 기간'
       : `${draftYear}년 ${draftMonth === 0 ? '전체' : `${draftMonth}월`}`;
   const emotionLabel = draftEmotion === null ? '전체 감정' : EMOTIONS[draftEmotion].name;
-  const applyLabel =
-    draftYear === null && draftEmotion === null
-      ? '전체 일기 보기'
-      : `${[draftYear === null ? null : periodLabel, draftEmotion === null ? null : emotionLabel].filter(Boolean).join(' · ')} 보기`;
   const selectYear = (value: number) => {
     setDisplayYear(value);
     setYear(value);
     setMonth(0);
   };
   return (
-    <BottomSheetModal
-      visible
+    <FilterSheet
       title="일기 필터"
-      scrollFade
       onClose={onClose}
-      footer={(closePicker) => (
-        <Button
-          label={applyLabel}
-          accessibilityLabel="일기 필터 적용"
-          onPress={() =>
-            closePicker(() => onApply(draftYear, draftYear === null ? 0 : draftMonth, draftEmotion))
-          }
-        />
-      )}
+      onReset={() => {
+        setYear(null);
+        setMonth(0);
+        setEmotion(null);
+        setDisplayYear(currentYear);
+      }}
+      onApply={() => onApply(draftYear, draftYear === null ? 0 : draftMonth, draftEmotion)}
     >
-      <View className="gap-6">
+      <>
         <View className="gap-3">
-          <Text className="text-base font-semibold">기간</Text>
+          <View className="flex-row items-baseline justify-between gap-3">
+            <Text className="text-base font-semibold">기간</Text>
+            <Text className="shrink text-sm text-theme-text-secondary">{periodLabel}</Text>
+          </View>
           <View className="gap-1.5">
             <View className="flex-row items-center gap-2">
               <Pressable
@@ -69,13 +63,13 @@ export function DiaryFilterPicker({
                 accessibilityLabel="이전 연도 선택"
                 disabled={displayYear <= 1900}
                 onPress={() => selectYear(displayYear - 1)}
-                className={`h-12 w-12 items-center justify-center rounded-theme bg-transparent active:opacity-70 ${displayYear <= 1900 ? 'opacity-40' : 'opacity-100'}`}
+                className={`h-12 w-12 items-center justify-center rounded-xl bg-transparent active:opacity-70 ${displayYear <= 1900 ? 'opacity-40' : 'opacity-100'}`}
               >
-                <AppIcon name="chevron-left" size={iconSizes.md} color={colors.text} />
+                <AppIcon name="chevron-left" size={iconSizes.md} color={colors.accent} />
               </Pressable>
               <View className="flex-1">
                 <PickerOption
-                  selectionOnly
+                  variant="filter"
                   compact
                   selected={draftYear === displayYear && draftMonth === 0}
                   accessibilityLabel={`${displayYear}년 전체`}
@@ -98,9 +92,9 @@ export function DiaryFilterPicker({
                 accessibilityLabel="다음 연도 선택"
                 disabled={displayYear >= 2100}
                 onPress={() => selectYear(displayYear + 1)}
-                className={`h-12 w-12 items-center justify-center rounded-theme bg-transparent active:opacity-70 ${displayYear >= 2100 ? 'opacity-40' : 'opacity-100'}`}
+                className={`h-12 w-12 items-center justify-center rounded-xl bg-transparent active:opacity-70 ${displayYear >= 2100 ? 'opacity-40' : 'opacity-100'}`}
               >
-                <AppIcon name="chevron-right" size={iconSizes.md} color={colors.text} />
+                <AppIcon name="chevron-right" size={iconSizes.md} color={colors.accent} />
               </Pressable>
             </View>
             <View className="gap-1.5">
@@ -111,7 +105,7 @@ export function DiaryFilterPicker({
                     return (
                       <View key={value} className="flex-1">
                         <PickerOption
-                          selectionOnly
+                          variant="filter"
                           compact
                           selected={selected}
                           accessibilityLabel={`${displayYear}년 ${value}월`}
@@ -135,8 +129,11 @@ export function DiaryFilterPicker({
           </View>
         </View>
         <View className="gap-3">
-          <Text className="text-base font-semibold">감정</Text>
-          <View className="gap-1">
+          <View className="flex-row items-baseline justify-between gap-3">
+            <Text className="text-base font-semibold">감정</Text>
+            <Text className="shrink text-sm text-theme-text-secondary">{emotionLabel}</Text>
+          </View>
+          <View className="gap-1.5">
             {[EMOTIONS.slice(0, 5), EMOTIONS.slice(5)].map((row, rowIndex) => (
               <View key={rowIndex} className="flex-row gap-1.5">
                 {row.map((item, index) => {
@@ -145,7 +142,7 @@ export function DiaryFilterPicker({
                   return (
                     <View key={item.key} className="flex-1 min-w-0">
                       <PickerOption
-                        selectionOnly
+                        variant="filter"
                         compact
                         dense
                         selected={selected}
@@ -166,21 +163,7 @@ export function DiaryFilterPicker({
             ))}
           </View>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="선택 초기화"
-          onPress={() => {
-            setYear(null);
-            setMonth(0);
-            setEmotion(null);
-            setDisplayYear(currentYear);
-          }}
-          className="h-10 self-center flex-row items-center justify-center gap-1.5 px-4 active:opacity-70"
-        >
-          <AppIcon name="restart-alt" size={iconSizes.md} color={colors.accent} />
-          <Text className="text-sm text-theme-accent">선택 초기화</Text>
-        </Pressable>
-      </View>
-    </BottomSheetModal>
+      </>
+    </FilterSheet>
   );
 }
