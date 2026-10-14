@@ -4,6 +4,7 @@ import type { Sober, SoberRestart } from './types';
 import type { Settings } from '../settings/model';
 import { MAX_SOBER_COUNT } from '../domain/limits';
 import {
+  getCurrentSoberStart,
   validateSober,
   validateSoberRestart,
   type SoberInput,
@@ -53,11 +54,32 @@ export async function getSoberMemoPage(
 }
 export function sortSobers(
   sobers: Sober[],
-  settings: Pick<Settings, 'soberSort' | 'soberPriorityFirst'>,
+  settings: Pick<Settings, 'soberSort' | 'soberPriorityFirst'> &
+    Partial<Pick<Settings, 'soberRecordSort'>>,
+  restarts: SoberRestart[] = [],
+  now = Date.now(),
 ) {
+  const durations = new Map(
+    sobers.map((sober) => [
+      sober.id,
+      Math.max(
+        0,
+        now -
+          Date.parse(
+            getCurrentSoberStart(
+              sober,
+              restarts.filter((item) => item.sober_id === sober.id),
+            ),
+          ),
+      ),
+    ]),
+  );
   return [...sobers].sort((a, b) => {
     if (settings.soberPriorityFirst && a.is_priority !== b.is_priority)
       return b.is_priority - a.is_priority;
+    const recordDifference = durations.get(a.id)! - durations.get(b.id)!;
+    if (recordDifference)
+      return settings.soberRecordSort === 'ASC' ? recordDifference : -recordDifference;
     const difference = Date.parse(a.created_at) - Date.parse(b.created_at);
     return (settings.soberSort === 'ASC' ? difference : -difference) || a.id - b.id;
   });

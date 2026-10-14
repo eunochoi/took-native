@@ -36,15 +36,24 @@ export function TodayRecordSection({ today }: { today: string }) {
   const habits = useQuery(habitQueries.list(db));
   const completions = useQuery(habitQueries.completions(db, today, today));
   const sobers = useQuery(soberQueries.list(db));
-  const sober = sortSobers(sobers.data ?? [], settings)[0];
-  const restarts = useQuery({ ...soberQueries.restarts(db, sober?.id), enabled: !!sober });
+  const restarts = useQuery({
+    ...soberQueries.restarts(db),
+    enabled: !!sobers.data?.length,
+  });
+  const sober = sortSobers(sobers.data ?? [], settings, restarts.data ?? [], now)[0];
   const habitPending = habits.isPending || completions.isPending;
   const habitError = habits.isError || completions.isError;
   const soberPending = sobers.isPending || (!!sober && restarts.isPending);
   const soberError = sobers.isError || (!!sober && restarts.isError);
   const soberDays =
     sober && restarts.data
-      ? Math.floor(getSoberSummary(sober, restarts.data, now).duration / SOBER_DAY_MS) + 1
+      ? Math.floor(
+        getSoberSummary(
+          sober,
+          restarts.data.filter((item) => item.sober_id === sober.id),
+          now,
+        ).duration / SOBER_DAY_MS,
+      ) + 1
       : null;
   return (
     <View className="py-1 gap-2">

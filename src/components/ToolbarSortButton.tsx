@@ -7,18 +7,20 @@ import { Text } from './Text';
 export function ToolbarSortButton({
   sort,
   priorityFirst = false,
+  recordSort,
   ascendingLabel = '과거순',
   accessibilityLabel,
   onPress,
 }: {
   sort: 'ASC' | 'DESC' | 'CUSTOM';
   priorityFirst?: boolean;
+  recordSort?: 'ASC' | 'DESC';
   ascendingLabel?: string;
   accessibilityLabel: string;
   onPress: () => void;
 }) {
   const { rem: appRem } = useAppTheme();
-  const label = sort === 'CUSTOM' ? '커스텀' : sort === 'DESC' ? '최신순' : ascendingLabel;
+  const label = recordSort ? `기록 ${recordSort === 'DESC' ? '내림차순' : '오름차순'}` : sort === 'CUSTOM' ? '커스텀' : sort === 'DESC' ? '최신순' : ascendingLabel;
   const showPriority = sort !== 'CUSTOM' && priorityFirst;
   return (
     <GesturePressable

@@ -30,6 +30,7 @@ async function fixture() {
       ...DEFAULT_SETTINGS,
       habitPriorityFirst: true,
       soberSort: 'ASC',
+      soberRecordSort: 'ASC',
       soberPriorityFirst: true,
     }),
   ]);
@@ -58,6 +59,7 @@ test('Sober and restart with memo survive ZIP backup and atomic record replaceme
   const settings = JSON.parse(String(rows(target.raw, 'SELECT value FROM settings')[0][0]));
   assert.equal(settings.habitPriorityFirst, true);
   assert.equal(settings.soberSort, 'ASC');
+  assert.equal(settings.soberRecordSort, 'ASC');
   assert.equal(settings.soberPriorityFirst, true);
   source.raw.close();
   snapshot.raw.close();

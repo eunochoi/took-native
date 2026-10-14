@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { runInNewContext } from 'node:vm';
 import test from 'node:test';
+import { sortSobers } from '../src/db/sober';
 import { EMOTIONS } from '../src/domain/constants';
 import {
   formatSoberDuration,
@@ -55,14 +56,16 @@ function render(
           return { useRouter: () => ({ push: (route: unknown) => scenario.routes?.push(route) }) };
         if (dependency.endsWith('SettingsProvider'))
           return {
-            useSettings: () => ({ settings: { soberSort: 'DESC', soberPriorityFirst: false } }),
+            useSettings: () => ({
+              settings: { soberSort: 'DESC', soberRecordSort: 'DESC', soberPriorityFirst: false },
+            }),
           };
         if (dependency.endsWith('useCurrentMinute'))
           return { useCurrentMinute: () => Date.parse('2026-10-05T12:00:00.000Z') };
         if (dependency.endsWith('domain/sober'))
           return { formatSoberDuration, getSoberStreaks, getSoberSummary, SOBER_DAY_MS };
         if (dependency === 'date-fns') return require('date-fns');
-        if (dependency.endsWith('db/sober')) return { sortSobers: (items: unknown[]) => items };
+        if (dependency.endsWith('db/sober')) return { sortSobers };
         if (dependency === 'expo-sqlite') return { useSQLiteContext: () => ({}) };
         if (dependency === '@tanstack/react-query')
           return {
@@ -175,7 +178,7 @@ test('today sober card uses the latest restart and opens the selected record', (
   const routes: unknown[] = [];
   const results = {
     sobers: { data: [sober] },
-    restarts: { data: [{ id: 1, restarted_at: '2026-10-04T00:00:00.000Z' }] },
+    restarts: { data: [{ id: 1, sober_id: 7, restarted_at: '2026-10-04T00:00:00.000Z' }] },
   };
   const tree = render('TodayRecordSection', { today: '2026-10-05' }, undefined, {
     results,
@@ -192,7 +195,7 @@ test('today sober card uses the latest restart and opens the selected record', (
   const reset = render('TodayRecordSection', { today: '2026-10-05' }, undefined, {
     results: {
       ...results,
-      restarts: { data: [{ id: 2, restarted_at: '2026-10-05T11:00:00.000Z' }] },
+      restarts: { data: [{ id: 2, sober_id: 7, restarted_at: '2026-10-05T11:00:00.000Z' }] },
     },
   });
   assert(text(reset).includes('거리를 두고 지낸 지 1일째예요.'));
@@ -318,4 +321,30 @@ test('sober rankings compare past and current streaks in both directions across 
       '아직 거리두기 기록이 없어요.',
     ),
   );
+});
+
+test('home sober card selects by current record using all restarts', () => {
+  const routes: unknown[] = [];
+  const items = [7, 8].map((id) => ({
+    id,
+    name: `항목 ${id}`,
+    icon_key: 'coffee',
+    icon_color: 'theme',
+    initial_started_at: '2026-10-01T00:00:00.000Z',
+    created_at: '2026-10-01T00:00:00.000Z',
+    is_priority: 0,
+    goal_mode: 'AUTO',
+    goal_days: null,
+  }));
+  const tree = render('TodayRecordSection', { today: '2026-10-05' }, undefined, {
+    routes,
+    results: {
+      sobers: { data: items },
+      restarts: { data: [{ id: 1, sober_id: 7, restarted_at: '2026-10-05T00:00:00.000Z' }] },
+    },
+  });
+  assert(text(tree.props.children[1]).includes('항목 8'));
+  assert(text(tree.props.children[1]).includes('거리를 두고 지낸 지 5일째예요.'));
+  tree.props.children[1].props.onPress();
+  assert.deepEqual(routes, ['/sober/8']);
 });

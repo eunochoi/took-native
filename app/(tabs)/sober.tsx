@@ -43,7 +43,7 @@ export default function SoberList() {
   const fade = useScrollFade();
   const scroll = useRef<FlatList<Row>>(null);
   useScrollToTop(scroll);
-  const sorted = sortSobers(list.data ?? [], settings);
+  const sorted = sortSobers(list.data ?? [], settings, restarts.data ?? [], now);
   const grouped = useMemo(() => {
     const result = new Map<number, NonNullable<typeof restarts.data>>();
     for (const item of restarts.data ?? []) {
@@ -85,6 +85,7 @@ export default function SoberList() {
             <Toolbar>
               <ToolbarSortButton
                 sort={settings.soberSort}
+          recordSort={settings.soberRecordSort}
                 priorityFirst={settings.soberPriorityFirst}
                 ascendingLabel="과거순"
                 accessibilityLabel="거리두기 항목 정렬"
@@ -173,14 +174,16 @@ export default function SoberList() {
       {sortOpen && (
         <RecordSortPicker
           title="거리두기 정렬"
+          sortLabel="생성일"
           sort={settings.soberSort}
+          recordSort={settings.soberRecordSort}
           priorityFirst={settings.soberPriorityFirst}
           ascendingLabel="과거순"
           onClose={() => setSortOpen(false)}
-          onApply={(sort, priorityFirst) => {
+          onApply={(sort, priorityFirst, recordSort) => {
             setSortOpen(false);
             if (sort === 'CUSTOM') return;
-            change({ soberSort: sort, soberPriorityFirst: priorityFirst });
+            change({ soberSort: sort, soberPriorityFirst: priorityFirst, soberRecordSort: recordSort });
           }}
         />
       )}

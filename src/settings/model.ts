@@ -8,6 +8,7 @@ export interface Settings {
   habitPriorityFirst: boolean;
   habitOrder: number[];
   soberSort: 'ASC' | 'DESC';
+  soberRecordSort: 'ASC' | 'DESC';
   soberPriorityFirst: boolean;
   diaryReminderTime: string | null;
   habitReminderTime: string | null;
@@ -23,6 +24,7 @@ export const DEFAULT_SETTINGS: Settings = {
   habitPriorityFirst: false,
   habitOrder: [],
   soberSort: 'DESC',
+  soberRecordSort: 'DESC',
   soberPriorityFirst: false,
   diaryReminderTime: null,
   habitReminderTime: null,
@@ -42,6 +44,7 @@ export function parseSettings(raw: unknown): Settings {
     !['ASC', 'DESC', 'CUSTOM'].includes(settings.habitSort) ||
     typeof settings.habitPriorityFirst !== 'boolean' ||
     !['ASC', 'DESC'].includes(settings.soberSort) ||
+    !['ASC', 'DESC'].includes(settings.soberRecordSort) ||
     typeof settings.soberPriorityFirst !== 'boolean' ||
     [settings.diaryReminderTime, settings.habitReminderTime, settings.soberReminderTime].some(
       (time) =>
@@ -64,6 +67,7 @@ export function parseSettings(raw: unknown): Settings {
     habitPriorityFirst: settings.habitPriorityFirst,
     habitOrder: settings.habitOrder,
     soberSort: settings.soberSort,
+    soberRecordSort: settings.soberRecordSort,
     soberPriorityFirst: settings.soberPriorityFirst,
     diaryReminderTime: settings.diaryReminderTime,
     habitReminderTime: settings.habitReminderTime,

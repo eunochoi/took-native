@@ -48,6 +48,7 @@ function picker(path: string, name: string, initial: Record<string, unknown>) {
         if (dependency === 'react-native')
           return {
             View: 'View',
+            Switch: 'Switch',
             Pressable: 'Pressable',
             useWindowDimensions: () => ({ height: 900 }),
           };
@@ -89,7 +90,8 @@ function picker(path: string, name: string, initial: Record<string, unknown>) {
       );
       assert(item, `missing choice ${label}`);
       assert(!item.props.disabled, `disabled choice ${label}`);
-      item.props.onPress();
+      if (item.type === 'Switch') item.props.onValueChange(!item.props.value);
+      else item.props.onPress();
     },
     finish: () => {
       deferred?.();
@@ -155,7 +157,7 @@ test('custom order disables priority and never applies a conflicting combination
     .render()
     .content.find((node) => node.props.accessibilityLabel === '중요도 우선');
   assert.equal(priority.props.disabled, true);
-  assert.equal(priority.props.selected, false);
+  assert.equal(priority.props.value, false);
   ui.press('적용하기');
   ui.finish();
   assert.deepEqual(ui.applied, [['CUSTOM', false]]);
@@ -340,4 +342,30 @@ test('diary toolbar shows current period and emotion and truncates a long label'
     accessibilityLabel: '일기 정렬',
   }).render();
   assert(sort.content.some((node) => node.type === 'Text' && node.props.children === '과거순'));
+});
+
+test('sober sorting shows priority, record, creation in order and applies drafts together', () => {
+  const ui = sortPicker({ priorityFirst: false, recordSort: 'DESC', sortLabel: '생성일' });
+  const headings = ui
+    .render()
+    .content.filter(
+      (node) =>
+        node.type === 'Text' &&
+        ['중요한 항목 먼저', '기록', '생성일'].includes(node.props.children),
+    )
+    .map((node) => node.props.children);
+  assert.deepEqual(headings, ['중요한 항목 먼저', '기록', '생성일']);
+  ui.press('중요도 우선');
+  ui.press('현재 기록 오름차순');
+  ui.press('과거순');
+  assert.equal(ui.applied.length, 0);
+  ui.press('적용하기');
+  assert.equal(ui.applied.length, 0);
+  ui.finish();
+  assert.deepEqual(ui.applied, [['ASC', true, 'ASC']]);
+  const cancelled = sortPicker({ priorityFirst: true, recordSort: 'DESC' });
+  cancelled.press('현재 기록 오름차순');
+  cancelled.render().shell.props.onClose();
+  cancelled.finish();
+  assert.equal(cancelled.applied.length, 0);
 });

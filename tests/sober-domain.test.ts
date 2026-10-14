@@ -280,3 +280,62 @@ test('achievements retain completed streaks and recalculate after restart edits 
     achieved,
   );
 });
+
+test('sober sorting applies priority, exact current duration, creation date, then ID', () => {
+  const items = [
+    { ...sober, id: 1, created_at: new Date(origin + day).toISOString() },
+    { ...sober, id: 2, initial_started_at: new Date(origin + day).toISOString() },
+    {
+      ...sober,
+      id: 3,
+      is_priority: 1 as const,
+      initial_started_at: new Date(origin + 2 * day).toISOString(),
+    },
+    { ...sober, id: 4 },
+    { ...sober, id: 5 },
+  ];
+  const restarts = [restart(1, 3 * day + 60000), restart(2, 3 * day)];
+  const order = (record: 'ASC' | 'DESC', creation: 'ASC' | 'DESC', priority: boolean) =>
+    sortSobers(
+      items,
+      { soberRecordSort: record, soberSort: creation, soberPriorityFirst: priority },
+      restarts,
+      origin + 4 * day,
+    ).map((item) => item.id);
+  assert.deepEqual(order('DESC', 'DESC', true), [3, 4, 5, 2, 1]);
+  assert.deepEqual(order('ASC', 'DESC', true), [3, 1, 2, 4, 5]);
+  assert.deepEqual(order('DESC', 'DESC', false), [4, 5, 2, 3, 1]);
+  assert.deepEqual(order('DESC', 'ASC', false), [4, 5, 2, 3, 1]);
+  assert.deepEqual(
+    sortSobers(
+      [items[0], items[3], items[4]],
+      { soberSort: 'DESC', soberRecordSort: 'ASC', soberPriorityFirst: false },
+      [],
+      origin + 4 * day,
+    ).map((item) => item.id),
+    [1, 4, 5],
+  );
+  assert.deepEqual(
+    sortSobers(
+      [items[0], items[3], items[4]],
+      { soberSort: 'ASC', soberRecordSort: 'DESC', soberPriorityFirst: false },
+      [],
+      origin + 4 * day,
+    ).map((item) => item.id),
+    [4, 5, 1],
+  );
+  assert.deepEqual(
+    items.map((item) => item.id),
+    [1, 2, 3, 4, 5],
+  );
+});
+
+test('older settings default record sorting to descending and validate both directions', () => {
+  const { soberRecordSort, ...older } = DEFAULT_SETTINGS;
+  assert.equal(parseSettings(older).soberRecordSort, 'DESC');
+  for (const direction of ['ASC', 'DESC'] as const) {
+    const settings = { ...DEFAULT_SETTINGS, soberRecordSort: direction };
+    assert.deepEqual(parseSettings(JSON.parse(JSON.stringify(settings))), settings);
+  }
+  assert.throws(() => parseSettings({ ...DEFAULT_SETTINGS, soberRecordSort: 'CUSTOM' }));
+});
