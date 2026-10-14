@@ -199,7 +199,7 @@ export default function SettingsScreen() {
               accessibilityState={{ disabled }}
               disabled={disabled}
               onPress={() => setOnboardingOpen(true)}
-              className={`h-11 shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
+              className={`shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
             >
               <AppIcon name="info" size={appRem * 1.2} className="text-theme-accent" />
               <Text className="text-sm leading-snug text-theme-text-secondary">앱 가이드</Text>
@@ -217,7 +217,7 @@ export default function SettingsScreen() {
                   }),
                 );
               }}
-              className={`h-11 min-w-0 shrink flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
+              className={`min-w-0 shrink flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
             >
               <AppIcon name="open-in-new" size={appRem * 1.2} className="text-theme-accent" />
               <Text
@@ -232,7 +232,7 @@ export default function SettingsScreen() {
               accessibilityState={{ disabled }}
               disabled={disabled}
               onPress={() => openModal('/privacy')}
-              className={`h-11 shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
+              className={`shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
             >
               <AppIcon name="privacy-tip" size={appRem * 1.2} className="text-theme-accent" />
             </Pressable>

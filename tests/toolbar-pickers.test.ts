@@ -297,7 +297,6 @@ test('record toolbar shows saved sorting and priority while keeping add separate
     onPress: () => opened++,
   });
   const view = ui.render();
-  assert(view.shell.props.className.includes('h-11'));
   assert(view.content.some((node) => node.type === 'Text' && node.props.children === '최신순'));
   assert.equal(view.content.filter((node) => node.type === 'StarIcon').length, 1);
   ui.press('습관 정렬, 최신순 · 중요도 우선');
@@ -324,7 +323,6 @@ test('diary toolbar shows current period and emotion and truncates a long label'
     emotion: 1,
   });
   const view = ui.render();
-  assert(view.shell.props.className.includes('h-11'));
   const label = view.content.find(
     (node) => node.type === 'Text' && node.props.children === '26년 4월 · 기쁨',
   );

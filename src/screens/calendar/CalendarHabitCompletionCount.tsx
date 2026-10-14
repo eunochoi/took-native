@@ -6,7 +6,7 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 export function CalendarHabitCompletionCount({ count }: { count: number }) {
   const { iconSizes } = useAppTheme();
   return (
-    <View className="h-11 min-w-0 shrink flex-row items-center gap-1.5 px-3.5">
+    <View className="min-w-0 shrink flex-row items-center gap-1.5 px-3.5">
       <View className="h-5 shrink-0 items-center justify-center">
         <AppIcon
           name="habit"

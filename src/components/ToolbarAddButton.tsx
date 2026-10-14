@@ -19,7 +19,7 @@ export function ToolbarAddButton({
       accessibilityLabel={label}
       disabled={disabled}
       onPress={onPress}
-      className={`h-11 shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-50' : 'opacity-100'}`}
+      className={`shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-50' : 'opacity-100'}`}
     >
       <AppIcon name="add" size={appRem * 1.2} className="text-theme-accent" />
       <Text className="text-sm leading-snug text-theme-text-secondary">{label}</Text>
