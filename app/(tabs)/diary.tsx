@@ -192,6 +192,7 @@ export default function DiaryList() {
           month={month}
           emotion={emotion}
           currentYear={Number(today.slice(0, 4))}
+          currentMonth={Number(today.slice(5, 7))}
           onClose={() => setPicker(null)}
           onApply={(value, selectedMonth, selectedEmotion) => {
             setYear(value);

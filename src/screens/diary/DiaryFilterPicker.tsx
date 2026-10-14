@@ -12,6 +12,7 @@ export function DiaryFilterPicker({
   year,
   month,
   currentYear,
+  currentMonth,
   emotion,
   onClose,
   onApply,
@@ -19,21 +20,28 @@ export function DiaryFilterPicker({
   year: number | null;
   month: number;
   currentYear: number;
+  currentMonth: number;
   emotion: number | null;
   onClose: () => void;
   onApply: (year: number | null, month: number, emotion: number | null) => void;
 }) {
   const { colors, iconSizes, rem: appRem } = useAppTheme();
   const [draftEmotion, setEmotion] = useState(emotion);
-  const [draftYear, setYear] = useState(year);
-  const [draftMonth, setMonth] = useState(month);
-  const [displayYear, setDisplayYear] = useState(year ?? currentYear);
+  const initialYear = year !== null && year >= 1900 && year <= currentYear ? year : null;
+  const [draftYear, setYear] = useState(initialYear);
+  const [draftMonth, setMonth] = useState(
+    initialYear !== null && month >= 0 && month <= (initialYear === currentYear ? currentMonth : 12)
+      ? month
+      : 0,
+  );
+  const [displayYear, setDisplayYear] = useState(initialYear ?? currentYear);
   const periodLabel =
     draftYear === null
       ? '전체 기간'
       : `${draftYear}년 ${draftMonth === 0 ? '전체' : `${draftMonth}월`}`;
   const emotionLabel = draftEmotion === null ? '전체 감정' : EMOTIONS[draftEmotion].name;
   const selectYear = (value: number) => {
+    if (value < 1900 || value > currentYear) return;
     setDisplayYear(value);
     setYear(value);
     setMonth(0);
@@ -48,7 +56,16 @@ export function DiaryFilterPicker({
         setEmotion(null);
         setDisplayYear(currentYear);
       }}
-      onApply={() => onApply(draftYear, draftYear === null ? 0 : draftMonth, draftEmotion)}
+      onApply={() => {
+        const validYear = draftYear !== null && draftYear <= currentYear ? draftYear : null;
+        const validMonth =
+          validYear === null
+            ? 0
+            : validYear === currentYear
+              ? Math.min(draftMonth, currentMonth)
+              : draftMonth;
+        onApply(validYear, validMonth, draftEmotion);
+      }}
     >
       <>
         <View className="gap-3">
@@ -90,9 +107,9 @@ export function DiaryFilterPicker({
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="다음 연도 선택"
-                disabled={displayYear >= 2100}
+                disabled={displayYear >= currentYear}
                 onPress={() => selectYear(displayYear + 1)}
-                className={`h-12 w-12 items-center justify-center rounded-xl bg-transparent active:opacity-70 ${displayYear >= 2100 ? 'opacity-40' : 'opacity-100'}`}
+                className={`h-12 w-12 items-center justify-center rounded-xl bg-transparent active:opacity-70 ${displayYear >= currentYear ? 'opacity-40' : 'opacity-100'}`}
               >
                 <AppIcon name="chevron-right" size={iconSizes.md} color={colors.accent} />
               </Pressable>
@@ -102,14 +119,19 @@ export function DiaryFilterPicker({
                 <View key={offset} className="flex-row gap-1.5">
                   {Array.from({ length: 6 }, (_, index) => offset + index + 1).map((value) => {
                     const selected = draftYear === displayYear && draftMonth === value;
+                    const disabled =
+                      displayYear > currentYear ||
+                      (displayYear === currentYear && value > currentMonth);
                     return (
                       <View key={value} className="flex-1">
                         <PickerOption
                           variant="filter"
                           compact
                           selected={selected}
+                          disabled={disabled}
                           accessibilityLabel={`${displayYear}년 ${value}월`}
                           onPress={() => {
+                            if (disabled) return;
                             setYear(displayYear);
                             setMonth(selected ? 0 : value);
                           }}

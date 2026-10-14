@@ -579,6 +579,49 @@ test('sober filters draft importance and one minimum period, with cancel and res
   ]);
 });
 
+test('diary filter prevents future years and months including direct handler calls', () => {
+  const ui = filterPicker({ currentMonth: 10 });
+  const option = (label: string) =>
+    ui.render().content.find((node) => node.props.accessibilityLabel === label);
+  assert.equal(option('다음 연도 선택').props.disabled, true);
+  option('다음 연도 선택').props.onPress();
+  assert(option('2026년 전체'));
+  assert.equal(option('2026년 10월').props.disabled, false);
+  assert.equal(option('2026년 11월').props.disabled, true);
+  assert.equal(option('2026년 12월').props.disabled, true);
+  option('2026년 11월').props.onPress();
+  ui.press('일기 필터 적용');
+  ui.finish();
+  assert.deepEqual(ui.applied, [[null, 0, null]]);
+  ui.press('이전 연도 선택');
+  assert.equal(option('2025년 12월').props.disabled, false);
+  ui.press('2025년 12월');
+  ui.press('다음 연도 선택');
+  assert.equal(option('2026년 12월').props.selected, false);
+  assert.equal(option('다음 연도 선택').props.disabled, true);
+});
+
+test('diary filter respects January and December boundaries and clears legacy future selections', () => {
+  for (const currentMonth of [1, 12]) {
+    const ui = filterPicker({ currentMonth });
+    for (let month = 1; month <= 12; month++) {
+      const option = ui
+        .render()
+        .content.find((node) => node.props.accessibilityLabel === `2026년 ${month}월`);
+      assert.equal(option.props.disabled, month > currentMonth);
+    }
+  }
+  for (const props of [
+    { year: 2027, month: 1 },
+    { year: 2026, month: 12 },
+  ]) {
+    const ui = filterPicker({ ...props, currentMonth: 10 });
+    ui.press('일기 필터 적용');
+    ui.finish();
+    assert.deepEqual(ui.applied, [[props.year === 2027 ? null : 2026, 0, null]]);
+  }
+});
+
 test('sober filter supports a three-month threshold through the shared footer', () => {
   const ui = picker('src/screens/sober/SoberFilterPicker.tsx', 'SoberFilterPicker', {
     filter: { priorityOnly: false, minimumDays: 0 },
