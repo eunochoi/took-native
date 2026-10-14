@@ -51,15 +51,15 @@ export default function Home() {
       </View>
       <View className="mb-10 shrink-0 gap-5">
         <View className="gap-1">
-          <Text className="text-theme-accent-deep font-semibold text-base">
+          <Text className="text-theme-accent font-semibold text-lg">
             {format(parseISO(today), 'M월 d일 EEEE', {
               locale: ko,
             })}
           </Text>
-          <Text className="font-bold text-3xl">오늘을 툭,</Text>
+          <Text className="font-bold text-3xl">오늘을 툭,툭!</Text>
           <Text className="font-bold text-3xl">나답게 쌓는 하루</Text>
         </View>
-        <Text className="text-theme-text-secondary text-lg">감정도 습관도 내 속도로 남겨요.</Text>
+        <Text className="text-theme-accent-deep text-base font-semibold">#감정기록 #작은습관 #거리두기</Text>
       </View>
       <View className="shrink-0">
         <TodayRecordSection today={today} />
