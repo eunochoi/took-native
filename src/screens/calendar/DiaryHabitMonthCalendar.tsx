@@ -103,7 +103,7 @@ export function DiaryHabitMonthCalendar(props: {
                     </View>
                   )}
                   {count > 0 && (
-                    <Badge className={`h-auto w-auto py-0.5 px-1.5 ${diary ? 'absolute -top-1 -right-2' : ''}`}>
+                    <Badge className={`h-auto w-auto py-0.5 px-1.5 ${diary ? 'absolute -top-1 -right-1' : ''}`}>
                       {count}
                     </Badge>
                   )}
