@@ -44,18 +44,6 @@ export default function Home() {
       />
       <View className="mb-8 shrink-0 flex-row items-center gap-2">
         <Wordmark size={appRem * 2.4} color={colors.text} accentColor={colors.accent} />
-        <Animated.View
-          key={focused && !reducedMotion ? 'moving' : 'idle'}
-          className="h-9 w-9 shrink-0 items-center justify-center"
-          style={{
-            transform: [{ rotate: '5deg' }],
-            animationName: focused && !reducedMotion ? greeting : undefined,
-            animationDuration: `${tokens.motion.greeting}ms`,
-            animationTimingFunction: 'ease-in-out',
-          }}
-        >
-          <EmotionImage emotion={1} size={appRem * 2.25} />
-        </Animated.View>
       </View>
       <View className="mb-10 shrink-0 gap-5">
         <View className="gap-1">
@@ -65,7 +53,21 @@ export default function Home() {
             })}
           </Text>
           <Text className="font-bold text-3xl">오늘을 툭!!</Text>
-          <Text className="font-bold text-3xl">나답게 쌓는 하루</Text>
+          <View className="flex-row items-center gap-2">
+            <Text className="font-bold text-3xl">나답게 쌓는 하루</Text>
+            <Animated.View
+              key={focused && !reducedMotion ? 'moving' : 'idle'}
+              className="h-9 w-9 shrink-0 items-center justify-center"
+              style={{
+                transform: [{ rotate: '5deg' }],
+                animationName: focused && !reducedMotion ? greeting : undefined,
+                animationDuration: `${tokens.motion.greeting}ms`,
+                animationTimingFunction: 'ease-in-out',
+              }}
+            >
+              <EmotionImage emotion={1} size={appRem * 2.25} />
+            </Animated.View>
+          </View>
         </View>
         <Text className="text-theme-accent-deep text-base font-semibold">#감정기록 #작은습관 #거리두기</Text>
       </View>
