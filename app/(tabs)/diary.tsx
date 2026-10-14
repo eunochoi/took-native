@@ -1,5 +1,5 @@
 import { useScrollToTop } from 'expo-router';
-import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, View } from 'react-native';
@@ -11,6 +11,8 @@ import { EmptyState } from '../../src/components/EmptyState';
 import { RecordSortPicker } from '../../src/components/RecordSortPicker';
 import { ScrollEdgeFade } from '../../src/components/ScrollEdgeFade';
 import { TabBottomSpacer } from '../../src/components/TabBottomSpacer';
+import { ToolbarAddButton } from '../../src/components/ToolbarAddButton';
+import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { Toolbar } from '../../src/components/Toolbar';
 import { ToolbarFilterButton } from '../../src/components/ToolbarFilterButton';
 import { ToolbarSortButton } from '../../src/components/ToolbarSortButton';
@@ -33,6 +35,8 @@ export default function DiaryList() {
   const db = useSQLiteContext();
   const fade = useScrollFade();
   const today = useToday();
+  const todayDiary = useQuery(diaryQueries.byDate(db, today));
+  const { openModal } = useModalNavigation();
   const { settings, updateSettings } = useSettings();
   const scroll = useRef<FlatList<Row>>(null);
   useScrollToTop(scroll);
@@ -100,6 +104,17 @@ export default function DiaryList() {
                 month={month}
                 emotion={emotion}
                 onPress={() => setPicker('filter')}
+              />
+              <ToolbarAddButton
+                label={todayDiary.data ? '오늘 일기 수정' : '오늘 일기 작성'}
+                disabled={todayDiary.isPending || todayDiary.isError}
+                onPress={() =>
+                  openModal(
+                    todayDiary.data
+                      ? `/diary/${todayDiary.data.id}/edit`
+                      : { pathname: '/diary/new', params: { date: today } },
+                  )
+                }
               />
             </Toolbar>
           </DiaryTopSection>

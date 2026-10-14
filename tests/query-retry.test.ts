@@ -7,7 +7,7 @@ import { DEFAULT_SETTINGS } from '../src/settings/model';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
-function load(file: string, results: Record<string, any> = {}) {
+function load(file: string, results: Record<string, any> = {}, routes: unknown[] = []) {
   const exports: any = {};
   const jsx = (type: unknown, props: any) => ({ type, props });
   const query = (kind: string) => ({ kind });
@@ -18,6 +18,10 @@ function load(file: string, results: Record<string, any> = {}) {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/ModalNavigationProvider'))
+          return {
+            useModalNavigation: () => ({ openModal: (route: unknown) => routes.push(route) }),
+          };
         if (name.endsWith('/NoticeProvider'))
           return { useNotice: () => ({ showNotice: () => {} }) };
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
@@ -38,11 +42,15 @@ function load(file: string, results: Record<string, any> = {}) {
         if (name === '@tanstack/react-query')
           return {
             useInfiniteQuery: () => results.list,
-            useQuery: ({ kind }: any) => results[kind],
+            useQuery: ({ kind }: any) =>
+              results[kind] ?? { data: null, isPending: false, isError: false },
           };
         if (name.endsWith('/queries'))
           return {
-            diaryQueries: { list: () => query('list') },
+            diaryQueries: {
+              list: () => query('list'),
+              byDate: (_db: unknown, date: string) => query(`date:${date}`),
+            },
             statsQueries: {
               years: () => query('years'),
               diary: () => query('diary'),
@@ -143,4 +151,46 @@ test('QueryState keeps loading, failure retry and ready states separate', () => 
   query.error = null;
   query.isPending = false;
   assert.equal(QueryState({ query }), null);
+});
+
+test('diary toolbar creates today or edits its existing diary independently of list results', () => {
+  for (const existing of [null, { id: 42 }]) {
+    const routes: unknown[] = [];
+    const { default: DiaryList } = load(
+      'app/(tabs)/diary.tsx',
+      {
+        list: { data: { pages: [[{ id: 99, date: '2025-01-01' }]] } },
+        'date:2026-10-07': { data: existing, isPending: false, isError: false },
+      },
+      routes,
+    );
+    const list = nodes(DiaryList()).find((node) => node.type === 'FlatList');
+    const header = nodes(list.props.ListHeaderComponent);
+    assert.deepEqual(
+      header
+        .filter((node) => node.type.startsWith('Toolbar') && node.type !== 'Toolbar')
+        .map((node) => node.type),
+      ['ToolbarSortButton', 'ToolbarFilterButton', 'ToolbarAddButton'],
+    );
+    const add = header.find((node) => node.type === 'ToolbarAddButton');
+    assert.equal(add.props.label, existing ? '오늘 일기 수정' : '오늘 일기 작성');
+    assert.equal(add.props.disabled, false);
+    add.props.onPress();
+    assert.deepEqual(
+      JSON.parse(JSON.stringify(routes)),
+      existing ? ['/diary/42/edit'] : [{ pathname: '/diary/new', params: { date: '2026-10-07' } }],
+    );
+  }
+  for (const status of [{ isPending: true }, { isError: true }]) {
+    const { default: DiaryList } = load('app/(tabs)/diary.tsx', {
+      list: {},
+      'date:2026-10-07': status,
+    });
+    const list = nodes(DiaryList()).find((node) => node.type === 'FlatList');
+    assert.equal(
+      nodes(list.props.ListHeaderComponent).find((node) => node.type === 'ToolbarAddButton').props
+        .disabled,
+      true,
+    );
+  }
 });
