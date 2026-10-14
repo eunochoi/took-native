@@ -1,7 +1,7 @@
 import { format, parseISO } from 'date-fns';
 import { View } from 'react-native';
-import { SoberIcon } from '../../components/SoberIcon';
 import { ProgressBar } from '../../components/ProgressBar';
+import { SoberIcon } from '../../components/SoberIcon';
 import { Text } from '../../components/Text';
 import type { HabitIconColorKey } from '../../domain/constants';
 import type { SoberIconKey } from '../../domain/sober';
@@ -31,7 +31,7 @@ export function SoberGauge({
         <Text className="text-center text-2xl font-bold text-theme-text-primary">
           {formatSoberDuration(duration)}
         </Text>
-        <Text className="text-center text-base text-theme-text-secondary">
+        <Text className="text-center text-sm text-theme-text-secondary">
           {format(parseISO(start), 'yy년 M월 d일 HH:mm')} 시작
         </Text>
       </View>
