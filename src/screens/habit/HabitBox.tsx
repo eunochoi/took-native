@@ -1,13 +1,13 @@
-import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
-import { AppIcon } from '../../components/AppIcon';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Pressable, View } from 'react-native';
+import { AppIcon } from '../../components/AppIcon';
 import { HabitIcon } from '../../components/HabitIcon';
 import { Text } from '../../components/Text';
 import type { Completion, Habit } from '../../db/types';
 import { resolveIconColor } from '../../domain/constants';
-import { canCheckHabit, shiftDate, localDate } from '../../domain/date';
+import { canCheckHabit, localDate, shiftDate } from '../../domain/date';
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { HabitMenu } from './HabitMenu';
 import { HabitStars } from './HabitStars';
@@ -51,12 +51,7 @@ export function HabitBox({
             <HabitMenu habit={habit} />
           </View>
         </View>
-        <View className="flex-row flex-wrap items-center justify-center gap-x-5">
-          <Text className="text-sm" style={{ color: habitColor }}>
-            우선순위
-          </Text>
-          <HabitStars priority={habit.priority} color={habitColor} />
-        </View>
+        <HabitStars priority={habit.priority} color={habitColor} className='self-center' />
       </View>
       <View className="flex-row justify-around">
         {Array.from({ length: 4 }, (_, i) => shiftDate(today, -i)).map((date) => {
