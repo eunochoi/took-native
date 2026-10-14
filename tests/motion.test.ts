@@ -95,7 +95,7 @@ test('fade visibility preserves hit testing, insets and surface gradient without
     assert.equal(tree.props.style.opacity, visible ? 1 : 0);
     assert.equal(tree.props.style.height, 69);
     assert.equal(tree.props.style.transitionProperty, 'opacity');
-    assert.equal(tree.props.style.transitionDuration, `${tokens.motion.fade}ms`);
+    assert.equal(tree.props.style.transitionDuration, `${tokens.motion.scrollFade}ms`);
     assert.equal(tree.props.children.type, 'LinearGradient');
     assert.equal(tree.props.children.props.colors[0], '#FFFFFFFF');
   }

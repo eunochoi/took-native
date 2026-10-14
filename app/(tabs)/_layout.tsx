@@ -2,7 +2,7 @@ import { BlurTargetView } from 'expo-blur';
 import { Tabs } from 'expo-router';
 import type { RefObject } from 'react';
 import { createRef, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { Easing, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomNav } from '../../src/components/BottomNav';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
@@ -52,7 +52,10 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         animation: reducedMotion ? 'none' : 'shift',
-        transitionSpec: { animation: 'timing', config: { duration: tokens.motion.tab } },
+        transitionSpec: {
+          animation: 'timing',
+          config: { duration: tokens.motion.tab, easing: Easing.out(Easing.ease) },
+        },
         sceneStyle: { backgroundColor: colors.surface },
       }}
     >

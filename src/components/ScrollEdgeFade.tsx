@@ -35,8 +35,8 @@ export function ScrollEdgeFade({
         height: appRem * 3 + (edge === 'bottom' && includeBottomInset ? insets.bottom : 0),
         opacity: visible ? 1 : 0,
         transitionProperty: 'opacity',
-        transitionDuration: `${reducedMotion ? 0 : tokens.motion.fade}ms`,
-        transitionTimingFunction: 'ease-in-out',
+        transitionDuration: `${reducedMotion ? 0 : tokens.motion.scrollFade}ms`,
+        transitionTimingFunction: 'ease-out',
       }}
     >
       <LinearGradient
