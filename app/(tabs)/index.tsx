@@ -65,7 +65,7 @@ export default function Home() {
                 animationTimingFunction: 'ease-in-out',
               }}
             >
-              <EmotionImage emotion={1} size={appRem * 2.25} />
+              <EmotionImage emotion={1} size={appRem * 2.25} iconStyle="basic" />
             </Animated.View>
           </View>
         </View>
