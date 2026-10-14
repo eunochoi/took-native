@@ -21,7 +21,7 @@ export function BottomSheetHeader({
   menuAction?: ReactNode;
   onClose?: () => void;
 }) {
-  const { colors, iconSizes } = useAppTheme();
+  const { iconSizes } = useAppTheme();
   return (
     <View className="shrink-0 items-center ">
       {onClose && (
@@ -32,7 +32,7 @@ export function BottomSheetHeader({
           className="h-9 w-9 items-center justify-center rounded-full"
           hitSlop={4}
         >
-          <AppIcon name="chevron-down" size={iconSizes.lg} color={colors.accent} />
+          <View className="h-1 w-8 rounded-full bg-theme-accent" />
         </Pressable>
       )}
       {(title || titleIcon || menuAction) && (
