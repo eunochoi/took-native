@@ -101,7 +101,7 @@ export default function SoberList() {
         scrollEventThrottle={16}
         contentContainerClassName="grow"
         ListHeaderComponent={
-          <PageTopSection title="거리두기" hashtags="#절제력 #디톡스">
+          <PageTopSection title="거리두기" hashtags="#절제 #디톡스">
             <Toolbar>
               <ToolbarSortButton
                 sort={settings.soberSort}

@@ -138,7 +138,7 @@ export default function HabitList() {
         showsHorizontalScrollIndicator={false}
         contentContainerClassName="grow"
       >
-        <PageTopSection title="습관 관리" hashtags="#실천 #반복 #성장">
+        <PageTopSection title="습관 관리" hashtags="#실천 #성장">
           <Toolbar>
             <ToolbarSortButton
               sort={settings.habitSort}
