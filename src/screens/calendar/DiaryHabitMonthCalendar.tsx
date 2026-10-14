@@ -83,6 +83,7 @@ export function DiaryHabitMonthCalendar(props: {
               disabled={!navigation.isDateAvailable(date)}
               dimmed={!navigation.isDateAvailable(date)}
               onSelect={props.onSelect}
+              onMonthChange={navigation.changeToMonth}
               label={[
                 date,
                 diary ? `일기 있음, ${EMOTIONS[diary.emotion]?.name}` : '',

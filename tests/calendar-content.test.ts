@@ -103,10 +103,10 @@ test('date cell guards disabled presses and handles adjacent-month navigation wi
   };
   CalendarDay({ ...props, disabled: true }).props.onPress();
   CalendarDay({ ...props, date: 'invalid' }).props.onPress();
-  assert.deepEqual(selected, []);
+  assert.equal(selected.length, 0);
   CalendarDay({ ...props, date: '2026-09-30' }).props.onPress();
   assert.deepEqual(months, ['2026-09']);
-  assert.deepEqual(selected, []);
+  assert.equal(selected.length, 0);
   CalendarDay(props).props.onPress();
   assert.deepEqual(selected, [day.date]);
 });
@@ -449,4 +449,47 @@ test('calendar replaces style-changing decoration roots while retaining the date
   assert.equal(render().key, 'habit-decoration');
   completions = [];
   assert.equal(render().key, 'default-day');
+});
+
+test('diary calendar adjacent dates change month without opening day info', () => {
+  const months: string[] = [];
+  const selected: string[] = [];
+  const { DiaryHabitMonthCalendar } = load('src/screens/calendar/DiaryHabitMonthCalendar.tsx', {
+    'expo-sqlite': { useSQLiteContext: () => ({}) },
+    '../../queries': {
+      diaryQueries: { month: () => 'diary' },
+      habitQueries: { completions: () => 'habit' },
+    },
+    '@tanstack/react-query': { useQuery: () => ({ data: [] }) },
+  });
+  const tree = DiaryHabitMonthCalendar({
+    month: '2026-09',
+    today: '2026-10-14',
+    selected: '2026-09-15',
+    fillHeight: true,
+    onMonthChange: (month: string) => months.push(month),
+    onSelect: (date: string) => selected.push(date),
+  });
+  for (const date of ['2026-08-31', '2026-10-01']) {
+    const item = cell(tree, date);
+    CalendarDay(item.props).props.onPress();
+  }
+  assert.deepEqual(months, ['2026-08', '2026-10']);
+  assert.equal(selected.length, 0);
+  CalendarDay(cell(tree, '2026-09-15').props).props.onPress();
+  assert.deepEqual(selected, ['2026-09-15']);
+  assert.deepEqual(months, ['2026-08', '2026-10']);
+  const current = DiaryHabitMonthCalendar({
+    month: '2026-10',
+    today: '2026-10-14',
+    selected: '2026-10-14',
+    fillHeight: true,
+    onMonthChange: (month: string) => months.push(month),
+    onSelect: (date: string) => selected.push(date),
+  });
+  const future = CalendarDay(cell(current, '2026-11-01').props);
+  assert.equal(future.props.disabled, true);
+  future.props.onPress();
+  assert.deepEqual(months, ['2026-08', '2026-10']);
+  assert.deepEqual(selected, ['2026-09-15']);
 });
