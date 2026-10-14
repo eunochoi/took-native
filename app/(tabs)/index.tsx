@@ -56,7 +56,7 @@ export default function Home() {
               locale: ko,
             })}
           </Text>
-          <Text className="font-bold text-3xl">오늘을 툭,툭!</Text>
+          <Text className="font-bold text-3xl">오늘을 툭!!</Text>
           <Text className="font-bold text-3xl">나답게 쌓는 하루</Text>
         </View>
         <Text className="text-theme-accent-deep text-base font-semibold">#감정기록 #작은습관 #거리두기</Text>
