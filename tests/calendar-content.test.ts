@@ -405,3 +405,48 @@ test('habit detail only queries completion records and exposes no write action t
   assert.equal(stats.props.disabled, undefined);
   assert.equal(stats.props.unavailable, false);
 });
+
+test('calendar replaces style-changing decoration roots while retaining the date cell identity', () => {
+  let diaries: any[] = [];
+  let completions: any[] = [];
+  const { DiaryHabitMonthCalendar } = load('src/screens/calendar/DiaryHabitMonthCalendar.tsx', {
+    'expo-sqlite': { useSQLiteContext: () => ({}) },
+    '../../queries': {
+      diaryQueries: { month: () => 'diary' },
+      habitQueries: { completions: () => 'habit' },
+    },
+    '@tanstack/react-query': {
+      useQuery: (kind: string) => ({ data: kind === 'diary' ? diaries : completions }),
+    },
+  });
+  const render = () => {
+    const tree = DiaryHabitMonthCalendar({
+      month: day.month,
+      today: day.today,
+      selected: day.date,
+      fillHeight: true,
+      onMonthChange: () => {},
+      onSelect: () => {},
+    });
+    const dateCell = cell(tree, day.date);
+    assert.equal(dateCell.key, day.date);
+    return CalendarDay(dateCell.props).props.children[0];
+  };
+  const empty = render();
+  assert.equal(empty.key, 'default-day');
+  completions = [{ date: day.date }];
+  const habitOnly = render();
+  assert.equal(habitOnly.key, 'habit-decoration');
+  assert(habitOnly.props.className.includes('scale-[1.2]'));
+  diaries = [{ date: day.date, emotion: 0, created_at: `${day.date}T00:00:00Z` }];
+  const diaryAndHabit = render();
+  assert.equal(diaryAndHabit.key, 'diary-decoration');
+  assert.notEqual(diaryAndHabit.key, habitOnly.key);
+  completions = [];
+  assert.equal(render().key, 'diary-decoration');
+  completions = [{ date: day.date }];
+  diaries = [];
+  assert.equal(render().key, 'habit-decoration');
+  completions = [];
+  assert.equal(render().key, 'default-day');
+});

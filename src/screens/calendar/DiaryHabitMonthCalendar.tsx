@@ -93,6 +93,7 @@ export function DiaryHabitMonthCalendar(props: {
             >
               {hasDecoration ? (
                 <View
+                  key={diary ? 'diary-decoration' : 'habit-decoration'}
                   className={`items-center justify-center ${diary ? 'w-full h-4/5' : 'scale-[1.2]'}`}
                 >
                   {diary && (
