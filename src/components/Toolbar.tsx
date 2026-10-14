@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 export function Toolbar({ children }: { children: ReactNode }) {
   return (
-    <View className="my-1 max-w-full min-w-0 self-start flex-row items-center overflow-hidden rounded-theme border border-theme-border/50 bg-theme-accent-light pr-0.5">
+    <View className="my-1 max-w-full min-w-0 self-start flex-row items-center overflow-hidden rounded-theme border-[1px] border-theme-accent/20 bg-theme-accent-light pr-0.5">
       {Children.toArray(children).map((child, index) => (
         <Fragment key={isValidElement(child) ? child.key : index}>
           {index > 0 && (
