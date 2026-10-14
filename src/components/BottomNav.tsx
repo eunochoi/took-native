@@ -10,7 +10,7 @@ const items = [
   { name: 'index', label: '홈', icon: 'home' },
   { name: 'calendar', label: '월간 기록', icon: 'calendar' },
   { name: 'diary', label: '일기 목록', icon: 'diary' },
-  { name: 'habit', label: '습관 만들기', icon: 'habit' },
+  { name: 'habit', label: '습관 관리', icon: 'habit' },
   { name: 'sober', label: '거리두기', icon: 'sober' },
 ] as const;
 
