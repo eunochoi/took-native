@@ -45,11 +45,13 @@ function load(file: string, modules: Record<string, any> = {}) {
 test('form sheets retain footer, overlays and the dismissal guard while locking image drag scrolling', () => {
   const guard = () => false;
   const closed = () => {};
+  const titleAction = { onPress: () => {}, accessibilityLabel: '일기 날짜 선택' };
   const { RecordFormLayout } = load('../src/components/RecordFormLayout.tsx', {
     './BottomSheetPage': { BottomSheetPage: 'BottomSheetPage' },
   });
   const tree = RecordFormLayout({
     title: '일기 작성',
+    titleAction,
     backRoute: '/diary',
     onBeforeClose: guard,
     closeRequested: true,
@@ -62,6 +64,7 @@ test('form sheets retain footer, overlays and the dismissal guard while locking 
   const [sheet, overlays] = tree.props.children;
   assert.equal(sheet.type, 'BottomSheetPage');
   assert.equal(sheet.props.title, '일기 작성');
+  assert.equal(sheet.props.titleAction, titleAction);
   assert.equal(sheet.props.backRoute, '/diary');
   assert.equal(sheet.props.onBeforeClose, guard);
   assert.equal(sheet.props.closeRequested, true);
@@ -163,4 +166,35 @@ test('diary photo picker guards dismissal and scrolling while preparing or dragg
       assert.equal(images.props.onReorder, onReorder);
     }
   }
+});
+
+test('optional sheet title action opens its picker and blocks presses while disabled', () => {
+  const { BottomSheetHeader } = load('../src/components/BottomSheetHeader.tsx');
+  const nodes = (tree: any): any[] =>
+    Array.isArray(tree)
+      ? tree.flatMap(nodes)
+      : tree && typeof tree === 'object'
+        ? [tree, ...nodes(tree.props?.children)]
+        : [];
+  let opened = 0;
+  const titleAction = {
+    onPress: () => opened++,
+    accessibilityLabel: '일기 날짜 선택',
+    disabled: false,
+  };
+  const render = () => nodes(BottomSheetHeader({ title: '2026. 10. 14.', titleAction }));
+  render()
+    .find((node) => node.props.accessibilityLabel === '일기 날짜 선택')
+    .props.onPress();
+  assert.equal(opened, 1);
+  titleAction.disabled = true;
+  const button = render().find((node) => node.props.accessibilityLabel === '일기 날짜 선택');
+  assert.equal(button.props.disabled, true);
+  button.props.onPress();
+  assert.equal(opened, 1);
+  assert(
+    !nodes(BottomSheetHeader({ title: '일기 수정' })).some(
+      (node) => node.props.accessibilityRole === 'button',
+    ),
+  );
 });

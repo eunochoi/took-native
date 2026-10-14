@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, type ReactNode, type ComponentProps } from 'react';
 import {
   KeyboardAvoidingView,
   Modal,
@@ -24,6 +24,7 @@ export function BottomSheetModal({
   visible,
   title,
   titleIcon,
+  titleAction,
   onClose,
   children,
   renderScrollView,
@@ -48,6 +49,7 @@ export function BottomSheetModal({
   visible: boolean;
   title?: string;
   titleIcon?: ReactNode;
+  titleAction?: ComponentProps<typeof BottomSheetHeader>['titleAction'];
   onClose: () => void;
   children?: ReactNode | ((closeSheet: CloseBottomSheet) => ReactNode);
   maxHeight?: number;
@@ -102,6 +104,7 @@ export function BottomSheetModal({
     <BottomSheetHeader
       title={title}
       titleIcon={titleIcon}
+      titleAction={titleAction}
       menuAction={menuAction}
       onClose={dismissible ? () => closeSheet() : undefined}
     />

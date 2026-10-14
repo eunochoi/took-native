@@ -1,10 +1,11 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, ComponentProps } from 'react';
 import type { Href } from 'expo-router';
 import { View } from 'react-native';
 import { BottomSheetPage } from './BottomSheetPage';
 
 export function RecordFormLayout({
   title,
+  titleAction,
   backRoute,
   onBeforeClose,
   closeRequested = false,
@@ -16,6 +17,7 @@ export function RecordFormLayout({
   fillContent = false,
 }: {
   title: string;
+  titleAction?: ComponentProps<typeof BottomSheetPage>['titleAction'];
   backRoute: Href;
   onBeforeClose?: () => boolean;
   closeRequested?: boolean;
@@ -30,6 +32,7 @@ export function RecordFormLayout({
     <>
       <BottomSheetPage
         title={title}
+        titleAction={titleAction}
         backRoute={backRoute}
         onBeforeClose={onBeforeClose}
         closeRequested={closeRequested}

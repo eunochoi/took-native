@@ -27,6 +27,7 @@ import {
 import { diaryQueries, useRecordMutation, useToday } from '../queries';
 import { useAppTheme } from '../theme/AppThemeProvider';
 import { FORM_TEXT_INPUT_CLASS_NAME, SECTION_TITLE_CLASS_NAME } from '../theme/classes';
+import { DiaryDatePicker } from './diary/DiaryDatePicker';
 import { DiaryEmotionPicker } from './diary/DiaryEmotionPicker';
 import { DiaryImagesPicker } from './diary/DiaryImagesPicker';
 
@@ -43,7 +44,7 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
   const [keyboardVisible, setKeyboardVisible] = useState(() => Keyboard.isVisible());
   const [emotion, setEmotion] = useState<number | null>(null);
   const [images, setImages] = useState<DraftImage[]>([]);
-  const [picker, setPicker] = useState<'emotion' | 'images' | null>(null);
+  const [picker, setPicker] = useState<'emotion' | 'images' | 'date' | null>(null);
   const [picking, setPicking] = useState(false);
   const [saved, setSaved] = useState(false);
   const drafts = useRef<DraftImage[]>([]);
@@ -136,6 +137,18 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
       closeRequested={saved && !mutation.isPending}
       onClosed={onClosed}
       title={title}
+      titleAction={
+        id === undefined
+          ? {
+              accessibilityLabel: `${title}, 일기 날짜 선택`,
+              disabled: busy || dragging || picker !== null,
+              onPress: () => {
+                Keyboard.dismiss();
+                setPicker('date');
+              },
+            }
+          : undefined
+      }
       onBeforeClose={() => {
         if (!busy) return true;
         showNotice({
@@ -157,6 +170,16 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
       }
       overlays={
         <>
+          {picker === 'date' && (
+            <DiaryDatePicker
+              value={date}
+              onClose={() => setPicker(null)}
+              onApply={(next) => {
+                setDate(next);
+                setPicker(null);
+              }}
+            />
+          )}
           {picker === 'emotion' && (
             <DiaryEmotionPicker
               value={draftEmotion}
