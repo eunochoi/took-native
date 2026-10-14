@@ -197,7 +197,7 @@ export default function RootLayout() {
             </AppReadyContext.Provider>
           )}
           {!error && (!navigationReady || !imagesReady) && (
-            <AppLoadingScreen onReady={onImagesReady} />
+            <AppLoadingScreen onReady={onImagesReady} onError={onError} />
           )}
         </View>
       </QueryClientProvider>

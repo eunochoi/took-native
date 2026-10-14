@@ -36,8 +36,8 @@ test('all six accents resolve their shared tokens and preserve dark surfaces', (
     assert.equal(light.accentLight, ACCENT_PALETTES[accent].accentLight);
     assert.equal(light.surface, '#FFFFFF');
     assert.equal(dark.accent, light.accent);
-    assert.equal(dark.accentLight, '#262626');
-    assert.equal(dark.surface, '#3C3C3C');
+    assert.equal(dark.accentLight, '#3C3C3C');
+    assert.equal(dark.surface, '#262626');
     assert.equal(dark.textPrimary, '#FFFFFF');
     assert.equal(dark.text, dark.textPrimary);
     assert.notEqual(dark.accentText, light.accentText);

@@ -3,10 +3,10 @@ import { ko } from 'date-fns/locale';
 import { useIsFocused } from 'expo-router/react-navigation';
 import { Image, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import wordmarkSize from '../../assets/ui/wordmark.json';
 import { ColorView } from '../../src/components/ColorTransition';
 import { EmotionImage } from '../../src/components/EmotionImage';
 import { Text } from '../../src/components/Text';
+import { Wordmark } from '../../src/components/Wordmark';
 import { useToday } from '../../src/queries';
 import { TodayRecordSection } from '../../src/screens/home/TodayRecordSection';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
@@ -29,19 +29,13 @@ const catSize = Image.resolveAssetSource(cat);
 
 export default function Home() {
   const today = useToday();
-  const { rem: appRem, reducedMotion } = useAppTheme();
+  const { colors, rem: appRem, reducedMotion } = useAppTheme();
   const focused = useIsFocused();
 
   return (
     <ColorView className="flex-1 min-h-0 overflow-hidden bg-theme-accent-light px-[5%] pt-[5%]">
       <View className="mb-8 shrink-0 flex-row items-center gap-2">
-        <Image
-          source={require('../../assets/ui/wordmark.png')}
-          accessibilityLabel="to:ok"
-          className="shrink-0"
-          resizeMode="contain"
-          style={{ width: wordmarkSize.width, height: wordmarkSize.height }}
-        />
+        <Wordmark size={appRem * 2.4} color={colors.text} accentColor={colors.accent} />
         <Animated.View
           key={focused && !reducedMotion ? 'moving' : 'idle'}
           className="h-9 w-9 shrink-0 items-center justify-center"

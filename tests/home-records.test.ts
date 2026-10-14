@@ -61,7 +61,6 @@ function harness(path: string, name: string) {
           };
         if (dependency === 'date-fns') return require('date-fns');
         if (dependency === 'date-fns/locale') return require('date-fns/locale');
-        if (dependency.endsWith('wordmark.json')) return require('../assets/ui/wordmark.json');
         if (dependency === 'expo-router/react-navigation') return { useIsFocused: () => true };
         if (dependency === 'react-native-reanimated')
           return { __esModule: true, default: { View: 'AnimatedView' } };

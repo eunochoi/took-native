@@ -76,6 +76,7 @@ function load(
         if (name === 'date-fns/locale') return { ko: {} };
         return {
           Text: 'Text',
+          Wordmark: 'Wordmark',
           EmotionImage: 'EmotionImage',
           TodayRecordSection: 'TodayRecordSection',
           ColorView: 'ColorView',

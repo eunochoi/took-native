@@ -6,6 +6,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSQLiteContext } from 'expo-sqlite';
 import { withWriteLock } from '../db';
 import { DEFAULT_SETTINGS, parseSettings, type Settings } from './model';
+import { wordmarkFont } from '../theme/fonts';
 
 interface Context {
   settings: Settings;
@@ -14,6 +15,7 @@ interface Context {
 }
 const SettingsContext = createContext<Context | null>(null);
 const fontAssets = {
+  ...wordmarkFont,
   ...MaterialIcons.font,
   ...Ionicons.font,
   ...MaterialCommunityIcons.font,

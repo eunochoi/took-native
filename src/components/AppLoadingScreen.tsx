@@ -1,16 +1,37 @@
 import { useEffect, useState } from 'react';
 import { Image, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { loadAsync } from 'expo-font';
+import { wordmarkFont } from '../theme/fonts';
+import { Wordmark } from './Wordmark';
 
-const wordmark = require('../../assets/ui/wordmark.png');
 const cat = require('../../assets/cats/hiding-cat-home.png');
-const wordmarkSize = Image.resolveAssetSource(wordmark);
 const catSize = Image.resolveAssetSource(cat);
 
-export function AppLoadingScreen({ onReady }: { onReady: () => void }) {
+export function AppLoadingScreen({
+  onReady,
+  onError,
+}: {
+  onReady: () => void;
+  onError: (error: Error) => void;
+}) {
   const [laidOut, setLaidOut] = useState(false);
   const [wordmarkReady, setWordmarkReady] = useState(false);
   const [catReady, setCatReady] = useState(false);
+  useEffect(() => {
+    let active = true;
+    loadAsync(wordmarkFont).then(
+      () => {
+        if (active) setWordmarkReady(true);
+      },
+      (error: Error) => {
+        if (active) onError(error);
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [onError]);
   useEffect(() => {
     if (laidOut && wordmarkReady && catReady) onReady();
   }, [laidOut, wordmarkReady, catReady, onReady]);
@@ -22,14 +43,7 @@ export function AppLoadingScreen({ onReady }: { onReady: () => void }) {
       onLayout={() => setLaidOut(true)}
     >
       <StatusBar style="dark" />
-      <Image
-        source={wordmark}
-        className="w-1/4"
-        style={{ height: 'auto', aspectRatio: wordmarkSize.width / wordmarkSize.height }}
-        resizeMode="contain"
-        onLoadEnd={() => setWordmarkReady(true)}
-        accessible={false}
-      />
+      {wordmarkReady && <Wordmark />}
       <Image
         source={cat}
         className="absolute bottom-0 right-0 w-1/3"

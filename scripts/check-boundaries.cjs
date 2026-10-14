@@ -53,8 +53,12 @@ assert(!config.ios && !pkg.scripts.ios);
 assert(!fs.existsSync(path.join(root, 'ios')));
 for (const file of source) {
   const text = fs.readFileSync(file, 'utf8');
+  const wordmarkFontSource = ['src/components/Wordmark.tsx', 'src/theme/fonts.ts'].some(
+    (name) => file === path.join(root, name),
+  );
   assert(
-    !/Fredoka|settings\.(mode|accent|font)\b|Platform\.OS/.test(text),
+    (!/Fredoka/.test(text) || wordmarkFontSource) &&
+      !/settings\.(mode|accent|font)\b|Platform\.OS/.test(text),
     `Retired platform/font code: ${file}`,
   );
 }

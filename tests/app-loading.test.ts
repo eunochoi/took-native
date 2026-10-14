@@ -86,6 +86,7 @@ function settingsHarness() {
     'expo-sqlite': { useSQLiteContext: () => db },
     '../db': { withWriteLock: (fn: any) => fn() },
     './model': { DEFAULT_SETTINGS, parseSettings },
+    '../theme/fonts': { wordmarkFont: { FredokaWordmark: 'wordmark.ttf' } },
   });
   const db = { getFirstAsync: () => read.promise, runAsync: async () => {} };
   const props = {
@@ -133,26 +134,68 @@ test('late settings read after unmount cannot reveal the app', async () => {
   assert.equal(h.errors.length, 0);
 });
 
-test('startup waits for layout and both image requests, including a failed image', () => {
+function loadingHarness() {
+  const fonts = deferred<void>();
+  const errors: Error[] = [];
+  let ready = 0;
   const h = harness('../src/components/AppLoadingScreen.tsx', {
     'react-native': {
       View: 'View',
       Image: Object.assign('Image', { resolveAssetSource: () => ({ width: 100, height: 36 }) }),
     },
     'expo-status-bar': { StatusBar: 'StatusBar' },
+    'expo-font': { loadAsync: () => fonts.promise },
+    '../theme/fonts': { wordmarkFont: { FredokaWordmark: 'wordmark.ttf' } },
+    './Wordmark': { Wordmark: 'Wordmark' },
   });
-  let ready = 0;
-  const props = { onReady: () => ready++ };
-  const render = () => h.render('AppLoadingScreen', props);
-  let tree = render();
+  const props = { onReady: () => ready++, onError: (error: Error) => errors.push(error) };
+  return {
+    ...h,
+    fonts,
+    errors,
+    ready: () => ready,
+    render: () => h.render('AppLoadingScreen', props),
+  };
+}
+
+test('startup waits for font, layout and cat request, including a failed image', async () => {
+  const h = loadingHarness();
+  let tree = h.render();
+  assert.equal(tree.props.children[1], false);
   tree.props.onLayout();
-  tree = render();
-  assert.equal(ready, 0);
-  tree.props.children[1].props.onLoadEnd();
-  tree = render();
-  assert.equal(ready, 0);
   // React Native calls onLoadEnd for failure as well, so startup cannot hang.
   tree.props.children[2].props.onLoadEnd();
-  render();
-  assert.equal(ready, 1);
+  h.render();
+  assert.equal(h.ready(), 0);
+  h.fonts.resolve();
+  await tick();
+  tree = h.render();
+  assert.equal(tree.props.children[1].type, 'Wordmark');
+  assert.equal(h.ready(), 1);
+});
+
+test('loading font failure reaches retry UI without reporting readiness', async () => {
+  const h = loadingHarness();
+  const tree = h.render();
+  tree.props.onLayout();
+  tree.props.children[2].props.onLoadEnd();
+  const error = new Error('wordmark font failed');
+  h.fonts.reject(error);
+  await tick();
+  h.render();
+  assert.equal(h.errors[0], error);
+  assert.equal(h.ready(), 0);
+});
+
+test('unmounted loading screen ignores a late font load or failure', async () => {
+  for (const reject of [false, true]) {
+    const h = loadingHarness();
+    h.render();
+    h.unmount();
+    if (reject) h.fonts.reject(new Error('late font failure'));
+    else h.fonts.resolve();
+    await tick();
+    assert.equal(h.errors.length, 0);
+    assert.equal(h.ready(), 0);
+  }
 });
