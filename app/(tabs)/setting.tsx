@@ -202,8 +202,29 @@ export default function SettingsScreen() {
               className={`h-11 shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
             >
               <AppIcon name="info" size={appRem * 1.2} className="text-theme-accent" />
-              <Text className="text-sm leading-snug text-theme-text-secondary">
-                앱 가이드
+              <Text className="text-sm leading-snug text-theme-text-secondary">앱 가이드</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="link"
+              accessibilityState={{ disabled }}
+              disabled={disabled}
+              onPress={() => {
+                void Linking.openURL('https://to-ok.me').catch(() =>
+                  showNotice({
+                    tone: 'error',
+                    title: 'TOOK 웹을 열지 못했어요',
+                    message: '인터넷 연결을 확인하고 다시 시도해주세요.',
+                  }),
+                );
+              }}
+              className={`h-11 min-w-0 shrink flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
+            >
+              <AppIcon name="open-in-new" size={appRem * 1.2} className="text-theme-accent" />
+              <Text
+                numberOfLines={1}
+                className="min-w-0 shrink text-sm leading-snug text-theme-text-secondary"
+              >
+                툭 웹
               </Text>
             </Pressable>
             <Pressable
@@ -218,24 +239,6 @@ export default function SettingsScreen() {
           </Toolbar>
         </SettingsTopSection>
         <View className="pt-6 gap-12" style={{ paddingHorizontal: '5%' }}>
-          <Pressable
-            accessibilityRole="link"
-            accessibilityState={{ disabled }}
-            disabled={disabled}
-            onPress={() => {
-              void Linking.openURL('https://to-ok.me').catch(() =>
-                showNotice({
-                  tone: 'error',
-                  title: 'TOOK 웹을 열지 못했어요',
-                  message: '인터넷 연결을 확인하고 다시 시도해주세요.',
-                }),
-              );
-            }}
-            className={`p-2 flex-row items-center justify-between gap-2 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
-          >
-            <Text className="text-base text-theme-text-secondary">TOOK 웹 이용하기</Text>
-            <Text className="text-base text-theme-accent">↗</Text>
-          </Pressable>
           <NotificationSettingsSection disabled={disabled} />
           <View className="gap-3">
             <Text accessibilityRole="header" className="text-xl py-2 font-semibold">

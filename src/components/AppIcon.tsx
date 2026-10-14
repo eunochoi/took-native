@@ -25,6 +25,7 @@ const APP_ICONS = {
   edit: { family: 'material', name: 'edit' },
   check: { family: 'material', name: 'check' },
   'arrow-forward': { family: 'material', name: 'arrow-forward' },
+  'open-in-new': { family: 'material', name: 'open-in-new' },
   'drag-indicator': { family: 'material', name: 'drag-indicator' },
   'lock-outline': { family: 'material', name: 'lock-outline' },
   'restart-alt': { family: 'material', name: 'restart-alt' },
