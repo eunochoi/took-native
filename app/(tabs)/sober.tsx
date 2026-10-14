@@ -18,6 +18,13 @@ import { Text } from '../../src/components/Text';
 import { Toolbar } from '../../src/components/Toolbar';
 import { ToolbarAddButton } from '../../src/components/ToolbarAddButton';
 import { ToolbarSortButton } from '../../src/components/ToolbarSortButton';
+import {
+  SoberFilterPicker,
+  DEFAULT_SOBER_FILTER,
+  SOBER_RECORD_FILTERS,
+} from '../../src/screens/sober/SoberFilterPicker';
+import { ToolbarFilterButton } from '../../src/components/ToolbarFilterButton';
+import { getCurrentSoberStart, SOBER_DAY_MS } from '../../src/domain/sober';
 import { sortSobers } from '../../src/db/sober';
 import type { Sober } from '../../src/db/types';
 import { MAX_SOBER_COUNT } from '../../src/domain/limits';
@@ -38,6 +45,8 @@ export default function SoberList() {
   const restarts = useQuery(soberQueries.restarts(db));
   const { settings, updateSettings } = useSettings();
   const [sortOpen, setSortOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filter, setFilter] = useState(DEFAULT_SOBER_FILTER);
   const { showNotice } = useNotice();
   const now = useCurrentMinute();
   const fade = useScrollFade();
@@ -53,12 +62,23 @@ export default function SoberList() {
     }
     return result;
   }, [restarts.data]);
+  const hasFilter = filter.priorityOnly || filter.minimumDays > 0;
+  const filtered = sorted.filter(
+    (sober) =>
+      (!filter.priorityOnly || sober.is_priority === 1) &&
+      Math.max(0, now - Date.parse(getCurrentSoberStart(sober, grouped.get(sober.id) ?? []))) >=
+        filter.minimumDays * SOBER_DAY_MS,
+  );
+  const periodFilter = SOBER_RECORD_FILTERS.find((option) => option.days === filter.minimumDays)!;
+  const filterLabel =
+    [filter.priorityOnly ? '중요' : null, periodFilter.shortLabel].filter(Boolean).join(' · ') ||
+    '필터';
   const ready = !!list.data && !!restarts.data;
   const failed = list.isError || restarts.isError;
   const disabledAdd = !ready || failed;
   const rows: Row[] =
-    ready && sorted.length
-      ? sorted.map((sober): Row => ({ kind: 'sober', sober }))
+    ready && filtered.length
+      ? filtered.map((sober): Row => ({ kind: 'sober', sober }))
       : [{ kind: 'state' }];
   const change = (patch: Parameters<typeof updateSettings>[0]) =>
     void updateSettings(patch)
@@ -85,11 +105,16 @@ export default function SoberList() {
             <Toolbar>
               <ToolbarSortButton
                 sort={settings.soberSort}
-          recordSort={settings.soberRecordSort}
+                recordSort={settings.soberRecordSort}
                 priorityFirst={settings.soberPriorityFirst}
                 ascendingLabel="과거순"
                 accessibilityLabel="거리두기 항목 정렬"
                 onPress={() => setSortOpen(true)}
+              />
+              <ToolbarFilterButton
+                label={filterLabel}
+                accessibilityLabel={`거리두기 필터, ${filter.priorityOnly ? '중요한 항목만' : '중요도 전체'}, 현재 기록 ${periodFilter.label}`}
+                onPress={() => setFilterOpen(true)}
               />
               <ToolbarAddButton
                 disabled={disabledAdd}
@@ -145,8 +170,16 @@ export default function SoberList() {
               ) : (
                 <EmptyState
                   icon={<AppIcon name="sober" size={appRem * 1.875} color={colors.accent} />}
-                  title="아직 시작한 거리두기가 없어요."
-                  description="잠시 거리를 두고 싶은 것을 추가해보세요."
+                  title={
+                    hasFilter
+                      ? '선택한 조건의 거리두기가 없어요.'
+                      : '아직 시작한 거리두기가 없어요.'
+                  }
+                  description={
+                    hasFilter
+                      ? '필터 조건을 바꿔보세요.'
+                      : '잠시 거리를 두고 싶은 것을 추가해보세요.'
+                  }
                 />
               )}
             </View>
@@ -154,7 +187,7 @@ export default function SoberList() {
         }}
         ListFooterComponent={
           <>
-            {ready && sorted.length > 0 && failed ? (
+            {ready && filtered.length > 0 && failed ? (
               <QueryError
                 className="pt-4"
                 message="거리두기 목록을 불러오지 못했어요."
@@ -171,6 +204,17 @@ export default function SoberList() {
       <ScrollEdgeFade edge="top" visible={fade.topVisible} />
       <ScrollEdgeFade edge="bottom" visible={fade.bottomVisible} />
 
+      {filterOpen && (
+        <SoberFilterPicker
+          filter={filter}
+          onClose={() => setFilterOpen(false)}
+          onApply={(next) => {
+            setFilter(next);
+            setFilterOpen(false);
+            scroll.current?.scrollToOffset({ offset: 0, animated: true });
+          }}
+        />
+      )}
       {sortOpen && (
         <RecordSortPicker
           title="거리두기 정렬"
@@ -183,7 +227,11 @@ export default function SoberList() {
           onApply={(sort, priorityFirst, recordSort) => {
             setSortOpen(false);
             if (sort === 'CUSTOM') return;
-            change({ soberSort: sort, soberPriorityFirst: priorityFirst, soberRecordSort: recordSort });
+            change({
+              soberSort: sort,
+              soberPriorityFirst: priorityFirst,
+              soberRecordSort: recordSort,
+            });
           }}
         />
       )}

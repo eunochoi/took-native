@@ -165,6 +165,11 @@ test('year picker keeps its final action in the footer and applies only after cl
 
 test('sort and priority are drafts and commit together only after the sheet closes', () => {
   const ui = sortPicker({ priorityFirst: false });
+  const choices = ui
+    .render()
+    .content.filter((node) => ['Switch', 'PickerOption'].includes(node.type));
+  assert.equal(choices[0].type, 'Switch');
+  assert.equal(choices[0].props.accessibilityLabel, '중요도 우선');
   ui.press('과거순');
   ui.press('중요도 우선');
   assert.equal(ui.applied.length, 0);
@@ -270,6 +275,65 @@ test('sort hint reserves the same space for date and custom order', () => {
   const custom = ui.render().content.find((node) => node.props.className === 'h-10 justify-center');
   assert.equal(custom.props.className, initial.props.className);
   assert.equal(custom.props.children.props.children, '직접 정한 순서로 보여드려요.');
+});
+
+test('diary sections summarize drafts while the common footer stays concise', () => {
+  const ui = filterPicker();
+  const apply = () =>
+    ui.render().content.find((node) => node.props.accessibilityLabel === '일기 필터 적용');
+  assert.equal(apply().props.label, '적용하기');
+  assert(ui.render().content.some((node) => node.props.children === '전체 기간'));
+  ui.press('2026년 4월');
+  ui.press(EMOTIONS[1].name);
+  assert.equal(apply().props.label, '적용하기');
+  assert(ui.render().content.some((node) => node.props.children === '2026년 4월'));
+  ui.press('2026년 4월');
+  assert(ui.render().content.some((node) => node.props.children === '2026년 전체'));
+  ui.press('2026년 전체');
+  ui.press(EMOTIONS[1].name);
+  assert(ui.render().content.some((node) => node.props.children === '전체 기간'));
+  assert.equal(ui.applied.length, 0);
+});
+
+test('filters share footer reset and apply while diary keeps ten compact emotion choices', () => {
+  const samples = [
+    filterPicker(),
+    picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
+      filter: { completion: 'ALL', priority: null },
+    }),
+    picker('src/screens/sober/SoberFilterPicker.tsx', 'SoberFilterPicker', {
+      filter: { priorityOnly: false, minimumDays: 0 },
+    }),
+  ];
+  for (const ui of samples) {
+    const view = ui.render();
+    const footer = nodes(view.shell.props.footer(() => {}));
+    assert(footer.some((node) => node.props.accessibilityLabel === '선택 초기화'));
+    assert(footer.some((node) => node.props.label === '적용하기'));
+    assert(
+      !nodes(view.shell.props.children).some(
+        (node) => node.props.accessibilityLabel === '선택 초기화',
+      ),
+    );
+    assert(
+      view.content
+        .filter((node) => node.type === 'PickerOption')
+        .every((node) => node.props.variant === 'filter'),
+    );
+  }
+  const view = samples[0].render();
+  const choices = view.content.filter(
+    (node) =>
+      node.type === 'PickerOption' &&
+      EMOTIONS.some((item) => item.name === node.props.accessibilityLabel),
+  );
+  assert.equal(choices.length, 10);
+  assert(choices.every((node) => node.props.dense));
+  assert(
+    view.content
+      .filter((node) => node.type === 'EmotionImage')
+      .every((node) => node.props.size === 15 * 2.25),
+  );
 });
 
 test('record toolbar shows saved sorting and priority while keeping add separate', () => {
@@ -447,53 +511,83 @@ test('filter labels shorten this year while retaining other years and full acces
   }
 });
 
-test('diary sections summarize drafts while the common footer stays concise', () => {
-  const ui = filterPicker();
-  const apply = () =>
-    ui.render().content.find((node) => node.props.accessibilityLabel === '일기 필터 적용');
-  assert.equal(apply().props.label, '적용하기');
-  assert(ui.render().content.some((node) => node.props.children === '전체 기간'));
-  ui.press('2026년 4월');
-  ui.press(EMOTIONS[1].name);
-  assert.equal(apply().props.label, '적용하기');
-  assert(ui.render().content.some((node) => node.props.children === '2026년 4월'));
-  ui.press('2026년 4월');
-  assert(ui.render().content.some((node) => node.props.children === '2026년 전체'));
-  ui.press('2026년 전체');
-  ui.press(EMOTIONS[1].name);
-  assert(ui.render().content.some((node) => node.props.children === '전체 기간'));
+test('habit filter drafts combine completion and exact stars after closing, and reset to all', () => {
+  const ui = picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
+    filter: { completion: 'ALL', priority: null },
+  });
+  const choices = ui.render().content.filter((node) => node.type === 'PickerOption');
+  assert.equal(choices[0].props.accessibilityLabel, '오늘 전체');
+  assert.equal(choices[3].props.accessibilityLabel, '별표 전체');
+  ui.press('오늘 미완료');
+  ui.press('별표 2개');
   assert.equal(ui.applied.length, 0);
+  ui.press('적용하기');
+  assert.equal(ui.applied.length, 0);
+  ui.finish();
+  assert.deepEqual(JSON.parse(JSON.stringify(ui.applied)), [
+    [{ completion: 'UNDONE', priority: 1 }],
+  ]);
+  const reset = picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
+    filter: { completion: 'DONE', priority: 2 },
+  });
+  reset.press('선택 초기화');
+  assert.equal(reset.applied.length, 0);
+  reset.press('적용하기');
+  reset.finish();
+  assert.deepEqual(JSON.parse(JSON.stringify(reset.applied)), [
+    [{ completion: 'ALL', priority: null }],
+  ]);
 });
 
-test('filters share footer reset and apply while diary keeps ten compact emotion choices', () => {
-  const samples = [filterPicker()];
-  for (const ui of samples) {
-    const view = ui.render();
-    const footer = nodes(view.shell.props.footer(() => {}));
-    assert(footer.some((node) => node.props.accessibilityLabel === '선택 초기화'));
-    assert(footer.some((node) => node.props.label === '적용하기'));
-    assert(
-      !nodes(view.shell.props.children).some(
-        (node) => node.props.accessibilityLabel === '선택 초기화',
-      ),
-    );
-    assert(
-      view.content
-        .filter((node) => node.type === 'PickerOption')
-        .every((node) => node.props.variant === 'filter'),
-    );
-  }
-  const view = samples[0].render();
-  const choices = view.content.filter(
-    (node) =>
-      node.type === 'PickerOption' &&
-      EMOTIONS.some((item) => item.name === node.props.accessibilityLabel),
+test('sober filters draft importance and one minimum period, with cancel and reset', () => {
+  const ui = picker('src/screens/sober/SoberFilterPicker.tsx', 'SoberFilterPicker', {
+    filter: { priorityOnly: false, minimumDays: 0 },
+  });
+  assert.equal(
+    ui.render().content.find((node) => node.type === 'PickerOption').props.accessibilityLabel,
+    '현재 기록 전체',
   );
-  assert.equal(choices.length, 10);
-  assert(choices.every((node) => node.props.dense));
-  assert(
-    view.content
-      .filter((node) => node.type === 'EmotionImage')
-      .every((node) => node.props.size === 15 * 2.25),
+  ui.press('중요한 항목만 보기');
+  ui.press('현재 기록 1주 이상');
+  ui.press('현재 기록 2주 이상');
+  assert.equal(
+    ui.render().content.filter((node) => node.type === 'PickerOption' && node.props.selected)
+      .length,
+    1,
   );
+  ui.press('적용하기');
+  assert.equal(ui.applied.length, 0);
+  ui.finish();
+  assert.deepEqual(JSON.parse(JSON.stringify(ui.applied)), [
+    [{ priorityOnly: true, minimumDays: 14 }],
+  ]);
+  const cancel = picker('src/screens/sober/SoberFilterPicker.tsx', 'SoberFilterPicker', {
+    filter: { priorityOnly: true, minimumDays: 30 },
+  });
+  cancel.press('선택 초기화');
+  cancel.render().shell.props.onClose();
+  cancel.finish();
+  assert.equal(cancel.applied.length, 0);
+  const reset = picker('src/screens/sober/SoberFilterPicker.tsx', 'SoberFilterPicker', {
+    filter: { priorityOnly: true, minimumDays: 30 },
+  });
+  reset.press('선택 초기화');
+  reset.press('적용하기');
+  reset.finish();
+  assert.deepEqual(JSON.parse(JSON.stringify(reset.applied)), [
+    [{ priorityOnly: false, minimumDays: 0 }],
+  ]);
+});
+
+test('sober filter supports a three-month threshold through the shared footer', () => {
+  const ui = picker('src/screens/sober/SoberFilterPicker.tsx', 'SoberFilterPicker', {
+    filter: { priorityOnly: false, minimumDays: 0 },
+  });
+  ui.press('현재 기록 3개월 이상');
+  ui.press('적용하기');
+  assert.equal(ui.applied.length, 0);
+  ui.finish();
+  assert.deepEqual(JSON.parse(JSON.stringify(ui.applied)), [
+    [{ priorityOnly: false, minimumDays: 90 }],
+  ]);
 });

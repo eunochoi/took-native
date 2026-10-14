@@ -21,6 +21,12 @@ import { habitQueries, useRecordMutation, useToday } from '../../src/queries';
 import { HabitBox } from '../../src/screens/habit/HabitBox';
 import { HabitListSkeleton } from '../../src/screens/habit/HabitListSkeleton';
 import { HabitTodayProgress } from '../../src/screens/habit/HabitTodayProgress';
+import {
+  HabitFilterPicker,
+  DEFAULT_HABIT_FILTER,
+  HABIT_COMPLETION_FILTERS,
+} from '../../src/screens/habit/HabitFilterPicker';
+import { ToolbarFilterButton } from '../../src/components/ToolbarFilterButton';
 import { Toolbar } from '../../src/components/Toolbar';
 import { ToolbarSortButton } from '../../src/components/ToolbarSortButton';
 import { ToolbarAddButton } from '../../src/components/ToolbarAddButton';
@@ -30,6 +36,8 @@ import { useAppTheme } from '../../src/theme/AppThemeProvider';
 
 export default function HabitList() {
   const [sortOpen, setSortOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filter, setFilter] = useState(DEFAULT_HABIT_FILTER);
   const { showNotice } = useNotice();
   const { colors, rem: appRem } = useAppTheme();
   const db = useSQLiteContext();
@@ -71,6 +79,24 @@ export default function HabitList() {
       });
   };
   const sorted = sortHabits(list.data ?? [], settings);
+  const hasFilter = filter.completion !== 'ALL' || filter.priority !== null;
+  const todayDone = new Set(
+    (completions.data ?? []).filter((item) => item.date === today).map((item) => item.habit_id),
+  );
+  const filtered = sorted.filter(
+    (habit) =>
+      (filter.priority === null || habit.priority === filter.priority) &&
+      (filter.completion === 'ALL' || todayDone.has(habit.id) === (filter.completion === 'DONE')),
+  );
+  const filterLabel =
+    [
+      filter.completion === 'ALL'
+        ? null
+        : HABIT_COMPLETION_FILTERS.find((option) => option.value === filter.completion)?.label,
+      filter.priority === null ? null : '★'.repeat(filter.priority + 1),
+    ]
+      .filter(Boolean)
+      .join(' · ') || '필터';
   const ready = !!list.data && !!completions.data;
   const done = (completions.data ?? []).filter((item) => item.date === today).length;
   const change = (values: Parameters<typeof updateSettings>[0]) => {
@@ -81,7 +107,7 @@ export default function HabitList() {
       );
   };
   const failed = list.isError || completions.isError;
-  const gridItems = ready ? [...sorted, ...(sorted.length % 2 ? [null] : [])] : [];
+  const gridItems = ready ? [...filtered, ...(filtered.length % 2 ? [null] : [])] : [];
   const emptyContent = failed ? (
     <QueryError
       className="min-h-64"
@@ -96,8 +122,8 @@ export default function HabitList() {
   ) : (
     <EmptyState
       icon={<AppIcon name="habit" size={appRem * 1.875} color={colors.accent} />}
-      title="아직 만든 습관이 없어요."
-      description="작은 목표 하나부터 만들어 보아요."
+      title={hasFilter ? '선택한 조건의 습관이 없어요.' : '아직 만든 습관이 없어요.'}
+      description={hasFilter ? '필터 조건을 바꿔보세요.' : '작은 목표 하나부터 만들어 보아요.'}
     />
   );
   return (
@@ -119,6 +145,11 @@ export default function HabitList() {
               priorityFirst={settings.habitPriorityFirst}
               accessibilityLabel="습관 정렬"
               onPress={() => setSortOpen(true)}
+            />
+            <ToolbarFilterButton
+              label={filterLabel}
+              accessibilityLabel={`습관 필터, 오늘 ${HABIT_COMPLETION_FILTERS.find((option) => option.value === filter.completion)?.label}, ${filter.priority === null ? '별표 전체' : `별표 ${filter.priority + 1}개`}`}
+              onPress={() => setFilterOpen(true)}
             />
             <ToolbarAddButton
               disabled={!ready || failed}
@@ -175,6 +206,17 @@ export default function HabitList() {
       <ScrollEdgeFade edge="top" visible={fade.topVisible} />
       <ScrollEdgeFade edge="bottom" visible={fade.bottomVisible} />
 
+      {filterOpen && (
+        <HabitFilterPicker
+          filter={filter}
+          onClose={() => setFilterOpen(false)}
+          onApply={(next) => {
+            setFilter(next);
+            setFilterOpen(false);
+            scroll.current?.scrollTo({ y: 0, animated: true });
+          }}
+        />
+      )}
       {sortOpen && (
         <RecordSortPicker
           title="습관 정렬"
