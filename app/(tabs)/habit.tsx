@@ -1,4 +1,5 @@
 import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
+import { PageTopSection } from '../../src/components/PageTopSection';
 import { AppIcon } from '../../src/components/AppIcon';
 import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 import { EmptyState } from '../../src/components/EmptyState';
@@ -30,7 +31,6 @@ import { ToolbarFilterButton } from '../../src/components/ToolbarFilterButton';
 import { Toolbar } from '../../src/components/Toolbar';
 import { ToolbarSortButton } from '../../src/components/ToolbarSortButton';
 import { ToolbarAddButton } from '../../src/components/ToolbarAddButton';
-import { HabitTopSection } from '../../src/screens/habit/HabitTopSection';
 import { useSettings } from '../../src/settings/SettingsProvider';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
 
@@ -138,7 +138,7 @@ export default function HabitList() {
         showsHorizontalScrollIndicator={false}
         contentContainerClassName="grow"
       >
-        <HabitTopSection>
+        <PageTopSection title="습관 관리" hashtags="#실천 #반복 #성장">
           <Toolbar>
             <ToolbarSortButton
               sort={settings.habitSort}
@@ -165,7 +165,7 @@ export default function HabitList() {
               }}
             />
           </Toolbar>
-        </HabitTopSection>
+        </PageTopSection>
         <View className="pt-8" style={{ paddingHorizontal: '5%' }}>
           {ready && sorted.length > 0 && <HabitTodayProgress done={done} total={sorted.length} />}
           {gridItems.length === 0 ? (

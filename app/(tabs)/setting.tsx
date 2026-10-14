@@ -9,6 +9,7 @@ import {
   exportBackup,
   restoreBackup,
 } from '../../src/backup';
+import { PageTopSection } from '../../src/components/PageTopSection';
 import { AppIcon } from '../../src/components/AppIcon';
 import { ColorView } from '../../src/components/ColorTransition';
 import { ConfirmModal } from '../../src/components/ConfirmModal';
@@ -25,7 +26,6 @@ import { BackupDestinationPicker } from '../../src/screens/settings/BackupDestin
 import { BackupSection } from '../../src/screens/settings/BackupSection';
 import { EmotionIconStyleSelector } from '../../src/screens/settings/EmotionIconStyleSelector';
 import { NotificationSettingsSection } from '../../src/screens/settings/NotificationSettingsSection';
-import { SettingsTopSection } from '../../src/screens/settings/SettingsTopSection';
 import type { Settings } from '../../src/settings/model';
 import { useSettings } from '../../src/settings/SettingsProvider';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
@@ -192,7 +192,7 @@ export default function SettingsScreen() {
         scrollEventThrottle={16}
         className="flex-1 bg-transparent"
       >
-        <SettingsTopSection>
+        <PageTopSection title="앱 설정" hashtags="#맞춤 #공간">
           <Toolbar>
             <Pressable
               accessibilityRole="button"
@@ -231,7 +231,7 @@ export default function SettingsScreen() {
               <AppIcon name="privacy-tip" size={appRem * 1.2} className="text-theme-accent" />
             </Pressable>
           </Toolbar>
-        </SettingsTopSection>
+        </PageTopSection>
         <View className="pt-6 gap-12" style={{ paddingHorizontal: '5%' }}>
           <NotificationSettingsSection disabled={disabled} />
           <View className="gap-3">

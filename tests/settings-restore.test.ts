@@ -30,7 +30,7 @@ function harness() {
     'AppearanceSettingsSection',
     'BackupSection',
     'EmotionIconStyleSelector',
-    'SettingsTopSection',
+    'PageTopSection',
     'NotificationSettingsSection',
   ];
   const jsx = (type: unknown, props: any) => ({ type, props });

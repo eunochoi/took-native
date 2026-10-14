@@ -3,12 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { PageTopSection } from '../../src/components/PageTopSection';
 import { ColorView } from '../../src/components/ColorTransition';
 import { Toolbar } from '../../src/components/Toolbar';
 import { diaryQueries, habitQueries, useToday } from '../../src/queries';
 import { CalendarDiaryCount } from '../../src/screens/calendar/CalendarDiaryCount';
 import { CalendarHabitCompletionCount } from '../../src/screens/calendar/CalendarHabitCompletionCount';
-import { CalendarTopSection } from '../../src/screens/calendar/CalendarTopSection';
 import { DiaryHabitMonthCalendar } from '../../src/screens/calendar/DiaryHabitMonthCalendar';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
 import { PAGE_CLASS_NAME } from '../../src/theme/classes';
@@ -24,12 +24,12 @@ export default function CalendarScreen() {
   const completions = useQuery(habitQueries.completions(db, `${month}-01`, `${month}-31`));
   return (
     <ColorView className={PAGE_CLASS_NAME}>
-      <CalendarTopSection>
+      <PageTopSection title="월간 기록" hashtags="#기록 #발자국">
         <Toolbar>
           <CalendarDiaryCount count={diaries.data?.length ?? 0} />
           <CalendarHabitCompletionCount count={completions.data?.length ?? 0} />
         </Toolbar>
-      </CalendarTopSection>
+      </PageTopSection>
       <View
         className="flex-1 min-h-0 pt-6"
         style={{ paddingHorizontal: '5%', paddingBottom: tabContentBottom }}

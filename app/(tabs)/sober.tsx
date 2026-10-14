@@ -1,3 +1,4 @@
+import { PageTopSection } from '../../src/components/PageTopSection';
 import { EmptyState } from '../../src/components/EmptyState';
 import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { EMPTY_STATE_CLASS_NAME, PAGE_CLASS_NAME } from '../../src/theme/classes';
@@ -32,7 +33,6 @@ import { useCurrentMinute } from '../../src/hooks/useCurrentMinute';
 import { useScrollFade } from '../../src/hooks/useScrollFade';
 import { soberQueries } from '../../src/queries';
 import { SoberBox } from '../../src/screens/sober/SoberBox';
-import { SoberTopSection } from '../../src/screens/sober/SoberTopSection';
 import { useSettings } from '../../src/settings/SettingsProvider';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
 
@@ -101,7 +101,7 @@ export default function SoberList() {
         scrollEventThrottle={16}
         contentContainerClassName="grow"
         ListHeaderComponent={
-          <SoberTopSection>
+          <PageTopSection title="거리두기" hashtags="#절제력 #디톡스">
             <Toolbar>
               <ToolbarSortButton
                 sort={settings.soberSort}
@@ -130,7 +130,7 @@ export default function SoberList() {
                 }}
               />
             </Toolbar>
-          </SoberTopSection>
+          </PageTopSection>
         }
         renderItem={({ item, index }) => {
           if (item.kind === 'sober')

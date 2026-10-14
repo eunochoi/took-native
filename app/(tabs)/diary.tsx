@@ -3,6 +3,7 @@ import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-qu
 import { useSQLiteContext } from 'expo-sqlite';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, View } from 'react-native';
+import { PageTopSection } from '../../src/components/PageTopSection';
 import { QueryError } from '../../src/components/QueryError';
 import { useNotice } from '../../src/components/NoticeProvider';
 import { AppIcon } from '../../src/components/AppIcon';
@@ -22,7 +23,6 @@ import { diaryQueries, useToday } from '../../src/queries';
 import { DiaryCard } from '../../src/screens/diary/DiaryCard';
 import { DiaryFilterPicker } from '../../src/screens/diary/DiaryFilterPicker';
 import { DiaryListSkeleton } from '../../src/screens/diary/DiaryListSkeleton';
-import { DiaryTopSection } from '../../src/screens/diary/DiaryTopSection';
 import { useSettings } from '../../src/settings/SettingsProvider';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
 import { PAGE_CLASS_NAME } from '../../src/theme/classes';
@@ -90,7 +90,7 @@ export default function DiaryList() {
         removeClippedSubviews={false}
         contentContainerClassName="grow"
         ListHeaderComponent={
-          <DiaryTopSection>
+          <PageTopSection title="일기 목록" hashtags="#감정 #끄적끄적">
             <Toolbar>
               <ToolbarSortButton
                 sort={settings.diarySort}
@@ -117,7 +117,7 @@ export default function DiaryList() {
                 }
               />
             </Toolbar>
-          </DiaryTopSection>
+          </PageTopSection>
         }
         renderItem={({ item, index }) => {
           if (item.kind === 'state') return <View className="pt-8">{emptyContent}</View>;
