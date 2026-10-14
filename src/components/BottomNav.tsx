@@ -35,7 +35,7 @@ export function BottomNav({
         accessibilityLabel="주요 메뉴"
         className="self-center flex-row items-center gap-2"
       >
-        <View className="rounded-full bg-theme-surface/40 shadow-lg">
+        <View className="rounded-full bg-theme-accent-light/40 shadow-lg">
           <View className="flex-row items-center gap-0 overflow-hidden rounded-full border border-theme-accent/15 px-1 py-1.5">
             {blurTargetReady && (
               <BlurView
@@ -47,7 +47,7 @@ export function BottomNav({
                 style={StyleSheet.absoluteFill}
               />
             )}
-            <View pointerEvents="none" className="absolute inset-0 bg-theme-surface/40" />
+            <View pointerEvents="none" className="absolute inset-0 bg-theme-accent-light/40" />
             {items.map((item) => {
               const route = state.routes.find((entry) => entry.name === item.name);
               if (!route) return null;
@@ -88,7 +88,7 @@ export function BottomNav({
         </View>
         {settingRoute && (
           <View
-            className="rounded-full bg-theme-surface/40 shadow-lg"
+            className="rounded-full bg-theme-accent-light/40 shadow-lg"
             style={{ width: navigationHeight, height: navigationHeight }}
           >
             <View className="h-full w-full overflow-hidden rounded-full border border-theme-accent/15">
@@ -102,7 +102,7 @@ export function BottomNav({
                   style={StyleSheet.absoluteFill}
                 />
               )}
-              <View pointerEvents="none" className="absolute inset-0 bg-theme-surface/40" />
+              <View pointerEvents="none" className="absolute inset-0 bg-theme-accent-light/40" />
               <Pressable
                 accessibilityRole="tab"
                 accessibilityLabel="설정"

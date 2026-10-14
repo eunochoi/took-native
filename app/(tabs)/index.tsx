@@ -1,7 +1,8 @@
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useIsFocused } from 'expo-router/react-navigation';
-import { Image, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { ColorView } from '../../src/components/ColorTransition';
 import { EmotionImage } from '../../src/components/EmotionImage';
@@ -34,6 +35,13 @@ export default function Home() {
 
   return (
     <ColorView className="flex-1 min-h-0 overflow-hidden bg-theme-accent-light px-[5%] pt-[5%]">
+      <LinearGradient
+        pointerEvents="none"
+        colors={[`${colors.accent}20`, `${colors.accent}00`]}
+        start={{ x: 1, y: 1 }}
+        end={{ x: 0, y: 0 }}
+        style={StyleSheet.absoluteFill}
+      />
       <View className="mb-8 shrink-0 flex-row items-center gap-2">
         <Wordmark size={appRem * 2.4} color={colors.text} accentColor={colors.accent} />
         <Animated.View
