@@ -1,5 +1,5 @@
 import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
-import { AppIcon } from '../../components/AppIcon';
+import { HabitIcon } from '../../components/HabitIcon';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { Pressable, View } from 'react-native';
 import { format, parseISO } from 'date-fns';
@@ -7,7 +7,7 @@ import { ko } from 'date-fns/locale';
 import { Text } from '../../components/Text';
 import { EmotionImage } from '../../components/EmotionImage';
 import type { DiaryDetail } from '../../db/types';
-import { EMOTIONS, resolveIconColor } from '../../domain/constants';
+import { EMOTIONS } from '../../domain/constants';
 import { DiaryMenu } from './DiaryMenu';
 import { DiaryGallery } from './DiaryGallery';
 
@@ -22,7 +22,7 @@ export function DiaryCard({
   last?: boolean;
   today: string;
 }) {
-  const { colors, rem: appRem, iconSizes } = useAppTheme();
+  const { rem: appRem, iconSizes } = useAppTheme();
   const { openModal } = useModalNavigation();
   const open = () => openModal(`/diary/${diary.id}`);
   return (
@@ -81,10 +81,10 @@ export function DiaryCard({
                 onPress={() => openModal(`/habit/${habit.id}`)}
                 className="max-w-full flex-row items-center gap-1"
               >
-                <AppIcon
-                  name="check"
+                <HabitIcon
+                  name={habit.icon_key}
                   size={iconSizes.sm}
-                  color={resolveIconColor(habit.icon_color, colors.accent)}
+                  colorKey={habit.icon_color}
                 />
                 <Text numberOfLines={1} className="shrink text-sm text-theme-text-secondary">
                   {habit.name}

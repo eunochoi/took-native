@@ -5,11 +5,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { View } from 'react-native';
 import { AppIcon } from '../../../src/components/AppIcon';
+import { HabitIcon } from '../../../src/components/HabitIcon';
 import { BottomSheetPage } from '../../../src/components/BottomSheetPage';
 import { EmotionImage } from '../../../src/components/EmotionImage';
 import { QueryState } from '../../../src/components/QueryState';
 import { Text } from '../../../src/components/Text';
-import { EMOTIONS, resolveIconColor } from '../../../src/domain/constants';
+import { EMOTIONS } from '../../../src/domain/constants';
 import { diaryQueries, useToday } from '../../../src/queries';
 import { DiaryGallery } from '../../../src/screens/diary/DiaryGallery';
 import { DiaryMenu } from '../../../src/screens/diary/DiaryMenu';
@@ -60,10 +61,10 @@ export default function DiaryDetail() {
                       accessibilityLabel={habit.name}
                       className="max-w-full flex-row items-center gap-1"
                     >
-                      <AppIcon
-                        name="check"
+                      <HabitIcon
+                        name={habit.icon_key}
                         size={iconSizes.sm}
-                        color={resolveIconColor(habit.icon_color, colors.accent)}
+                        colorKey={habit.icon_color}
                       />
                       <Text numberOfLines={1} className="shrink text-sm text-theme-text-secondary">
                         {habit.name}
