@@ -43,7 +43,7 @@ export default function Home() {
         style={StyleSheet.absoluteFill}
       />
       <View className="mb-8 shrink-0 flex-row items-center gap-2">
-        <Wordmark size={appRem * 2.4} color={colors.text} accentColor={colors.accent} />
+        <Wordmark size={appRem * 3} color={colors.text} accentColor={colors.accent} />
       </View>
       <View className="mb-10 shrink-0 gap-5">
         <View className="gap-1">
