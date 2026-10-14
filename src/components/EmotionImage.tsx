@@ -61,7 +61,8 @@ const EmotionArtwork = memo(function EmotionArtwork({
       className={fill ? 'w-full h-full' : undefined}
       style={{
         ...(fill ? {} : { width: size, height: size }),
-        transform: [{ scale: style === 'simple' ? 0.85 : 1 }],
+        // Calendar emoji artwork has transparent margins; match the simple style's visible size.
+        transform: [{ scale: style === 'simple' ? 0.85 : style === 'emoji' && fill ? 1.2 : 1 }],
       }}
       fadeDuration={0}
       resizeMode="contain"
