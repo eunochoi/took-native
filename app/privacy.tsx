@@ -1,4 +1,4 @@
-import { SECTION_TITLE_CLASS_NAME, BODY_DESCRIPTION_CLASS_NAME } from '../src/theme/classes';
+import { SECTION_TITLE_CLASS_NAME, BODY_TEXT_CLASS_NAME } from '../src/theme/classes';
 import { BottomSheetPage } from '../src/components/BottomSheetPage';
 import { View } from 'react-native';
 import { Text } from '../src/components/Text';
@@ -13,9 +13,7 @@ export default function Privacy() {
             <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
               {section.title}
             </Text>
-            <Text className={`px-2 ${BODY_DESCRIPTION_CLASS_NAME}`}>
-              {section.text}
-            </Text>
+            <Text className={`px-2 ${BODY_TEXT_CLASS_NAME}`}>{section.text}</Text>
           </View>
         ))}
       </View>

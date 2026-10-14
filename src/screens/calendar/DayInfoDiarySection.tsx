@@ -1,12 +1,12 @@
-import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
-import { twMerge } from 'tailwind-merge';
 import { Pressable, View, useWindowDimensions } from 'react-native';
+import { twMerge } from 'tailwind-merge';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
 import type { DiaryDetail } from '../../db/types';
 import { EMOTIONS } from '../../domain/constants';
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
-import { BODY_DESCRIPTION_CLASS_NAME } from '../../theme/classes';
+import { BODY_TEXT_CLASS_NAME } from '../../theme/classes';
 import { DiaryGallery } from '../diary/DiaryGallery';
 import { DiaryMenu } from '../diary/DiaryMenu';
 
@@ -68,7 +68,7 @@ export function DayInfoDiarySection({
                 diary.images.length > 0 ? 'justify-evenly' : 'justify-between',
               )}
             >
-              <Text numberOfLines={3} className={BODY_DESCRIPTION_CLASS_NAME}>
+              <Text numberOfLines={3} className={BODY_TEXT_CLASS_NAME}>
                 {diary.text}
               </Text>
               <View className="flex-row items-center self-end">

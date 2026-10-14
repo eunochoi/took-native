@@ -3,7 +3,7 @@ import { PageTopSection } from '../../components/PageTopSection';
 
 export function DiaryTopSection({ children }: { children?: ReactNode }) {
   return (
-    <PageTopSection title="일기 목록" description="#감정 #습관 #끄적끄적">
+    <PageTopSection title="일기 목록" hashtags="#감정 #습관 #끄적끄적">
       {children}
     </PageTopSection>
   );

@@ -5,22 +5,21 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { twMerge } from 'tailwind-merge';
-import { useModalNavigation } from '../../../src/navigation/ModalNavigationProvider';
 import { BottomSheetPage } from '../../../src/components/BottomSheetPage';
 import { Button } from '../../../src/components/Button';
 import { QueryState } from '../../../src/components/QueryState';
 import { Text } from '../../../src/components/Text';
-import { isDate } from '../../../src/domain/date';
 import type { SoberRestart } from '../../../src/db/types';
+import { isDate } from '../../../src/domain/date';
 import { getSoberAchievements, getSoberSummary } from '../../../src/domain/sober';
 import { useCurrentMinute } from '../../../src/hooks/useCurrentMinute';
+import { useModalNavigation } from '../../../src/navigation/ModalNavigationProvider';
 import { soberQueries } from '../../../src/queries';
 import { SoberGauge } from '../../../src/screens/sober/SoberGauge';
 import { SoberLongRecords } from '../../../src/screens/sober/SoberLongRecords';
 import { SoberMenu } from '../../../src/screens/sober/SoberMenu';
 import { SoberMonthCalendar } from '../../../src/screens/sober/SoberMonthCalendar';
 import { SoberStatisticsSummary } from '../../../src/screens/sober/SoberStatisticsSummary';
-import { BODY_DESCRIPTION_CLASS_NAME } from '../../../src/theme/classes';
 
 export default function SoberDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -101,7 +100,7 @@ export default function SoberDetail() {
             <Text accessibilityRole="header" className="text-xl font-semibold">
               나의 다짐
             </Text>
-            <Text className={twMerge(BODY_DESCRIPTION_CLASS_NAME, 'px-2')}>
+            <Text className={twMerge("text-base text-theme-text-secondary", 'px-2')}>
               {sober.description}
             </Text>
           </View>
