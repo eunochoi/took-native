@@ -1,5 +1,3 @@
-export const TOP_SECTION_BORDER_CLASS_NAME = 'border-b-[1px] border-theme-accent/10';
-
 export const RECORD_SURFACE_CLASS_NAME = 'border border-theme-border/50 bg-theme-surface/70';
 
 export const BADGE_CLASS_NAME =

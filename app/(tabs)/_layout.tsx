@@ -25,7 +25,10 @@ export default function TabLayout() {
     <Tabs
       safeAreaInsets={{ bottom: 0 }}
       screenLayout={({ route, children }) => (
-        <View className="flex-1 bg-theme-accent-light" style={{ paddingTop: insets.top }}>
+        <View
+          className={`flex-1 ${route.name === 'index' ? 'bg-theme-accent-light' : 'bg-theme-surface'}`}
+          style={{ paddingTop: insets.top }}
+        >
           <BlurTargetView
             ref={targetFor(route.key)}
             style={{ flex: 1 }}
