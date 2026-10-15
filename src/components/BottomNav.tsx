@@ -4,6 +4,9 @@ import type { ComponentProps, RefObject } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useAppTheme } from '../theme/AppThemeProvider';
 import { AppIcon } from './AppIcon';
+import tokens from '../theme/tokens.json';
+
+const navigationMetrics = tokens.metrics.navigation;
 
 type BottomNavProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 const items = [
@@ -20,7 +23,9 @@ export function BottomNav({
   blurTarget,
   blurTargetReady,
 }: BottomNavProps & { blurTarget: RefObject<View | null>; blurTargetReady: boolean }) {
-  const { iconSizes, rem: appRem, navigationHeight, navigationBottom } = useAppTheme();
+  const { navigationHeight, navigationBottom } = useAppTheme();
+  const backgroundClassName =
+    state.routes[state.index].name === 'index' ? 'bg-theme-surface/70' : 'bg-theme-accent-light/40';
   const settingRoute = state.routes.find((route) => route.name === 'setting');
   const settingSelected = state.routes[state.index].key === settingRoute?.key;
   return (
@@ -33,10 +38,20 @@ export function BottomNav({
         pointerEvents="box-none"
         accessibilityRole="tablist"
         accessibilityLabel="주요 메뉴"
-        className="self-center flex-row items-center gap-2"
+        className="self-center flex-row items-center"
+        style={{ gap: navigationMetrics.groupGap }}
       >
-        <View className="rounded-full bg-theme-accent-light/40 shadow-lg">
-          <View className="flex-row items-center gap-0 overflow-hidden rounded-full border border-theme-accent/15 px-1 py-1.5">
+        <View
+          className={`rounded-full ${backgroundClassName} shadow-lg ios:shadow-theme-overlay/20`}
+        >
+          <View
+            className="flex-row items-center overflow-hidden rounded-full border border-theme-accent/15"
+            style={{
+              height: navigationHeight,
+              gap: navigationMetrics.itemGap,
+              paddingHorizontal: navigationMetrics.horizontalPadding,
+            }}
+          >
             {blurTargetReady && (
               <BlurView
                 key={state.routes[state.index].key}
@@ -47,7 +62,7 @@ export function BottomNav({
                 style={StyleSheet.absoluteFill}
               />
             )}
-            <View pointerEvents="none" className="absolute inset-0 bg-theme-accent-light/40" />
+            <View pointerEvents="none" className={`absolute inset-0 ${backgroundClassName}`} />
             {items.map((item) => {
               const route = state.routes.find((entry) => entry.name === item.name);
               if (!route) return null;
@@ -69,15 +84,23 @@ export function BottomNav({
                   }}
                   onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
                   hitSlop={{ top: 4, bottom: 4 }}
-                  className="h-11 w-12 items-center justify-center rounded-full"
+                  className="items-center justify-center rounded-full"
+                  style={{
+                    height: navigationMetrics.buttonSize,
+                    width: navigationMetrics.itemWidth,
+                  }}
                 >
                   <View
-                    className={`h-11 w-11 items-center justify-center overflow-hidden ${selected ? 'bg-theme-accent' : 'bg-transparent'}`}
-                    style={{ borderRadius: (appRem * 2.75) / 2 }}
+                    className={`items-center justify-center overflow-hidden ${selected ? 'bg-theme-accent' : 'bg-transparent'}`}
+                    style={{
+                      height: navigationMetrics.buttonSize,
+                      width: navigationMetrics.buttonSize,
+                      borderRadius: navigationMetrics.buttonSize / 2,
+                    }}
                   >
                     <AppIcon
                       name={item.icon}
-                      size={iconSizes.md}
+                      size={navigationMetrics.iconSize}
                       className={selected ? 'text-theme-text-on-accent' : 'text-theme-accent/80'}
                     />
                   </View>
@@ -88,7 +111,7 @@ export function BottomNav({
         </View>
         {settingRoute && (
           <View
-            className="rounded-full bg-theme-accent-light/40 shadow-lg"
+            className={`rounded-full ${backgroundClassName} shadow-lg ios:shadow-theme-overlay/20`}
             style={{ width: navigationHeight, height: navigationHeight }}
           >
             <View className="h-full w-full overflow-hidden rounded-full border border-theme-accent/15">
@@ -102,7 +125,7 @@ export function BottomNav({
                   style={StyleSheet.absoluteFill}
                 />
               )}
-              <View pointerEvents="none" className="absolute inset-0 bg-theme-accent-light/40" />
+              <View pointerEvents="none" className={`absolute inset-0 ${backgroundClassName}`} />
               <Pressable
                 accessibilityRole="tab"
                 accessibilityLabel="설정"
@@ -124,7 +147,7 @@ export function BottomNav({
               >
                 <AppIcon
                   name="settings"
-                  size={iconSizes.md}
+                  size={navigationMetrics.iconSize}
                   className={settingSelected ? 'text-theme-text-on-accent' : 'text-theme-accent/80'}
                 />
               </Pressable>

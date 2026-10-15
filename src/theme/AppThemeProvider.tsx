@@ -1,5 +1,5 @@
 import { createContext, useContext, useLayoutEffect, useMemo, type ReactNode } from 'react';
-import { View, useColorScheme } from 'react-native';
+import { Platform, View, useColorScheme } from 'react-native';
 import { rem, vars } from 'nativewind';
 import { useSettings } from '../settings/SettingsProvider';
 import tokens from './tokens.json';
@@ -29,9 +29,11 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
     () => themeColors(settings.themeAccent, mode),
     [settings.themeAccent, mode],
   );
-  // h-11 + py-1.5 on both sides + the two border edges.
-  const navigationHeight = rootSize * 3.5 + 2;
-  const navigationBottom = insets.bottom + rootSize * tokens.metrics.navigationBottomRem;
+  const navigationHeight = tokens.metrics.navigation.height;
+  const navigationBottom =
+    Platform.OS === 'ios'
+      ? Math.max(insets.bottom, tokens.metrics.navigation.bottomGap)
+      : insets.bottom + tokens.metrics.navigation.bottomGap;
   const theme = useMemo(
     () => ({
       colors,

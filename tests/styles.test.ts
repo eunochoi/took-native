@@ -97,70 +97,83 @@ test('tab footer clears the floating navigation for every font size and bottom s
     new URL('../src/theme/AppThemeProvider.tsx', import.meta.url),
     'utf8',
   );
-  for (const fontSize of ['small', 'normal', 'large'] as const) {
-    for (const bottom of [0, 24, 48]) {
-      const exports: Record<string, Function> = {};
-      const jsx = (type: unknown, props: any) => ({ type, props });
-      runInNewContext(
-        ts.transpileModule(providerSource, {
-          compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
-        }).outputText,
-        {
-          exports,
-          require: (name: string) => {
-            if (name === 'react')
-              return {
-                createContext: () => ({ Provider: 'Provider' }),
-                useMemo: (build: () => unknown) => build(),
-                useLayoutEffect: () => undefined,
-              };
-            if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
-            if (name === 'react-native') return { View: 'View', useColorScheme: () => 'light' };
-            if (name === 'nativewind')
-              return { vars: (values: unknown) => values, rem: { set: () => undefined } };
-            if (name === 'react-native-safe-area-context')
-              return { useSafeAreaInsets: () => ({ bottom }) };
-            if (name.endsWith('/SettingsProvider'))
-              return { useSettings: () => ({ settings: { fontSize } }) };
-            if (name.endsWith('/tokens.json')) return { __esModule: true, default: tokens };
-            if (name.endsWith('/useReducedMotion')) return { useReducedMotion: () => false };
-            if (name === './colors')
-              return { resolveThemeMode: () => 'light', themeColors: () => ({}) };
-            throw new Error(`Unexpected provider dependency: ${name}`);
+  for (const platform of ['android', 'ios']) {
+    for (const fontSize of ['small', 'normal', 'large'] as const) {
+      for (const bottom of [0, 24, 34, 48]) {
+        const exports: Record<string, Function> = {};
+        const jsx = (type: unknown, props: any) => ({ type, props });
+        runInNewContext(
+          ts.transpileModule(providerSource, {
+            compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+          }).outputText,
+          {
+            exports,
+            require: (name: string) => {
+              if (name === 'react')
+                return {
+                  createContext: () => ({ Provider: 'Provider' }),
+                  useMemo: (build: () => unknown) => build(),
+                  useLayoutEffect: () => undefined,
+                };
+              if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
+              if (name === 'react-native')
+                return { View: 'View', Platform: { OS: platform }, useColorScheme: () => 'light' };
+              if (name === 'nativewind')
+                return { vars: (values: unknown) => values, rem: { set: () => undefined } };
+              if (name === 'react-native-safe-area-context')
+                return { useSafeAreaInsets: () => ({ bottom }) };
+              if (name.endsWith('/SettingsProvider'))
+                return { useSettings: () => ({ settings: { fontSize } }) };
+              if (name.endsWith('/tokens.json')) return { __esModule: true, default: tokens };
+              if (name.endsWith('/useReducedMotion')) return { useReducedMotion: () => false };
+              if (name === './colors')
+                return { resolveThemeMode: () => 'light', themeColors: () => ({}) };
+              throw new Error(`Unexpected provider dependency: ${name}`);
+            },
           },
-        },
-      );
-      const shell = exports.AppThemeProvider({ children: null });
-      const height = shell.props.value.tabContentBottom;
-      const rootSize = tokens.metrics.fontSizes[fontSize];
-      // Actual nav geometry: h-11 buttons, two py-1.5 paddings, two 1px borders;
-      // the Settings circle now shares this height.
-      const navHeight = rootSize * 3.5 + 2;
-      const navTopFromBottom = bottom + rootSize * tokens.metrics.navigationBottomRem + navHeight;
-      assert(
-        height - navTopFromBottom >= rootSize * tokens.metrics.contentBottomRem,
-        `last content must clear the nav with a full gap: ${fontSize}, inset ${bottom}`,
-      );
-      assert(Number.isFinite(height));
-      const spacerModule: Record<string, Function> = {};
-      runInNewContext(
-        ts.transpileModule(
-          readFileSync(new URL('../src/components/TabBottomSpacer.tsx', import.meta.url), 'utf8'),
-          { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } },
-        ).outputText,
-        {
-          exports: spacerModule,
-          require: (name: string) => {
-            if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
-            if (name === 'react-native') return { View: 'View' };
-            if (name.endsWith('/AppThemeProvider')) return { useAppTheme: () => shell.props.value };
-            throw new Error(`Unexpected spacer dependency: ${name}`);
+        );
+        const shell = exports.AppThemeProvider({ children: null });
+        const height = shell.props.value.tabContentBottom;
+        const rootSize = tokens.metrics.fontSizes[fontSize];
+        const navHeight = 64;
+        assert.equal(
+          shell.props.value.navigationHeight,
+          navHeight,
+          'font size must not resize navigation',
+        );
+        const navBottom = platform === 'ios' ? Math.max(bottom, 15) : bottom + 15;
+        assert.equal(shell.props.value.navigationBottom, navBottom);
+        const navTopFromBottom = navBottom + navHeight;
+        assert(
+          height >= navTopFromBottom + rootSize * tokens.metrics.contentBottomRem,
+          `last content must clear the nav with a full gap: ${fontSize}, inset ${bottom}`,
+        );
+        assert(Number.isFinite(height));
+        const spacerModule: Record<string, Function> = {};
+        runInNewContext(
+          ts.transpileModule(
+            readFileSync(new URL('../src/components/TabBottomSpacer.tsx', import.meta.url), 'utf8'),
+            { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } },
+          ).outputText,
+          {
+            exports: spacerModule,
+            require: (name: string) => {
+              if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
+              if (name === 'react-native') return { View: 'View' };
+              if (name.endsWith('/AppThemeProvider'))
+                return { useAppTheme: () => shell.props.value };
+              throw new Error(`Unexpected spacer dependency: ${name}`);
+            },
           },
-        },
-      );
-      const spacer = spacerModule.TabBottomSpacer();
-      assert.equal(spacer.props.style.height, height, 'the footer supplies a native layout height');
-      assert.equal(spacer.props.pointerEvents, 'none');
+        );
+        const spacer = spacerModule.TabBottomSpacer();
+        assert.equal(
+          spacer.props.style.height,
+          height,
+          'the footer supplies a native layout height',
+        );
+        assert.equal(spacer.props.pointerEvents, 'none');
+      }
     }
   }
   for (const route of ['diary', 'habit', 'sober', 'setting']) {
