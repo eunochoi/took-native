@@ -33,6 +33,7 @@ export function BottomSheetModal({
   fixedHeight = false,
   scrollFade = false,
   contentKey,
+  contentBottomPadding,
   presentation = 'modal',
   dimBackdrop = true,
   menuAction,
@@ -56,6 +57,7 @@ export function BottomSheetModal({
   fixedHeight?: boolean;
   scrollFade?: boolean;
   contentKey?: string | number;
+  contentBottomPadding?: number;
   presentation?: 'modal' | 'screen';
   dimBackdrop?: boolean;
   menuAction?: ReactNode;
@@ -149,7 +151,10 @@ export function BottomSheetModal({
             scrollEnabled={scrollEnabled}
             scrollFade={scrollFade}
             contentKey={contentKey}
-            bottomPadding={!footer && insets.bottom > 0 ? appRem * 3 + insets.bottom : undefined}
+            bottomPadding={
+              contentBottomPadding ??
+              (!footer && insets.bottom > 0 ? appRem * 3 + insets.bottom : undefined)
+            }
           >
             {typeof children === 'function' ? children(closeSheet) : children}
           </BottomSheetScrollViewport>

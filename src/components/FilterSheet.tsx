@@ -19,15 +19,16 @@ export function FilterSheet({
   onReset: () => void;
   onApply: () => void;
 }) {
-  const { iconSizes } = useAppTheme();
+  const { iconSizes, rem } = useAppTheme();
   return (
     <BottomSheetModal
       visible
       title={title}
       scrollFade
+      contentBottomPadding={rem}
       onClose={onClose}
       footer={(close) => (
-        <View className="gap-2">
+        <View className="gap-4">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="선택 초기화"
