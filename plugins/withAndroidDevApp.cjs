@@ -37,7 +37,7 @@ android.buildTypes.debug.applicationIdSuffix = ".dev"
       await fs.mkdir(values, { recursive: true });
       await fs.writeFile(
         path.join(values, 'took_dev.xml'),
-        '<?xml version="1.0" encoding="utf-8"?>\n<resources><string name="app_name">took dev</string></resources>\n',
+        '<?xml version="1.0" encoding="utf-8"?>\n<resources><string name="app_name">툭 로그 dev</string></resources>\n',
       );
       return mod;
     },
