@@ -185,7 +185,7 @@ test('missing native module and failed updates do not fail saved app actions', a
   for (const native of [null, {}]) {
     let updates = 0;
     const bridge = load('../src/widgets/sober.ts', {
-      'react-native': { TurboModuleRegistry: { get: () => native } },
+      'react-native': { Platform: { OS: 'android' }, TurboModuleRegistry: { get: () => native } },
       './sober/model': { SOBER_WIDGET_NAME: 'Sober' },
       'react-native-android-widget': {
         getWidgetInfo: async () => [{ widgetId: 1 }],

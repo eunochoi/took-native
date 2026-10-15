@@ -6,10 +6,19 @@
     "scheme": "took-local",
     "orientation": "portrait",
     "platforms": [
-      "android"
+      "android",
+      "ios"
     ],
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
+    "ios": {
+      "bundleIdentifier": "com.everstamp",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
     "android": {
       "package": "com.everstamp",
       "allowBackup": false,
@@ -24,6 +33,8 @@
       "versionCode": 25
     },
     "plugins": [
+      "./plugins/withIosSceneLifecycle.cjs",
+      "./plugins/withIosBuildSettings.cjs",
       "./plugins/withAndroidDevApp.cjs",
       "./plugins/withAndroidBuildSettings.cjs",
       "expo-router",

@@ -5,17 +5,30 @@
   "build": {
     "production": {
       "channel": "production",
-      "credentialsSource": "local",
       "android": {
+        "credentialsSource": "local",
         "buildType": "app-bundle"
+      },
+      "ios": {
+        "credentialsSource": "remote"
       }
     },
     "preview": {
       "channel": "preview",
       "distribution": "internal",
-      "credentialsSource": "local",
       "android": {
+        "credentialsSource": "local",
         "buildType": "apk"
+      },
+      "ios": {
+        "credentialsSource": "remote"
+      }
+    },
+    "ios-simulator": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
       }
     }
   }

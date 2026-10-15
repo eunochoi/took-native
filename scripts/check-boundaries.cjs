@@ -46,11 +46,12 @@ const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'))
 assert(!pkg.dependencies['react-native-webview']);
 assert(!pkg.dependencies['next']);
 const config = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8')).expo;
-assert.deepEqual(config.platforms, ['android']);
+assert.deepEqual(config.platforms, ['android', 'ios']);
 assert.equal(config.android.package, 'com.everstamp');
 assert.equal(config.userInterfaceStyle, 'automatic');
-assert(!config.ios && !pkg.scripts.ios);
-assert(!fs.existsSync(path.join(root, 'ios')));
+assert.equal(config.ios.bundleIdentifier, 'com.everstamp');
+assert.match(config.ios.buildNumber, /^\d+$/);
+assert(pkg.scripts.ios);
 for (const file of source) {
   const text = fs.readFileSync(file, 'utf8');
   const wordmarkFontSource = ['src/components/Wordmark.tsx', 'src/theme/fonts.ts'].some(
@@ -58,7 +59,7 @@ for (const file of source) {
   );
   assert(
     (!/Fredoka/.test(text) || wordmarkFontSource) &&
-      !/settings\.(mode|accent|font)\b|Platform\.OS/.test(text),
+      !/settings\.(mode|accent|font)\b/.test(text),
     `Retired platform/font code: ${file}`,
   );
 }

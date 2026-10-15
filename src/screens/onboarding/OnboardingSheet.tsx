@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Linking, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { Text } from '../../components/Text';
@@ -19,7 +19,7 @@ const titles = [
   '하루를 기록하는 TOOK',
   '나에게 맞게 설정해요',
   '편리하게 사용해요',
-  '위젯으로 바로 확인해요',
+  ...(Platform.OS === 'android' ? ['위젯으로 바로 확인해요'] : []),
   '기록을 안전하게 보관해요',
 ] as const;
 
@@ -191,7 +191,9 @@ export function OnboardingSheet({
             <WelcomePage key="welcome" onOpenWeb={openWeb} />,
             <ThemePage key="theme" settings={settings} busy={busy} onChange={change} />,
             <UsagePage key="usage" imageWidth={imageWidth} />,
-            <WidgetPage key="widget" imageWidth={imageWidth} />,
+            ...(Platform.OS === 'android'
+              ? [<WidgetPage key="widget" imageWidth={imageWidth} />]
+              : []),
             <BackupPage key="backup" busy={busy} onConfirm={() => confirm(close)} />,
           ].map((content) => (
             <View key={content.key} className="h-full justify-center py-6" style={{ width }}>

@@ -52,7 +52,7 @@ const sheetRoutes = [
   'image',
 ];
 
-// This Android-only app must not share native handles, including in release builds.
+// Database users must not share native handles, including in release builds.
 const databaseOptions: SQLiteOpenOptions = { useNewConnection: true };
 async function initializeAppDatabase(db: SQLiteDatabase) {
   await initializeDatabase(db);

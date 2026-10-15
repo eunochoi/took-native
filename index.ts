@@ -1,8 +1,8 @@
 import './global.css';
-import { TurboModuleRegistry } from 'react-native';
+import { Platform, TurboModuleRegistry } from 'react-native';
 
 // Expo Go and an older development build do not include the native widget module.
-if (TurboModuleRegistry.get('AndroidWidget')) {
+if (Platform.OS === 'android' && TurboModuleRegistry.get('AndroidWidget')) {
   const {
     registerWidgetTaskHandler,
     registerWidgetConfigurationScreen,

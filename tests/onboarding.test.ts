@@ -32,7 +32,7 @@ function load(file: string, dependencies: Record<string, unknown>) {
   );
   return exports;
 }
-function harness(values = new Map<string, string>()) {
+function harness(values = new Map<string, string>(), platform = 'android') {
   let failRead = false;
   let persist: () => Promise<void> = async () => {};
   const writes: string[] = [];
@@ -84,6 +84,7 @@ function harness(values = new Map<string, string>()) {
     },
     'react/jsx-runtime': { jsx, jsxs: jsx },
     'react-native': {
+      Platform: { OS: platform },
       Linking: { openURL: async () => {} },
       Pressable: 'Pressable',
       View: 'View',
@@ -198,6 +199,21 @@ test('visiting all pages leaves completion absent and relaunch shows the guide',
     harness(h.values).renderSheet().body.props.accessibilityLabel,
     '앱 안내, 5단계 중 1단계',
   );
+});
+
+test('iOS onboarding omits the Android widget page and can complete its four steps', async () => {
+  const h = harness(new Map(), 'ios');
+  const first = h.renderSheet();
+  assert.equal(first.body.props.accessibilityLabel, '앱 안내, 4단계 중 1단계');
+  assert.equal(nodes(first.body, 'WidgetPage').length, 0);
+  first.body.props.onLayout({ nativeEvent: { layout: { width: 390 } } });
+  const laidOut = h.renderSheet();
+  laidOut.body.props.onMomentumScrollEnd({ nativeEvent: { contentOffset: { x: 390 * 3 } } });
+  const last = h.renderSheet();
+  assert.equal(last.body.props.accessibilityLabel, '앱 안내, 4단계 중 4단계');
+  await last.buttons.at(-1).props.onPress();
+  assert.equal(await h.storage.hasCompletedOnboarding(), true);
+  assert.equal(h.closes(), 1);
 });
 
 test('completion waits for persistence and repeated taps write only once', async () => {

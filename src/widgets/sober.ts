@@ -1,10 +1,10 @@
-import { TurboModuleRegistry } from 'react-native';
+import { Platform, TurboModuleRegistry } from 'react-native';
 import { SOBER_WIDGET_NAME } from './sober/model';
 
 // Do not import the widget package on old APKs/Expo Go: its enforcing TurboModule
 // would fail at import time. Widget failure must never fail a saved record.
 export function refreshSoberWidgets() {
-  if (!TurboModuleRegistry.get('AndroidWidget')) return;
+  if (Platform.OS !== 'android' || !TurboModuleRegistry.get('AndroidWidget')) return;
   void Promise.resolve()
     .then(async () => {
       const { getWidgetInfo, requestWidgetUpdateById } =
