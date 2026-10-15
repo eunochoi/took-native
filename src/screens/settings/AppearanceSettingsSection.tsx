@@ -44,13 +44,13 @@ export function AppearanceSettingsSection({
                     disabled={disabled}
                     hitSlop={3}
                     onPress={() => onChange({ themeAccent: accent })}
-                    className="h-8 w-8 items-center justify-center rounded-full border-2 active:opacity-65"
+                    className="h-8 w-8 items-center justify-center ios:curve-continuous rounded-full border-2 active:opacity-65"
                     style={{
                       borderColor: selected ? ACCENT_PALETTES[accent].accent : 'transparent',
                     }}
                   >
                     <View
-                      className="h-6 w-6 rounded-full"
+                      className="h-6 w-6 ios:curve-continuous rounded-full"
                       style={{ backgroundColor: ACCENT_PALETTES[accent].accent }}
                     />
                   </Pressable>

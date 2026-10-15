@@ -15,9 +15,9 @@ export function CalendarHabitProgress({ done, total }: { done: number; total: nu
         now: progress,
         text: `${done}/${total}개 완료`,
       }}
-      className="h-1.5 w-full shrink-0 overflow-hidden rounded-full bg-theme-border-muted"
+      className="h-1.5 w-full shrink-0 overflow-hidden ios:curve-continuous rounded-full bg-theme-border-muted"
     >
-      <View className="h-full rounded-full bg-theme-accent/70" style={{ width: `${progress}%` }} />
+      <View className="h-full ios:curve-continuous rounded-full bg-theme-accent/70" style={{ width: `${progress}%` }} />
     </View>
   );
 }

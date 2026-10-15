@@ -57,7 +57,7 @@ export function CalendarDay({
         else onSelect?.(date);
       }}
       className={twMerge(
-        'relative flex-1 items-center justify-center rounded-lg',
+        'relative flex-1 items-center justify-center ios:curve-continuous rounded-lg',
         fillHeight ? 'min-h-0' : 'aspect-[1/1.25]',
         dimmed || outside ? 'opacity-30' : 'opacity-100',
         className,
@@ -79,7 +79,7 @@ export function CalendarDay({
         </View>
       )}
       {!outside && ((showTodayIndicator && isToday) || (showSelectedIndicator && isSelected)) && (
-        <View className="absolute -bottom-0.5 h-1.5 w-1.5 rounded-full bg-theme-accent/70" />
+        <View className="absolute -bottom-0.5 h-1.5 w-1.5 ios:curve-continuous rounded-full bg-theme-accent/70" />
       )}
     </Pressable>
   );

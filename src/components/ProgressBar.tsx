@@ -15,9 +15,9 @@ export function ProgressBar({
       accessibilityRole="progressbar"
       accessibilityLabel={accessibilityLabel}
       accessibilityValue={{ min: 0, max: 100, now: progress, text: accessibilityValueText }}
-      className="h-4 w-full overflow-hidden rounded-full bg-theme-border-muted"
+      className="h-4 w-full overflow-hidden ios:curve-continuous rounded-full bg-theme-border-muted"
     >
-      <View className="h-full rounded-full bg-theme-accent/70" style={{ width: `${progress}%` }} />
+      <View className="h-full ios:curve-continuous rounded-full bg-theme-accent/70" style={{ width: `${progress}%` }} />
     </View>
   );
 }

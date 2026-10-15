@@ -109,7 +109,7 @@ export function SoberGoalPicker({
               maxLength={5}
               value={draftDays}
               onChangeText={setDays}
-              className="flex-1 h-12 rounded-2xl bg-transparent border border-theme-border px-4 text-base font-normal text-theme-text-primary"
+              className="flex-1 h-12 ios:curve-continuous rounded-2xl bg-transparent border border-theme-border px-4 text-base font-normal text-theme-text-primary"
             />
             <Text>일</Text>
           </View>

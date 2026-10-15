@@ -18,7 +18,7 @@ export function WelcomePage({ onOpenWeb }: { onOpenWeb: () => void }) {
           일기와 습관, 거리두기 기록을{'\n'}한곳에서 관리해요.
         </Text>
       </View>
-      <View className="gap-6 rounded-2xl bg-theme-surface-muted p-6">
+      <View className="gap-6 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-6">
         <View className="gap-2">
           <Text className="text-center text-base font-semibold">기록은 이 기기에</Text>
           <Text className="text-center text-sm text-theme-text-secondary">
@@ -35,7 +35,7 @@ export function WelcomePage({ onOpenWeb }: { onOpenWeb: () => void }) {
             accessibilityRole="link"
             accessibilityLabel="TOOK 웹 열기"
             onPress={onOpenWeb}
-            className="min-h-12 flex-row items-center justify-center gap-2 rounded-xl active:opacity-65"
+            className="min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-xl active:opacity-65"
           >
             <Text className="text-sm font-semibold text-theme-accent">TOOK 웹 열기</Text>
             <AppIcon name="arrow-forward" size={iconSizes.sm} className="text-theme-accent" />

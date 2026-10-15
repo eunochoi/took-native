@@ -54,7 +54,7 @@ export function IconColorPicker({
                       accessibilityLabel={label}
                       onPress={() => setDraft(key)}
                     >
-                      <View className="h-8 w-8 rounded-full" style={{ backgroundColor }} />
+                      <View className="h-8 w-8 ios:curve-continuous rounded-full" style={{ backgroundColor }} />
                       <Text
                         className={`text-xs text-center ${draft === key ? 'text-theme-accent' : 'text-theme-text-secondary'}`}
                       >

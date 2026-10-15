@@ -28,7 +28,7 @@ export function DiaryAnalysis({
                 style={{
                   height: count > 0 ? Math.max((count / max) * 112, 8) : 4,
                 }}
-                className={`w-3 rounded-[3px] ${count > 0 ? 'bg-theme-accent' : 'bg-theme-text-primary/15'}`}
+                className={`w-3 ios:curve-continuous rounded-[3px] ${count > 0 ? 'bg-theme-accent' : 'bg-theme-text-primary/15'}`}
               />
             </View>
             <Text className="text-theme-text-secondary text-sm">{index + 1}</Text>

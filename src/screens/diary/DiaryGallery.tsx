@@ -20,7 +20,7 @@ export function DiaryGallery(props: DiaryGalleryProps) {
         accessibilityRole="button"
         accessibilityLabel="사진 1 일기 상세보기"
         onPress={onPress}
-        className={`w-full ${square ? 'aspect-square rounded-xl border-2 border-theme-border-muted' : 'aspect-[4/3] rounded-lg'} overflow-hidden`}
+        className={`w-full ${square ? 'aspect-square ios:curve-continuous rounded-xl border-2 border-theme-border-muted' : 'aspect-[4/3] ios:curve-continuous rounded-lg'} overflow-hidden`}
       >
         <Image
           source={{ uri: mediaUri(images[0].file_name) }}
@@ -92,10 +92,10 @@ function DiaryGalleryPages({ images, detail = false, square = false, onPress }: 
               style={{ width, height }}
               className={
                 detail
-                  ? 'rounded-theme overflow-hidden bg-black/75 border-2 border-theme-border-muted'
+                  ? 'ios:curve-continuous rounded-theme overflow-hidden bg-black/75 border-2 border-theme-border-muted'
                   : square
-                    ? 'rounded-xl overflow-hidden border-2 border-theme-border-muted'
-                    : 'rounded-lg overflow-hidden'
+                    ? 'ios:curve-continuous rounded-xl overflow-hidden border-2 border-theme-border-muted'
+                    : 'ios:curve-continuous rounded-lg overflow-hidden'
               }
             >
               <Image
@@ -115,7 +115,7 @@ function DiaryGalleryPages({ images, detail = false, square = false, onPress }: 
           {images.map((image, index) => (
             <View
               key={image.id}
-              className={`m-[3px] h-2 rounded-theme ${page === index ? 'bg-theme-accent w-5' : 'bg-theme-accent/80 w-2'}`}
+              className={`m-[3px] h-2 ios:curve-continuous rounded-theme ${page === index ? 'bg-theme-accent w-5' : 'bg-theme-accent/80 w-2'}`}
             />
           ))}
         </View>

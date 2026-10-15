@@ -13,7 +13,7 @@ export function HabitYearChart({ monthly }: { monthly: number[] }) {
                 {count > 0 ? count : ''}
               </Text>
               <View
-                className={`w-3/5 max-w-5 rounded-[3px] ${count > 0 ? 'bg-theme-accent' : 'bg-theme-text-primary/15'}`}
+                className={`w-3/5 max-w-5 ios:curve-continuous rounded-[3px] ${count > 0 ? 'bg-theme-accent' : 'bg-theme-text-primary/15'}`}
                 style={{ height: count ? Math.max((count / max) * 160, 8) : 4 }}
               />
             </View>

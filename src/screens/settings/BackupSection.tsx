@@ -19,7 +19,7 @@ export function BackupSection({
         백업 / 복원
       </Text>
       <View className="gap-6 px-2 pt-2">
-        <View className="gap-4 rounded-2xl bg-theme-surface-muted p-4">
+        <View className="gap-4 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-4">
           <View className="gap-2">
             <Text className="text-base font-semibold">기록 보관</Text>
             <Text className={MUTED_DESCRIPTION_CLASS_NAME}>
@@ -50,7 +50,7 @@ export function BackupSection({
           accessibilityState={{ disabled: activity !== null, busy: activity === 'export' }}
           disabled={activity !== null}
           onPress={onExport}
-          className={`min-h-12 flex-row items-center justify-center gap-2 rounded-full bg-theme-accent px-5 ${activity !== null ? 'opacity-40' : 'opacity-100'}`}
+          className={`min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-full bg-theme-accent px-5 ${activity !== null ? 'opacity-40' : 'opacity-100'}`}
         >
           {activity === 'export' && <ActivityIndicator color={colors.textOnAccent} />}
           <Text className="text-base text-theme-text-on-accent">
@@ -62,7 +62,7 @@ export function BackupSection({
           accessibilityState={{ disabled: activity !== null, busy: activity === 'restore' }}
           disabled={activity !== null}
           onPress={onRestore}
-          className={`min-h-12 flex-row items-center justify-center gap-2 rounded-full bg-theme-accent/10 px-5 ${activity !== null ? 'opacity-40' : 'opacity-100'}`}
+          className={`min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-full bg-theme-accent/10 px-5 ${activity !== null ? 'opacity-40' : 'opacity-100'}`}
         >
           {activity === 'restore' && <ActivityIndicator color={colors.accent} />}
           <Text className="text-base text-theme-accent">

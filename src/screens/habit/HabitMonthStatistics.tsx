@@ -68,9 +68,9 @@ export function HabitMonthStatistics({
                 label={`${date}${completed ? ', 완료 기록 있음' : ''}${empty ? ', 실천 기록 없음' : ''}`}
                 contentClassName={
                   completed
-                    ? 'rounded-full bg-theme-accent'
+                    ? 'ios:curve-continuous rounded-full bg-theme-accent'
                     : empty
-                      ? 'rounded-full bg-theme-calendar-empty'
+                      ? 'ios:curve-continuous rounded-full bg-theme-calendar-empty'
                       : undefined
                 }
                 textClassName={completed ? 'font-medium text-theme-text-on-accent' : 'font-medium'}

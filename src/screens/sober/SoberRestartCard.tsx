@@ -16,7 +16,7 @@ export function SoberRestartCard({
 }) {
   const time = format(parseISO(record.restarted_at), 'HH:mm');
   return (
-    <View className="gap-2 rounded-2xl bg-transparent border border-theme-border p-4">
+    <View className="gap-2 ios:curve-continuous rounded-2xl bg-transparent border border-theme-border p-4">
       <View className="flex-row items-center gap-3">
         <Text className="text-base">{time}</Text>
         {onMenu && (

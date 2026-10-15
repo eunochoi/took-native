@@ -213,7 +213,7 @@ export function SoberForm({ id }: { id?: number }) {
           onPress={() => setPicker('color')}
           leading={
             <View
-              className="h-6 w-6 rounded-full"
+              className="h-6 w-6 ios:curve-continuous rounded-full"
               style={{
                 backgroundColor:
                   draft.icon_color === 'theme'

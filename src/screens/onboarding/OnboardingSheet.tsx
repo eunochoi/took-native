@@ -142,7 +142,7 @@ export function OnboardingSheet({
                 className="items-center justify-center"
               >
                 <Animated.View
-                  className={`h-2.5 rounded-full ${index === step ? 'bg-theme-accent' : 'bg-theme-text-disabled'}`}
+                  className={`h-2.5 ios:curve-continuous rounded-full ${index === step ? 'bg-theme-accent' : 'bg-theme-text-disabled'}`}
                   style={{
                     width: rem * (index === step ? 1.25 : 0.6),
                     transitionProperty: ['width', 'backgroundColor'],

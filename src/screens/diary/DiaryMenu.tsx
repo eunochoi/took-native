@@ -45,7 +45,7 @@ export function DiaryMenu({
         accessibilityState={{ expanded: open, disabled: mutation.isPending }}
         disabled={mutation.isPending}
         onPress={() => setOpen(true)}
-        className="h-11 w-11 items-center justify-center rounded-full"
+        className="h-11 w-11 items-center justify-center ios:curve-continuous rounded-full"
       />
       <BottomSheetModal visible={open} title={title} onClose={() => setOpen(false)}>
         {(closePicker) => (

@@ -211,7 +211,7 @@ export function HabitForm({ id }: { id?: number }) {
           onPress={() => setPicker('color')}
           leading={
             <View
-              className="h-6 w-6 rounded-full"
+              className="h-6 w-6 ios:curve-continuous rounded-full"
               style={{
                 backgroundColor:
                   iconColor === 'theme' ? colors.accent : HABIT_ICON_COLORS[iconColor].value,

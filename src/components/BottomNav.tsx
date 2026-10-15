@@ -1,10 +1,10 @@
 import { BlurView } from 'expo-blur';
 import type { Tabs } from 'expo-router';
 import type { ComponentProps, RefObject } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useAppTheme } from '../theme/AppThemeProvider';
-import { AppIcon } from './AppIcon';
 import tokens from '../theme/tokens.json';
+import { AppIcon } from './AppIcon';
 
 const navigationMetrics = tokens.metrics.navigation;
 
@@ -42,10 +42,10 @@ export function BottomNav({
         style={{ gap: navigationMetrics.groupGap }}
       >
         <View
-          className={`rounded-full ${backgroundClassName} shadow-lg ios:shadow-theme-overlay/20`}
+          className={`ios:curve-continuous rounded-full ${backgroundClassName} shadow-lg ios:shadow-theme-overlay/20`}
         >
           <View
-            className="flex-row items-center overflow-hidden rounded-full border border-theme-accent/15"
+            className="flex-row items-center overflow-hidden ios:curve-continuous rounded-full border border-theme-accent/15"
             style={{
               height: navigationHeight,
               gap: navigationMetrics.itemGap,
@@ -84,7 +84,7 @@ export function BottomNav({
                   }}
                   onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
                   hitSlop={{ top: 4, bottom: 4 }}
-                  className="items-center justify-center rounded-full"
+                  className="items-center justify-center ios:curve-continuous rounded-full"
                   style={{
                     height: navigationMetrics.buttonSize,
                     width: navigationMetrics.itemWidth,
@@ -96,6 +96,7 @@ export function BottomNav({
                       height: navigationMetrics.buttonSize,
                       width: navigationMetrics.buttonSize,
                       borderRadius: navigationMetrics.buttonSize / 2,
+                      borderCurve: Platform.OS === 'ios' ? 'continuous' : undefined,
                     }}
                   >
                     <AppIcon
@@ -111,10 +112,10 @@ export function BottomNav({
         </View>
         {settingRoute && (
           <View
-            className={`rounded-full ${backgroundClassName} shadow-lg ios:shadow-theme-overlay/20`}
+            className={`ios:curve-continuous rounded-full ${backgroundClassName} shadow-lg ios:shadow-theme-overlay/20`}
             style={{ width: navigationHeight, height: navigationHeight }}
           >
-            <View className="h-full w-full overflow-hidden rounded-full border border-theme-accent/15">
+            <View className="h-full w-full overflow-hidden ios:curve-continuous rounded-full border border-theme-accent/15">
               {blurTargetReady && (
                 <BlurView
                   key={state.routes[state.index].key}
@@ -143,7 +144,10 @@ export function BottomNav({
                   navigation.emit({ type: 'tabLongPress', target: settingRoute.key })
                 }
                 className={`h-full w-full items-center justify-center overflow-hidden ${settingSelected ? 'bg-theme-accent' : 'bg-transparent'}`}
-                style={{ borderRadius: navigationHeight / 2 }}
+                style={{
+                  borderRadius: navigationHeight / 2,
+                  borderCurve: Platform.OS === 'ios' ? 'continuous' : undefined,
+                }}
               >
                 <AppIcon
                   name="settings"

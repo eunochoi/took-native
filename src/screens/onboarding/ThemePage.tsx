@@ -31,7 +31,7 @@ export function ThemePage({
           취향에 맞게 고르고, 언제든 다시 바꿔요.
         </Text>
       </View>
-      <View className="gap-6 rounded-2xl bg-theme-surface-muted p-4">
+      <View className="gap-6 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-4">
         <View className="gap-1">
           <Text className="text-center text-sm font-semibold">감정 아이콘</Text>
           <EmotionIconStyleSelector
@@ -56,7 +56,7 @@ export function ThemePage({
                   onPress={() => void onChange({ themeAccent: accent })}
                 >
                   <View
-                    className="h-6 w-6 rounded-full"
+                    className="h-6 w-6 ios:curve-continuous rounded-full"
                     style={{ backgroundColor: ACCENT_PALETTES[accent].accent }}
                   />
                   <Text

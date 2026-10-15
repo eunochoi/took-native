@@ -3,7 +3,7 @@ import { themeColors } from '../src/theme/colors';
 import { AppThemeProvider, useAppTheme } from '../src/theme/AppThemeProvider';
 import '../global.css';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { AppState, Pressable, Text as NativeText, View } from 'react-native';
+import { AppState, Platform, Pressable, Text as NativeText, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SQLiteProvider, type SQLiteDatabase, type SQLiteOpenOptions } from 'expo-sqlite';
@@ -170,6 +170,7 @@ export default function RootLayout() {
                   padding: 16,
                   backgroundColor: themeColors('blue', 'light').accent,
                   borderRadius: 16,
+                  borderCurve: Platform.OS === 'ios' ? 'continuous' : undefined,
                 }}
               >
                 <NativeText>다시 시도</NativeText>

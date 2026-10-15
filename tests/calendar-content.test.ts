@@ -73,11 +73,11 @@ test('calendar habit bar shows exact percentages including one percent and hides
   for (const [done, total] of [[1, 100], [1, 5], [1, 6], [1, 3], [3, 4], [99, 100], [4, 4]]) {
     const tree = CalendarHabitProgress({ done, total });
     const percent = done / total * 100;
-    assert.equal(tree.props.className, 'h-1.5 w-full shrink-0 overflow-hidden rounded-full bg-theme-border-muted');
+    assert.equal(tree.props.className, 'h-1.5 w-full shrink-0 overflow-hidden ios:curve-continuous rounded-full bg-theme-border-muted');
     assert.equal(tree.props.accessibilityRole, 'progressbar');
     assert.equal(tree.props.accessibilityValue.now, percent);
     assert.equal(tree.props.accessibilityValue.text, `${done}/${total}개 완료`);
-    assert.equal(tree.props.children.props.className, 'h-full rounded-full bg-theme-accent/70');
+    assert.equal(tree.props.children.props.className, 'h-full ios:curve-continuous rounded-full bg-theme-accent/70');
     assert.equal(tree.props.children.props.style.width, `${percent}%`);
     assert(!nodes(tree).some((node) => ['Svg', 'Path', 'Circle'].includes(node.type)));
   }
@@ -118,7 +118,7 @@ test('date cell owns weekday color, outside-month dimming and optional today/sel
   assert.match(tree.props.accessibilityLabel, /오늘/);
   assert.equal(nodes(tree).filter((node) => node.props.className?.includes('h-1.5 w-1.5')).length, 1);
   assert.equal(nodes(tree).find((node) => node.props.className?.includes('absolute -bottom-0.5')).props.className,
-    'absolute -bottom-0.5 h-1.5 w-1.5 rounded-full bg-theme-accent/70');
+    'absolute -bottom-0.5 h-1.5 w-1.5 ios:curve-continuous rounded-full bg-theme-accent/70');
   const hidden = CalendarDay({
     ...day,
     selected: day.date,
@@ -171,7 +171,7 @@ test('today and selection use one identical bottom dot, including when both are 
     const tree = CalendarDay(props);
     const markers = nodes(tree).filter((node) => node.props.className?.includes('absolute -bottom-0.5'));
     assert.equal(markers.length, 1);
-    assert.equal(markers[0].props.className, 'absolute -bottom-0.5 h-1.5 w-1.5 rounded-full bg-theme-accent/70');
+    assert.equal(markers[0].props.className, 'absolute -bottom-0.5 h-1.5 w-1.5 ios:curve-continuous rounded-full bg-theme-accent/70');
     assert.match(tree.props.className, /relative/);
     assert(!nodes(tree).some((node) => node.props.className?.includes('top-')));
     assert(!nodes(tree).find((node) => node.type === 'Text').props.className.includes('rounded-full'));
@@ -392,7 +392,7 @@ test('date picker owns its min/future range and default selection indicator', ()
   ]);
   const rendered = CalendarDay(cell(tree, '2026-10-05').props);
   assert.equal(nodes(rendered).find((node) => node.props.className?.includes('absolute -bottom-0.5')).props.className,
-    'absolute -bottom-0.5 h-1.5 w-1.5 rounded-full bg-theme-accent/70');
+    'absolute -bottom-0.5 h-1.5 w-1.5 ios:curve-continuous rounded-full bg-theme-accent/70');
 });
 
 test('day detail falls back to today for a direct future-date route', () => {

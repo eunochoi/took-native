@@ -80,7 +80,7 @@ export function DiaryFilterPicker({
                 accessibilityLabel="이전 연도 선택"
                 disabled={displayYear <= 1900}
                 onPress={() => selectYear(displayYear - 1)}
-                className={`h-12 w-12 items-center justify-center rounded-xl bg-transparent active:opacity-70 ${displayYear <= 1900 ? 'opacity-40' : 'opacity-100'}`}
+                className={`h-12 w-12 items-center justify-center ios:curve-continuous rounded-xl bg-transparent active:opacity-70 ${displayYear <= 1900 ? 'opacity-40' : 'opacity-100'}`}
               >
                 <AppIcon name="chevron-left" size={iconSizes.md} color={colors.accent} />
               </Pressable>
@@ -109,7 +109,7 @@ export function DiaryFilterPicker({
                 accessibilityLabel="다음 연도 선택"
                 disabled={displayYear >= currentYear}
                 onPress={() => selectYear(displayYear + 1)}
-                className={`h-12 w-12 items-center justify-center rounded-xl bg-transparent active:opacity-70 ${displayYear >= currentYear ? 'opacity-40' : 'opacity-100'}`}
+                className={`h-12 w-12 items-center justify-center ios:curve-continuous rounded-xl bg-transparent active:opacity-70 ${displayYear >= currentYear ? 'opacity-40' : 'opacity-100'}`}
               >
                 <AppIcon name="chevron-right" size={iconSizes.md} color={colors.accent} />
               </Pressable>

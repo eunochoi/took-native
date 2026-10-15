@@ -26,7 +26,7 @@ export function CalendarHeader({
         accessibilityLabel={amount === -1 ? '이전 달' : '다음 달'}
         disabled={!enabled}
         onPress={() => navigation.changeMonth(amount)}
-        className={`h-10 w-10 items-center justify-center rounded-xl ${enabled ? 'opacity-100' : 'opacity-30'}`}
+        className={`h-10 w-10 items-center justify-center ios:curve-continuous rounded-xl ${enabled ? 'opacity-100' : 'opacity-30'}`}
       >
         <AppIcon
           name={amount === -1 ? 'chevron-left' : 'chevron-right'}

@@ -25,7 +25,7 @@ export function SoberLongRecords({ records }: { records: SoberStreak[] }) {
       className="flex-row gap-4 py-3 items-center"
     >
       <View
-        className={`w-7 h-7 rounded-full flex items-center justify-center ${RANK_BACKGROUND_CLASSES[index] ?? 'bg-theme-accent/40'}`}
+        className={`w-7 h-7 ios:curve-continuous rounded-full flex items-center justify-center ${RANK_BACKGROUND_CLASSES[index] ?? 'bg-theme-accent/40'}`}
       >
         <Text className={`text-base font-semibold text-theme-surface`}>{index + 1}</Text>
       </View>

@@ -297,7 +297,7 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
             Keyboard.dismiss();
             setPicker('images');
           }}
-          className="shrink-0 min-h-12 flex-row items-center gap-2 rounded-2xl px-2 active:opacity-70"
+          className="shrink-0 min-h-12 flex-row items-center gap-2 ios:curve-continuous rounded-2xl px-2 active:opacity-70"
         >
           <AppIcon name="image" size={iconSizes.md} className="text-theme-accent" />
           <Text className="flex-1 text-base text-theme-text-secondary">사진 {images.length}장</Text>

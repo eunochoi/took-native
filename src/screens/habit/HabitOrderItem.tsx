@@ -21,7 +21,7 @@ export function HabitOrderItem({
 }) {
   const { colors, rem: appRem } = useAppTheme();
   return (
-    <View className="h-16 flex-row items-center gap-3 px-2 py-3 rounded-lg overflow-hidden">
+    <View className="h-16 flex-row items-center gap-3 px-2 py-3 ios:curve-continuous rounded-lg overflow-hidden">
       <View className="w-20">
         <HabitStars priority={habit.priority} size={appRem} />
       </View>

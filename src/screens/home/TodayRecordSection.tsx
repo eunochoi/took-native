@@ -15,14 +15,14 @@ import { useSettings } from '../../settings/SettingsProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { RECORD_SURFACE_CLASS_NAME } from '../../theme/classes';
 
-const recordCardClass = `${RECORD_SURFACE_CLASS_NAME} flex-row items-center gap-3 min-h-12 p-3.5 rounded-2xl active:opacity-70`;
+const recordCardClass = `${RECORD_SURFACE_CLASS_NAME} flex-row items-center gap-3 min-h-12 p-3.5 ios:curve-continuous rounded-2xl active:opacity-70`;
 const recordIconContainerClass = '-ml-1 h-10 w-10 shrink-0 items-center justify-center';
 const recordIconClass = 'text-theme-accent';
 const recordChevronClass = 'text-theme-text-tertiary';
 const recordContentClass = 'flex-1 min-w-0 gap-1';
 const recordTitleClass = 'text-sm leading-4 font-semibold';
 const recordStatusClass = 'text-sm leading-5 text-theme-text-secondary';
-const recordLoadingClass = 'h-4 w-24 rounded-lg bg-theme-skeleton';
+const recordLoadingClass = 'h-4 w-24 ios:curve-continuous rounded-lg bg-theme-skeleton';
 const recordTextStyle = { includeFontPadding: false };
 
 export function TodayRecordSection({ today }: { today: string }) {

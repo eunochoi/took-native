@@ -29,10 +29,10 @@ export function BottomSheetHeader({
           accessibilityRole="button"
           accessibilityLabel="닫기"
           onPress={() => onClose()}
-          className="h-9 w-9 items-center justify-center rounded-full"
+          className="h-9 w-9 items-center justify-center ios:curve-continuous rounded-full"
           hitSlop={4}
         >
-          <View className="h-1 w-8 rounded-full bg-theme-accent" />
+          <View className="h-1 w-8 ios:curve-continuous rounded-full bg-theme-accent" />
         </Pressable>
       )}
       {(title || titleIcon || menuAction) && (

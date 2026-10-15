@@ -45,6 +45,7 @@ module.exports = {
   plugins: [
     plugin(({ addBase, addUtilities }) => {
       addBase({ ':root': { fontSize: `${metrics.fontSizes.normal}px` } });
+      addUtilities({ '.curve-continuous': { '-rn-border-curve': 'continuous' } });
       // Tmoney has Regular (400) and ExtraBold (800); match web font-face selection.
       const weights = [
         'thin',

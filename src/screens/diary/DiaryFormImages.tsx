@@ -27,14 +27,14 @@ function PhotoTile({
 }) {
   const { rem: appRem } = useAppTheme();
   return (
-    <View className="relative h-28 w-24 rounded-2xl overflow-hidden">
+    <View className="relative h-28 w-24 ios:curve-continuous rounded-2xl overflow-hidden">
       <Image
         source={{ uri: image.uri }}
         accessibilityLabel={`첨부 사진 ${index + 1}`}
         className="w-full h-full"
         resizeMode="cover"
       />
-      <View className="absolute bottom-2 left-2 h-6 w-6 items-center justify-center rounded-full bg-black/50">
+      <View className="absolute bottom-2 left-2 h-6 w-6 items-center justify-center ios:curve-continuous rounded-full bg-black/50">
         <Text className="text-xs text-white">{index + 1}</Text>
       </View>
       <Pressable
@@ -43,7 +43,7 @@ function PhotoTile({
         accessibilityLabel={`사진 ${index + 1} 삭제`}
         onPress={onRemove}
         hitSlop={appRem * 0.25}
-        className={`absolute right-2 top-2 h-6 w-6 items-center justify-center rounded-full bg-black/50 ${busy ? 'opacity-40' : 'opacity-100'}`}
+        className={`absolute right-2 top-2 h-6 w-6 items-center justify-center ios:curve-continuous rounded-full bg-black/50 ${busy ? 'opacity-40' : 'opacity-100'}`}
       >
         <AppIcon name="close" size={appRem} color="white" />
       </Pressable>
@@ -64,7 +64,7 @@ function PhotoTile({
               const target = index + (event.nativeEvent.actionName === 'decrement' ? -1 : 1);
               if (target >= 0 && target < count) onReorder(index, target);
             }}
-            className="h-6 w-6 items-center justify-center rounded-full bg-black/50"
+            className="h-6 w-6 items-center justify-center ios:curve-continuous rounded-full bg-black/50"
           >
             <AppIcon name="drag-indicator" size={appRem} color="white" />
           </View>
@@ -135,7 +135,7 @@ export function DiaryFormImages({
             accessibilityLabel="사진 추가"
             disabled={busy || dragging}
             onPress={onPick}
-            className={`h-28 w-24 rounded-2xl border border-dashed border-theme-accent bg-theme-surface/40 items-center justify-center gap-2 ${busy || dragging ? 'opacity-40' : 'opacity-100'}`}
+            className={`h-28 w-24 ios:curve-continuous rounded-2xl border border-dashed border-theme-accent bg-theme-surface/40 items-center justify-center gap-2 ${busy || dragging ? 'opacity-40' : 'opacity-100'}`}
           >
             {picking ? (
               <ActivityIndicator color={colors.accent} />

@@ -6,7 +6,7 @@ import { Text } from '../../components/Text';
 import type { CloseBottomSheet } from '../../hooks/useBottomSheetLifecycle';
 
 const TIME_INPUT_CLASS_NAME =
-  'h-12 w-16 rounded-2xl bg-transparent border border-theme-border text-center text-lg text-theme-text-primary font-normal';
+  'h-12 w-16 ios:curve-continuous rounded-2xl bg-transparent border border-theme-border text-center text-lg text-theme-text-primary font-normal';
 
 export function NotificationTimePicker({
   title,

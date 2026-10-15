@@ -55,7 +55,7 @@ export default function HabitDetail() {
                 today={today}
                 unavailable={records.isPending || records.isError}
               />
-              <View className="rounded-theme p-4 gap-3 bg-theme-accent-light/50">
+              <View className="ios:curve-continuous rounded-theme p-4 gap-3 bg-theme-accent-light/50">
                 <View className="gap-1">
                   <Text className="text-sm leading-5 font-semibold text-theme-accent">
                     실천 가능일

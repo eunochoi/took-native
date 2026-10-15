@@ -16,7 +16,7 @@ export function WidgetPage({ imageWidth }: { imageWidth: number }) {
           앱을 열지 않아도, 기록을 가까이.
         </Text>
       </View>
-      <View className="items-center gap-6 rounded-2xl bg-theme-surface-muted px-4 py-8">
+      <View className="items-center gap-6 ios:curve-continuous rounded-2xl bg-theme-surface-muted px-4 py-8">
         <Image
           source={widgetPreview}
           accessibilityLabel="TOOK 거리두기 홈 화면 위젯 예시"

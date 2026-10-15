@@ -1,4 +1,4 @@
-import { Text as NativeText, View } from 'react-native';
+import { Platform, Text as NativeText, View } from 'react-native';
 import { themeColors } from '../theme/colors';
 
 const defaultColors = themeColors('blue', 'light');
@@ -37,6 +37,7 @@ export function Wordmark({
           width: size * 0.23,
           height: size * 0.23,
           borderRadius: (size * 0.23) / 2,
+          borderCurve: Platform.OS === 'ios' ? 'continuous' : undefined,
           backgroundColor: accentColor,
         }}
       />

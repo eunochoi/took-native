@@ -19,8 +19,8 @@ export function BackupPage({ busy, onConfirm }: { busy: boolean; onConfirm: () =
           앱 삭제나 기기 변경 전에는{'\n'}설정에서 기록을 백업해 주세요.
         </Text>
       </View>
-      <View className="items-center gap-6 rounded-2xl bg-theme-surface-muted p-8">
-        <View className="h-12 w-12 items-center justify-center rounded-full bg-theme-surface">
+      <View className="items-center gap-6 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-8">
+        <View className="h-12 w-12 items-center justify-center ios:curve-continuous rounded-full bg-theme-surface">
           <AppIcon name="save-alt" size={iconSizes.lg} className="text-theme-accent" />
         </View>
         <Text className="text-center text-base font-semibold">백업 파일로 이어가기</Text>

@@ -14,7 +14,7 @@ export function EmptyState({
 }) {
   return (
     <View className={EMPTY_STATE_CLASS_NAME}>
-      <View className="h-14 w-14 items-center justify-center rounded-full bg-theme-accent/10">
+      <View className="h-14 w-14 items-center justify-center ios:curve-continuous rounded-full bg-theme-accent/10">
         {icon}
       </View>
       <View className="gap-1.5">

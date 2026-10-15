@@ -82,7 +82,7 @@ export function SoberMonthCalendar({
                 ]
                   .filter(Boolean)
                   .join(', ')}
-                contentClassName={noRestart ? 'rounded-full bg-theme-calendar-empty' : undefined}
+                contentClassName={noRestart ? 'ios:curve-continuous rounded-full bg-theme-calendar-empty' : undefined}
                 textClassName="font-medium"
               >
                 {goals.length > 0 ? (
@@ -90,7 +90,7 @@ export function SoberMonthCalendar({
                     <AppIcon name="auto-awesome" size={iconSizes.lg} color={colors.achievement} />
                   </View>
                 ) : count > 0 ? (
-                  <View className="w-3/5 aspect-square items-center justify-center rounded-full bg-theme-accent">
+                  <View className="w-3/5 aspect-square items-center justify-center ios:curve-continuous rounded-full bg-theme-accent">
                     <Text className="text-xs font-medium text-theme-text-on-accent">{count}</Text>
                   </View>
                 ) : undefined}

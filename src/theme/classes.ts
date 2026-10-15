@@ -1,7 +1,7 @@
 export const RECORD_SURFACE_CLASS_NAME = 'border border-theme-border/50 bg-theme-surface/70';
 
 export const BADGE_CLASS_NAME =
-  'items-center justify-center rounded-full bg-theme-accent-light/20 border-[1px] border-theme-accent/10';
+  'items-center justify-center ios:curve-continuous rounded-full bg-theme-accent-light/20 border-[1px] border-theme-accent/10';
 export const BADGE_TEXT_CLASS_NAME =
   'text-sm font-semibold text-center leading-tight text-theme-accent-deep';
 

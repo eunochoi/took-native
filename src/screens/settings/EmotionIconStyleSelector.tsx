@@ -32,7 +32,7 @@ export function EmotionIconStyleSelector({
           accessibilityState={{ checked: value === style, disabled }}
           disabled={disabled}
           onPress={() => onChange(style)}
-          className={`flex-1 items-center px-2 rounded-theme ${compact ? 'gap-1 py-2' : 'gap-3 py-6'} ${dimmed ? 'opacity-40' : ''} ${value === style ? `border border-theme-accent ${compact ? 'bg-transparent' : 'bg-theme-accent/10'}` : 'border border-transparent'}`}
+          className={`flex-1 items-center px-2 ios:curve-continuous rounded-theme ${compact ? 'gap-1 py-2' : 'gap-3 py-6'} ${dimmed ? 'opacity-40' : ''} ${value === style ? `border border-theme-accent ${compact ? 'bg-transparent' : 'bg-theme-accent/10'}` : 'border border-transparent'}`}
         >
           <View className="flex-row items-center gap-1">
             <EmotionImage emotion={0} iconStyle={style} size={appRem * 1.75} />

@@ -32,7 +32,7 @@ export function PickerAction({
       accessibilityState={{ disabled, selected }}
       disabled={disabled}
       onPress={onPress}
-      className={`min-h-16 flex-row items-center gap-4 rounded-2xl p-4 active:opacity-70 ${disabled ? 'opacity-40' : 'opacity-100'} bg-transparent border ${selected ? 'border-theme-accent' : 'border-theme-border'}`}
+      className={`min-h-16 flex-row items-center gap-4 ios:curve-continuous rounded-2xl p-4 active:opacity-70 ${disabled ? 'opacity-40' : 'opacity-100'} bg-transparent border ${selected ? 'border-theme-accent' : 'border-theme-border'}`}
     >
       <AppIcon name={icon} size={iconSizes.lg} color={danger ? colors.danger : colors.accent} />
       <View className="flex-1 gap-1">
