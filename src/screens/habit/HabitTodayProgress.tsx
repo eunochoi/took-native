@@ -8,7 +8,7 @@ export function HabitTodayProgress({ done, total }: { done: number; total: numbe
     <View className="gap-4 px-2 mb-8">
       <View className="flex-row items-center justify-between gap-3">
         <View className="gap-1">
-          <Text accessibilityRole="header" className="text-xl font-semibold">
+          <Text accessibilityRole="header" className="text-lg font-semibold">
             오늘의 습관
           </Text>
           <Text className="text-base text-theme-text-tertiary">
