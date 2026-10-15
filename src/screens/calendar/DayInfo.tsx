@@ -1,13 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
 import { ActivityIndicator, View } from 'react-native';
-import { QueryError } from '../../components/QueryError';
+import { EmotionImage } from '../../components/EmotionImage';
 import { useNotice } from '../../components/NoticeProvider';
+import { QueryError } from '../../components/QueryError';
 import { setHabitCompletion, sortHabits } from '../../db/habit';
 import { dayHabits } from '../../domain/calendar';
 import { diaryQueries, habitQueries, useRecordMutation } from '../../queries';
 import { useSettings } from '../../settings/SettingsProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
+import { CalendarHabitProgress } from './CalendarHabitProgress';
 import { DayInfoDiarySection } from './DayInfoDiarySection';
 import { DayInfoHabitSection } from './DayInfoHabitSection';
 
@@ -53,6 +55,19 @@ export function DayInfo({ date, today }: { date: string; today: string }) {
         </View>
       ) : (
         <View className="gap-6">
+          {diary.data && (
+            <View className="w-16 self-center gap-2">
+              <View className="h-16 w-full">
+                <EmotionImage emotion={diary.data.emotion} fill />
+              </View>
+              <View className='px-2'>
+                <CalendarHabitProgress
+                  done={rows.filter((habit) => habit.completed).length}
+                  total={rows.length}
+                />
+              </View>
+            </View>
+          )}
           <DayInfoDiarySection
             key={`diary-${date}`}
             date={date}

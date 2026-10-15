@@ -131,3 +131,51 @@ test('day query failure shows the common error and retries all day queries befor
   h.results.completions = { data: [], isPending: false, isError: false };
   assert(h.render().some((node) => node.type === 'DayInfoHabitSection'));
 });
+
+test('day info shows emotion and exact habit progress before the sections only when a diary exists', () => {
+  const h = harness();
+  h.results.diary = { data: { emotion: 2 }, isPending: false };
+  h.results.habits = {
+    data: [...habits, { ...habits[0], id: 7, initial_started_at: '2026-10-06T00:00:00Z' }],
+    isPending: false,
+  };
+  h.results.completions = {
+    data: [
+      { habit_id: 1, date: '2026-10-05' },
+      { habit_id: 2, date: '2026-10-05' },
+      { habit_id: 3, date: '2026-10-04' },
+    ],
+    isPending: false,
+  };
+  const tree = h.render();
+  const emotion = tree.find((node) => node.type === 'EmotionImage');
+  const progress = tree.find((node) => node.type === 'CalendarHabitProgress');
+  assert.equal(emotion.props.emotion, 2);
+  assert.equal(emotion.props.fill, true);
+  assert.equal(progress.props.done, 2);
+  assert.equal(progress.props.total, 6);
+  assert(tree.indexOf(emotion) < tree.indexOf(progress));
+  assert(tree.indexOf(progress) < tree.findIndex((node) => node.type === 'DayInfoDiarySection'));
+  assert(tree.some((node) => node.props?.className === 'w-16 self-center gap-2'));
+  h.results.completions.data.push({ habit_id: 3, date: '2026-10-05' });
+  assert.equal(h.render().find((node) => node.type === 'CalendarHabitProgress').props.done, 3);
+  h.results.diary.data = null;
+  const withoutDiary = h.render();
+  assert(!withoutDiary.some((node) => ['EmotionImage', 'CalendarHabitProgress'].includes(node.type)));
+  assert(withoutDiary.some((node) => node.type === 'DayInfoHabitSection'));
+});
+
+test('day info waits for all queries and hides the summary on errors while allowing a zero-progress diary', () => {
+  const h = harness();
+  h.results.diary = { data: { emotion: 0 }, isPending: false };
+  assert(!h.render().some((node) => node.type === 'EmotionImage'));
+  h.results.habits = { data: habits, isPending: false };
+  h.results.completions = { data: [], isPending: false };
+  const tree = h.render();
+  assert.equal(tree.find((node) => node.type === 'EmotionImage').props.emotion, 0);
+  assert.equal(tree.find((node) => node.type === 'CalendarHabitProgress').props.done, 0);
+  h.results.completions.isError = true;
+  const failed = h.render();
+  assert(failed.some((node) => node.type === 'QueryError'));
+  assert(!failed.some((node) => ['EmotionImage', 'CalendarHabitProgress'].includes(node.type)));
+});

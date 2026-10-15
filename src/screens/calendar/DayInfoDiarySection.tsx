@@ -3,7 +3,6 @@ import { twMerge } from 'tailwind-merge';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
 import type { DiaryDetail } from '../../db/types';
-import { EMOTIONS } from '../../domain/constants';
 import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { BODY_TEXT_CLASS_NAME } from '../../theme/classes';
@@ -25,7 +24,6 @@ export function DayInfoDiarySection({
   // Three relaxed body lines, the link, spacing, and native font padding.
   const contentHeight = appRem * Math.max(26 / 3, (3 * 1.625 + 1.25) * fontScale + 1.25);
   const galleryHeight = appRem * 8.25 + 6;
-  const emotion = diary ? EMOTIONS[diary.emotion] : undefined;
   const open = () => {
     if (!diary) return;
     openModal(`/diary/${diary.id}`);
@@ -39,14 +37,6 @@ export function DayInfoDiarySection({
         <View className="min-w-0 flex-1 flex-row items-center gap-2">
           <Text accessibilityRole="header" className="text-base font-semibold">
             감정 일기
-            {emotion && (
-              <>
-                {' · '}
-                <Text className="text-base font-semibold" style={{ color: emotion.color }}>
-                  {emotion.name}
-                </Text>
-              </>
-            )}
           </Text>
         </View>
         {diary && <DiaryMenu diary={diary} today={today} />}
