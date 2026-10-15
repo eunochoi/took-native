@@ -1,6 +1,7 @@
 import { View } from 'react-native';
-import { Text } from './Text';
+import { twMerge } from 'tailwind-merge';
 import { BADGE_CLASS_NAME, BADGE_TEXT_CLASS_NAME } from '../theme/classes';
+import { Text } from './Text';
 
 export function Badge({
   children,
@@ -10,8 +11,10 @@ export function Badge({
   className?: string;
 }) {
   return (
-    <View className={`${BADGE_CLASS_NAME} ${className}`}>
-      <Text className={BADGE_TEXT_CLASS_NAME}>{children}</Text>
+    <View className={twMerge(BADGE_CLASS_NAME, className)}>
+      <Text numberOfLines={1} adjustsFontSizeToFit className={BADGE_TEXT_CLASS_NAME}>
+        {children}
+      </Text>
     </View>
   );
 }

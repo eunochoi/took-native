@@ -25,6 +25,7 @@ function load(name: string) {
             ActivityIndicator: 'ActivityIndicator',
             View: 'View',
           };
+        if (dependency === 'tailwind-merge') return require(dependency);
         if (dependency.endsWith('AppThemeProvider'))
           return { useAppTheme: () => ({ iconSizes: { md: 24 }, colors: {} }) };
         if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
@@ -97,8 +98,8 @@ test('badges retain caller sizing and position with shared theme classes', () =>
   const badge = load('Badge');
   const node = badge({ children: 3, className: 'h-6 w-6 absolute -top-1 -right-2' });
   assert.match(node.props.className, /bg-theme-accent-light/);
-  assert.match(node.props.className, /border-\[1px\] border-theme-accent\/30/);
-  assert.match(node.props.className, /rounded-\[50%_45%_55%_50%\/60%_50%_50%_55%\]/);
+  assert.match(node.props.className, /border-\[1px\] border-theme-accent\/10/);
+  assert.match(node.props.className, /rounded-full/);
   assert.match(node.props.className, /h-6 w-6 absolute -top-1 -right-2/);
   assert.equal(node.props.style, undefined);
   assert.equal(node.props.children.type, 'Text');
