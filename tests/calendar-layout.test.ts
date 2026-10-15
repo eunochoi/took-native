@@ -74,7 +74,13 @@ function load(path: string, states: unknown[], date = '2026-09-30') {
         if (name === 'date-fns' || name === 'date-fns/locale') return require(name);
         if (name.endsWith('AppThemeProvider'))
           return {
-            useAppTheme: () => ({ rem: 15, colors: {}, iconSizes: {}, tabContentBottom: 104.5 }),
+            useAppTheme: () => ({
+              rem: 15,
+              colors: {},
+              iconSizes: {},
+              navigationBottom: 20,
+              navigationHeight: 54.5,
+            }),
           };
         if (name.endsWith('/queries'))
           return {
@@ -109,7 +115,7 @@ test('calendar pushes the selected date sheet while preserving the selected mont
   const render = load('app/(tabs)/calendar.tsx', []);
   const tree = render('default');
   assert(!nodes(tree).some((node) => String(node.type).includes('ScrollView')));
-  assert.equal(tree.props.children[1].props.style.paddingBottom, 104.5);
+  assert.equal(tree.props.children[1].props.style.paddingBottom, 89.5);
   tree.props.children[1].props.children.props.onSelect('2026-09-30');
   assert.equal(render.navigations[0].pathname, '/calendar/[date]');
   assert.equal(render.navigations[0].params.date, '2026-09-30');

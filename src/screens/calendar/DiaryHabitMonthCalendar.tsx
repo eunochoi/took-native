@@ -123,7 +123,7 @@ export function DiaryHabitMonthCalendar(props: {
                       </Text>
                     )}
                   </View>
-                  <View className="h-1.5 w-full px-1.5 shrink-0">
+                  <View className="h-1.5 w-full px-2 shrink-0">
                     {count > 0 && progressReady && <CalendarHabitProgress done={count} total={total} />}
                   </View>
                 </View>

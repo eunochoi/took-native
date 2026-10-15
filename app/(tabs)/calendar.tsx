@@ -16,7 +16,7 @@ import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 export default function CalendarScreen() {
   const today = useToday();
   const db = useSQLiteContext();
-  const { tabContentBottom } = useAppTheme();
+  const { navigationBottom, navigationHeight, rem } = useAppTheme();
   const { openModal } = useModalNavigation();
   const [selected, setSelected] = useState(today);
   const [month, setMonth] = useState(today.slice(0, 7));
@@ -32,7 +32,7 @@ export default function CalendarScreen() {
       </PageTopSection>
       <View
         className="flex-1 min-h-0 pt-6"
-        style={{ paddingHorizontal: '5%', paddingBottom: tabContentBottom }}
+        style={{ paddingHorizontal: '5%', paddingBottom: navigationBottom + navigationHeight + rem }}
       >
         <DiaryHabitMonthCalendar
           fillHeight

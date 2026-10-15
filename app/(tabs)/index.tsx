@@ -1,8 +1,7 @@
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useIsFocused } from 'expo-router/react-navigation';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { ColorView } from '../../src/components/ColorTransition';
 import { EmotionImage } from '../../src/components/EmotionImage';
@@ -35,13 +34,6 @@ export default function Home() {
 
   return (
     <ColorView className="flex-1 min-h-0 overflow-hidden bg-theme-accent-light px-[5%] pt-[5%]">
-      <LinearGradient
-        pointerEvents="none"
-        colors={[`${colors.surface}70`, `${colors.accent}00`]}
-        start={{ x: 0, y: 1 }}
-        end={{ x: 0, y: 0 }}
-        style={StyleSheet.absoluteFill}
-      />
       <View className="mb-8 shrink-0 flex-row items-center gap-2">
         <Wordmark size={appRem * 3} color={colors.text} accentColor={colors.accent} />
       </View>
@@ -69,7 +61,9 @@ export default function Home() {
             </Animated.View>
           </View>
         </View>
-        <Text className="text-theme-accent-deep text-base font-semibold">#감정기록 #작은습관 #거리두기</Text>
+        <Text className="text-theme-accent-deep text-base font-semibold">
+          #감정기록 #작은습관 #거리두기
+        </Text>
       </View>
       <View className="shrink-0">
         <TodayRecordSection today={today} />
