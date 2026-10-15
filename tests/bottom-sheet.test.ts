@@ -608,7 +608,8 @@ test('day info uses automatic height with a bounded viewport and scopes surface 
   assert.equal(h.sheet().props.children.props.style.maxHeight, 480);
   const fades = body.props.children[1].props.children;
   assert.equal(fades.length, 2);
-  assert(fades.every((node: any) => node.props.tone === 'surface'));
+  assert.equal(fades[0].props.edge, 'top');
+  assert.equal(fades[1].props.edge, 'bottom');
   assert.equal(fades[1].props.includeBottomInset, false);
   const other = harness();
   other.show();

@@ -90,7 +90,7 @@ function load(
 test('fade visibility preserves hit testing, insets and surface gradient without low-level animation hooks', () => {
   const { ScrollEdgeFade } = load('../src/components/ScrollEdgeFade.tsx', false);
   for (const visible of [false, true]) {
-    const tree = ScrollEdgeFade({ edge: 'bottom', tone: 'surface', visible });
+    const tree = ScrollEdgeFade({ edge: 'bottom', visible });
     assert.equal(tree.props.pointerEvents, 'none');
     assert.equal(tree.props.style.opacity, visible ? 1 : 0);
     assert.equal(tree.props.style.height, 69);

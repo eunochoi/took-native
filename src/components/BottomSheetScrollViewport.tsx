@@ -65,10 +65,9 @@ export function BottomSheetScrollViewport({
       </GestureDetector>
       {scrollFade && (
         <>
-          <ScrollEdgeFade edge="top" tone="surface" visible={fade.topVisible} />
+          <ScrollEdgeFade edge="top" visible={fade.topVisible} />
           <ScrollEdgeFade
             edge="bottom"
-            tone="surface"
             visible={fade.bottomVisible}
             includeBottomInset={false}
           />

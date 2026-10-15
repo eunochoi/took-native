@@ -11,19 +11,15 @@ const locations = [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1] as const;
 export function ScrollEdgeFade({
   edge,
   visible,
-  tone = 'surface',
   includeBottomInset = true,
 }: {
   edge: 'top' | 'bottom';
-  tone?: 'accent-light' | 'surface';
   includeBottomInset?: boolean;
   visible: boolean;
 }) {
   const { colors, rem: appRem, reducedMotion } = useAppTheme();
   const insets = useSafeAreaInsets();
-  const stops = alphas.map(
-    (alpha) => `${tone === 'surface' ? colors.surface : colors.accentLight}${alpha}`,
-  );
+  const stops = alphas.map((alpha) => `${colors.surface}${alpha}`);
   return (
     <Animated.View
       pointerEvents="none"
