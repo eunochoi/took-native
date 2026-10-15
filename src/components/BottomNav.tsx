@@ -26,7 +26,7 @@ export function BottomNav({
   const { navigationHeight, navigationBottom } = useAppTheme();
   const navigationScale = navigationHeight / navigationMetrics.height;
   const backgroundClassName =
-    state.routes[state.index].name === 'index' ? 'bg-theme-surface/70' : 'bg-theme-accent-light/40';
+    state.routes[state.index].name === 'index' ? 'bg-theme-surface/40' : 'bg-theme-accent-light/20';
   const settingRoute = state.routes.find((route) => route.name === 'setting');
   const settingSelected = state.routes[state.index].key === settingRoute?.key;
   return (
