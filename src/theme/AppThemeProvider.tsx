@@ -29,11 +29,16 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
     () => themeColors(settings.themeAccent, mode),
     [settings.themeAccent, mode],
   );
-  const navigationHeight = tokens.metrics.navigation.height;
+  const navigationHeight =
+    Platform.OS === 'android'
+      ? tokens.metrics.navigation.androidHeight
+      : tokens.metrics.navigation.height;
+  const navigationBottomGap =
+    tokens.metrics.navigation.bottomGap * (navigationHeight / tokens.metrics.navigation.height);
   const navigationBottom =
     Platform.OS === 'ios'
-      ? Math.max(insets.bottom, tokens.metrics.navigation.bottomGap)
-      : insets.bottom + tokens.metrics.navigation.bottomGap;
+      ? Math.max(insets.bottom, navigationBottomGap)
+      : insets.bottom + navigationBottomGap;
   const theme = useMemo(
     () => ({
       colors,

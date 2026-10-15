@@ -135,13 +135,13 @@ test('tab footer clears the floating navigation for every font size and bottom s
         const shell = exports.AppThemeProvider({ children: null });
         const height = shell.props.value.tabContentBottom;
         const rootSize = tokens.metrics.fontSizes[fontSize];
-        const navHeight = 64;
+        const navHeight = platform === 'android' ? 58 : 64;
         assert.equal(
           shell.props.value.navigationHeight,
           navHeight,
           'font size must not resize navigation',
         );
-        const navBottom = platform === 'ios' ? Math.max(bottom, 15) : bottom + 15;
+        const navBottom = platform === 'ios' ? Math.max(bottom, 15) : bottom + 15 * (58 / 64);
         assert.equal(shell.props.value.navigationBottom, navBottom);
         const navTopFromBottom = navBottom + navHeight;
         assert(

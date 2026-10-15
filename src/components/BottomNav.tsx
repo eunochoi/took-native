@@ -24,6 +24,7 @@ export function BottomNav({
   blurTargetReady,
 }: BottomNavProps & { blurTarget: RefObject<View | null>; blurTargetReady: boolean }) {
   const { navigationHeight, navigationBottom } = useAppTheme();
+  const navigationScale = navigationHeight / navigationMetrics.height;
   const backgroundClassName =
     state.routes[state.index].name === 'index' ? 'bg-theme-surface/70' : 'bg-theme-accent-light/40';
   const settingRoute = state.routes.find((route) => route.name === 'setting');
@@ -39,7 +40,7 @@ export function BottomNav({
         accessibilityRole="tablist"
         accessibilityLabel="주요 메뉴"
         className="self-center flex-row items-center"
-        style={{ gap: navigationMetrics.groupGap }}
+        style={{ gap: navigationMetrics.groupGap * navigationScale }}
       >
         <View
           className={`ios:curve-continuous rounded-full ${backgroundClassName} shadow-lg ios:shadow-theme-overlay/20`}
@@ -48,8 +49,8 @@ export function BottomNav({
             className="flex-row items-center overflow-hidden ios:curve-continuous rounded-full border border-theme-accent/15"
             style={{
               height: navigationHeight,
-              gap: navigationMetrics.itemGap,
-              paddingHorizontal: navigationMetrics.horizontalPadding,
+              gap: Platform.OS === 'android' ? 0 : navigationMetrics.itemGap * navigationScale,
+              paddingHorizontal: navigationMetrics.horizontalPadding * navigationScale,
             }}
           >
             {blurTargetReady && (
@@ -86,22 +87,22 @@ export function BottomNav({
                   hitSlop={{ top: 4, bottom: 4 }}
                   className="items-center justify-center ios:curve-continuous rounded-full"
                   style={{
-                    height: navigationMetrics.buttonSize,
-                    width: navigationMetrics.itemWidth,
+                    height: navigationMetrics.buttonSize * navigationScale,
+                    width: navigationMetrics.itemWidth * navigationScale,
                   }}
                 >
                   <View
                     className={`items-center justify-center overflow-hidden ${selected ? 'bg-theme-accent' : 'bg-transparent'}`}
                     style={{
-                      height: navigationMetrics.buttonSize,
-                      width: navigationMetrics.buttonSize,
-                      borderRadius: navigationMetrics.buttonSize / 2,
+                      height: navigationMetrics.buttonSize * navigationScale,
+                      width: navigationMetrics.buttonSize * navigationScale,
+                      borderRadius: (navigationMetrics.buttonSize * navigationScale) / 2,
                       borderCurve: Platform.OS === 'ios' ? 'continuous' : undefined,
                     }}
                   >
                     <AppIcon
                       name={item.icon}
-                      size={navigationMetrics.iconSize}
+                      size={navigationMetrics.iconSize * navigationScale}
                       className={selected ? 'text-theme-text-on-accent' : 'text-theme-accent/80'}
                     />
                   </View>
@@ -151,7 +152,7 @@ export function BottomNav({
               >
                 <AppIcon
                   name="settings"
-                  size={navigationMetrics.iconSize}
+                  size={navigationMetrics.iconSize * navigationScale}
                   className={settingSelected ? 'text-theme-text-on-accent' : 'text-theme-accent/80'}
                 />
               </Pressable>
