@@ -1,5 +1,4 @@
-import { Pressable, View, useWindowDimensions } from 'react-native';
-import { twMerge } from 'tailwind-merge';
+import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
 import type { DiaryDetail } from '../../db/types';
@@ -20,19 +19,12 @@ export function DayInfoDiarySection({
 }) {
   const { colors, rem: appRem } = useAppTheme();
   const { openModal } = useModalNavigation();
-  const { fontScale } = useWindowDimensions();
-  // Three relaxed body lines, the link, spacing, and native font padding.
-  const contentHeight = appRem * Math.max(26 / 3, (3 * 1.625 + 1.25) * fontScale + 1.25);
-  const galleryHeight = appRem * 8.25 + 6;
   const open = () => {
     if (!diary) return;
     openModal(`/diary/${diary.id}`);
   };
   return (
-    <View
-      className="shrink-0 px-1 pb-1"
-      style={{ height: Math.max(contentHeight, galleryHeight) + appRem * 5 }}
-    >
+    <View className="shrink-0 px-1 pb-1">
       <View className="h-12 flex-row items-center justify-between gap-2 py-2">
         <View className="min-w-0 flex-1 flex-row items-center gap-2">
           <Text accessibilityRole="header" className="text-base font-semibold">
@@ -41,34 +33,38 @@ export function DayInfoDiarySection({
         </View>
         {diary && <DiaryMenu diary={diary} today={today} />}
       </View>
-      <View className="flex-1 min-h-0 py-3 px-2">
+      <View className="py-3 px-2">
         {diary ? (
-          <View className="h-full flex-row items-center gap-3">
-            {diary.images.length > 0 && (
-              <View className="w-28 shrink-0">
-                <DiaryGallery key={diary.id} images={diary.images} square onPress={open} />
-              </View>
-            )}
+          <View className="gap-3">
+            <View className="flex-row items-start gap-3">
+              {diary.images.length > 0 && (
+                <View className="w-28 shrink-0">
+                  <DiaryGallery key={diary.id} images={diary.images} square onPress={open} />
+                </View>
+              )}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="일기 전체 보기"
+                onPress={open}
+                className="flex-1 min-w-0"
+              >
+                <Text numberOfLines={4} className={BODY_TEXT_CLASS_NAME}>
+                  {diary.text}
+                </Text>
+              </Pressable>
+            </View>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="일기 전체 보기"
               onPress={open}
-              className={twMerge(
-                'h-full flex-1 min-w-0 gap-3',
-                diary.images.length > 0 ? 'justify-evenly' : 'justify-between',
-              )}
+              className="min-h-9 flex-row items-center self-end"
             >
-              <Text numberOfLines={3} className={BODY_TEXT_CLASS_NAME}>
-                {diary.text}
-              </Text>
-              <View className="flex-row items-center self-end">
-                <Text className="text-sm text-theme-accent">일기 전체 보기</Text>
-                <AppIcon name="chevron-right" size={appRem * 1.125} color={colors.accent} />
-              </View>
+              <Text className="text-sm text-theme-accent">일기 전체 보기</Text>
+              <AppIcon name="chevron-right" size={appRem * 1.125} color={colors.accent} />
             </Pressable>
           </View>
         ) : (
-          <View className="h-full items-center justify-center px-2">
+          <View className="min-h-32 items-center justify-center px-2">
             <Text className="mt-1 text-sm text-theme-text-tertiary">
               아직 작성한 일기가 없어요.
             </Text>
