@@ -17,6 +17,10 @@ if (version === current) {
   throw new Error(`Version is already ${current}. Choose a new version.`);
 }
 const versionCode = app.expo.android.versionCode + 1;
+if (!/^\d+$/.test(app.expo.ios.buildNumber)) {
+  throw new Error('Use an integer iOS buildNumber.');
+}
+const buildNumber = String(Number(app.expo.ios.buildNumber) + 1);
 
 // Prepare every file before writing, so an unexpected native layout leaves versions untouched.
 const files = new Map();
@@ -43,10 +47,41 @@ if (fs.existsSync(stringsPath)) {
     strings.replace(runtime, (_, start, end) => `${start}${version}${end}`),
   );
 }
+const iosPath = path.join(root, 'ios');
+if (fs.existsSync(iosPath)) {
+  for (const entry of fs.readdirSync(iosPath, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const infoPath = path.join(iosPath, entry.name, 'Info.plist');
+    if (!fs.existsSync(infoPath)) continue;
+    let info = fs.readFileSync(infoPath, 'utf8');
+    for (const [key, value] of [
+      ['CFBundleShortVersionString', version],
+      ['CFBundleVersion', buildNumber],
+    ]) {
+      const field = new RegExp(`(<key>${key}</key>\\s*<string>)[^<]*(</string>)`);
+      if (!field.test(info)) throw new Error(`Cannot find iOS ${key}.`);
+      info = info.replace(field, (_, start, end) => `${start}${value}${end}`);
+    }
+    files.set(infoPath, info);
+    const expoPath = path.join(iosPath, entry.name, 'Supporting/Expo.plist');
+    if (fs.existsSync(expoPath)) {
+      const expo = fs.readFileSync(expoPath, 'utf8');
+      const runtime = /(<key>EXUpdatesRuntimeVersion<\/key>\s*<string>)[^<]*(<\/string>)/;
+      if (!runtime.test(expo)) throw new Error('Cannot find iOS OTA runtime version.');
+      files.set(
+        expoPath,
+        expo.replace(runtime, (_, start, end) => `${start}${version}${end}`),
+      );
+    }
+  }
+}
 app.expo.version = version;
 app.expo.android.versionCode = versionCode;
+app.expo.ios.buildNumber = buildNumber;
 pkg.version = version;
 files.set(appPath, JSON.stringify(app, null, 2) + '\n');
 files.set(packagePath, JSON.stringify(pkg, null, 2) + '\n');
 for (const [file, content] of files) fs.writeFileSync(file, content);
-console.log(`${current} → ${version} (Android versionCode ${versionCode})`);
+console.log(
+  `${current} → ${version} (Android versionCode ${versionCode}, iOS buildNumber ${buildNumber})`,
+);
