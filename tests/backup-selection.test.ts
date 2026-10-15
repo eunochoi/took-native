@@ -13,6 +13,7 @@ function selection(
     reportedSizes?: number[];
     wait?: Promise<void>;
     failAt?: number;
+    platform?: 'android' | 'ios';
   } = {},
 ) {
   const originals = (options.sizes ?? [100, 200]).map((size, index) => ({
@@ -23,6 +24,7 @@ function selection(
   const copies: string[] = [];
   const deleted: string[] = [];
   let pickerOptions: any;
+  let initialDirectory: string | undefined;
   class File {
     uri: string;
     constructor(...parts: string[]) {
@@ -53,7 +55,18 @@ function selection(
     {
       exports,
       require: (name: string) => {
-        if (name === 'expo-file-system') return { File, Paths: { cache: 'file://project/cache' } };
+        if (name === 'react-native') return { Platform: { OS: options.platform ?? 'android' } };
+        if (name === 'expo-file-system')
+          return {
+            File,
+            Paths: { cache: 'file://project/cache' },
+            Directory: {
+              pickDirectoryAsync: async (uri?: string) => {
+                initialDirectory = uri;
+                throw new Error('cancel');
+              },
+            },
+          };
         if (name === 'expo-document-picker')
           return {
             getDocumentAsync: async (value: any) => {
@@ -72,8 +85,30 @@ function selection(
       },
     },
   );
-  return { exports, originals, files, copies, deleted, pickerOptions: () => pickerOptions };
+  return {
+    exports,
+    originals,
+    files,
+    copies,
+    deleted,
+    pickerOptions: () => pickerOptions,
+    initialDirectory: () => initialDirectory,
+  };
 }
+
+test('backup export preserves the Android Documents hint and lets iOS choose its own folder', async () => {
+  for (const platform of ['android', 'ios'] as const) {
+    const value = selection({ platform });
+    assert.equal(await value.exports.exportBackup({}, 'device'), false);
+    assert.equal(
+      value.initialDirectory(),
+      platform === 'android'
+        ? 'content://com.android.externalstorage.documents/document/primary%3ADocuments'
+        : undefined,
+    );
+    assert.deepEqual(value.deleted, []);
+  }
+});
 
 test('backup selection waits for all copies in the project cache and preserves original ZIPs', async () => {
   let finish!: () => void;
@@ -105,6 +140,15 @@ test('failed selection removes completed and partial copies while preserving ori
   await assert.rejects(value.exports.chooseBackup(), /copy failed/);
   assert.deepEqual(value.deleted, value.copies);
   assert(value.originals.every((file) => value.files.has(file.uri)));
+});
+
+test('iOS backup selection downloads provider documents before reading and copying', async () => {
+  const value = selection({ platform: 'ios' });
+  const uris = await value.exports.chooseBackup();
+  assert.equal(value.pickerOptions().copyToCacheDirectory, true);
+  assert.equal(value.pickerOptions().multiple, true);
+  assert.equal(uris.length, 2);
+  assert.equal(value.copies.length, 2);
 });
 
 test('backup selection rejects excessive counts and sizes without deleting originals', async () => {

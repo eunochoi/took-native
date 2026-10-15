@@ -2,6 +2,7 @@ import { Directory, File, Paths } from 'expo-file-system';
 import { deserializeDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
+import { Platform } from 'react-native';
 import { withMaintenance } from '../db';
 import { mediaFile } from '../media';
 import { MAX_BACKUP_BYTES, MAX_BACKUP_FILES } from './format';
@@ -33,7 +34,9 @@ export async function exportBackup(db: SQLiteDatabase, destination: 'device' | '
   if (destination === 'device') {
     try {
       directory = await Directory.pickDirectoryAsync(
-        'content://com.android.externalstorage.documents/document/primary%3ADocuments',
+        Platform.OS === 'android'
+          ? 'content://com.android.externalstorage.documents/document/primary%3ADocuments'
+          : undefined,
       );
     } catch (error) {
       if (String(error).includes('cancel') || String(error).includes('dismiss')) return false;
@@ -173,8 +176,9 @@ export function discardBackupSelection(uris: string[]) {
 export async function chooseBackup(): Promise<string[] | null> {
   const result = await DocumentPicker.getDocumentAsync({
     type: ['application/zip', 'application/octet-stream', 'application/x-zip-compressed'],
+    // iCloud documents must finish downloading into readable app storage on iOS.
     // Android's picker cache is outside the project's scoped cache in Expo Go.
-    copyToCacheDirectory: false,
+    copyToCacheDirectory: Platform.OS === 'ios',
     multiple: true,
   });
   if (result.canceled) return null;
