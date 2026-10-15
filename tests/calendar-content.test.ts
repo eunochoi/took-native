@@ -25,7 +25,14 @@ function evaluate(
       require: (name: string) => {
         if (name in mocks) return mocks[name];
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
-        if (name === 'react') return { useMemo: (factory: Function) => factory() };
+        if (name === 'react')
+          return {
+            useMemo: (factory: Function) => factory(),
+            useRef: (current: unknown) => ({ current }),
+            createRef: () => ({ current: null }),
+            useState: (initial: any) => [typeof initial === 'function' ? initial() : initial, () => {}],
+          };
+        if (name === 'expo-blur') return { BlurTargetView: 'BlurTargetView' };
         if (name === 'react-native') return { Pressable: 'Pressable', View: 'View' };
         if (name === 'date-fns' || name === 'tailwind-merge') return require(name);
         if (name.endsWith('theme/AppThemeProvider'))
@@ -58,6 +65,52 @@ const cell = (tree: any, date: string) =>
   nodes(tree).find((node) => node.type === 'CalendarDay' && node.props.date === date);
 
 const day = { date: '2026-10-07', month: '2026-10', today: '2026-10-07', onSelect: () => {} };
+
+test('calendar habit bar shows exact percentages including one percent and hides only zero', () => {
+  const { CalendarHabitProgress } = load('src/screens/calendar/CalendarHabitProgress.tsx');
+  for (const [done, total] of [[0, 4], [0, 0], [1, 0], [-1, 4], [NaN, 4]])
+    assert.equal(CalendarHabitProgress({ done, total }), null);
+  for (const [done, total] of [[1, 100], [1, 5], [1, 6], [1, 3], [3, 4], [99, 100], [4, 4]]) {
+    const tree = CalendarHabitProgress({ done, total });
+    const percent = done / total * 100;
+    assert.equal(tree.props.className, 'h-1.5 w-full shrink-0 overflow-hidden rounded-full bg-theme-border-muted');
+    assert.equal(tree.props.accessibilityRole, 'progressbar');
+    assert.equal(tree.props.accessibilityValue.now, percent);
+    assert.equal(tree.props.accessibilityValue.text, `${done}/${total}개 완료`);
+    assert.equal(tree.props.children.props.className, 'h-full rounded-full bg-theme-accent/70');
+    assert.equal(tree.props.children.props.style.width, `${percent}%`);
+    assert(!nodes(tree).some((node) => ['Svg', 'Path', 'Circle'].includes(node.type)));
+  }
+  assert.equal(CalendarHabitProgress({ done: 5, total: 4 }).props.children.props.style.width, '100%');
+});
+
+test('calendar hides progress while the habit denominator is loading or failed and exposes a retry', () => {
+  let isError = false;
+  let retries = 0;
+  const { DiaryHabitMonthCalendar } = load('src/screens/calendar/DiaryHabitMonthCalendar.tsx', {
+    'expo-sqlite': { useSQLiteContext: () => ({}) },
+    '../../queries': {
+      diaryQueries: { month: () => 'diary' },
+      habitQueries: { list: () => 'habits', completions: () => 'habit' },
+    },
+    '@tanstack/react-query': {
+      useQuery: (kind: string) => ({
+        data: kind === 'habits' ? undefined : kind === 'diary' ? [] : [{ date: day.date }],
+        isError: kind === 'habits' && isError,
+        refetch: () => { if (kind === 'habits') retries++; },
+      }),
+    },
+  });
+  const props = { month: day.month, today: day.today, selected: day.date, onMonthChange: () => {}, onSelect: () => {} };
+  const loading = DiaryHabitMonthCalendar(props);
+  assert(!nodes(loading).some((node) => node.type === 'CalendarHabitProgress'));
+  assert(!nodes(cell(loading, day.date)).some((node) => node.type === 'EmotionImage'));
+  isError = true;
+  const failed = DiaryHabitMonthCalendar(props);
+  assert(!nodes(failed).some((node) => node.type === 'CalendarHabitProgress'));
+  nodes(failed).find((node) => node.type === 'QueryError').props.onRetry();
+  assert.equal(retries, 1);
+});
 
 test('date cell owns weekday color, outside-month dimming and optional today/selection indicators', () => {
   const tree = CalendarDay({ ...day, selected: day.date });
@@ -132,20 +185,25 @@ test('today and selection use one identical bottom dot, including when both are 
     assert(!nodes(hidden).some((node) => node.props.className?.includes('absolute -bottom-0.5')));
   }
 });
+
 test('diary calendar owns decorations and future-date limits while using the default date cell', () => {
   const selected: string[] = [];
   const { DiaryHabitMonthCalendar } = load('src/screens/calendar/DiaryHabitMonthCalendar.tsx', {
     'expo-sqlite': { useSQLiteContext: () => ({}) },
     '../../queries': {
       diaryQueries: { month: () => 'diary' },
-      habitQueries: { completions: () => 'habit' },
+      habitQueries: { list: () => 'habits', completions: () => 'habit' },
     },
     '@tanstack/react-query': {
       useQuery: (kind: string) => ({
         data:
           kind === 'diary'
             ? [{ date: day.date, emotion: 0, created_at: '2026-10-07T00:00:00Z' }]
-            : [{ date: day.date }, { date: day.date }, { date: '2026-10-06' }],
+            : kind === 'habits'
+              ? ['2026-10-01', '2026-10-01', '2026-10-01', '2026-10-07', '2026-10-08'].map(
+                  (date) => ({ initial_started_at: `${date}T00:00:00Z` }),
+                )
+              : [{ date: day.date }, { date: day.date }, { date: '2026-10-06' }],
       }),
     },
   });
@@ -162,6 +220,7 @@ test('diary calendar owns decorations and future-date limits while using the def
   assert.equal(cells.length, calendarDays(day.month).length);
   assert(!nodes(tree).some((node) => node.type === 'CalendarFrame'));
   for (const item of cells) {
+    assert.equal(item.props.showSelectedIndicator, false);
     assert.equal(item.props.disabled, item.props.date > day.today);
     assert.equal(item.props.dimmed, item.props.date > day.today);
     CalendarDay(item.props).props.onPress();
@@ -170,15 +229,43 @@ test('diary calendar owns decorations and future-date limits while using the def
   assert(selected.every((date) => date <= day.today));
   const content = nodes(cell(tree, day.date));
   assert.equal(content.find((node) => node.type === 'EmotionImage').props.fill, true);
-  const badge = content.find((node) => node.type === 'Badge');
-  assert.equal(badge.props.children, 2);
-  assert.equal(badge.props.className, 'h-auto w-auto py-0.5 px-1.5 absolute -top-1 -right-1');
+  assert.equal(content.find((node) => node.type === 'EmotionImage').props.emotion, 0);
+  const progress = content.find((node) => node.type === 'CalendarHabitProgress');
+  assert.equal(progress.props.done, 2);
+  assert.equal(progress.props.total, 4);
+  assert(!content.some((node) => node.type === 'Badge' || node.type === 'BlurTargetView'));
+  assert.match(cell(tree, day.date).props.label, /습관 2\/4개 완료/);
+  const decoration = cell(tree, day.date).props.children;
+  const [artwork, progressSlot] = decoration.props.children;
+  assert.equal(artwork.props.className, 'w-full flex-1 min-h-0 items-center justify-center');
+  assert.match(progressSlot.props.className, /h-1.5 w-full/);
+  assert.match(progressSlot.props.className, /shrink-0/);
+  assert.equal(progressSlot.props.children, progress);
   assert.equal(
     cell(tree, '2026-10-06').props.children.props.className,
-    'items-center justify-center scale-[1.2]',
+    'items-center w-full flex-1 min-h-0 gap-1 pb-2',
   );
+  const habitOnly = cell(tree, '2026-10-06');
+  const selectedHabitOnly = CalendarDay({ ...habitOnly.props, selected: '2026-10-06' });
+  assert.equal(selectedHabitOnly.props.accessibilityState.selected, true);
+  assert(!nodes(selectedHabitOnly).some((node) => node.props.className?.includes('absolute -bottom-0.5')));
+  const todayCell = CalendarDay(cell(tree, day.today).props);
+  assert.equal(nodes(todayCell).filter((node) => node.props.className?.includes('absolute -bottom-0.5')).length, 1);
+  assert(!nodes(habitOnly).some((node) => node.type === 'EmotionImage'));
+  const dateLabel = nodes(habitOnly).find((node) => node.type === 'Text');
+  assert.equal(dateLabel.props.children, 6);
+  assert.equal(dateLabel.props.className,
+    nodes(CalendarDay({ ...day, date: '2026-10-06' })).find((node) => node.type === 'Text').props.className);
+  assert.equal(habitOnly.props.children.props.className, decoration.props.className);
+  assert.equal(habitOnly.props.children.props.children[0].props.className, artwork.props.className);
+  assert.equal(habitOnly.props.children.props.children[1].props.className, progressSlot.props.className);
+  const emptyProgress = nodes(habitOnly).find((node) => node.type === 'CalendarHabitProgress');
+  assert.equal(emptyProgress.props.done, 1);
+  assert.equal(emptyProgress.props.total, 3);
+  assert.match(habitOnly.props.label, /일기 없음/);
   assert.equal(cell(tree, '2026-10-05').props.children, undefined);
   assert.equal(cell(tree, '2026-09-30').props.children, undefined);
+
 });
 
 test('habit calendar colors completed and empty history without enabling record changes', () => {
@@ -425,17 +512,17 @@ test('habit detail only queries completion records and exposes no write action t
   assert.equal(stats.props.unavailable, false);
 });
 
-test('calendar replaces style-changing decoration roots while retaining the date cell identity', () => {
+test('calendar preserves date cell identity and decoration sizing across record changes', () => {
   let diaries: any[] = [];
   let completions: any[] = [];
   const { DiaryHabitMonthCalendar } = load('src/screens/calendar/DiaryHabitMonthCalendar.tsx', {
     'expo-sqlite': { useSQLiteContext: () => ({}) },
     '../../queries': {
       diaryQueries: { month: () => 'diary' },
-      habitQueries: { completions: () => 'habit' },
+      habitQueries: { list: () => 'habits', completions: () => 'habit' },
     },
     '@tanstack/react-query': {
-      useQuery: (kind: string) => ({ data: kind === 'diary' ? diaries : completions }),
+      useQuery: (kind: string) => ({ data: kind === 'diary' ? diaries : kind === 'habits' ? [] : completions }),
     },
   });
   const render = () => {
@@ -456,11 +543,14 @@ test('calendar replaces style-changing decoration roots while retaining the date
   completions = [{ date: day.date }];
   const habitOnly = render();
   assert.equal(habitOnly.key, 'habit-decoration');
-  assert(habitOnly.props.className.includes('scale-[1.2]'));
+  assert.equal(habitOnly.props.className, 'items-center w-full flex-1 min-h-0 gap-1 pb-2');
+  assert(!nodes(habitOnly).some((node) => node.type === 'EmotionImage'));
   diaries = [{ date: day.date, emotion: 0, created_at: `${day.date}T00:00:00Z` }];
   const diaryAndHabit = render();
   assert.equal(diaryAndHabit.key, 'diary-decoration');
   assert.notEqual(diaryAndHabit.key, habitOnly.key);
+  assert.equal(diaryAndHabit.props.className, habitOnly.props.className);
+  assert.equal(nodes(diaryAndHabit).find((node) => node.type === 'EmotionImage').props.emotion, 0);
   completions = [];
   assert.equal(render().key, 'diary-decoration');
   completions = [{ date: day.date }];
@@ -477,7 +567,7 @@ test('diary calendar adjacent dates change month without opening day info', () =
     'expo-sqlite': { useSQLiteContext: () => ({}) },
     '../../queries': {
       diaryQueries: { month: () => 'diary' },
-      habitQueries: { completions: () => 'habit' },
+      habitQueries: { list: () => 'habits', completions: () => 'habit' },
     },
     '@tanstack/react-query': { useQuery: () => ({ data: [] }) },
   });

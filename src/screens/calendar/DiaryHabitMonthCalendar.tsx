@@ -1,17 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
+import { getDay, parseISO } from 'date-fns';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo } from 'react';
 import { View } from 'react-native';
-import { Badge } from '../../components/Badge';
 import { EmotionImage } from '../../components/EmotionImage';
 import { QueryError } from '../../components/QueryError';
+import { Text } from '../../components/Text';
 import { calendarDays } from '../../domain/calendar';
 import { EMOTIONS } from '../../domain/constants';
+import { localDate } from '../../domain/date';
 import { useCalendarNavigation } from '../../hooks/useCalendarNavigation';
 import { useMonthSwipe } from '../../hooks/useMonthSwipe';
 import { diaryQueries, habitQueries } from '../../queries';
 import { CalendarDay } from './CalendarDay';
 import { CalendarGrid } from './CalendarGrid';
+import { CalendarHabitProgress } from './CalendarHabitProgress';
 import { CalendarHeader } from './CalendarHeader';
 
 export function DiaryHabitMonthCalendar(props: {
@@ -27,6 +30,7 @@ export function DiaryHabitMonthCalendar(props: {
   const swipe = useMonthSwipe(navigation.changeMonth);
   const db = useSQLiteContext();
   const diaries = useQuery(diaryQueries.month(db, props.month));
+  const habits = useQuery(habitQueries.list(db));
   const completions = useQuery(
     habitQueries.completions(db, `${props.month}-01`, `${props.month}-31`),
   );
@@ -40,15 +44,20 @@ export function DiaryHabitMonthCalendar(props: {
       result.set(record.date, (result.get(record.date) ?? 0) + 1);
     return result;
   }, [completions.data]);
+  const habitStartDates = useMemo(
+    () => (habits.data ?? []).map((habit) => localDate(habit.initial_started_at)),
+    [habits.data],
+  );
   return (
     <View className={props.fillHeight ? 'flex-1 min-h-0 gap-2' : 'gap-2'}>
-      {(diaries.isError || completions.isError) && (
+      {(diaries.isError || completions.isError || habits.isError) && (
         <QueryError
           className="flex-row gap-2"
           message="월 기록을 불러오지 못했어요."
           onRetry={() => {
             void diaries.refetch();
             void completions.refetch();
+            void habits.refetch();
           }}
         />
       )}
@@ -69,8 +78,11 @@ export function DiaryHabitMonthCalendar(props: {
           const outside = date.slice(0, 7) !== props.month;
           const diary = outside ? undefined : diaryByDate.get(date);
           const count = outside ? 0 : (counts.get(date) ?? 0);
+          const total = outside ? 0 : habitStartDates.filter((start) => start <= date).length;
+          const progressReady = habits.data !== undefined && !habits.isError && !completions.isError;
           const hasDecoration = diary !== undefined || count > 0;
-          const rotation = -10 + ((diary ? new Date(diary.created_at).getTime() % 10 : 0) * 20) / 9;
+          const rotation = diary ? -10 + ((new Date(diary.created_at).getTime() % 10) * 20) / 9 : 0;
+          const weekday = getDay(parseISO(date));
           return (
             <CalendarDay
               key={date}
@@ -86,8 +98,8 @@ export function DiaryHabitMonthCalendar(props: {
               onMonthChange={navigation.changeToMonth}
               label={[
                 date,
-                diary ? `일기 있음, ${EMOTIONS[diary.emotion]?.name}` : '',
-                count ? `습관 ${count}개 완료` : '',
+                diary ? `일기 있음, ${EMOTIONS[diary.emotion]?.name}` : count > 0 ? '일기 없음' : '',
+                count ? `습관 ${progressReady ? `${count}/${total}` : count}개 완료` : '',
               ]
                 .filter(Boolean)
                 .join(', ')}
@@ -95,21 +107,25 @@ export function DiaryHabitMonthCalendar(props: {
               {hasDecoration ? (
                 <View
                   key={diary ? 'diary-decoration' : 'habit-decoration'}
-                  className={`items-center justify-center ${diary ? 'w-full h-4/5' : 'scale-[1.2]'}`}
+                  className="items-center w-full flex-1 min-h-0 gap-1 pb-2"
                 >
-                  {diary && (
-                    <View
-                      className="w-full h-full"
-                      style={{ transform: [{ rotate: `${rotation}deg` }] }}
-                    >
+                  <View
+                    className="w-full flex-1 min-h-0 items-center justify-center"
+                    style={{ transform: [{ rotate: `${rotation}deg` }] }}
+                  >
+                    {diary ? (
                       <EmotionImage emotion={diary.emotion} fill />
-                    </View>
-                  )}
-                  {count > 0 && (
-                    <Badge className={`h-auto w-auto py-0.5 px-1.5 ${diary ? 'absolute -top-1 -right-1' : ''}`}>
-                      {count}
-                    </Badge>
-                  )}
+                    ) : (
+                      <Text
+                        className={`text-xs ${weekday === 6 ? 'text-theme-calendar-saturday' : weekday === 0 ? 'text-theme-calendar-sunday' : 'text-theme-text-secondary'}`}
+                      >
+                        {Number(date.slice(-2))}
+                      </Text>
+                    )}
+                  </View>
+                  <View className="h-1.5 w-full px-1.5 shrink-0">
+                    {count > 0 && progressReady && <CalendarHabitProgress done={count} total={total} />}
+                  </View>
                 </View>
               ) : undefined}
             </CalendarDay>
