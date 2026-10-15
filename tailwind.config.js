@@ -25,7 +25,7 @@ module.exports = {
       spacing: {
         'screen-content-bottom': 'var(--screen-content-bottom)',
       },
-      borderRadius: { theme: `${metrics.radius}px` },
+      borderRadius: { theme: `${metrics.radius}px`, '4xl': '2rem' },
       fontSize: { app: '1rem' },
       colors: { theme: themeColors },
       fontFamily: {
