@@ -63,11 +63,9 @@ test('date cell owns weekday color, outside-month dimming and optional today/sel
   const tree = CalendarDay({ ...day, selected: day.date });
   assert.equal(tree.props.accessibilityState.selected, true);
   assert.match(tree.props.accessibilityLabel, /오늘/);
-  assert.equal(nodes(tree).filter((node) => node.props.className?.includes('h-1.5 w-4')).length, 1);
-  assert.match(
-    nodes(tree).find((node) => node.type === 'Text').props.className,
-    /bg-theme-accent text-theme-text-on-accent w-7 h-7 leading-7 text-center rounded-full/,
-  );
+  assert.equal(nodes(tree).filter((node) => node.props.className?.includes('h-1.5 w-1.5')).length, 1);
+  assert.equal(nodes(tree).find((node) => node.props.className?.includes('absolute -bottom-0.5')).props.className,
+    'absolute -bottom-0.5 h-1.5 w-1.5 rounded-full bg-theme-accent/70');
   const hidden = CalendarDay({
     ...day,
     selected: day.date,
@@ -111,6 +109,29 @@ test('date cell guards disabled presses and handles adjacent-month navigation wi
   assert.deepEqual(selected, [day.date]);
 });
 
+test('today and selection use one identical bottom dot, including when both are active', () => {
+  for (const props of [
+    { ...day },
+    { ...day, today: '2026-10-08', selected: day.date },
+    { ...day, selected: day.date },
+  ]) {
+    const tree = CalendarDay(props);
+    const markers = nodes(tree).filter((node) => node.props.className?.includes('absolute -bottom-0.5'));
+    assert.equal(markers.length, 1);
+    assert.equal(markers[0].props.className, 'absolute -bottom-0.5 h-1.5 w-1.5 rounded-full bg-theme-accent/70');
+    assert.match(tree.props.className, /relative/);
+    assert(!nodes(tree).some((node) => node.props.className?.includes('top-')));
+    assert(!nodes(tree).find((node) => node.type === 'Text').props.className.includes('rounded-full'));
+  }
+  for (const props of [
+    { month: '2026-09' },
+    { showTodayIndicator: false, showSelectedIndicator: false },
+    { today: '2026-10-08', selected: '2026-10-06' },
+  ]) {
+    const hidden = CalendarDay({ ...day, selected: day.date, ...props });
+    assert(!nodes(hidden).some((node) => node.props.className?.includes('absolute -bottom-0.5')));
+  }
+});
 test('diary calendar owns decorations and future-date limits while using the default date cell', () => {
   const selected: string[] = [];
   const { DiaryHabitMonthCalendar } = load('src/screens/calendar/DiaryHabitMonthCalendar.tsx', {
@@ -283,10 +304,8 @@ test('date picker owns its min/future range and default selection indicator', ()
     '2026-10-07',
   ]);
   const rendered = CalendarDay(cell(tree, '2026-10-05').props);
-  assert.match(
-    nodes(rendered).find((node) => node.type === 'Text').props.className,
-    /bg-theme-accent text-theme-text-on-accent w-7 h-7 leading-7 text-center rounded-full/,
-  );
+  assert.equal(nodes(rendered).find((node) => node.props.className?.includes('absolute -bottom-0.5')).props.className,
+    'absolute -bottom-0.5 h-1.5 w-1.5 rounded-full bg-theme-accent/70');
 });
 
 test('day detail falls back to today for a direct future-date route', () => {

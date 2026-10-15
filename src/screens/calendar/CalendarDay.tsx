@@ -57,7 +57,7 @@ export function CalendarDay({
         else onSelect?.(date);
       }}
       className={twMerge(
-        'flex-1 items-center justify-center rounded-lg',
+        'relative flex-1 items-center justify-center rounded-lg',
         fillHeight ? 'min-h-0' : 'aspect-[1/1.25]',
         dimmed || outside ? 'opacity-30' : 'opacity-100',
         className,
@@ -72,18 +72,14 @@ export function CalendarDay({
             className={twMerge(
               `text-xs ${weekday === 6 ? 'text-theme-calendar-saturday' : weekday === 0 ? 'text-theme-calendar-sunday' : 'text-theme-text-secondary'}`,
               textClassName,
-              showSelectedIndicator &&
-                isSelected &&
-                !outside &&
-                'bg-theme-accent text-theme-text-on-accent w-7 h-7 leading-7 text-center rounded-full',
             )}
           >
             {Number(date.slice(-2))}
           </Text>
         </View>
       )}
-      {showTodayIndicator && isToday && !outside && (
-        <View className="absolute -bottom-[3px] h-1.5 w-4 rounded-full bg-theme-accent" />
+      {!outside && ((showTodayIndicator && isToday) || (showSelectedIndicator && isSelected)) && (
+        <View className="absolute -bottom-0.5 h-1.5 w-1.5 rounded-full bg-theme-accent/70" />
       )}
     </Pressable>
   );
