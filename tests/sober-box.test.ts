@@ -103,7 +103,7 @@ for (const [label, record, events, elapsed] of [
     const percentage = nodes.find(
       (node) =>
         node.type === 'Text' &&
-        node.props.className === 'text-3xl font-bold text-theme-text-primary',
+        node.props.className === 'text-2xl font-bold text-theme-text-primary',
     );
     assert.equal(percentage.props.children, `${Number(expected.progress.toFixed(1))}%`);
     assert.equal(percentage.props.style, undefined);

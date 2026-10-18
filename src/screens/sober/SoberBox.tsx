@@ -74,7 +74,8 @@ export function SoberBox({
           <Text
             numberOfLines={1}
             adjustsFontSizeToFit
-            className="text-3xl font-bold text-theme-text-primary">
+            className="text-2xl font-bold text-theme-text-primary"
+          >
             {`${Number(progress.toFixed(1))}%`}
           </Text>
           <Text className="text-sm text-theme-text-secondary">
