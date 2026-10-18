@@ -45,7 +45,7 @@ export function SoberLongRecords({ records }: { records: SoberStreak[] }) {
       <Text accessibilityRole="header" className="text-xl font-semibold">
         상위 기록
       </Text>
-      <View className="px-2 gap-4">
+      <View className="px-1 gap-4">
         <View>
           {records.slice(0, expanded ? 20 : 5).map(renderRecord)}
           {records.length > 5 && (

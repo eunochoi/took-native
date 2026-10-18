@@ -86,7 +86,7 @@ export function DayInfoHabitSection({
             </View>
           ))}
       </View>
-      <View className="px-2 pt-3">
+      <View className="px-1 pt-3">
         {habits.length ? (
           <View className="min-h-56 gap-2">
             {!editable && (

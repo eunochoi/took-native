@@ -49,7 +49,7 @@ export function SoberMonthCalendar({
       <Text accessibilityRole="header" className="text-xl font-semibold">
         월간 기록
       </Text>
-      <View className="px-2 gap-4">
+      <View className="px-1 gap-4">
         <CalendarHeader month={month} today={today} navigation={navigation} />
         <CalendarGrid {...swipe.panHandlers} accessibilityLabel={`${month} 거리두기 기록 달력`}>
           {days.map((date) => {

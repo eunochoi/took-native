@@ -23,7 +23,7 @@ export function DiaryListSkeleton() {
             </View>
             <View className="h-5 w-1 ios:curve-continuous rounded-full bg-theme-skeleton" />
           </View>
-          <View className="p-2">
+          <View className="py-2 px-1">
             {[0, 1, 2].map((line) => (
               <View key={line} className="h-7 justify-center">
                 <View

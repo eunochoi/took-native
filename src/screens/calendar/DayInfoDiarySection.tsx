@@ -33,7 +33,7 @@ export function DayInfoDiarySection({
         </View>
         {diary && <DiaryMenu diary={diary} today={today} />}
       </View>
-      <View className="py-3 px-2">
+      <View className="py-3 px-1">
         {diary ? (
           <View className="gap-3">
             <View className="flex-row items-start gap-3">

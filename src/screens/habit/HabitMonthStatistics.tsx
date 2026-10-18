@@ -47,7 +47,7 @@ export function HabitMonthStatistics({
         ]}
         unavailable={unavailable}
       />
-      <View className="px-2">
+      <View className="px-1">
         <CalendarHeader month={month} today={today} navigation={navigation} />
         <CalendarGrid {...swipe.panHandlers} accessibilityLabel={`${month} 습관 실천 달력`}>
           {days.map((date) => {

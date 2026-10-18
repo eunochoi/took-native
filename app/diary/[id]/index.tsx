@@ -54,7 +54,7 @@ export default function DiaryDetail() {
                 </View>
               </View>
               {diary.completedHabits.length > 0 && (
-                <View className="flex-row flex-wrap gap-x-4 gap-y-2 px-2">
+                <View className="flex-row flex-wrap gap-x-4 gap-y-2 px-1">
                   {diary.completedHabits.map((habit) => (
                     <View
                       key={habit.id}
@@ -73,7 +73,7 @@ export default function DiaryDetail() {
                   ))}
                 </View>
               )}
-              <Text className="p-2 text-base leading-[1.9]">{diary.text}</Text>
+              <Text className="py-2 px-1 text-base leading-[1.9]">{diary.text}</Text>
             </View>
             {diary.images.length > 0 && (
               <View>

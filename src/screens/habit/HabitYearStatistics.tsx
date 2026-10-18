@@ -35,7 +35,7 @@ export function HabitYearStatistics({
         ]}
         unavailable={unavailable}
       />
-      <View className="px-2 gap-4">
+      <View className="px-1 gap-4">
         <HabitYearHeader
           year={year}
           startedDate={startedDate}

@@ -101,7 +101,7 @@ export default function SoberDetail() {
             <Text accessibilityRole="header" className="text-xl font-semibold">
               나의 다짐
             </Text>
-            <Text className="px-2 text-base text-theme-text-secondary">{sober.description}</Text>
+            <Text className="px-1 text-base text-theme-text-secondary">{sober.description}</Text>
           </View>
         )}
         <SoberMonthCalendar

@@ -54,7 +54,7 @@ export function DiaryCard({
           <DiaryMenu diary={diary} today={today} />
         </View>
       </View>
-      <View className="p-2 gap-3">
+      <View className="py-2 px-1 gap-3">
         {diary.images.length > 0 && (
           <DiaryGallery
             key={diary.images.map((image) => image.file_name).join(',')}

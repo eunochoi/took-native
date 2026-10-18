@@ -18,7 +18,7 @@ export function WidgetAppearanceFields({
     <>
       <View className="gap-3">
         <Text className="text-xl font-semibold">강조 색상</Text>
-        <View className="flex-row items-center justify-between gap-2 px-2">
+        <View className="flex-row items-center justify-between gap-2 px-1">
           {ACCENT_KEYS.map((accent) => (
             <Pressable
               key={accent}

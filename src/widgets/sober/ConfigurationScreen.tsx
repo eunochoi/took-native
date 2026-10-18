@@ -142,7 +142,7 @@ function ConfigurationContent({
                 onPress={() => setPicker(true)}
               />
               {!records.length && (
-                <Text className="px-2 text-base text-theme-text-secondary">
+                <Text className="px-1 text-base text-theme-text-secondary">
                   앱에서 거리두기를 먼저 추가해주세요.
                 </Text>
               )}
