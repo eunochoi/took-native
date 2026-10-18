@@ -24,6 +24,7 @@ const APP_ICONS = {
   settings: { family: 'material', name: 'settings' },
   edit: { family: 'material', name: 'edit' },
   check: { family: 'material', name: 'check' },
+  statistics: { family: 'material', name: 'bar-chart' },
   'arrow-forward': { family: 'material', name: 'arrow-forward' },
   'open-in-new': { family: 'material', name: 'open-in-new' },
   'drag-indicator': { family: 'material', name: 'drag-indicator' },

@@ -1,27 +1,89 @@
+import { format, parseISO } from 'date-fns';
+import { ko } from 'date-fns/locale';
 import { View } from 'react-native';
-import { ProgressBar } from '../../components/ProgressBar';
+import { PROGRESS_TRACK_CLASS_NAME, PROGRESS_FILL_CLASS_NAME } from '../../theme/classes';
+import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
+import type { Completion, Habit } from '../../db/types';
+import { localDate, shiftDate } from '../../domain/date';
+import { useAppTheme } from '../../theme/AppThemeProvider';
 
-export function HabitTodayProgress({ done, total }: { done: number; total: number }) {
-  const rate = total ? Math.round((done / total) * 100) : 0;
+export function HabitTodayProgress({
+  today,
+  habits,
+  records,
+}: {
+  today: string;
+  habits: Pick<Habit, 'id' | 'initial_started_at'>[];
+  records: Pick<Completion, 'habit_id' | 'date'>[];
+}) {
+  const { colors, rem: appRem } = useAppTheme();
+  const days = Array.from({ length: 4 }, (_, index) => {
+    const date = shiftDate(today, -index);
+    const eligible = habits.filter((habit) => localDate(habit.initial_started_at) <= date);
+    const completedIds = new Set(
+      records.filter((record) => record.date === date).map((record) => record.habit_id),
+    );
+    const completed = eligible.filter((habit) => completedIds.has(habit.id)).length;
+    const percent = eligible.length ? (completed / eligible.length) * 100 : 0;
+    return { date, total: eligible.length, completed, percent };
+  });
+  const eligibleDays = days.filter((day) => day.total > 0);
+  const average = eligibleDays.length
+    ? Math.round(eligibleDays.reduce((sum, day) => sum + day.percent, 0) / eligibleDays.length)
+    : 0;
   return (
-    <View className="gap-4 px-2 mb-8">
-      <View className="flex-row items-center justify-between gap-3">
-        <View className="gap-1">
-          <Text accessibilityRole="header" className="text-lg font-semibold">
-            오늘의 습관
-          </Text>
-          <Text className="text-base text-theme-text-tertiary">
-            {total}개 중 {done}개 완료
+    <View className="flex-1 gap-4 bg-theme-surface px-2 py-4">
+      <View>
+        <View className="items-center gap-2 mb-2">
+          <View
+            className="items-center justify-center"
+            style={{ width: appRem * 1.875, height: appRem * 1.875 }}
+          >
+            <AppIcon name="statistics" size={appRem * 1.875} color={colors.accent} />
+          </View>
+          <Text
+            accessibilityRole="header"
+            numberOfLines={1}
+            className="w-full text-base text-center font-semibold"
+          >
+            습관 흐름
           </Text>
         </View>
-        <Text className="text-4xl font-semibold text-theme-accent">{rate}%</Text>
+        <Text className="h-5 text-sm leading-5 text-center text-theme-text-secondary">
+          최근 4일
+        </Text>
       </View>
-      <ProgressBar
-        value={rate}
-        accessibilityLabel="오늘의 습관"
-        accessibilityValueText={`${done}/${total} 완료`}
-      />
+      <View className="flex-row justify-around">
+        {days.map(({ date, total, completed, percent }) => {
+          return (
+            <View
+              key={date}
+              accessible
+              accessibilityRole="image"
+              accessibilityLabel={`${date}${date === today ? ', 오늘' : ''}, ${total ? `${total}개 중 ${completed}개 완료, ${Math.round(percent)}%` : '시작한 습관 없음'}`}
+              className="flex-1 min-w-0 items-center gap-1 px-1"
+            >
+              <Text className="h-5 text-sm leading-5 text-theme-text-secondary">
+                {date === today ? '오늘' : format(parseISO(date), 'eee', { locale: ko })}
+              </Text>
+              <View className={`h-12 w-4/5 justify-end rounded-lg ${PROGRESS_TRACK_CLASS_NAME}`}>
+                {total ? (
+                  <View
+                    className={`w-full ${PROGRESS_FILL_CLASS_NAME}`}
+                    style={{ height: `${percent}%` }}
+                  />
+                ) : (
+                  <Text className="text-sm text-center text-theme-text-disabled">–</Text>
+                )}
+              </View>
+            </View>
+          );
+        })}
+      </View>
+      <View className="mt-auto min-h-9 ios:curve-continuous rounded-xl px-3 py-1.5 items-center justify-center bg-theme-surface-muted border border-theme-text-secondary/5">
+        <Text className="text-sm text-theme-text-secondary">{`평균 완료율 ${average}%`}</Text>
+      </View>
     </View>
   );
 }

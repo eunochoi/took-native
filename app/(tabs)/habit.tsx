@@ -2,6 +2,7 @@ import { selectionSummary } from '../../src/domain/selection';
 import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { PageTopSection } from '../../src/components/PageTopSection';
 import { AppIcon } from '../../src/components/AppIcon';
+import { Text } from '../../src/components/Text';
 import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 import { EmptyState } from '../../src/components/EmptyState';
 import { ColorView } from '../../src/components/ColorTransition';
@@ -9,7 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { QueryError } from '../../src/components/QueryError';
 import { useNotice } from '../../src/components/NoticeProvider';
 import { RecordSortPicker } from '../../src/components/RecordSortPicker';
@@ -98,7 +99,6 @@ export default function HabitList() {
       .filter(Boolean)
       .join(' · ') || '필터';
   const ready = !!list.data && !!completions.data;
-  const done = (completions.data ?? []).filter((item) => item.date === today).length;
   const change = (values: Parameters<typeof updateSettings>[0]) => {
     void updateSettings(values)
       .then(() => scroll.current?.scrollTo({ y: 0, animated: true }))
@@ -107,7 +107,15 @@ export default function HabitList() {
       );
   };
   const failed = list.isError || completions.isError;
-  const gridItems = ready ? [...filtered, ...(filtered.length % 2 ? [null] : [])] : [];
+  const gridEntries =
+    ready && sorted.length > 0
+      ? [
+          'progress' as const,
+          ...filtered,
+          ...(sorted.length < MAX_HABIT_COUNT ? ['add' as const] : []),
+        ]
+      : [];
+  const gridItems = [...gridEntries, ...(gridEntries.length % 2 ? [null] : [])];
   const emptyContent = failed ? (
     <QueryError
       className="min-h-64"
@@ -170,17 +178,37 @@ export default function HabitList() {
           </Toolbar>
         </PageTopSection>
         <View className="pt-8" style={{ paddingHorizontal: '5%' }}>
-          {ready && sorted.length > 0 && <HabitTodayProgress done={done} total={sorted.length} />}
           {gridItems.length === 0 ? (
             emptyContent
           ) : (
             <View className="flex-row flex-wrap">
               {gridItems.map((item, index) => (
                 <View
-                  key={item?.id ?? 'empty'}
+                  key={typeof item === 'string' ? item : (item?.id ?? 'empty')}
                   className={`w-1/2 border-theme-border/50 ${index < gridItems.length - 2 ? 'border-b' : 'border-b-0'} ${index % 2 === 0 ? 'border-r' : 'border-r-0'}`}
                 >
-                  {item && (
+                  {item === 'progress' ? (
+                    <HabitTodayProgress
+                      today={today}
+                      habits={sorted}
+                      records={completions.data ?? []}
+                    />
+                  ) : item === 'add' ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="습관 추가"
+                      disabled={failed}
+                      onPress={() => {
+                        if (!failed && sorted.length < MAX_HABIT_COUNT) openModal('/habit/new');
+                      }}
+                      className={`flex-1 min-h-56 items-center justify-center gap-2 bg-theme-surface px-2 py-4 active:opacity-65 ${failed ? 'opacity-40' : ''}`}
+                    >
+                      <AppIcon name="add" size={appRem * 2} color={colors.accent} />
+                      <Text className="text-xs text-center text-theme-text-tertiary">
+                        ({sorted.length}/{MAX_HABIT_COUNT})
+                      </Text>
+                    </Pressable>
+                  ) : item ? (
                     <HabitBox
                       habit={item}
                       today={today}
@@ -188,11 +216,12 @@ export default function HabitList() {
                       disabled={pendingIds.has(item.id) || failed}
                       onToggle={toggle}
                     />
-                  )}
+                  ) : null}
                 </View>
               ))}
             </View>
           )}
+          {gridItems.length > 0 && filtered.length === 0 && emptyContent}
           {ready && failed && (
             <QueryError
               className="pt-4"

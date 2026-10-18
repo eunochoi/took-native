@@ -42,7 +42,12 @@ export function HabitBox({
             onPress={() => openModal(`/habit/${habit.id}`)}
             className="items-center gap-2"
           >
-            <HabitIcon name={habit.icon_key} colorKey={habit.icon_color} size={appRem * 1.875} />
+            <View
+              className="items-center justify-center"
+              style={{ width: appRem * 1.875, height: appRem * 1.875 }}
+            >
+              <HabitIcon name={habit.icon_key} colorKey={habit.icon_color} size={appRem * 1.875} />
+            </View>
             <Text numberOfLines={1} className="w-full text-base text-center font-semibold">
               {habit.name}
             </Text>
@@ -51,7 +56,9 @@ export function HabitBox({
             <HabitMenu habit={habit} />
           </View>
         </View>
-        <HabitStars priority={habit.priority} color={habitColor} className='self-center' />
+        <View className="h-5 items-center justify-center">
+          <HabitStars priority={habit.priority} color={habitColor} size={appRem} />
+        </View>
       </View>
       <View className="flex-row justify-around">
         {Array.from({ length: 4 }, (_, i) => shiftDate(today, -i)).map((date) => {
@@ -65,14 +72,16 @@ export function HabitBox({
               accessibilityState={{ checked: completed, disabled: locked }}
               disabled={locked}
               onPress={() => onToggle(habit.id, date, !completed)}
-              className={`items-center gap-1 ${locked ? 'opacity-40' : 'opacity-100'}`}
+              className={`flex-1 min-w-0 items-center gap-1 ${locked ? 'opacity-40' : 'opacity-100'}`}
             >
-              <Text className="text-sm text-theme-text-secondary">
-                {format(parseISO(date), 'eee', { locale: ko })}
+              <Text className="h-5 text-sm leading-5 text-theme-text-secondary">
+                {date === today ? '오늘' : format(parseISO(date), 'eee', { locale: ko })}
               </Text>
-              <Text className="text-sm text-theme-text-secondary">{Number(date.slice(-2))}</Text>
+              <Text className="h-5 text-sm leading-5 text-theme-text-secondary">
+                {Number(date.slice(-2))}
+              </Text>
               <View
-                className="mt-1 h-5 w-5 items-center justify-center ios:curve-continuous rounded-md border-[1.5px] bg-theme-surface"
+                className="mt-1 h-5 w-5 items-center justify-center ios:curve-continuous rounded-md border-[1px] bg-theme-surface"
                 style={{
                   borderColor: `${habitColor}${completed ? 'BF' : '99'}`,
                   ...(completed && { backgroundColor: `${habitColor}BF` }),
@@ -88,7 +97,7 @@ export function HabitBox({
         accessibilityRole="button"
         disabled={disabled || done || !canCheckHabit(today, startedDate, today)}
         onPress={() => onToggle(habit.id, today, true)}
-        className={`mt-auto min-h-10 ios:curve-continuous rounded-xl px-3 py-2 flex-row items-center justify-center gap-2 bg-theme-surface-muted border-[1px] border-theme-text-secondary/5`}
+        className={`mt-auto min-h-9 ios:curve-continuous rounded-xl px-3 py-1.5 flex-row items-center justify-center gap-2 bg-theme-surface-muted border-[1px] border-theme-text-secondary/5`}
       >
         {done && <AppIcon name="check" size={iconSizes.sm} color={colors.textSecondary} />}
         <Text className={`text-sm text-theme-text-secondary`}>
