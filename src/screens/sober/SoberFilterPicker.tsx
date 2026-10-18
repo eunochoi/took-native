@@ -1,5 +1,8 @@
+import { PICKER_DESCRIPTION_CLASS_NAME } from '../../theme/classes';
 import { useState } from 'react';
 import { Switch, View } from 'react-native';
+import { BottomSheetModal } from '../../components/BottomSheetModal';
+import { FormPickerRow } from '../../components/FormPickerRow';
 import { FilterSheet } from '../../components/FilterSheet';
 import { PickerOption } from '../../components/PickerOption';
 import { Text } from '../../components/Text';
@@ -28,11 +31,14 @@ export function SoberFilterPicker({
   onClose: () => void;
   onApply: (filter: SoberFilter) => void;
 }) {
-  const { colors } = useAppTheme();
+  const { colors, rem } = useAppTheme();
   const [draft, setDraft] = useState(filter);
+  const [periodOpen, setPeriodOpen] = useState(false);
   return (
     <FilterSheet
       title="거리두기 필터"
+      resetInHeader
+      contentBottomPadding={rem * 1.5}
       onClose={onClose}
       onReset={() => setDraft(DEFAULT_SOBER_FILTER)}
       onApply={() => onApply(draft)}
@@ -48,31 +54,46 @@ export function SoberFilterPicker({
             thumbColor={colors.surface}
           />
         </View>
-        <View className="gap-3">
-          <Text className="text-base font-semibold">현재 기록</Text>
-          <View className="gap-3">
-            {[0, 2, 4].map((offset) => (
-              <View key={offset} className="flex-row gap-3">
-                {SOBER_RECORD_FILTERS.slice(offset, offset + 2).map((option) => (
-                  <View key={option.days} className="flex-1">
-                    <PickerOption
-                      compact
-                      selected={draft.minimumDays === option.days}
-                      accessibilityLabel={`현재 기록 ${option.label}`}
-                      onPress={() => setDraft({ ...draft, minimumDays: option.days })}
+        <View className="gap-4">
+          <Text className="text-base font-semibold">최소 유지 기간</Text>
+          <FormPickerRow
+            label={SOBER_RECORD_FILTERS.find((option) => option.days === draft.minimumDays)!.label}
+            accessibilityLabel="최소 유지 기간 선택"
+            disabled={false}
+            onPress={() => setPeriodOpen(true)}
+          />
+        </View>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.85}
+          className={PICKER_DESCRIPTION_CLASS_NAME}
+        >
+          현재 기록이 선택한 기간 이상인 항목만 보여요.
+        </Text>
+        {periodOpen && (
+          <BottomSheetModal visible title="최소 유지 기간" onClose={() => setPeriodOpen(false)}>
+            {(close) => (
+              <View className="gap-3">
+                {SOBER_RECORD_FILTERS.map((option) => (
+                  <PickerOption
+                    key={option.days}
+                    compact
+                    selected={draft.minimumDays === option.days}
+                    accessibilityLabel={`현재 기록 ${option.label}`}
+                    onPress={() => close(() => setDraft({ ...draft, minimumDays: option.days }))}
+                  >
+                    <Text
+                      className={`text-base ${draft.minimumDays === option.days ? 'text-theme-accent' : ''}`}
                     >
-                      <Text
-                        className={`text-base ${draft.minimumDays === option.days ? 'text-theme-accent' : ''}`}
-                      >
-                        {option.label}
-                      </Text>
-                    </PickerOption>
-                  </View>
+                      {option.label}
+                    </Text>
+                  </PickerOption>
                 ))}
               </View>
-            ))}
-          </View>
-        </View>
+            )}
+          </BottomSheetModal>
+        )}
       </>
     </FilterSheet>
   );

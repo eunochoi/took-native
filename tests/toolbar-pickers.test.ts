@@ -342,8 +342,12 @@ test('all filters keep reset in the header and apply in the footer', () => {
   assert(!diary.content.some((node) => node.type === 'EmotionImage'));
   assert(choices.every((node) => node.props.compact));
   for (const ui of [
-    filterPicker(),
-    picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', { filter: { completedOnly: false, priorities: [] } }),
+    picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
+      filter: { completedOnly: false, priorities: [] },
+    }),
+    picker('src/screens/sober/SoberFilterPicker.tsx', 'SoberFilterPicker', {
+      filter: { priorityOnly: false, minimumDays: 0 },
+    }),
   ]) {
     const view = ui.render();
     assert(
@@ -539,18 +543,13 @@ test('sober filters draft importance and one minimum period, with cancel and res
   const ui = picker('src/screens/sober/SoberFilterPicker.tsx', 'SoberFilterPicker', {
     filter: { priorityOnly: false, minimumDays: 0 },
   });
-  assert.equal(
-    ui.render().content.find((node) => node.type === 'PickerOption').props.accessibilityLabel,
-    '현재 기록 전체',
-  );
+  assert(!ui.render().content.some((node) => node.type === 'PickerOption'));
   ui.press('중요한 항목만 보기');
+  ui.press('최소 유지 기간 선택');
   ui.press('현재 기록 1주 이상');
+  ui.press('최소 유지 기간 선택');
   ui.press('현재 기록 2주 이상');
-  assert.equal(
-    ui.render().content.filter((node) => node.type === 'PickerOption' && node.props.selected)
-      .length,
-    1,
-  );
+  assert(!ui.render().content.some((node) => node.type === 'PickerOption'));
   ui.press('적용하기');
   assert.equal(ui.applied.length, 0);
   ui.finish();
@@ -604,6 +603,7 @@ test('sober filter supports a three-month threshold through the shared footer', 
   const ui = picker('src/screens/sober/SoberFilterPicker.tsx', 'SoberFilterPicker', {
     filter: { priorityOnly: false, minimumDays: 0 },
   });
+  ui.press('최소 유지 기간 선택');
   ui.press('현재 기록 3개월 이상');
   ui.press('적용하기');
   assert.equal(ui.applied.length, 0);
@@ -612,7 +612,6 @@ test('sober filter supports a three-month threshold through the shared footer', 
     [{ priorityOnly: false, minimumDays: 90 }],
   ]);
 });
-
 
 test('diary checkbox selections combine, toggle off independently and preserve canonical order', () => {
   const ui = filterPicker();
@@ -647,7 +646,6 @@ test('diary checkbox selections combine, toggle off independently and preserve c
   assert.deepEqual(reopened.applied, [[null, [], []]]);
 });
 
-
 test('picker checkbox accessibility announces checked state without changing ordinary options', () => {
   for (const selected of [false, true]) {
     const checkbox = picker('src/components/PickerOption.tsx', 'PickerOption', {
@@ -665,7 +663,6 @@ test('picker checkbox accessibility announces checked state without changing ord
     assert.equal(option.props.accessibilityState.selected, selected);
   }
 });
-
 
 test('all checked diary categories summarize as all while retaining checked cards', () => {
   const ui = filterPicker();
@@ -691,6 +688,19 @@ test('all checked diary categories summarize as all while retaining checked card
   );
 });
 
+test('all checked habit priorities summarize as all and can be deselected individually', () => {
+  const ui = picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
+    filter: { completedOnly: false, priorities: [] },
+  });
+  for (const label of ['별표 1개', '별표 2개', '별표 3개']) ui.press(label);
+  assert(
+    ui.render().content.some((node) => node.type === 'Text' && node.props.children === '전체'),
+  );
+  ui.press('별표 2개');
+  ui.press('적용하기');
+  ui.finish();
+  assert.deepEqual(ui.applied, [[{ completedOnly: false, priorities: [2, 0] }]]);
+});
 
 test('emotion icon style cards share checked and unchecked appearance and remain single selection', () => {
   let changed = '';
@@ -708,6 +718,10 @@ test('emotion icon style cards share checked and unchecked appearance and remain
   assert.equal(changed, 'basic');
 });
 
+function chooseDiaryYear(ui: ReturnType<typeof picker>, year: number | null) {
+  ui.press('연도 선택');
+  ui.press(year === null ? '전체 연도' : `${year}년`);
+}
 
 test('diary year picker retains all-years for empty, loading and failed queries', () => {
   for (const yearsQuery of [
@@ -739,7 +753,6 @@ test('diary year picker retains all-years for empty, loading and failed queries'
   }
 });
 
-
 test('a removed diary year becomes all years on the next filter application without changing other filters', () => {
   const ui = filterPicker({
     year: 2025,
@@ -756,24 +769,3 @@ test('a removed diary year becomes all years on the next filter application with
   ui.finish();
   assert.deepEqual(ui.applied, [[null, ['summer'], ['neutral']]]);
 });
-
-
-test('all checked habit priorities summarize as all and can be deselected individually', () => {
-  const ui = picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
-    filter: { completedOnly: false, priorities: [] },
-  });
-  for (const label of ['별표 1개', '별표 2개', '별표 3개']) ui.press(label);
-  assert(
-    ui.render().content.some((node) => node.type === 'Text' && node.props.children === '전체'),
-  );
-  ui.press('별표 2개');
-  ui.press('적용하기');
-  ui.finish();
-  assert.deepEqual(ui.applied, [[{ completedOnly: false, priorities: [2, 0] }]]);
-});
-
-
-function chooseDiaryYear(ui: ReturnType<typeof picker>, year: number | null) {
-  ui.press('연도 선택');
-  ui.press(year === null ? '전체 연도' : `${year}년`);
-}
