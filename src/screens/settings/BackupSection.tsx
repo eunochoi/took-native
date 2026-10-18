@@ -45,30 +45,40 @@ export function BackupSection({
             </Text>
           </View>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ disabled: activity !== null, busy: activity === 'export' }}
-          disabled={activity !== null}
-          onPress={onExport}
-          className={`min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-full bg-theme-accent px-5 ${activity !== null ? 'opacity-40' : 'opacity-100'}`}
-        >
-          {activity === 'export' && <ActivityIndicator color={colors.textOnAccent} />}
-          <Text className="text-base text-theme-text-on-accent">
-            {activity === 'export' ? '백업 준비 중…' : '백업하기'}
-          </Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ disabled: activity !== null, busy: activity === 'restore' }}
-          disabled={activity !== null}
-          onPress={onRestore}
-          className={`min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-full bg-theme-accent/10 px-5 ${activity !== null ? 'opacity-40' : 'opacity-100'}`}
-        >
-          {activity === 'restore' && <ActivityIndicator color={colors.accent} />}
-          <Text className="text-base text-theme-accent">
-            {activity === 'restore' ? '복원 준비 중…' : '백업 파일에서 복원하기'}
-          </Text>
-        </Pressable>
+        <View className="flex-row gap-3">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: activity !== null, busy: activity === 'export' }}
+            disabled={activity !== null}
+            onPress={onExport}
+            className={`flex-1 min-w-0 min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-full bg-theme-accent px-3 ${activity !== null ? 'opacity-40' : 'opacity-100'}`}
+          >
+            {activity === 'export' && <ActivityIndicator color={colors.textOnAccent} />}
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              className="min-w-0 shrink text-base text-theme-text-on-accent"
+            >
+              {activity === 'export' ? '백업 준비 중…' : '백업하기'}
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: activity !== null, busy: activity === 'restore' }}
+            disabled={activity !== null}
+            onPress={onRestore}
+            className={`flex-1 min-w-0 min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-full bg-theme-accent/10 px-3 ${activity !== null ? 'opacity-40' : 'opacity-100'}`}
+          >
+            {activity === 'restore' && <ActivityIndicator color={colors.accent} />}
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              className="min-w-0 shrink text-base text-theme-accent"
+            >
+              {activity === 'restore' ? '복원 준비 중…' : '복원하기'}
+            </Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
