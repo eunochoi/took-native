@@ -20,7 +20,7 @@ export function DiaryGallery(props: DiaryGalleryProps) {
         accessibilityRole="button"
         accessibilityLabel="사진 1 일기 상세보기"
         onPress={onPress}
-        className={`w-full ${square ? 'aspect-square ios:curve-continuous rounded-xl border-2 border-theme-border-muted' : 'aspect-[4/3] ios:curve-continuous rounded-lg'} overflow-hidden`}
+        className={`w-full ${square ? 'aspect-square ios:curve-continuous rounded-xl border border-theme-border-muted' : 'aspect-[4/3] ios:curve-continuous rounded-lg'} overflow-hidden`}
       >
         <Image
           source={{ uri: mediaUri(images[0].file_name) }}
@@ -92,9 +92,9 @@ function DiaryGalleryPages({ images, detail = false, square = false, onPress }: 
               style={{ width, height }}
               className={
                 detail
-                  ? 'ios:curve-continuous rounded-theme overflow-hidden bg-black/75 border-2 border-theme-border-muted'
+                  ? 'ios:curve-continuous rounded-theme overflow-hidden bg-black/75 border border-theme-border-muted'
                   : square
-                    ? 'ios:curve-continuous rounded-xl overflow-hidden border-2 border-theme-border-muted'
+                    ? 'ios:curve-continuous rounded-xl overflow-hidden border border-theme-border-muted'
                     : 'ios:curve-continuous rounded-lg overflow-hidden'
               }
             >

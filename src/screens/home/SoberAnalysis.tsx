@@ -64,7 +64,7 @@ export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts:
                 onPress={() => {
                   openModal(`/sober/${sober.id}`);
                 }}
-                className={`flex-row items-center gap-6 min-h-24 py-3 ${index < visibleRecords.length - 1 ? 'border-b border-theme-border/60' : ''}`}
+                className={`flex-row items-center gap-6 min-h-24 py-3 ${index < visibleRecords.length - 1 ? 'border-b border-theme-border/50' : ''}`}
               >
                 <View className="h-9 w-9 shrink-0 items-center justify-center">
                   <SoberIcon

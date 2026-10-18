@@ -52,7 +52,7 @@ export function HabitAnalysis({
               key={habit.id}
               accessibilityRole="button"
               onPress={() => openModal(`/habit/${habit.id}`)}
-              className={`flex-row items-center gap-6 min-h-24 py-3 ${index < habits.length - 1 ? 'border-b border-theme-border/60' : ''}`}
+              className={`flex-row items-center gap-6 min-h-24 py-3 ${index < habits.length - 1 ? 'border-b border-theme-border/50' : ''}`}
             >
               <View className="h-9 w-9 shrink-0 items-center justify-center">
                 <HabitIcon name={habit.icon_key} colorKey={habit.icon_color} size={appRem * 2.25} />

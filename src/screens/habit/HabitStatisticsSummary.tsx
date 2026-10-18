@@ -13,7 +13,7 @@ export function HabitStatisticsSummary({
       {stats.map((stat, index) => (
         <View
           key={stat.label}
-          className={`flex-1 gap-1 px-2 items-center ${index > 0 ? 'border-l border-theme-border/60' : ''}`}
+          className={`flex-1 gap-1 px-2 items-center ${index > 0 ? 'border-l border-theme-border/50' : ''}`}
         >
           <Text className="text-sm text-theme-text-secondary">{stat.label}</Text>
           <Text className="text-2xl font-bold text-theme-accent">

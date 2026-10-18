@@ -23,7 +23,7 @@ export function HabitListSkeleton() {
         {[0, 1, 2, 3].map((index) => (
           <View
             key={index}
-            className={`w-1/2 border-theme-border/60 ${index < 2 ? 'border-t-0' : 'border-t'} ${index % 2 === 0 ? 'border-l-0' : 'border-l'}`}
+            className={`w-1/2 border-theme-border/50 ${index < 2 ? 'border-t-0' : 'border-t'} ${index % 2 === 0 ? 'border-l-0' : 'border-l'}`}
           >
             <View className="gap-4 px-2 py-4">
               <View>

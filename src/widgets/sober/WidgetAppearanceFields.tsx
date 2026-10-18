@@ -27,14 +27,10 @@ export function WidgetAppearanceFields({
               accessibilityState={{ selected: widgetSettings?.accent === accent, disabled }}
               disabled={disabled}
               onPress={() => onChange({ accent })}
-              className={`h-10 w-10 items-center justify-center ios:curve-continuous rounded-full border-2 active:opacity-65 ${disabled ? 'opacity-40' : ''}`}
-              style={{
-                borderColor:
-                  widgetSettings?.accent === accent ? ACCENT_PALETTES[accent].accent : 'transparent',
-              }}
+              className={`h-10 w-10 items-center justify-center ios:curve-continuous rounded-full active:opacity-65 ${disabled ? 'opacity-40' : ''}`}
             >
               <View
-                className="h-8 w-8 ios:curve-continuous rounded-full"
+                className={`${widgetSettings?.accent === accent ? 'h-10 w-10' : 'h-8 w-8'} ios:curve-continuous rounded-full`}
                 style={{ backgroundColor: ACCENT_PALETTES[accent].accent }}
               />
             </Pressable>

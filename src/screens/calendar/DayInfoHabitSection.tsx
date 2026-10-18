@@ -41,7 +41,7 @@ export function DayInfoHabitSection({
           className={`min-h-9 flex-1 flex-row items-center gap-2.5 ios:curve-continuous rounded-lg ${!editable ? 'opacity-60' : 'opacity-100'}`}
         >
           <View
-            className="h-5 w-5 shrink-0 items-center justify-center ios:curve-continuous rounded-md border-[1.5px] bg-theme-surface"
+            className="h-5 w-5 shrink-0 items-center justify-center ios:curve-continuous rounded-md border bg-theme-surface"
             style={{
               borderColor: `${habitColor}${habit.completed ? 'BF' : '99'}`,
               ...(habit.completed && { backgroundColor: `${habitColor}BF` }),

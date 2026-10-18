@@ -123,7 +123,7 @@ export default function DiaryList() {
           if (item.kind === 'state') return <View className="pt-8">{emptyContent}</View>;
           return (
             <View className={item.first ? 'pt-8' : undefined} style={{ paddingHorizontal: '5%' }}>
-              <View className={`border-theme-border/60 ${item.first ? 'border-t-0' : 'border-t'}`}>
+              <View className={`border-theme-border/50 ${item.first ? 'border-t-0' : 'border-t'}`}>
                 <DiaryCard
                   diary={item.diary}
                   first={item.first}

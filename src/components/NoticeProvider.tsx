@@ -108,7 +108,7 @@ function NoticeSurface({
       }}
     >
       <View
-        className={`max-w-full ios:curve-continuous rounded-2xl border bg-theme-surface px-5 py-3 shadow-lg ${notice.tone === 'error' ? 'border-theme-danger' : 'border-theme-border-muted'}`}
+        className={`max-w-full ios:curve-continuous rounded-2xl border bg-theme-surface px-5 py-3 shadow-lg ios:shadow-theme-overlay/20 ${notice.tone === 'error' ? 'border-theme-danger' : 'border-theme-border-muted'}`}
       >
         <Text
           className={`text-center text-base font-medium ${notice.tone === 'error' ? 'text-theme-danger' : 'text-theme-text-primary'}`}

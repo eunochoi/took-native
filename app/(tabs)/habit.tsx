@@ -175,7 +175,7 @@ export default function HabitList() {
               {gridItems.map((item, index) => (
                 <View
                   key={item?.id ?? 'empty'}
-                  className={`w-1/2 border-theme-border/60 ${index < gridItems.length - 2 ? 'border-b' : 'border-b-0'} ${index % 2 === 0 ? 'border-r' : 'border-r-0'}`}
+                  className={`w-1/2 border-theme-border/50 ${index < gridItems.length - 2 ? 'border-b' : 'border-b-0'} ${index % 2 === 0 ? 'border-r' : 'border-r-0'}`}
                 >
                   {item && (
                     <HabitBox

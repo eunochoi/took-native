@@ -140,7 +140,7 @@ export default function SoberList() {
                 style={{ paddingHorizontal: '5%' }}
               >
                 <View
-                  className={`border-theme-border/60 ${index === 0 ? 'border-t-0' : 'border-t'}`}
+                  className={`border-theme-border/50 ${index === 0 ? 'border-t-0' : 'border-t'}`}
                 >
                   <SoberBox
                     sober={item.sober}

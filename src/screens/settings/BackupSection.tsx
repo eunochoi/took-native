@@ -26,7 +26,7 @@ export function BackupSection({
               기록·사진·설정을 파일로 저장해요. 자동 업로드는 하지 않아요.
             </Text>
           </View>
-          <View className="gap-2 border-t border-theme-border/60 pt-4">
+          <View className="gap-2 border-t border-theme-border/50 pt-4">
             <Text className="text-base font-semibold">안전한 저장</Text>
             <Text className={MUTED_DESCRIPTION_CLASS_NAME}>
               암호화하지 않으니 안전한 곳에 보관해주세요.
@@ -35,7 +35,7 @@ export function BackupSection({
               1GB 초과 시 분할해요. 복원할 땐 같은 세트의 ZIP을 모두 선택해주세요.
             </Text>
           </View>
-          <View className="gap-2 border-t border-theme-border/60 pt-4">
+          <View className="gap-2 border-t border-theme-border/50 pt-4">
             <Text className="text-base font-semibold">복원 전 확인</Text>
             <Text className={MUTED_DESCRIPTION_CLASS_NAME}>
               현재 데이터가 백업 내용으로 교체돼요.

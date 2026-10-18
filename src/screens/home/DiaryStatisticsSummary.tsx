@@ -23,7 +23,7 @@ export function DiaryStatisticsSummary({ current, longest }: { current: number; 
       ).map((stat, index) => (
         <View
           key={stat.label}
-          className={`flex-1 items-center gap-2 py-3 border-theme-border/60 ${index === 1 ? 'border-l' : 'border-l-0'}`}
+          className={`flex-1 items-center gap-2 py-3 border-theme-border/50 ${index === 1 ? 'border-l' : 'border-l-0'}`}
         >
           <AppIcon name={stat.icon} size={iconSizes.lg} color={colors.accent} />
           <Text className="text-theme-text-secondary text-sm">{stat.label}</Text>

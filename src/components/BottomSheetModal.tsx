@@ -123,7 +123,7 @@ export function BottomSheetModal({
       <View
         onLayout={motion.onSheetLayout}
         accessibilityViewIsModal
-        className={`w-full shrink ios:curve-continuous rounded-t-4xl border-[1px] border-theme-border bg-theme-surface ${renderBody ? '' : 'px-[5%]'} pt-2 shadow-2xl shadow-theme-overlay/60`}
+        className={`w-full shrink ios:curve-continuous rounded-t-4xl border-[1px] border-theme-border bg-theme-surface ${renderBody ? '' : 'px-[5%]'} pt-2 shadow-2xl shadow-theme-overlay/60 ios:shadow-lg ios:shadow-theme-overlay/20`}
         style={{
           maxHeight: sheetHeight,
           height: fixedHeight ? sheetHeight : undefined,
