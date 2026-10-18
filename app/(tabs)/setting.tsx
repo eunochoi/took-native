@@ -9,11 +9,11 @@ import {
   exportBackup,
   restoreBackup,
 } from '../../src/backup';
-import { PageTopSection } from '../../src/components/PageTopSection';
 import { AppIcon } from '../../src/components/AppIcon';
 import { ColorView } from '../../src/components/ColorTransition';
 import { ConfirmModal } from '../../src/components/ConfirmModal';
 import { useNotice } from '../../src/components/NoticeProvider';
+import { PageTopSection } from '../../src/components/PageTopSection';
 import { ScrollEdgeFade } from '../../src/components/ScrollEdgeFade';
 import { TabBottomSpacer } from '../../src/components/TabBottomSpacer';
 import { Text } from '../../src/components/Text';
@@ -205,6 +205,15 @@ export default function SettingsScreen() {
               <Text className="text-sm leading-snug text-theme-text-secondary">앱 가이드</Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled }}
+              disabled={disabled}
+              onPress={() => openModal('/privacy')}
+              className={`shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
+            >
+              <AppIcon name="privacy-tip" size={appRem * 1.2} className="text-theme-accent" />
+            </Pressable>
+            <Pressable
               accessibilityRole="link"
               accessibilityState={{ disabled }}
               disabled={disabled}
@@ -220,15 +229,6 @@ export default function SettingsScreen() {
               className={`min-w-0 shrink flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
             >
               <AppIcon name="open-in-new" size={appRem * 1.2} className="text-theme-accent" />
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled }}
-              disabled={disabled}
-              onPress={() => openModal('/privacy')}
-              className={`shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
-            >
-              <AppIcon name="privacy-tip" size={appRem * 1.2} className="text-theme-accent" />
             </Pressable>
           </Toolbar>
         </PageTopSection>
