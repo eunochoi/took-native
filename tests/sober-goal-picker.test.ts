@@ -64,7 +64,10 @@ function picker(mode: 'AUTO' | 'MANUAL', days: number | null) {
       onClose: () => undefined,
       onApply: (...args: unknown[]) => applied.push(args),
     });
-    const body = [shell.props.children, shell.props.footer((afterClose: () => void) => afterClose())];
+    const body = [
+      shell.props.children,
+      shell.props.footer((afterClose: () => void) => afterClose()),
+    ];
     const nodes: Node[] = [];
     const walk = (value: any) => {
       if (Array.isArray(value)) value.forEach(walk);
@@ -74,7 +77,16 @@ function picker(mode: 'AUTO' | 'MANUAL', days: number | null) {
       }
     };
     walk(body);
+    const editor = nodes.find((node) => node.type === 'BottomSheetModal');
+    const editorButton = editor?.props.footer((afterClose?: () => void) => {
+      editor.props.onClose();
+      afterClose?.();
+      return true;
+    });
     return {
+      shell,
+      editor,
+      editorButton,
       cards: nodes.filter((node) => node.type === 'PickerAction'),
       options: nodes.filter((node) => node.type === 'PickerOption'),
       input: nodes.find((node) => node.type === 'TextInput'),
@@ -84,7 +96,7 @@ function picker(mode: 'AUTO' | 'MANUAL', days: number | null) {
   return { render, applied };
 }
 
-test('goal methods are mutually exclusive through automatic, period and custom transitions', () => {
+test('period and custom editors only commit to the goal card on completion', () => {
   const ui = picker('AUTO', null);
   let view = ui.render();
   assert.deepEqual(
@@ -96,56 +108,126 @@ test('goal methods are mutually exclusive through automatic, period and custom t
     [true, false, false],
   );
   assert.match(view.cards[0].props.note, /^\* 3일 → 7일/);
+  assert.equal(view.editor, undefined);
+  assert.equal(view.options.length, 0);
+  assert.equal(view.input, undefined);
+
   view.cards[1].props.onPress();
   view = ui.render();
+  assert.equal(view.editor!.props.title, '목표 기간 선택');
+  assert.equal(view.shell.props.onBeforeClose(), false);
+  assert.equal(view.shell.props.dismissOnBack, false);
+  assert.equal(view.button.props.disabled, true);
+  assert.equal(view.cards[0].props.selected, true);
+  assert.equal(view.options.length, 9);
+  view.options.find((option) => option.props.accessibilityLabel === '1개월')!.props.onPress();
+  assert.equal(ui.render().cards[0].props.selected, true);
+  ui.render().editorButton.props.onPress();
+  view = ui.render();
+  assert.equal(view.editor, undefined);
+  assert.equal(view.options.length, 0);
+  assert.equal(view.shell.props.onBeforeClose(), true);
+  assert.equal(view.shell.props.dismissOnBack, true);
   assert.deepEqual(
     view.cards.map((card) => card.props.selected),
     [false, true, false],
   );
-  assert.equal(view.options.length, 9);
+  assert.equal(view.cards[1].props.note, '선택한 목표: 1개월');
+  assert.equal(ui.applied.length, 0);
+  view.button.props.onPress();
+  assert.deepEqual(ui.applied.at(-1), ['MANUAL', 30]);
+
   view.cards[2].props.onPress();
   view = ui.render();
+  assert.equal(view.editor!.props.title, '목표 일수 입력');
+  assert.equal(view.input!.props.value, '30');
+  view.input!.props.onChangeText('12');
+  ui.render().editorButton.props.onPress();
+  view = ui.render();
+  assert.equal(view.input, undefined);
   assert.deepEqual(
     view.cards.map((card) => card.props.selected),
     [false, false, true],
   );
-  assert.equal(view.options.length, 0);
-  view.input!.props.onChangeText('12');
-  ui.render().button.props.onPress();
+  assert.equal(view.cards[2].props.note, '선택한 목표: 12일');
+  view.button.props.onPress();
   assert.deepEqual(ui.applied.at(-1), ['MANUAL', 12]);
-  ui.render().cards[1].props.onPress();
+
+  view.cards[1].props.onPress();
   view = ui.render();
-  assert.equal(view.options.filter((option) => option.props.selected).length, 1);
+  assert.equal(
+    view.options.find((option) => option.props.selected)!.props.accessibilityLabel,
+    '7일',
+  );
+  view.editorButton.props.onPress();
+  view = ui.render();
   view.button.props.onPress();
   assert.deepEqual(ui.applied.at(-1), ['MANUAL', 7]);
   view.cards[0].props.onPress();
-  view = ui.render();
-  assert.deepEqual(
-    view.cards.map((card) => card.props.selected),
-    [true, false, false],
-  );
-  assert.equal(view.input, undefined);
-  assert.equal(view.options.length, 0);
-  view.button.props.onPress();
+  ui.render().button.props.onPress();
   assert.deepEqual(ui.applied.at(-1), ['AUTO', null]);
 });
 
-test('saved manual values restore the correct method and invalid custom input blocks apply', () => {
-  assert.deepEqual(
-    picker('MANUAL', 30)
-      .render()
-      .cards.map((card) => card.props.selected),
-    [false, true, false],
-  );
-  const ui = picker('MANUAL', 12);
+test('dismissing an editor discards its candidate and preserves the previous method and days', () => {
+  const ui = picker('MANUAL', 30);
   let view = ui.render();
+  assert.equal(view.input, undefined);
+  assert.equal(view.options.length, 0);
+  view.cards[1].props.onPress();
+  view = ui.render();
+  assert.equal(
+    view.options.find((option) => option.props.selected)!.props.accessibilityLabel,
+    '1개월',
+  );
+  view.options.find((option) => option.props.accessibilityLabel === '3일')!.props.onPress();
+  ui.render().editor!.props.onClose();
+  view = ui.render();
+  assert.equal(view.cards[1].props.note, '선택한 목표: 1개월');
+  view.cards[2].props.onPress();
+  ui.render().input!.props.onChangeText('99');
+  ui.render().editor!.props.onClose();
+  view = ui.render();
   assert.deepEqual(
     view.cards.map((card) => card.props.selected),
-    [false, false, true],
+    [false, true, false],
   );
-  view.input!.props.onChangeText('');
-  view = ui.render();
-  assert.equal(view.button.props.disabled, true);
-  view.cards[0].props.onPress();
-  assert.equal(ui.render().button.props.disabled, false);
+  view.button.props.onPress();
+  assert.deepEqual(ui.applied.at(-1), ['MANUAL', 30]);
+  view.cards[2].props.onPress();
+  assert.equal(ui.render().input!.props.value, '30');
+
+  const automatic = picker('AUTO', null);
+  automatic.render().cards[1].props.onPress();
+  automatic.render().editor!.props.onClose();
+  automatic.render().button.props.onPress();
+  assert.deepEqual(automatic.applied.at(-1), ['AUTO', null]);
+});
+
+test('custom days retain saved values and reject invalid entries before they can affect the goal', () => {
+  const ui = picker('MANUAL', 12);
+  let view = ui.render();
+  assert.equal(view.cards[2].props.selected, true);
+  assert.equal(view.input, undefined);
+  view.cards[2].props.onPress();
+  assert.equal(ui.render().input!.props.value, '12');
+  for (const value of ['', '0', '-1', '1.5', '36501', 'abc', ' 7']) {
+    ui.render().input!.props.onChangeText(value);
+    view = ui.render();
+    assert.equal(view.editorButton.props.disabled, true);
+    view.editorButton.props.onPress();
+    assert(view.editor);
+    assert.equal(view.cards[2].props.note, '선택한 목표: 12일');
+    assert.equal(ui.applied.length, 0);
+  }
+  for (const value of ['1', '36500', '00007']) {
+    ui.render().input!.props.onChangeText(value);
+    view = ui.render();
+    assert.equal(view.editorButton.props.disabled, false);
+    view.editorButton.props.onPress();
+    view = ui.render();
+    assert.equal(view.cards[2].props.note, `선택한 목표: ${Number(value)}일`);
+    view.button.props.onPress();
+    assert.deepEqual(ui.applied.at(-1), ['MANUAL', Number(value)]);
+    view.cards[2].props.onPress();
+  }
 });
