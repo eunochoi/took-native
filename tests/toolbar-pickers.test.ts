@@ -50,8 +50,11 @@ function picker(path: string, name: string, initial: Record<string, unknown>) {
           );
           return sheetExports;
         }
+        if (dependency.endsWith('domain/diaryFilters'))
+          return require('../src/domain/diaryFilters');
         if (dependency === 'tailwind-merge') return require(dependency);
         if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
+        if (dependency.endsWith('domain/selection')) return require('../src/domain/selection');
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (dependency === 'react')
           return {
@@ -88,16 +91,25 @@ function picker(path: string, name: string, initial: Record<string, unknown>) {
       onClose: () => {
         closed++;
       },
-      onApply: (...values: unknown[]) => applied.push(values),
+      onApply: (...values: unknown[]) => applied.push(JSON.parse(JSON.stringify(values))),
     });
     if (typeof shell.type === 'function') shell = shell.type(shell.props);
     const close = (action?: () => void) => {
       closed++;
       deferred = action;
     };
+    const nestedContent = nodes(shell)
+      .filter((node) => node !== shell && typeof node.props?.children === 'function')
+      .map((node) =>
+        node.props.children((action?: () => void) => {
+          node.props.onClose?.();
+          action?.();
+        }),
+      );
     return {
       shell,
       content: nodes([
+        ...nestedContent,
         typeof shell.props.children === 'function' ? shell.props.children(close) : shell,
         typeof shell.props.footer === 'function' ? shell.props.footer(close) : shell.props.footer,
       ]),
@@ -133,10 +145,16 @@ const sortPicker = (props: Record<string, unknown>) =>
 const filterPicker = (props: Record<string, unknown> = {}) =>
   picker('src/screens/diary/DiaryFilterPicker.tsx', 'DiaryFilterPicker', {
     year: null,
-    month: 0,
-    emotion: null,
+    seasons: [],
+    emotionGroups: [],
     currentYear: 2026,
-    currentMonth: 10,
+    yearsQuery: {
+      data: [2026, 2025, 1900],
+      isPending: false,
+      isError: false,
+      error: null,
+      refetch: () => {},
+    },
     ...props,
   });
 
@@ -213,56 +231,55 @@ test('diary sorting exposes date order only and cancel does not persist drafts',
   );
 });
 
-test('period and emotion apply together; choosing a whole year clears its month', () => {
+test('year, season and emotion apply together only after closing', () => {
   const ui = filterPicker();
-  ui.press('이전 연도 선택');
-  ui.press('2025년 3월');
-  ui.press(EMOTIONS[2].name);
+  chooseDiaryYear(ui, 2025);
+  ui.press('겨울');
+  ui.press('긍정');
   assert.equal(ui.applied.length, 0);
   ui.press('일기 필터 적용');
   assert.equal(ui.applied.length, 0);
   ui.finish();
-  assert.deepEqual(ui.applied, [[2025, 3, 2]]);
-  const year = filterPicker({ year: 2025, month: 3, emotion: 2 });
-  year.press('2025년 전체');
-  year.press('일기 필터 적용');
-  year.finish();
-  assert.deepEqual(year.applied, [[2025, 0, 2]]);
+  assert.deepEqual(ui.applied, [[2025, ['winter'], ['positive']]]);
 });
 
-test('deselecting filter conditions is a draft; dismissing preserves saved conditions', () => {
-  const ui = filterPicker({ year: 2025, month: 0, emotion: 2 });
-  ui.press('2025년 전체');
-  ui.press(EMOTIONS[2].name);
+test('selecting all years preserves independent seasons and cancel preserves saved conditions', () => {
+  const ui = filterPicker({ year: 2025, seasons: ['summer'], emotionGroups: ['positive'] });
+  chooseDiaryYear(ui, null);
+  ui.press('긍정');
   ui.render().shell.props.onClose();
   ui.finish();
   assert.equal(ui.applied.length, 0);
+  const applied = filterPicker({ year: 2025, seasons: ['summer'], emotionGroups: ['positive'] });
+  chooseDiaryYear(applied, null);
+  applied.press('일기 필터 적용');
+  applied.finish();
+  assert.deepEqual(applied.applied, [[null, ['summer'], ['positive']]]);
 });
 
-test('filter resets period and emotion drafts without applying them', () => {
-  const ui = filterPicker({ year: 2025, month: 0, emotion: 2 });
+test('header reset clears all diary drafts without applying until confirmation', () => {
+  const ui = filterPicker({ year: 2025, seasons: ['winter'], emotionGroups: ['negative'] });
   const view = ui.render();
   assert(
-    !view.content.some((node) =>
-      ['전체 기간', '전체 감정'].includes(node.props.accessibilityLabel),
+    nodes(view.shell.props.children).some(
+      (node) => node.props.accessibilityLabel === '선택 초기화',
     ),
   );
-  const reset = view.content.find((node) => node.props.accessibilityLabel === '선택 초기화');
-  assert.equal(reset.props.accessibilityRole, 'button');
-  assert(reset.props.className.includes('min-h-12'));
   assert(
-    !view.content.some((node) => node.props.children === '선택한 항목을 다시 누르면 해제돼요.'),
+    !nodes(view.shell.props.footer(() => {})).some(
+      (node) => node.props.accessibilityLabel === '선택 초기화',
+    ),
   );
   ui.press('선택 초기화');
-  assert.equal(ui.closed, 0);
   assert.equal(ui.applied.length, 0);
-  const cleared = ui.render().content;
-  assert(cleared.some((node) => node.props.label === '적용하기'));
-  assert(cleared.some((node) => node.props.accessibilityLabel === '2026년 전체'));
-  assert(!cleared.some((node) => node.type === 'PickerOption' && node.props.selected));
+  assert(
+    ui
+      .render()
+      .content.some((node) => node.type === 'FormPickerRow' && node.props.label === '전체 연도'),
+  );
   ui.press('일기 필터 적용');
   ui.finish();
-  assert.deepEqual(ui.applied, [[null, 0, null]]);
+  assert.deepEqual(ui.applied, [[null, [], []]]);
 });
 
 test('sort hint reserves the same space for date and custom order', () => {
@@ -278,58 +295,67 @@ test('sort hint reserves the same space for date and custom order', () => {
   assert.equal(custom.props.children.props.children, '직접 정한 순서로 보여드려요.');
 });
 
-test('diary sections summarize drafts while the common footer stays concise', () => {
+test('diary emotion descriptions live inside buttons and the full season legend stays fixed', () => {
   const ui = filterPicker();
-  const apply = () =>
-    ui.render().content.find((node) => node.props.accessibilityLabel === '일기 필터 적용');
-  assert.equal(apply().props.label, '적용하기');
-  assert(ui.render().content.some((node) => node.props.children === '전체 기간'));
-  ui.press('2026년 4월');
-  ui.press(EMOTIONS[1].name);
-  assert.equal(apply().props.label, '적용하기');
-  assert(ui.render().content.some((node) => node.props.children === '2026년 4월'));
-  ui.press('2026년 4월');
-  assert(ui.render().content.some((node) => node.props.children === '2026년 전체'));
-  ui.press('2026년 전체');
-  ui.press(EMOTIONS[1].name);
-  assert(ui.render().content.some((node) => node.props.children === '전체 기간'));
-  assert.equal(ui.applied.length, 0);
+  const text = () =>
+    ui
+      .render()
+      .content.filter((node) => node.type === 'Text')
+      .map((node) => node.props.children);
+  for (const [label, description] of [
+    ['긍정', '행복, 기쁨\n사랑, 평온'],
+    ['중립', '놀람, 무심'],
+    ['부정', '불안, 슬픔\n화남, 혼란'],
+  ]) {
+    const option = ui
+      .render()
+      .content.find(
+        (node) => node.type === 'PickerOption' && node.props.accessibilityLabel === label,
+      );
+    assert(nodes(option).some((node) => node.props.children === description));
+    assert.equal(option.props.dense, true);
+  }
+  ui.press('여름');
+  assert(text().includes('여름'));
+  const seasonLegend = '봄 3~5월 · 여름 6~8월 · 가을 9~11월 · 겨울 12~다음 2월';
+  assert(text().includes(seasonLegend));
+  chooseDiaryYear(ui, 2026);
+  ui.press('겨울');
+  assert(text().includes('여름 · 겨울'));
+  const hint = ui.render().content.find((node) => node.props.children === seasonLegend);
+  assert.equal(hint.props.numberOfLines, 1);
+  assert(!text().some((value) => typeof value === 'string' && value.includes('2027.02')));
+  assert(!text().some((value) => typeof value === 'string' && value.includes('겨울은')));
+  ui.press('여름');
+  ui.press('겨울');
+  chooseDiaryYear(ui, null);
+  assert(ui.render().content.some((node) => node.props.label === '전체 연도'));
+  assert(text().includes('전체 계절'));
 });
 
-test('filters share footer reset and apply while diary keeps ten compact emotion choices', () => {
-  const samples = [
+test('all filters keep reset in the header and apply in the footer', () => {
+  const diary = filterPicker().render();
+  const choices = diary.content.filter((node) => node.type === 'PickerOption');
+  for (const label of ['긍정', '중립', '부정', '봄', '여름', '가을', '겨울']) {
+    assert(choices.some((node) => node.props.accessibilityLabel === label));
+  }
+  assert(!diary.content.some((node) => node.type === 'EmotionImage'));
+  assert(choices.every((node) => node.props.compact));
+  for (const ui of [
     filterPicker(),
-    picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
-      filter: { completion: 'ALL', priority: null },
-    }),
-    picker('src/screens/sober/SoberFilterPicker.tsx', 'SoberFilterPicker', {
-      filter: { priorityOnly: false, minimumDays: 0 },
-    }),
-  ];
-  for (const ui of samples) {
+  ]) {
     const view = ui.render();
-    const footer = nodes(view.shell.props.footer(() => {}));
-    assert(footer.some((node) => node.props.accessibilityLabel === '선택 초기화'));
-    assert(footer.some((node) => node.props.label === '적용하기'));
     assert(
-      !nodes(view.shell.props.children).some(
+      nodes(view.shell.props.children).some(
+        (node) => node.props.accessibilityLabel === '선택 초기화',
+      ),
+    );
+    assert(
+      !nodes(view.shell.props.footer(() => {})).some(
         (node) => node.props.accessibilityLabel === '선택 초기화',
       ),
     );
   }
-  const view = samples[0].render();
-  const choices = view.content.filter(
-    (node) =>
-      node.type === 'PickerOption' &&
-      EMOTIONS.some((item) => item.name === node.props.accessibilityLabel),
-  );
-  assert.equal(choices.length, 10);
-  assert(choices.every((node) => node.props.dense));
-  assert(
-    view.content
-      .filter((node) => node.type === 'EmotionImage')
-      .every((node) => node.props.size === 15 * 2.25),
-  );
 });
 
 test('record toolbar shows saved sorting and priority while keeping add separate', () => {
@@ -364,33 +390,17 @@ test('record toolbar shows saved sorting and priority while keeping add separate
   assert(custom.content.some((node) => node.type === 'Text' && node.props.children === '커스텀'));
 });
 
-test('diary toolbar shows current period and emotion and truncates a long label', () => {
-  const ui = picker('src/components/ToolbarFilterButton.tsx', 'ToolbarFilterButton', {
-    sort: 'DESC',
-    year: 2026,
-    currentYear: 2026,
-    month: 4,
-    emotion: 1,
-  });
-  const view = ui.render();
+test('filter toolbar displays its supplied compact and accessible labels', () => {
+  const view = picker('src/components/ToolbarFilterButton.tsx', 'ToolbarFilterButton', {
+    label: '올해 · 여름 · 긍정',
+    accessibilityLabel: '일기 필터, 2026.06~2026.08 · 긍정',
+  }).render();
   const label = view.content.find(
-    (node) => node.type === 'Text' && node.props.children === '4월 · 기쁨',
+    (node) => node.type === 'Text' && node.props.children === '올해 · 여름 · 긍정',
   );
   assert.equal(label.props.numberOfLines, 1);
   assert.equal(label.props.ellipsizeMode, 'tail');
-  const all = picker('src/components/ToolbarFilterButton.tsx', 'ToolbarFilterButton', {
-    sort: 'ASC',
-    year: null,
-    month: 0,
-    emotion: null,
-  }).render();
-  assert(all.content.some((node) => node.type === 'Text' && node.props.children === '필터'));
-  const sort = picker('src/components/ToolbarSortButton.tsx', 'ToolbarSortButton', {
-    sort: 'ASC',
-    accessibilityLabel: '일기 정렬',
-    sortLabel: '날짜',
-  }).render();
-  assert(sort.content.some((node) => node.type === 'Text' && node.props.children === '오래된순'));
+  assert.equal(view.shell.props.accessibilityLabel, '일기 필터, 2026.06~2026.08 · 긍정');
 });
 
 test('sober sorting shows priority, record, creation in order and applies drafts together', () => {
@@ -486,25 +496,16 @@ test('sort modal defaults are leftmost', () => {
   assert.equal(choices[2].props.selected, true);
 });
 
-test('filter labels shorten this year while retaining other years and full accessible dates', () => {
-  for (const [year, month, emotion, label] of [
-    [2026, 10, null, '10월'],
-    [2025, 10, 1, '25년 10월 · 기쁨'],
-    [2026, 0, null, '올해'],
-    [null, 0, 1, '기쁨'],
-    [null, 0, null, '필터'],
-  ] as const) {
-    const view = picker('src/components/ToolbarFilterButton.tsx', 'ToolbarFilterButton', {
-      year,
-      month,
-      emotion,
-      currentYear: 2026,
-    }).render();
-    const text = view.content.find((node) => node.type === 'Text');
-    assert.equal(text.props.children, label);
-    assert(text.props.className.includes('text-theme-text-secondary'));
-    if (year !== null) assert(view.shell.props.accessibilityLabel.includes(`${year}년`));
-  }
+test('canceling the year picker leaves an all-year seasonal filter unchanged', () => {
+  const ui = filterPicker();
+  ui.press('연도 선택');
+  ui.render()
+    .content.find((node) => node.type === 'BottomSheetModal' && node.props.title === '연도 선택')
+    .props.onClose();
+  ui.press('봄');
+  ui.press('일기 필터 적용');
+  ui.finish();
+  assert.deepEqual(ui.applied, [[null, ['spring'], []]]);
 });
 
 test('habit filter drafts combine completion and exact stars after closing, and reset to all', () => {
@@ -575,47 +576,29 @@ test('sober filters draft importance and one minimum period, with cancel and res
   ]);
 });
 
-test('diary filter prevents future years and months including direct handler calls', () => {
-  const ui = filterPicker({ currentMonth: 10 });
-  const option = (label: string) =>
-    ui.render().content.find((node) => node.props.accessibilityLabel === label);
-  assert.equal(option('다음 연도 선택').props.disabled, true);
-  option('다음 연도 선택').props.onPress();
-  assert(option('2026년 전체'));
-  assert.equal(option('2026년 10월').props.disabled, false);
-  assert.equal(option('2026년 11월').props.disabled, true);
-  assert.equal(option('2026년 12월').props.disabled, true);
-  option('2026년 11월').props.onPress();
+test('diary year list includes only recorded years plus all years and marks one selection', () => {
+  const ui = filterPicker({ year: 2025 });
+  ui.press('연도 선택');
+  const choices = ui
+    .render()
+    .content.filter((node) => node.type === 'PickerOption' && !node.props.checkbox);
+  assert.equal(choices.length, 4);
+  assert.equal(choices[0].props.accessibilityLabel, '전체 연도');
+  assert.equal(choices[1].props.accessibilityLabel, '2026년');
+  assert.equal(choices.at(-1).props.accessibilityLabel, '1900년');
+  assert.equal(choices.filter((node) => node.props.selected).length, 1);
+  assert.equal(choices.find((node) => node.props.selected).props.accessibilityLabel, '2025년');
+  ui.press('1900년');
   ui.press('일기 필터 적용');
   ui.finish();
-  assert.deepEqual(ui.applied, [[null, 0, null]]);
-  ui.press('이전 연도 선택');
-  assert.equal(option('2025년 12월').props.disabled, false);
-  ui.press('2025년 12월');
-  ui.press('다음 연도 선택');
-  assert.equal(option('2026년 12월').props.selected, false);
-  assert.equal(option('다음 연도 선택').props.disabled, true);
+  assert.deepEqual(ui.applied, [[1900, [], []]]);
 });
 
-test('diary filter respects January and December boundaries and clears legacy future selections', () => {
-  for (const currentMonth of [1, 12]) {
-    const ui = filterPicker({ currentMonth });
-    for (let month = 1; month <= 12; month++) {
-      const option = ui
-        .render()
-        .content.find((node) => node.props.accessibilityLabel === `2026년 ${month}월`);
-      assert.equal(option.props.disabled, month > currentMonth);
-    }
-  }
-  for (const props of [
-    { year: 2027, month: 1 },
-    { year: 2026, month: 12 },
-  ]) {
-    const ui = filterPicker({ ...props, currentMonth: 10 });
-    ui.press('일기 필터 적용');
-    ui.finish();
-    assert.deepEqual(ui.applied, [[props.year === 2027 ? null : 2026, 0, null]]);
-  }
+test('future input years clear without dropping an independent season', () => {
+  const ui = filterPicker({ year: 2027, seasons: ['winter'] });
+  ui.press('일기 필터 적용');
+  ui.finish();
+  assert.deepEqual(ui.applied, [[null, ['winter'], []]]);
 });
 
 test('sober filter supports a three-month threshold through the shared footer', () => {
@@ -629,6 +612,40 @@ test('sober filter supports a three-month threshold through the shared footer', 
   assert.deepEqual(JSON.parse(JSON.stringify(ui.applied)), [
     [{ priorityOnly: false, minimumDays: 90 }],
   ]);
+});
+
+
+test('diary checkbox selections combine, toggle off independently and preserve canonical order', () => {
+  const ui = filterPicker();
+  const options = () =>
+    ui.render().content.filter((node) => node.type === 'PickerOption' && node.props.checkbox);
+  assert.equal(options().length, 7);
+  assert(options().every((node) => !node.props.selected));
+  assert(!ui.render().content.some((node) => node.props.accessibilityLabel === '전체'));
+  chooseDiaryYear(ui, 2026);
+  chooseDiaryYear(ui, null);
+  ui.press('여름');
+  ui.press('봄');
+  ui.press('부정');
+  ui.press('긍정');
+  ui.press('중립');
+  ui.press('부정');
+  ui.press('일기 필터 적용');
+  ui.finish();
+  assert.deepEqual(ui.applied, [[null, ['spring', 'summer'], ['positive', 'neutral']]]);
+  const reopened = filterPicker({
+    year: 2026,
+    seasons: ['spring', 'summer'],
+    emotionGroups: ['positive', 'neutral'],
+  });
+  assert(
+    reopened.render().content.find((node) => node.props.accessibilityLabel === '봄').props.selected,
+  );
+  chooseDiaryYear(reopened, null);
+  for (const label of ['봄', '여름', '긍정', '중립']) reopened.press(label);
+  reopened.press('일기 필터 적용');
+  reopened.finish();
+  assert.deepEqual(reopened.applied, [[null, [], []]]);
 });
 
 
@@ -651,6 +668,31 @@ test('picker checkbox accessibility announces checked state without changing ord
 });
 
 
+test('all checked diary categories summarize as all while retaining checked cards', () => {
+  const ui = filterPicker();
+  for (const label of ['봄', '여름', '가을', '겨울', '긍정', '중립', '부정']) ui.press(label);
+  const view = ui.render();
+  const text = view.content
+    .filter((node) => node.type === 'Text')
+    .map((node) => node.props.children);
+  assert(text.includes('전체 계절'));
+  assert(text.includes('전체 감정'));
+  assert.equal(
+    view.content.filter((node) => node.type === 'PickerOption' && node.props.selected).length,
+    7,
+  );
+  ui.press('겨울');
+  assert(
+    ui
+      .render()
+      .content.some(
+        (node) =>
+          typeof node.props.children === 'string' && node.props.children === '봄 · 여름 · 가을',
+      ),
+  );
+});
+
+
 test('emotion icon style cards share checked and unchecked appearance and remain single selection', () => {
   let changed = '';
   const ui = picker(
@@ -666,3 +708,58 @@ test('emotion icon style cards share checked and unchecked appearance and remain
   options[0].props.onPress();
   assert.equal(changed, 'basic');
 });
+
+
+test('diary year picker retains all-years for empty, loading and failed queries', () => {
+  for (const yearsQuery of [
+    { data: [], isPending: false, isError: false, error: null, refetch: () => {} },
+    { data: undefined, isPending: true, isError: false, error: null, refetch: () => {} },
+    {
+      data: undefined,
+      isPending: false,
+      isError: true,
+      error: new Error('실패'),
+      refetch: () => {},
+    },
+  ]) {
+    const ui = filterPicker({ yearsQuery });
+    ui.press('연도 선택');
+    const choices = ui
+      .render()
+      .content.filter((node) => node.type === 'PickerOption' && !node.props.checkbox);
+    assert.equal(choices.length, 1);
+    assert.equal(choices[0].props.accessibilityLabel, '전체 연도');
+    assert.equal(
+      ui.render().content.find((node) => node.type === 'QueryState').props.query,
+      yearsQuery,
+    );
+    ui.press('전체 연도');
+    ui.press('일기 필터 적용');
+    ui.finish();
+    assert.deepEqual(ui.applied, [[null, [], []]]);
+  }
+});
+
+
+test('a removed diary year becomes all years on the next filter application without changing other filters', () => {
+  const ui = filterPicker({
+    year: 2025,
+    seasons: ['summer'],
+    emotionGroups: ['neutral'],
+    yearsQuery: { data: [2024], isPending: false, isError: false, error: null, refetch: () => {} },
+  });
+  assert(
+    ui
+      .render()
+      .content.some((node) => node.type === 'FormPickerRow' && node.props.label === '전체 연도'),
+  );
+  ui.press('일기 필터 적용');
+  ui.finish();
+  assert.deepEqual(ui.applied, [[null, ['summer'], ['neutral']]]);
+});
+
+
+function chooseDiaryYear(ui: ReturnType<typeof picker>, year: number | null) {
+  ui.press('연도 선택');
+  ui.press(year === null ? '전체 연도' : `${year}년`);
+}

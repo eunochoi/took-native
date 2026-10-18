@@ -18,12 +18,14 @@ function load(file: string, results: Record<string, any> = {}, routes: unknown[]
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('domain/diaryFilters')) return require('../src/domain/diaryFilters');
         if (name.endsWith('/ModalNavigationProvider'))
           return {
             useModalNavigation: () => ({ openModal: (route: unknown) => routes.push(route) }),
           };
         if (name.endsWith('/NoticeProvider'))
           return { useNotice: () => ({ showNotice: () => {} }) };
+        if (name.endsWith('domain/selection')) return require('../src/domain/selection');
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (name === 'react')
           return {
@@ -49,6 +51,7 @@ function load(file: string, results: Record<string, any> = {}, routes: unknown[]
           return {
             diaryQueries: {
               list: () => query('list'),
+              years: () => query('diaryYears'),
               byDate: (_db: unknown, date: string) => query(`date:${date}`),
             },
             statsQueries: {

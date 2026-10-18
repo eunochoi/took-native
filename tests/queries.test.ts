@@ -43,7 +43,13 @@ function loadQueries(client: query.QueryClient, overrides: Record<string, unknow
 function cacheEntries(module: Record<string, any>) {
   const db = {};
   return {
-    diaryList: module.diaryQueries.list(db, { year: null, month: 0, emotion: null, sort: 'DESC' }),
+    diaryList: module.diaryQueries.list(db, {
+      year: null,
+      seasons: [],
+      emotionGroups: [],
+      sort: 'DESC',
+    }),
+    diaryYears: module.diaryQueries.years(db),
     diaryId: module.diaryQueries.byId(db, 1),
     diaryDate: module.diaryQueries.byDate(db, '2026-10-05'),
     diaryDetailDate: module.diaryQueries.detailByDate(db, '2026-10-05'),
@@ -70,6 +76,7 @@ for (const [scope, affected] of Object.entries({
     'diaryDate',
     'diaryDetailDate',
     'diaryMonth',
+    'diaryYears',
     'diaryStats',
     'years',
   ],

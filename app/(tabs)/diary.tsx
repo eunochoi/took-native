@@ -1,3 +1,11 @@
+import { selectionSummary } from '../../src/domain/selection';
+import {
+  DIARY_SEASONS,
+  DIARY_EMOTION_GROUPS,
+  diaryPeriodLabel,
+  type DiarySeason,
+  type DiaryEmotionGroup,
+} from '../../src/domain/diaryFilters';
 import { useScrollToTop } from 'expo-router';
 import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -41,14 +49,18 @@ export default function DiaryList() {
   const scroll = useRef<FlatList<Row>>(null);
   useScrollToTop(scroll);
   const [year, setYear] = useState<number | null>(null);
-  const [month, setMonth] = useState(0);
-  const [emotion, setEmotion] = useState<number | null>(null);
+  const [seasons, setSeasons] = useState<DiarySeason[]>([]);
+  const [emotionGroups, setEmotionGroups] = useState<DiaryEmotionGroup[]>([]);
   const [picker, setPicker] = useState<'sort' | 'filter' | null>(null);
+  const yearsQuery = useQuery({ ...diaryQueries.years(db), enabled: picker === 'filter' });
   const list = useInfiniteQuery({
-    ...diaryQueries.list(db, { year, month, emotion, sort: settings.diarySort }),
+    ...diaryQueries.list(db, { year, seasons, emotionGroups, sort: settings.diarySort }),
     placeholderData: keepPreviousData,
   });
-  const hasFilter = year !== null || emotion !== null;
+  const hasFilter =
+    year !== null ||
+    (seasons.length > 0 && seasons.length < 4) ||
+    (emotionGroups.length > 0 && emotionGroups.length < 3);
   const failedWithoutData = list.isError && !list.data;
   const diaries = list.data?.pages.flat() ?? [];
   const rows: Row[] = diaries.length
@@ -99,10 +111,32 @@ export default function DiaryList() {
                 onPress={() => setPicker('sort')}
               />
               <ToolbarFilterButton
-                currentYear={Number(today.slice(0, 4))}
-                year={year}
-                month={month}
-                emotion={emotion}
+                label={
+                  [
+                    year === null
+                      ? null
+                      : year === Number(today.slice(0, 4))
+                        ? '올해'
+                        : `${String(year % 100).padStart(2, '0')}년`,
+                    selectionSummary(
+                      seasons.map((season) => DIARY_SEASONS[season].label),
+                      4,
+                      '',
+                    ) || null,
+                    selectionSummary(
+                      emotionGroups.map((group) => DIARY_EMOTION_GROUPS[group].label),
+                      3,
+                      '',
+                    ) || null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ') || '필터'
+                }
+                accessibilityLabel={`일기 필터, ${diaryPeriodLabel(year, seasons)} · ${selectionSummary(
+                  emotionGroups.map((group) => DIARY_EMOTION_GROUPS[group].label),
+                  3,
+                  '전체 감정',
+                )}`}
                 onPress={() => setPicker('filter')}
               />
               <ToolbarAddButton
@@ -189,15 +223,15 @@ export default function DiaryList() {
       {picker === 'filter' && (
         <DiaryFilterPicker
           year={year}
-          month={month}
-          emotion={emotion}
+          yearsQuery={yearsQuery}
+          seasons={seasons}
+          emotionGroups={emotionGroups}
           currentYear={Number(today.slice(0, 4))}
-          currentMonth={Number(today.slice(5, 7))}
           onClose={() => setPicker(null)}
-          onApply={(value, selectedMonth, selectedEmotion) => {
+          onApply={(value, selectedSeasons, selectedEmotionGroups) => {
             setYear(value);
-            setMonth(selectedMonth);
-            setEmotion(selectedEmotion);
+            setSeasons(selectedSeasons);
+            setEmotionGroups(selectedEmotionGroups);
             setPicker(null);
             scroll.current?.scrollToOffset({ offset: 0, animated: true });
           }}

@@ -1,188 +1,210 @@
+import type { UseQueryResult } from '@tanstack/react-query';
+import { QueryState } from '../../components/QueryState';
+import { PICKER_DESCRIPTION_CLASS_NAME } from '../../theme/classes';
+import { selectionSummary } from '../../domain/selection';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
-import { AppIcon } from '../../components/AppIcon';
+import { View } from 'react-native';
+import { BottomSheetModal } from '../../components/BottomSheetModal';
+import { FormPickerRow } from '../../components/FormPickerRow';
 import { FilterSheet } from '../../components/FilterSheet';
-import { EmotionImage } from '../../components/EmotionImage';
 import { PickerOption } from '../../components/PickerOption';
 import { Text } from '../../components/Text';
-import { EMOTIONS } from '../../domain/constants';
+import {
+  DIARY_SEASONS,
+  DIARY_EMOTION_GROUPS,
+  type DiarySeason,
+  type DiaryEmotionGroup,
+} from '../../domain/diaryFilters';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 
 export function DiaryFilterPicker({
   year,
-  month,
+  yearsQuery,
+  seasons,
+  emotionGroups,
   currentYear,
-  currentMonth,
-  emotion,
   onClose,
   onApply,
 }: {
   year: number | null;
-  month: number;
+  yearsQuery: UseQueryResult<number[], Error>;
+  seasons: DiarySeason[];
+  emotionGroups: DiaryEmotionGroup[];
   currentYear: number;
-  currentMonth: number;
-  emotion: number | null;
   onClose: () => void;
-  onApply: (year: number | null, month: number, emotion: number | null) => void;
+  onApply: (
+    year: number | null,
+    seasons: DiarySeason[],
+    emotionGroups: DiaryEmotionGroup[],
+  ) => void;
 }) {
-  const { colors, iconSizes, rem: appRem } = useAppTheme();
-  const [draftEmotion, setEmotion] = useState(emotion);
+  const { rem } = useAppTheme();
   const initialYear = year !== null && year >= 1900 && year <= currentYear ? year : null;
   const [draftYear, setYear] = useState(initialYear);
-  const [draftMonth, setMonth] = useState(
-    initialYear !== null && month >= 0 && month <= (initialYear === currentYear ? currentMonth : 12)
-      ? month
-      : 0,
-  );
-  const [displayYear, setDisplayYear] = useState(initialYear ?? currentYear);
-  const periodLabel =
-    draftYear === null
-      ? '전체 기간'
-      : `${draftYear}년 ${draftMonth === 0 ? '전체' : `${draftMonth}월`}`;
-  const emotionLabel = draftEmotion === null ? '전체 감정' : EMOTIONS[draftEmotion].name;
-  const selectYear = (value: number) => {
-    if (value < 1900 || value > currentYear) return;
-    setDisplayYear(value);
-    setYear(value);
-    setMonth(0);
-  };
+  const [yearOpen, setYearOpen] = useState(false);
+  const [draftSeasons, setSeasons] = useState(seasons);
+  const [draftEmotionGroups, setEmotionGroups] = useState(emotionGroups);
+  const selectedYear =
+    draftYear !== null &&
+    yearsQuery.data !== undefined &&
+    !yearsQuery.isError &&
+    !yearsQuery.data.includes(draftYear)
+      ? null
+      : draftYear;
   return (
     <FilterSheet
       title="일기 필터"
+      resetInHeader
+      contentBottomPadding={rem * 1.5}
       onClose={onClose}
       onReset={() => {
         setYear(null);
-        setMonth(0);
-        setEmotion(null);
-        setDisplayYear(currentYear);
+        setSeasons([]);
+        setEmotionGroups([]);
       }}
-      onApply={() => {
-        const validYear = draftYear !== null && draftYear <= currentYear ? draftYear : null;
-        const validMonth =
-          validYear === null
-            ? 0
-            : validYear === currentYear
-              ? Math.min(draftMonth, currentMonth)
-              : draftMonth;
-        onApply(validYear, validMonth, draftEmotion);
-      }}
+      onApply={() => onApply(selectedYear, draftSeasons, draftEmotionGroups)}
     >
-      <>
+      <View className="gap-4">
+        <Text className="text-base font-semibold">연도</Text>
+        <FormPickerRow
+          label={selectedYear === null ? '전체 연도' : `${selectedYear}년`}
+          accessibilityLabel="연도 선택"
+          disabled={false}
+          onPress={() => setYearOpen(true)}
+        />
+      </View>
+      <View className="gap-4">
+        <View className="flex-row items-baseline justify-between gap-3">
+          <Text className="text-base font-semibold">계절</Text>
+          <Text className="min-w-0 shrink text-right text-sm text-theme-text-secondary">
+            {selectionSummary(
+              draftSeasons.map((season) => DIARY_SEASONS[season].label),
+              4,
+              '전체 계절',
+            )}
+          </Text>
+        </View>
         <View className="gap-3">
-          <View className="flex-row items-baseline justify-between gap-3">
-            <Text className="text-base font-semibold">기간</Text>
-            <Text className="shrink text-sm text-theme-text-secondary">{periodLabel}</Text>
-          </View>
-          <View className="gap-1.5">
-            <View className="flex-row items-center gap-2">
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="이전 연도 선택"
-                disabled={displayYear <= 1900}
-                onPress={() => selectYear(displayYear - 1)}
-                className={`h-12 w-12 items-center justify-center ios:curve-continuous rounded-xl bg-transparent active:opacity-70 ${displayYear <= 1900 ? 'opacity-40' : 'opacity-100'}`}
-              >
-                <AppIcon name="chevron-left" size={iconSizes.md} color={colors.accent} />
-              </Pressable>
-              <View className="flex-1">
+          {(
+            [
+              ['spring', 'summer'],
+              ['autumn', 'winter'],
+            ] as const
+          ).map((row, index) => (
+            <View key={index} className="flex-row gap-3">
+              {row.map((value) => {
+                const selected = draftSeasons.includes(value);
+                return (
+                  <View key={value} className="flex-1 min-w-0">
+                    <PickerOption
+                      compact
+                      checkbox
+                      selected={selected}
+                      accessibilityLabel={DIARY_SEASONS[value].label}
+                      onPress={() =>
+                        setSeasons(
+                          (Object.keys(DIARY_SEASONS) as DiarySeason[]).filter((season) =>
+                            season === value ? !selected : draftSeasons.includes(season),
+                          ),
+                        )
+                      }
+                    >
+                      <Text className={`text-base ${selected ? 'text-theme-accent' : ''}`}>
+                        {DIARY_SEASONS[value].label}
+                      </Text>
+                    </PickerOption>
+                  </View>
+                );
+              })}
+            </View>
+          ))}
+        </View>
+      </View>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.85}
+        className={PICKER_DESCRIPTION_CLASS_NAME}
+      >
+        {(Object.keys(DIARY_SEASONS) as DiarySeason[])
+          .map(
+            (season) =>
+              `${DIARY_SEASONS[season].label} ${DIARY_SEASONS[season].monthsLabel.replace('다음 해 ', '다음 ')}`,
+          )
+          .join(' · ')}
+      </Text>
+      <View className="gap-4">
+        <View className="flex-row items-baseline justify-between gap-3">
+          <Text className="text-base font-semibold">감정</Text>
+          <Text className="shrink text-sm text-theme-text-secondary">
+            {selectionSummary(
+              draftEmotionGroups.map((group) => DIARY_EMOTION_GROUPS[group].label),
+              3,
+              '전체 감정',
+            )}
+          </Text>
+        </View>
+        <View className="flex-row gap-3">
+          {(Object.keys(DIARY_EMOTION_GROUPS) as DiaryEmotionGroup[]).map((value) => {
+            const selected = draftEmotionGroups.includes(value);
+            return (
+              <View key={value} className="flex-1 min-w-0">
                 <PickerOption
                   compact
-                  selected={draftYear === displayYear && draftMonth === 0}
-                  accessibilityLabel={`${displayYear}년 전체`}
-                  onPress={() => {
-                    if (draftYear === displayYear && draftMonth === 0) {
-                      setYear(null);
-                      setMonth(0);
-                    } else selectYear(displayYear);
-                  }}
+                  dense
+                  checkbox
+                  selected={selected}
+                  accessibilityLabel={DIARY_EMOTION_GROUPS[value].label}
+                  onPress={() =>
+                    setEmotionGroups(
+                      (Object.keys(DIARY_EMOTION_GROUPS) as DiaryEmotionGroup[]).filter((group) =>
+                        group === value ? !selected : draftEmotionGroups.includes(group),
+                      ),
+                    )
+                  }
                 >
-                  <Text
-                    className={`text-base font-normal ${draftYear === displayYear && draftMonth === 0 ? 'text-theme-accent' : ''}`}
-                  >
-                    {displayYear}년
+                  <Text className={`text-base ${selected ? 'text-theme-accent' : ''}`}>
+                    {DIARY_EMOTION_GROUPS[value].label}
                   </Text>
+                  <View className="min-h-8 w-full items-center justify-center">
+                    <Text className="w-full text-center text-xs leading-4 text-theme-text-secondary">
+                      {DIARY_EMOTION_GROUPS[value].description}
+                    </Text>
+                  </View>
                 </PickerOption>
               </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="다음 연도 선택"
-                disabled={displayYear >= currentYear}
-                onPress={() => selectYear(displayYear + 1)}
-                className={`h-12 w-12 items-center justify-center ios:curve-continuous rounded-xl bg-transparent active:opacity-70 ${displayYear >= currentYear ? 'opacity-40' : 'opacity-100'}`}
-              >
-                <AppIcon name="chevron-right" size={iconSizes.md} color={colors.accent} />
-              </Pressable>
-            </View>
-            <View className="gap-1.5">
-              {[0, 6].map((offset) => (
-                <View key={offset} className="flex-row gap-1.5">
-                  {Array.from({ length: 6 }, (_, index) => offset + index + 1).map((value) => {
-                    const selected = draftYear === displayYear && draftMonth === value;
-                    const disabled =
-                      displayYear > currentYear ||
-                      (displayYear === currentYear && value > currentMonth);
-                    return (
-                      <View key={value} className="flex-1">
-                        <PickerOption
-                          compact
-                          selected={selected}
-                          disabled={disabled}
-                          accessibilityLabel={`${displayYear}년 ${value}월`}
-                          onPress={() => {
-                            if (disabled) return;
-                            setYear(displayYear);
-                            setMonth(selected ? 0 : value);
-                          }}
-                        >
-                          <Text
-                            className={`text-sm font-normal ${selected ? 'text-theme-accent' : ''}`}
-                          >
-                            {value}월
-                          </Text>
-                        </PickerOption>
-                      </View>
-                    );
-                  })}
-                </View>
+            );
+          })}
+        </View>
+      </View>
+      <Text className={PICKER_DESCRIPTION_CLASS_NAME}>
+        여러 개 선택할 수 있어요. 다시 누르면 해제돼요.{'\n'}계절이나 감정을 선택하지 않으면 전체로
+        검색해요.
+      </Text>
+      {yearOpen && (
+        <BottomSheetModal visible title="연도 선택" onClose={() => setYearOpen(false)}>
+          {(close) => (
+            <View className="gap-3">
+              {[null, ...(yearsQuery.data ?? [])].map((value) => (
+                <PickerOption
+                  key={value ?? 'all'}
+                  compact
+                  selected={selectedYear === value}
+                  accessibilityLabel={value === null ? '전체 연도' : `${value}년`}
+                  onPress={() => close(() => setYear(value))}
+                >
+                  <Text
+                    className={`text-base ${selectedYear === value ? 'text-theme-accent' : ''}`}
+                  >
+                    {value === null ? '전체 연도' : `${value}년`}
+                  </Text>
+                </PickerOption>
               ))}
+              <QueryState query={yearsQuery} />
             </View>
-          </View>
-        </View>
-        <View className="gap-3">
-          <View className="flex-row items-baseline justify-between gap-3">
-            <Text className="text-base font-semibold">감정</Text>
-            <Text className="shrink text-sm text-theme-text-secondary">{emotionLabel}</Text>
-          </View>
-          <View className="gap-1.5">
-            {[EMOTIONS.slice(0, 5), EMOTIONS.slice(5)].map((row, rowIndex) => (
-              <View key={rowIndex} className="flex-row gap-1.5">
-                {row.map((item, index) => {
-                  const id = rowIndex * 5 + index;
-                  const selected = draftEmotion === id;
-                  return (
-                    <View key={item.key} className="flex-1 min-w-0">
-                      <PickerOption
-                        compact
-                        dense
-                        selected={selected}
-                        accessibilityLabel={item.name}
-                        onPress={() => setEmotion(selected ? null : id)}
-                      >
-                        <EmotionImage emotion={id} size={appRem * 2.25} />
-                        <Text
-                          className={`text-xs font-normal ${selected ? 'text-theme-accent' : ''}`}
-                        >
-                          {item.name}
-                        </Text>
-                      </PickerOption>
-                    </View>
-                  );
-                })}
-              </View>
-            ))}
-          </View>
-        </View>
-      </>
+          )}
+        </BottomSheetModal>
+      )}
     </FilterSheet>
   );
 }

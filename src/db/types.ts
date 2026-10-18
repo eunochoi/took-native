@@ -1,3 +1,4 @@
+import type { DiarySeason, DiaryEmotionGroup } from '../domain/diaryFilters';
 import type { SoberIconKey } from '../domain/sober';
 import type { HabitIconKey, HabitIconColorKey } from '../domain/constants';
 
@@ -36,8 +37,8 @@ export interface Completion {
 }
 export interface DiaryFilters {
   year: number | null;
-  month: number;
-  emotion: number | null;
+  seasons: DiarySeason[];
+  emotionGroups: DiaryEmotionGroup[];
   sort: 'ASC' | 'DESC';
 }
 

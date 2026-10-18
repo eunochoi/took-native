@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { database, rows } from './database';
 import { initializeDatabase } from '../src/db/schema';
-import { saveDiary, deleteDiary, getDiaryById, getDiaryList } from '../src/db/diary';
+import { saveDiary, deleteDiary, getDiaryById, getDiaryList, getDiaryYears } from '../src/db/diary';
 import { saveHabit, deleteHabit, setHabitCompletion, getCompletionsByHabit } from '../src/db/habit';
 import { getDiaryStats, getHabitStats } from '../src/db/stats';
 import { shiftDate, todayString } from '../src/domain/date';
@@ -81,18 +81,27 @@ test('same-date diaries are rejected and failed image update rolls back text and
   );
   raw.close();
 });
-test('all-period/year/month filters, emotions and pagination retain distinct meanings', async () => {
+test('all-period/year/season filters, emotion groups and pagination retain distinct meanings', async () => {
   const { db, raw } = await database();
   for (let i = 1; i <= 7; i++)
     await saveDiary(db, { date: `2024-02-0${i}`, emotion: i % 2, text: `기록${i}`, files: [] });
   await saveDiary(db, { date: '2023-02-01', emotion: 1, text: '작년', files: [] });
-  const filters = { year: null, month: 0, emotion: null, sort: 'ASC' as const };
+  const filters = { year: null, seasons: [], emotionGroups: [], sort: 'ASC' as const };
   assert.equal((await getDiaryList(db, filters, 0))[0].date, '2023-02-01');
   assert.equal((await getDiaryList(db, filters, 1)).length, 3);
-  assert.equal((await getDiaryList(db, { ...filters, year: 2024, month: 3 }, 0)).length, 0);
   assert.equal(
-    (await getDiaryList(db, { ...filters, year: 2024, month: 2, emotion: 1 }, 0)).length,
-    4,
+    (await getDiaryList(db, { ...filters, year: 2024, seasons: ['spring'] }, 0)).length,
+    0,
+  );
+  assert.equal(
+    (
+      await getDiaryList(
+        db,
+        { ...filters, year: 2023, seasons: ['winter'], emotionGroups: ['positive'] },
+        0,
+      )
+    ).length,
+    5,
   );
   raw.close();
 });
@@ -133,7 +142,7 @@ test('diary pages batch ordered photos and only the independent completions on e
       text: `이전${day}`,
       files: [`day${day}.jpg`],
     });
-  const filters = { year: null, month: 0, emotion: null, sort: 'DESC' as const };
+  const filters = { year: null, seasons: [], emotionGroups: [], sort: 'DESC' as const };
   const page = await getDiaryList(db, filters, 0);
   assert.equal(page.length, 5);
   assert.equal(new Set(page.map((diary) => diary.id)).size, 5);
@@ -168,7 +177,7 @@ test('diary pages batch ordered photos and only the independent completions on e
   assert.deepEqual((await getDiaryById(db, target.id))?.completedHabits, []);
   await deleteDiary(db, target.id);
   assert.equal(await getDiaryById(db, target.id), null);
-  assert.equal((await getDiaryList(db, { ...filters, emotion: 1 }, 0)).length, 0);
+  assert.equal((await getDiaryList(db, { ...filters, emotionGroups: ['neutral'] }, 0)).length, 0);
   raw.close();
 });
 
@@ -301,5 +310,146 @@ test('a past habit start controls available dates while the last four days remai
   });
   assert.equal(rows(raw, 'SELECT initial_started_at FROM habits')[0][0], initialStartedAt);
   assert.equal(rows(raw, 'SELECT count(*) FROM habit_completions')[0][0], 1);
+  raw.close();
+});
+
+test('diary seasonal search crosses winter years and combines independent emotion categories before pagination', async () => {
+  const { db, raw } = await database();
+  const entries = [
+    ['2022-12-01', 0],
+    ['2023-01-01', 4],
+    ['2023-02-01', 5],
+    ['2023-03-01', 1],
+    ['2023-05-31', 2],
+    ['2023-06-01', 3],
+    ['2023-08-31', 6],
+    ['2023-09-01', 7],
+    ['2023-11-30', 8],
+    ['2023-12-01', 9],
+    ['2024-01-01', 0],
+    ['2024-02-29', 1],
+    ['2024-03-01', 2],
+    ['2024-06-01', 3],
+  ] as const;
+  for (const [date, emotion] of entries)
+    await saveDiary(db, { date, emotion, text: date, files: [] });
+  const filters = { year: null, seasons: [], emotionGroups: [], sort: 'ASC' as const };
+  assert.deepEqual(
+    (await getDiaryList(db, { ...filters, year: 2023, seasons: ['winter'] }, 0)).map(
+      (row) => row.date,
+    ),
+    ['2023-12-01', '2024-01-01', '2024-02-29'],
+  );
+  assert.deepEqual(
+    (await getDiaryList(db, { ...filters, year: 2022, seasons: ['winter'] }, 0)).map(
+      (row) => row.date,
+    ),
+    ['2022-12-01', '2023-01-01', '2023-02-01'],
+  );
+  const winter = { ...filters, seasons: ['winter' as const] };
+  assert.deepEqual(
+    (await getDiaryList(db, winter, 0)).map((row) => row.date),
+    ['2022-12-01', '2023-01-01', '2023-02-01', '2023-12-01', '2024-01-01'],
+  );
+  assert.deepEqual(
+    (await getDiaryList(db, winter, 1)).map((row) => row.date),
+    ['2024-02-29'],
+  );
+  assert.deepEqual(
+    (
+      await getDiaryList(db, { ...filters, seasons: ['summer'], emotionGroups: ['positive'] }, 0)
+    ).map((row) => row.date),
+    ['2023-06-01', '2024-06-01'],
+  );
+  assert.deepEqual(
+    (await getDiaryList(db, { ...filters, year: 2023, emotionGroups: ['negative'] }, 0)).map(
+      (row) => row.date,
+    ),
+    ['2023-02-01', '2023-08-31', '2023-09-01', '2023-11-30'],
+  );
+  assert.deepEqual(
+    (await getDiaryList(db, { ...filters, emotionGroups: ['neutral'], sort: 'DESC' }, 0)).map(
+      (row) => row.date,
+    ),
+    ['2023-12-01', '2023-01-01'],
+  );
+  assert.deepEqual(
+    (await getDiaryList(db, { ...filters, year: 2023, seasons: ['spring', 'winter'] }, 0)).map(
+      (row) => row.date,
+    ),
+    ['2023-03-01', '2023-05-31', '2023-12-01', '2024-01-01', '2024-02-29'],
+  );
+  assert.deepEqual(
+    (
+      await getDiaryList(
+        db,
+        { ...filters, seasons: ['spring', 'summer'], emotionGroups: ['positive', 'neutral'] },
+        0,
+      )
+    ).map((row) => row.date),
+    ['2023-03-01', '2023-05-31', '2023-06-01', '2024-03-01', '2024-06-01'],
+  );
+  assert.deepEqual(
+    (
+      await getDiaryList(
+        db,
+        { ...filters, seasons: ['spring', 'spring'], emotionGroups: ['positive', 'positive'] },
+        0,
+      )
+    ).map((row) => row.date),
+    ['2023-03-01', '2023-05-31', '2024-03-01'],
+  );
+  const all = {
+    ...filters,
+    seasons: [
+      'spring',
+      'summer',
+      'autumn',
+      'winter',
+    ] as import('../src/domain/diaryFilters').DiarySeason[],
+    emotionGroups: [
+      'positive',
+      'neutral',
+      'negative',
+    ] as import('../src/domain/diaryFilters').DiaryEmotionGroup[],
+  };
+  assert.deepEqual(
+    (await getDiaryList(db, all, 0)).map((row) => row.date),
+    entries.slice(0, 5).map(([date]) => date),
+  );
+  assert.deepEqual(
+    (await getDiaryList(db, all, 1)).map((row) => row.date),
+    entries.slice(5, 10).map(([date]) => date),
+  );
+  assert.deepEqual(
+    (await getDiaryList(db, all, 2)).map((row) => row.date),
+    entries.slice(10).map(([date]) => date),
+  );
+  for (const patch of [{ year: 1899 }, { seasons: ['invalid'] }, { emotionGroups: ['invalid'] }]) {
+    await assert.rejects(getDiaryList(db, { ...filters, ...patch } as any, 0));
+  }
+  raw.close();
+});
+
+test('diary year choices contain only distinct diary years and drop a year after its last diary is removed', async () => {
+  const { db, raw } = await database();
+  assert.deepEqual(await getDiaryYears(db), []);
+  const first = await saveDiary(db, { date: '2023-01-01', emotion: 0, text: '기록', files: [] });
+  const second = await saveDiary(db, { date: '2023-12-31', emotion: 0, text: '기록', files: [] });
+  const last = await saveDiary(db, { date: '2024-02-01', emotion: 0, text: '기록', files: [] });
+  const habit = await saveHabit(db, {
+    name: '걷기',
+    priority: 0,
+    icon_key: 'walking',
+    initial_started_at: '2022-01-01T00:00:00.000Z',
+  });
+  await setHabitCompletion(db, habit, today, true);
+  assert.deepEqual(await getDiaryYears(db), [2024, 2023]);
+  await deleteDiary(db, first.id);
+  assert.deepEqual(await getDiaryYears(db), [2024, 2023]);
+  await deleteDiary(db, second.id);
+  assert.deepEqual(await getDiaryYears(db), [2024]);
+  await deleteDiary(db, last.id);
+  assert.deepEqual(await getDiaryYears(db), []);
   raw.close();
 });

@@ -15,7 +15,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import { withReadLock } from '../db';
 import { AppState } from 'react-native';
 import { useEffect, useState } from 'react';
-import { getDiaryByDate, getDiaryById, getDiaryList } from '../db/diary';
+import { getDiaryByDate, getDiaryById, getDiaryList, getDiaryYears } from '../db/diary';
 import { getCompletions, getCompletionsByHabit, getHabitById, getHabitList } from '../db/habit';
 import { getAvailableYears, getDiaryStats, getHabitStats } from '../db/stats';
 import type { Diary, DiaryFilters } from '../db/types';
@@ -24,6 +24,11 @@ import { todayString } from '../domain/date';
 import { refreshSoberWidgets } from '../widgets/sober';
 
 export const diaryQueries = {
+  years: (db: SQLiteDatabase) =>
+    queryOptions({
+      queryKey: ['diary', 'years'],
+      queryFn: () => withReadLock(() => getDiaryYears(db)),
+    }),
   list: (db: SQLiteDatabase, filters: DiaryFilters) =>
     infiniteQueryOptions({
       queryKey: ['diary', 'list', filters],

@@ -1,8 +1,16 @@
+import { DIARY_SEASONS, DIARY_EMOTION_GROUPS } from '../domain/diaryFilters';
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { DIARY_IMAGE_MAX_COUNT, DIARY_TEXT_MAX_LENGTH, PAGE_SIZE } from '../domain/constants';
 import { assertDate, assertYear, todayString } from '../domain/date';
 import { withWriteLock } from './index';
 import type { Diary, DiaryDetail, DiaryFilters, DiaryImage, Habit } from './types';
+
+export async function getDiaryYears(db: SQLiteDatabase): Promise<number[]> {
+  const rows = await db.getAllAsync<{ year: number }>(
+    'SELECT DISTINCT CAST(substr(date, 1, 4) AS INTEGER) AS year FROM diaries ORDER BY year DESC',
+  );
+  return rows.map((row) => row.year);
+}
 
 export async function getDiaryById(db: SQLiteDatabase, id: number): Promise<DiaryDetail | null> {
   const diary = await db.getFirstAsync<Diary>('SELECT * FROM diaries WHERE id = ?', id);
@@ -23,27 +31,50 @@ export const getDiaryByDate = (db: SQLiteDatabase, date: string) =>
 export async function getDiaryList(db: SQLiteDatabase, filters: DiaryFilters, page: number) {
   if (filters.year !== null) assertYear(filters.year);
   if (
-    !Number.isInteger(filters.month) ||
-    filters.month < 0 ||
-    filters.month > 12 ||
-    (filters.year === null && filters.month !== 0)
+    !Array.isArray(filters.seasons) ||
+    filters.seasons.some((season) => !Object.hasOwn(DIARY_SEASONS, season))
   )
-    throw new Error('기간을 확인해주세요.');
+    throw new Error('계절을 확인해주세요.');
   if (
-    filters.emotion !== null &&
-    (!Number.isInteger(filters.emotion) || filters.emotion < 0 || filters.emotion > 9)
+    !Array.isArray(filters.emotionGroups) ||
+    filters.emotionGroups.some((group) => !Object.hasOwn(DIARY_EMOTION_GROUPS, group))
   )
     throw new Error('감정을 확인해주세요.');
   if (!Number.isInteger(page) || page < 0) throw new Error('목록 위치가 올바르지 않습니다.');
-  const prefix =
-    filters.year === null
-      ? ''
-      : `${filters.year}-${filters.month ? String(filters.month).padStart(2, '0') : ''}`;
+  const conditions: string[] = [];
+  const parameters: (string | number)[] = [];
+  const seasons = [...new Set(filters.seasons)];
+  if (filters.year !== null) {
+    if (seasons.length) {
+      const ranges = seasons.map((season) => {
+        const startMonth = DIARY_SEASONS[season].months[0];
+        const endMonth = season === 'winter' ? 3 : startMonth + 3;
+        const endYear = filters.year! + (season === 'winter' ? 1 : 0);
+        parameters.push(
+          `${filters.year}-${String(startMonth).padStart(2, '0')}-01`,
+          `${endYear}-${String(endMonth).padStart(2, '0')}-01`,
+        );
+        return '(date >= ? AND date < ?)';
+      });
+      conditions.push(`(${ranges.join(' OR ')})`);
+    } else {
+      conditions.push('date >= ? AND date < ?');
+      parameters.push(`${filters.year}-01-01`, `${filters.year + 1}-01-01`);
+    }
+  } else if (seasons.length && seasons.length < 4) {
+    const months = seasons.flatMap((season) => [...DIARY_SEASONS[season].months]);
+    conditions.push(`CAST(substr(date, 6, 2) AS INTEGER) IN (${months.map(() => '?').join(',')})`);
+    parameters.push(...months);
+  }
+  const groups = [...new Set(filters.emotionGroups)];
+  if (groups.length && groups.length < 3) {
+    const emotions = groups.flatMap((group) => [...DIARY_EMOTION_GROUPS[group].emotions]);
+    conditions.push(`emotion IN (${emotions.map(() => '?').join(',')})`);
+    parameters.push(...emotions);
+  }
   const diaries = await db.getAllAsync<Diary>(
-    `SELECT * FROM diaries WHERE date LIKE ? AND (? IS NULL OR emotion = ?) ORDER BY date ${filters.sort === 'ASC' ? 'ASC' : 'DESC'} LIMIT ? OFFSET ?`,
-    `${prefix}%`,
-    filters.emotion,
-    filters.emotion,
+    `SELECT * FROM diaries${conditions.length ? ` WHERE ${conditions.join(' AND ')}` : ''} ORDER BY date ${filters.sort === 'ASC' ? 'ASC' : 'DESC'} LIMIT ? OFFSET ?`,
+    ...parameters,
     PAGE_SIZE,
     page * PAGE_SIZE,
   );
