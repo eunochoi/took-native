@@ -238,7 +238,7 @@ export default function SettingsScreen() {
             <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
               감정 아이콘
             </Text>
-            <View className="p-2">
+            <View className="py-2 px-1">
               <EmotionIconStyleSelector
                 value={settings.emotionStyle}
                 disabled={disabled}
@@ -266,7 +266,7 @@ export default function SettingsScreen() {
               accessibilityState={{ disabled }}
               disabled={disabled}
               onPress={() => openModal('/habit/order')}
-              className={`p-2 flex-row items-center justify-between gap-2 ${disabled ? 'opacity-40' : 'opacity-100'}`}
+              className={`py-2 px-1 flex-row items-center justify-between gap-2 ${disabled ? 'opacity-40' : 'opacity-100'}`}
             >
               <Text className="text-base text-theme-text-secondary">습관 목록 순서 개인화</Text>
               <AppIcon name="low-priority" size={iconSizes.md} color={colors.accent} />

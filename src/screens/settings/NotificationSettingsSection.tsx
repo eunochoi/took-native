@@ -14,7 +14,7 @@ export function NotificationSettingsSection({ disabled }: { disabled: boolean })
       <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
         알림
       </Text>
-      <View className="gap-6 p-2">
+      <View className="gap-6 py-2 px-1">
         {REMINDERS.map((item) => {
           const time = settings[item.key];
           const hour = time ? Number(time.slice(0, 2)) : 0;

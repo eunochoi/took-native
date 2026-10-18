@@ -29,7 +29,7 @@ export function AppearanceSettingsSection({
         <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
           색상
         </Text>
-        <View className="gap-6 p-2">
+        <View className="gap-6 py-2 px-1">
           <View className="w-full min-w-0 flex-row flex-wrap items-center justify-between gap-2">
             <Text className="min-w-0 text-base text-theme-text-secondary">강조 색상</Text>
             <View className="ml-auto flex-row items-center justify-between gap-2">
@@ -75,7 +75,7 @@ export function AppearanceSettingsSection({
         <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
           폰트
         </Text>
-        <View className="p-2 w-full min-w-0 flex-row flex-wrap items-center justify-between gap-2">
+        <View className="py-2 px-1 w-full min-w-0 flex-row flex-wrap items-center justify-between gap-2">
           <Text className="min-w-0 text-base text-theme-text-secondary">폰트 크기 선택</Text>
           <Pressable
             accessibilityRole="button"
