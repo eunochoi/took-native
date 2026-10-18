@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "툭 로그",
+    "name": "오늘 툭",
     "slug": "took-native",
     "version": "2.1.6",
     "scheme": "took-local",
@@ -90,7 +90,7 @@
           "widgets": [
             {
               "name": "Sober",
-              "label": "took 거리두기 타이머",
+              "label": "오늘 툭 거리두기 타이머",
               "description": "선택한 거리두기의 경과 시간과 목표를 확인해요.",
               "minWidth": "110dp",
               "minHeight": "110dp",

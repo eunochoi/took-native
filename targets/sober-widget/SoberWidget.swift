@@ -174,7 +174,7 @@ struct TookSoberWidget: Widget {
     AppIntentConfiguration(kind: kind, intent: SoberWidgetIntent.self, provider: SoberWidgetProvider()) { entry in
       SoberWidgetView(entry: entry)
     }
-    .configurationDisplayName("툭 로그 거리두기")
+    .configurationDisplayName("오늘 툭 거리두기")
     .description("선택한 거리두기의 경과 시간과 목표를 확인해요.")
     .supportedFamilies([.systemSmall, .systemMedium])
   }
