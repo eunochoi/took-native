@@ -13,7 +13,7 @@ export function CalendarRecordCounts({
 }) {
   const { iconSizes } = useAppTheme();
   return (
-    <View className="min-w-0 shrink flex-row items-center gap-2 px-2.5">
+    <View className="min-w-0 shrink flex-row items-center gap-2 px-3.5">
       {[
         {
           key: 'diary',
