@@ -41,7 +41,7 @@ export function SoberStatisticsSummary({
       ).map((stat, index) => (
         <View
           key={stat.label}
-          className={`flex-1 min-w-0 items-center gap-3.5 px-1 border-theme-border-muted ${index < 2 ? 'border-r' : ''}`}
+          className={`flex-1 min-w-0 items-center gap-2 px-1 border-theme-border-muted ${index < 2 ? 'border-r' : ''}`}
         >
           <View className="flex gap-1 items-center">
             <AppIcon name={stat.icon} size={appRem * 2} className="text-theme-accent" />
@@ -57,7 +57,7 @@ export function SoberStatisticsSummary({
             <Text
               numberOfLines={1}
               adjustsFontSizeToFit
-              className="tracking-tighter w-full text-center text-2xl font-bold leading-snug text-theme-text-primary"
+              className="tracking-tighter w-full text-center text-xl font-bold leading-snug text-theme-text-primary"
             >
               {stat.value}
             </Text>
