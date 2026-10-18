@@ -28,13 +28,15 @@ export function HomeYearPicker({
       title="어느 해의 기록을 볼까요?"
       onClose={onClose}
       footer={
-        !query.isError && !query.isPending ? (closePicker) => (
-          <Button
-            labelWeight="normal"
-            label="적용하기"
-            onPress={() => closePicker(() => onApply(tempYear))}
-          />
-        ) : undefined
+        !query.isError && !query.isPending
+          ? (closePicker) => (
+              <Button
+                labelWeight="normal"
+                label="적용하기"
+                onPress={() => closePicker(() => onApply(tempYear))}
+              />
+            )
+          : undefined
       }
     >
       <>
@@ -46,9 +48,7 @@ export function HomeYearPicker({
             }}
           />
         ) : query.isPending ? (
-          <Text className="text-center text-theme-text-secondary">
-            연도를 불러오는 중이에요.
-          </Text>
+          <Text className="text-center text-theme-text-secondary">연도를 불러오는 중이에요.</Text>
         ) : (
           <>
             <ScrollView
@@ -67,7 +67,6 @@ export function HomeYearPicker({
                     className={`px-1.5 pb-1.5 ${years.length === 1 ? 'w-full' : years.length === 2 ? 'w-1/2' : 'w-1/3'}`}
                   >
                     <PickerOption
-                      selectionOnly
                       selected={tempYear === value}
                       accessibilityLabel={`${value}년`}
                       onPress={() => setTempYear(value)}

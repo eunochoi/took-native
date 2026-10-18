@@ -56,7 +56,6 @@ export function SoberFilterPicker({
                 {SOBER_RECORD_FILTERS.slice(offset, offset + 2).map((option) => (
                   <View key={option.days} className="flex-1">
                     <PickerOption
-                      variant="filter"
                       compact
                       selected={draft.minimumDays === option.days}
                       accessibilityLabel={`현재 기록 ${option.label}`}

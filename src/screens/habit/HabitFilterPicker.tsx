@@ -40,7 +40,6 @@ export function HabitFilterPicker({
             {HABIT_COMPLETION_FILTERS.map((option) => (
               <View key={option.value} className="flex-1">
                 <PickerOption
-                  variant="filter"
                   compact
                   selected={draft.completion === option.value}
                   accessibilityLabel={`오늘 ${option.label}`}
@@ -62,7 +61,6 @@ export function HabitFilterPicker({
             {[null, 0, 1, 2].map((priority) => (
               <View key={priority ?? 'all'} className="flex-1">
                 <PickerOption
-                  variant="filter"
                   compact
                   selected={draft.priority === priority}
                   accessibilityLabel={priority === null ? '별표 전체' : `별표 ${priority + 1}개`}

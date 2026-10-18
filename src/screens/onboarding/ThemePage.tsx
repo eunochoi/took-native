@@ -49,7 +49,7 @@ export function ThemePage({
                 <PickerOption
                   compact
                   dense
-                  selectionOnly
+
                   selected={settings.themeAccent === accent}
                   disabled={busy}
                   accessibilityLabel={`${ACCENT_LABELS[accent]} 강조 색상`}
@@ -77,7 +77,7 @@ export function ThemePage({
                 <PickerOption
                   compact
                   dense
-                  selectionOnly
+
                   selected={settings.themeMode === value}
                   disabled={busy}
                   accessibilityLabel={`${label} 배경`}
@@ -101,7 +101,7 @@ export function ThemePage({
                 <PickerOption
                   compact
                   dense
-                  selectionOnly
+
                   selected={settings.fontSize === value}
                   disabled={busy}
                   accessibilityLabel={`${label} 글자 크기`}

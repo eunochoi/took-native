@@ -86,7 +86,6 @@ export function DiaryFilterPicker({
               </Pressable>
               <View className="flex-1">
                 <PickerOption
-                  variant="filter"
                   compact
                   selected={draftYear === displayYear && draftMonth === 0}
                   accessibilityLabel={`${displayYear}년 전체`}
@@ -125,7 +124,6 @@ export function DiaryFilterPicker({
                     return (
                       <View key={value} className="flex-1">
                         <PickerOption
-                          variant="filter"
                           compact
                           selected={selected}
                           disabled={disabled}
@@ -164,7 +162,6 @@ export function DiaryFilterPicker({
                   return (
                     <View key={item.key} className="flex-1 min-w-0">
                       <PickerOption
-                        variant="filter"
                         compact
                         dense
                         selected={selected}

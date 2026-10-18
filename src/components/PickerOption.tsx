@@ -1,35 +1,49 @@
 import { Pressable } from 'react-native';
 import type { ReactNode } from 'react';
+import { twMerge } from 'tailwind-merge';
+import {
+  SELECTION_BOX_CLASS_NAME,
+  CHECKED_BOX_CLASS_NAME,
+  UNCHECKED_BOX_CLASS_NAME,
+} from '../theme/classes';
 
 export function PickerOption({
   selected,
-  variant = 'default',
+  checkbox = false,
   compact = false,
   dense = false,
-  selectionOnly = false,
   disabled = false,
   accessibilityLabel,
   onPress,
   children,
 }: {
   selected: boolean;
-  variant?: 'default' | 'filter';
+  checkbox?: boolean;
   compact?: boolean;
   dense?: boolean;
-  selectionOnly?: boolean;
   disabled?: boolean;
   accessibilityLabel: string;
   onPress: () => void;
   children: ReactNode;
 }) {
+  const stateClassName = selected ? CHECKED_BOX_CLASS_NAME : UNCHECKED_BOX_CLASS_NAME;
   return (
     <Pressable
-      accessibilityRole="button"
+      accessibilityRole={checkbox ? 'checkbox' : 'button'}
       accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ selected, disabled }}
+      accessibilityState={{ ...(checkbox ? { checked: selected } : { selected }), disabled }}
       disabled={disabled}
       onPress={onPress}
-      className={`items-center justify-center ${dense ? 'gap-1' : 'gap-2'} border ${variant === 'filter' ? `ios:curve-continuous rounded-xl ${selected ? 'bg-theme-accent/10' : 'bg-transparent'}` : `bg-transparent ${selectionOnly ? 'ios:curve-continuous rounded-theme' : 'ios:curve-continuous rounded-2xl'}`} active:opacity-70 ${disabled ? 'opacity-40' : 'opacity-100'} ${dense ? 'min-h-12 px-1 py-2' : compact ? 'min-h-12 px-1 py-3' : 'min-h-16 p-4'} ${selected ? 'border-theme-accent' : variant === 'filter' ? 'border-transparent' : selectionOnly ? 'border-transparent' : 'border-theme-border'}`}
+      className={twMerge(
+        SELECTION_BOX_CLASS_NAME,
+        stateClassName,
+        dense
+          ? 'gap-1 min-h-12 px-1 py-2'
+          : compact
+            ? 'gap-2 min-h-12 px-1 py-3'
+            : 'gap-2 min-h-16 p-4',
+        disabled ? 'opacity-40' : 'opacity-100',
+      )}
     >
       {children}
     </Pressable>

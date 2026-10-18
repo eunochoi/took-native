@@ -1,3 +1,9 @@
+import { twMerge } from 'tailwind-merge';
+import {
+  SELECTION_BOX_CLASS_NAME,
+  CHECKED_BOX_CLASS_NAME,
+  UNCHECKED_BOX_CLASS_NAME,
+} from '../../theme/classes';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { Pressable, View } from 'react-native';
 import { EmotionImage } from '../../components/EmotionImage';
@@ -32,14 +38,20 @@ export function EmotionIconStyleSelector({
           accessibilityState={{ checked: value === style, disabled }}
           disabled={disabled}
           onPress={() => onChange(style)}
-          className={`flex-1 items-center px-2 ios:curve-continuous rounded-theme ${compact ? 'gap-1 py-2' : 'gap-3 py-6'} ${dimmed ? 'opacity-40' : ''} ${value === style ? `border border-theme-accent ${compact ? 'bg-transparent' : 'bg-theme-accent/10'}` : 'border border-transparent'}`}
+          className={twMerge(
+            SELECTION_BOX_CLASS_NAME,
+            value === style ? CHECKED_BOX_CLASS_NAME : UNCHECKED_BOX_CLASS_NAME,
+            'flex-1 px-2',
+            compact ? 'gap-1 py-2' : 'gap-3 py-6',
+            dimmed && 'opacity-40',
+          )}
         >
           <View className="flex-row items-center gap-1">
             <EmotionImage emotion={0} iconStyle={style} size={appRem * 1.75} />
             <EmotionImage emotion={6} iconStyle={style} size={appRem * 1.75} />
           </View>
           <Text
-            className={`text-center text-sm font-medium ${compact && value === style ? 'text-theme-accent' : 'text-theme-text-primary'}`}
+            className={`text-center text-sm font-medium ${value === style ? 'text-theme-accent' : 'text-theme-text-primary'}`}
           >
             {['기본형', '단순형', '이모지'][index]}
           </Text>

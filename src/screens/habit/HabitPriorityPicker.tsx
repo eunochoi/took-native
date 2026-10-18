@@ -35,7 +35,6 @@ export function HabitPriorityPicker({
         {HABIT_PRIORITY_LABELS.map((label, priority) => (
           <View key={label} className="flex-1">
             <PickerOption
-              selectionOnly
               selected={draft === priority}
               accessibilityLabel={label}
               onPress={() => setDraft(priority)}

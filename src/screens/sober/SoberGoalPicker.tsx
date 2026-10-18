@@ -82,7 +82,7 @@ export function SoberGoalPicker({
                   <View key={value} className="flex-1">
                     <PickerOption
                       compact
-                      selectionOnly
+
                       selected={Number(draftDays) === value}
                       accessibilityLabel={formatSoberGoal(value)}
                       onPress={() => {

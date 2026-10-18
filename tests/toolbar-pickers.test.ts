@@ -50,6 +50,7 @@ function picker(path: string, name: string, initial: Record<string, unknown>) {
           );
           return sheetExports;
         }
+        if (dependency === 'tailwind-merge') return require(dependency);
         if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (dependency === 'react')
@@ -314,11 +315,6 @@ test('filters share footer reset and apply while diary keeps ten compact emotion
       !nodes(view.shell.props.children).some(
         (node) => node.props.accessibilityLabel === '선택 초기화',
       ),
-    );
-    assert(
-      view.content
-        .filter((node) => node.type === 'PickerOption')
-        .every((node) => node.props.variant === 'filter'),
     );
   }
   const view = samples[0].render();
@@ -633,4 +629,40 @@ test('sober filter supports a three-month threshold through the shared footer', 
   assert.deepEqual(JSON.parse(JSON.stringify(ui.applied)), [
     [{ priorityOnly: false, minimumDays: 90 }],
   ]);
+});
+
+
+test('picker checkbox accessibility announces checked state without changing ordinary options', () => {
+  for (const selected of [false, true]) {
+    const checkbox = picker('src/components/PickerOption.tsx', 'PickerOption', {
+      selected,
+      checkbox: true,
+      accessibilityLabel: '봄',
+    }).render().shell;
+    assert.equal(checkbox.props.accessibilityRole, 'checkbox');
+    assert.equal(checkbox.props.accessibilityState.checked, selected);
+    const option = picker('src/components/PickerOption.tsx', 'PickerOption', {
+      selected,
+      accessibilityLabel: '일반 선택',
+    }).render().shell;
+    assert.equal(option.props.accessibilityRole, 'button');
+    assert.equal(option.props.accessibilityState.selected, selected);
+  }
+});
+
+
+test('emotion icon style cards share checked and unchecked appearance and remain single selection', () => {
+  let changed = '';
+  const ui = picker(
+    'src/screens/settings/EmotionIconStyleSelector.tsx',
+    'EmotionIconStyleSelector',
+    { value: 'simple', disabled: false, onChange: (value: string) => (changed = value) },
+  );
+  const options = ui.render().content.filter((node) => node.props.accessibilityRole === 'radio');
+  assert.equal(options.length, 3);
+  assert.equal(options.filter((node) => node.props.accessibilityState.checked).length, 1);
+  assert(options[1].props.className.includes('bg-theme-accent/10'));
+  assert(options[0].props.className.includes('bg-theme-border-muted/40'));
+  options[0].props.onPress();
+  assert.equal(changed, 'basic');
 });

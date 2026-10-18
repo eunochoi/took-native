@@ -44,16 +44,13 @@ export function DiaryEmotionPicker({
               return (
                 <View key={emotion.key} className="flex-1 min-w-0">
                   <PickerOption
-                    selectionOnly
                     compact
                     selected={selected}
                     accessibilityLabel={emotion.name}
                     onPress={() => setDraft(allowDeselect && selected ? null : id)}
                   >
                     <EmotionImage emotion={id} size={appRem * 2.75} />
-                    <Text
-                      className={`text-xs font-normal ${selected ? 'text-theme-accent' : ''}`}
-                    >
+                    <Text className={`text-xs font-normal ${selected ? 'text-theme-accent' : ''}`}>
                       {emotion.name}
                     </Text>
                   </PickerOption>

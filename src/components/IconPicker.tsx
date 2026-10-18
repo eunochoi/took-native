@@ -41,7 +41,7 @@ export function IconPicker<Key extends string>({
               <View key={key} className="flex-1 min-w-0">
                 <PickerOption
                   compact
-                  selectionOnly
+
                   selected={draft === key}
                   accessibilityLabel={label}
                   onPress={() => setDraft(key)}
