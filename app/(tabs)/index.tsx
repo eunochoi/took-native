@@ -44,7 +44,7 @@ export default function Home() {
               locale: ko,
             })}
           </Text>
-          <Text className="font-bold text-3xl">오늘을 툭!!</Text>
+          <Text className="font-bold text-3xl">오늘도 툭!!</Text>
           <View className="flex-row items-center gap-2">
             <Text className="font-bold text-3xl">나답게 쌓는 하루</Text>
             <Animated.View
@@ -62,7 +62,7 @@ export default function Home() {
           </View>
         </View>
         <Text className="text-theme-accent-deep text-base font-semibold">
-          #감정기록 #작은습관 #거리두기
+          #감정기록 #습관관리 #거리두기
         </Text>
       </View>
       <View className="shrink-0">
