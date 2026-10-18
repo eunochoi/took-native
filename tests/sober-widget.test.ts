@@ -15,6 +15,7 @@ import type { Sober } from '../src/db/types';
 import initSqlJs from 'sql.js';
 import { ACCENT_PALETTES } from '../src/theme/colors';
 import tokens from '../src/theme/tokens.json';
+import { buildIosSoberWidgetSnapshot } from '../src/widgets/sober/ios/snapshot';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
@@ -36,6 +37,128 @@ function load(path: string, mocks: Record<string, unknown>) {
   });
   return exports;
 }
+
+test('iOS snapshot shares current starts and widget colors without copying private record details', () => {
+  const snapshot = buildIosSoberWidgetSnapshot(
+    [
+      {
+        id: 1,
+        name: '커피',
+        icon_key: 'coffee',
+        initial_started_at: '2026-10-01T00:00:00Z',
+        goal_mode: 'AUTO',
+        goal_days: null,
+        description: 'private',
+      } as Sober,
+      {
+        id: 2,
+        name: '야식',
+        icon_key: 'age19',
+        initial_started_at: '2026-10-02T00:00:00Z',
+        goal_mode: 'MANUAL',
+        goal_days: 30,
+      } as Sober,
+    ],
+    [
+      { sober_id: 1, restarted_at: '2026-10-03T00:00:00Z', memo: 'private' } as any,
+      { sober_id: 2, restarted_at: '2026-10-04T00:00:00Z' } as any,
+    ],
+  );
+  assert.equal(snapshot.records[0].startedAt, Date.parse('2026-10-03T00:00:00Z') / 1000);
+  assert.equal(snapshot.records[1].startedAt, Date.parse('2026-10-04T00:00:00Z') / 1000);
+  assert.equal(snapshot.records[1].iconGlyph, '19');
+  assert(!JSON.stringify(snapshot).includes('private'));
+  for (const accent of ACCENT_KEYS)
+    assert.equal(snapshot.accents[accent], ACCENT_PALETTES[accent].accent);
+  for (const icon_key of Object.keys(SOBER_ICONS) as Sober['icon_key'][]) {
+    const result = buildIosSoberWidgetSnapshot(
+      [
+        {
+          id: 1,
+          name: 'test',
+          icon_key,
+          initial_started_at: '2026-10-01T00:00:00Z',
+          goal_mode: 'MANUAL',
+          goal_days: 3,
+        } as Sober,
+      ],
+      [],
+    );
+    assert(result.records[0].iconGlyph);
+    assert(result.records[0].iconFont);
+  }
+});
+
+test('iOS bridge skips old binaries, clears deleted records and closes database on sync failure', async () => {
+  let native: any = null;
+  let opened = 0;
+  let closed = 0;
+  let sobers: Sober[] = [];
+  const writes: string[] = [];
+  const { syncIosSoberWidgets } = load('../src/widgets/sober/ios/sync.ts', {
+    expo: { requireOptionalNativeModule: () => native },
+    'expo-sqlite': {
+      openDatabaseAsync: async () => {
+        opened++;
+        return {
+          closeAsync: async () => {
+            closed++;
+          },
+        };
+      },
+    },
+    '../../../db': { withReadLock: (work: any) => work() },
+    '../../../db/sober': { getSoberList: async () => sobers, getSoberRestarts: async () => [] },
+    './snapshot': { buildIosSoberWidgetSnapshot },
+  });
+  await syncIosSoberWidgets();
+  assert.equal(opened, 0);
+  native = {
+    syncAsync: async (value: string) => {
+      writes.push(value);
+    },
+  };
+  sobers = [
+    {
+      id: 1,
+      name: '커피',
+      icon_key: 'coffee',
+      initial_started_at: '2026-10-01T00:00:00Z',
+      goal_mode: 'AUTO',
+      goal_days: null,
+    } as Sober,
+  ];
+  await syncIosSoberWidgets();
+  sobers = [];
+  await syncIosSoberWidgets();
+  assert.equal(JSON.parse(writes[0]).records.length, 1);
+  assert.deepEqual(JSON.parse(writes[1]).records, []);
+  native = {
+    syncAsync: async () => {
+      throw Error('native failed');
+    },
+  };
+  await assert.rejects(syncIosSoberWidgets(), /native failed/);
+  assert.equal(opened, 3);
+  assert.equal(closed, opened);
+});
+
+test('iOS refresh dispatches safely and never imports the Android widget runtime', async () => {
+  let updates = 0;
+  const { refreshSoberWidgets } = load('../src/widgets/sober.ts', {
+    'react-native': { Platform: { OS: 'ios' } },
+    './sober/model': { SOBER_WIDGET_NAME: 'Sober' },
+    './sober/ios/sync': {
+      syncIosSoberWidgets: async () => {
+        updates++;
+        throw Error('failed');
+      },
+    },
+  });
+  assert.equal(refreshSoberWidgets(), undefined);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(updates, 1);
+});
 
 test('widget choices are independent, validated, and use every existing Korean accent label', () => {
   assert.deepEqual(defaultWidgetSettings(1), {

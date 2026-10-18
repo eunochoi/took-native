@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSExtension</key>
+  <dict>
+    <key>NSExtensionPointIdentifier</key>
+    <string>com.apple.widgetkit-extension</string>
+  </dict>
+  <key>TookWidgetAppGroup</key>
+  <string>group.com.took.widgets</string>
+  <key>UIAppFonts</key>
+  <array>
+    <string>TmoneyRoundWindRegular.otf</string>
+    <string>TmoneyRoundWindExtraBold.otf</string>
+    <string>Ionicons.ttf</string>
+    <string>MaterialCommunityIcons.ttf</string>
+  </array>
+</dict>
+</plist>

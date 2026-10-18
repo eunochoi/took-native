@@ -4,9 +4,16 @@ import { SOBER_WIDGET_NAME } from './sober/model';
 // Do not import the widget package on old APKs/Expo Go: its enforcing TurboModule
 // would fail at import time. Widget failure must never fail a saved record.
 export function refreshSoberWidgets() {
-  if (Platform.OS !== 'android' || !TurboModuleRegistry.get('AndroidWidget')) return;
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') return;
+  if (Platform.OS === 'android' && !TurboModuleRegistry.get('AndroidWidget')) return;
   void Promise.resolve()
     .then(async () => {
+      if (Platform.OS === 'ios') {
+        const { syncIosSoberWidgets } =
+          require('./sober/ios/sync') as typeof import('./sober/ios/sync');
+        await syncIosSoberWidgets();
+        return;
+      }
       const { getWidgetInfo, requestWidgetUpdateById } =
         require('react-native-android-widget') as typeof import('react-native-android-widget');
       const { renderSoberWidget } = require('./sober/task') as typeof import('./sober/task');

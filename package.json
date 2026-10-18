@@ -19,6 +19,7 @@
     "version:bump": "node scripts/bump-version.cjs"
   },
   "dependencies": {
+    "@bacons/apple-targets": "5.0.0",
     "@expo/vector-icons": "^15.0.2",
     "@noble/hashes": "^2.4.0",
     "@tanstack/react-query": "^5.104.1",

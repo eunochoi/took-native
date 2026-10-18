@@ -49,7 +49,7 @@ const config = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8')).
 assert.deepEqual(config.platforms, ['android', 'ios']);
 assert.equal(config.android.package, 'com.everstamp');
 assert.equal(config.userInterfaceStyle, 'automatic');
-assert.equal(config.ios.bundleIdentifier, 'com.everstamp');
+assert.equal(config.ios.bundleIdentifier, 'com.took');
 assert.match(config.ios.buildNumber, /^\d+$/);
 assert(pkg.scripts.ios);
 for (const file of source) {

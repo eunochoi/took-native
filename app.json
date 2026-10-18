@@ -12,10 +12,16 @@
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
     "ios": {
-      "bundleIdentifier": "com.everstamp",
+      "bundleIdentifier": "com.took",
       "buildNumber": "1",
       "supportsTablet": false,
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.took.widgets"
+        ]
+      },
       "infoPlist": {
+        "TookWidgetAppGroup": "group.com.took.widgets",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -33,6 +39,7 @@
       "versionCode": 25
     },
     "plugins": [
+      "@bacons/apple-targets",
       "./plugins/withIosSceneLifecycle.cjs",
       "./plugins/withIosBuildSettings.cjs",
       "./plugins/withAndroidDevApp.cjs",
