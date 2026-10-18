@@ -20,7 +20,7 @@ export function SoberStatisticsSummary({
           {
             icon: 'emoji-events',
             label: '최고 기록',
-            value: formatSoberDuration(summary.longest),
+            value: formatSoberDuration(summary.longest).replace(/\s+/g, ''),
           },
           {
             icon: 'flag',
@@ -30,13 +30,13 @@ export function SoberStatisticsSummary({
           {
             icon: 'play-circle-outline',
             label: '첫 시작일',
-            value: format(parseISO(initialStartedAt), 'yy년 M월 d일'),
+            value: format(parseISO(initialStartedAt), 'yy년M월d일'),
           },
         ] as const
       ).map((stat, index) => (
         <View
           key={stat.label}
-          className={`flex-1 min-w-0 items-center gap-2 px-1 py-4 border-theme-border-muted ${index < 2 ? 'border-r' : ''}`}
+          className={`${index === 1 ? 'flex-[0.85]' : 'flex-1'} min-w-0 items-center gap-2 px-1 border-theme-border-muted ${index < 2 ? 'border-r' : ''}`}
         >
           <AppIcon name={stat.icon} size={appRem * 2} className="text-theme-accent" />
           <Text className="text-center text-sm text-theme-text-secondary">{stat.label}</Text>

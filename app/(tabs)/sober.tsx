@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo, useRef, useState } from 'react';
-import { FlatList, View } from 'react-native';
+import { FlatList, Pressable, View } from 'react-native';
 import { useNotice } from '../../src/components/NoticeProvider';
 import { AppIcon } from '../../src/components/AppIcon';
 import { ColorView } from '../../src/components/ColorTransition';
@@ -76,6 +76,7 @@ export default function SoberList() {
   const ready = !!list.data && !!restarts.data;
   const failed = list.isError || restarts.isError;
   const disabledAdd = !ready || failed;
+  const showAdd = ready && sorted.length > 0 && sorted.length < MAX_SOBER_COUNT;
   const rows: Row[] =
     ready && filtered.length
       ? filtered.map((sober): Row => ({ kind: 'sober', sober }))
@@ -147,7 +148,7 @@ export default function SoberList() {
                     restarts={grouped.get(item.sober.id) ?? []}
                     now={now}
                     isFirst={index === 0}
-                    isLast={index === rows.length - 1 && !failed}
+                    isLast={index === rows.length - 1 && !failed && !showAdd}
                   />
                 </View>
               </View>
@@ -187,6 +188,24 @@ export default function SoberList() {
         }}
         ListFooterComponent={
           <>
+            {showAdd && (
+              <View style={{ paddingHorizontal: '5%' }}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="거리두기 추가"
+                  disabled={disabledAdd}
+                  onPress={() => {
+                    if (!disabledAdd && sorted.length < MAX_SOBER_COUNT) openModal('/sober/new');
+                  }}
+                  className={`min-h-40 items-center justify-center gap-2 border-t border-theme-border/50 bg-theme-surface px-2 py-5 active:opacity-65 ${disabledAdd ? 'opacity-40' : ''}`}
+                >
+                  <AppIcon name="add" size={appRem * 2} color={colors.accent} />
+                  <Text className="text-xs text-center text-theme-text-tertiary">
+                    ({sorted.length}/{MAX_SOBER_COUNT})
+                  </Text>
+                </Pressable>
+              </View>
+            )}
             {ready && filtered.length > 0 && failed ? (
               <QueryError
                 className="pt-4"

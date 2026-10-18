@@ -140,6 +140,7 @@ function harness() {
         exports,
         Error,
         require: (name: string) => {
+          if (name.endsWith('theme/colors')) return require('../src/theme/colors');
           if (name.endsWith('/ModalNavigationProvider')) return navigation;
           assert(name in dependencies, `Unexpected import: ${name}`);
           return dependencies[name];

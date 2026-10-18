@@ -166,6 +166,186 @@ function soberRows(ui: ReturnType<typeof harness>) {
   return nodes(ui.render()).find((node) => node.type === 'FlatList');
 }
 
+test('habit grid pins total progress first and pads rows after including the summary', () => {
+  for (const count of [1, 2, 3, 4]) {
+    const results = {
+      habits: { data: Array.from({ length: count }, (_, index) => habit(index + 1, 0)) },
+      completions: { data: [{ habit_id: 1, date: today }] },
+    };
+    const ui = harness('app/(tabs)/habit.tsx', results);
+    const tree = ui.render();
+    const grid = nodes(tree).find((node) => node.props.className === 'flex-row flex-wrap');
+    const cells = grid.props.children;
+    assert.equal(cells.length, Math.ceil((count + 2) / 2) * 2);
+    assert.equal(cells[0].props.children.type, 'HabitTodayProgress');
+    assert.equal(cells[0].props.children.props.habits.length, count);
+    assert.equal(nodes(tree).filter((node) => node.type === 'HabitTodayProgress').length, 1);
+    assert.equal(nodes(tree).filter((node) => node.type === 'HabitBox').length, count);
+    assert.equal(cells.at(-1).props.children === null, count % 2 === 1);
+    const add = nodes(tree).find(
+      (node) => node.type === 'Pressable' && node.props.accessibilityLabel === '습관 추가',
+    );
+    assert(add);
+    assert.equal(
+      nodes(add)
+        .find((node) => node.type === 'Text')
+        .props.children.join(''),
+      `(${count}/${MAX_HABIT_COUNT})`,
+    );
+    assert.equal(cells[count + 1].props.children, add);
+    add.props.onPress();
+    assert.equal(ui.routes[0], '/habit/new');
+    for (const [index, cell] of cells.entries()) {
+      assert(cell.props.className.includes(index < cells.length - 2 ? 'border-b ' : 'border-b-0'));
+      assert(cell.props.className.includes(index % 2 === 0 ? 'border-r' : 'border-r-0'));
+    }
+    applyPageFilter(ui, 'Habit', { completedOnly: true, priorities: [2] });
+    const filtered = ui.render();
+    assert.equal(nodes(filtered).filter((node) => node.type === 'HabitBox').length, 0);
+    const summary = nodes(filtered).find((node) => node.type === 'HabitTodayProgress');
+    assert.equal(summary.props.habits.length, count);
+    assert.equal(summary.props.records, results.completions.data);
+    const filteredAdd = nodes(filtered).find(
+      (node) => node.type === 'Pressable' && node.props.accessibilityLabel === '습관 추가',
+    );
+    assert.equal(
+      nodes(filteredAdd)
+        .find((node) => node.type === 'Text')
+        .props.children.join(''),
+      `(${count}/${MAX_HABIT_COUNT})`,
+    );
+    assert.equal(
+      nodes(filtered).find((node) => node.type === 'EmptyState').props.title,
+      '선택한 조건의 습관이 없어요.',
+    );
+  }
+  const empty = harness('app/(tabs)/habit.tsx', {
+    habits: { data: [] },
+    completions: { data: [] },
+  }).render();
+  assert(!nodes(empty).some((node) => node.type === 'HabitTodayProgress'));
+  assert.equal(
+    nodes(empty).find((node) => node.type === 'EmptyState').props.title,
+    '아직 만든 습관이 없어요.',
+  );
+  const loading = harness('app/(tabs)/habit.tsx', {
+    habits: { data: undefined },
+    completions: { data: undefined },
+  }).render();
+  assert(nodes(loading).some((node) => node.type === 'HabitListSkeleton'));
+  assert(!nodes(loading).some((node) => node.type === 'HabitTodayProgress'));
+});
+
+test('habit grid hides add at the total limit even when filters hide habits', () => {
+  const results = {
+    habits: { data: Array.from({ length: MAX_HABIT_COUNT }, (_, index) => habit(index + 1, 0)) },
+    completions: { data: [], isError: false },
+  };
+  const ui = harness('app/(tabs)/habit.tsx', results);
+  const addButton = (tree: any) =>
+    nodes(tree).find(
+      (node) => node.type === 'Pressable' && node.props.accessibilityLabel === '습관 추가',
+    );
+  assert(!addButton(ui.render()));
+  applyPageFilter(ui, 'Habit', { completedOnly: true, priorities: [] });
+  assert(!addButton(ui.render()));
+  results.habits.data.pop();
+  const available = addButton(ui.render());
+  assert(available);
+  assert.equal(available.props.disabled, false);
+  results.completions.isError = true;
+  const failed = addButton(ui.render());
+  assert.equal(failed.props.disabled, true);
+  failed.props.onPress();
+  assert.equal(ui.routes.length, 0);
+  const emptyUi = harness('app/(tabs)/habit.tsx', {
+    habits: { data: [] },
+    completions: { data: [] },
+  });
+  assert(!addButton(emptyUi.render()));
+  const loading = harness('app/(tabs)/habit.tsx', {
+    habits: { data: undefined },
+    completions: { data: undefined },
+  });
+  assert(!addButton(loading.render()));
+});
+
+test('habit summary shows average completion without created capacity', () => {
+  const ui = harness('src/screens/habit/HabitTodayProgress.tsx');
+  const tree = ui.render({ total: 8, done: 6, today, habits: [], records: [] });
+  const labels = nodes(tree)
+    .filter((node) => node.type === 'Text')
+    .map((node) =>
+      Array.isArray(node.props.children) ? node.props.children.join('') : node.props.children,
+    );
+  assert(!labels.some((label) => String(label).includes('생성')));
+  assert(labels.includes('습관 흐름'));
+  assert(labels.includes('최근 4일'));
+  assert(labels.includes('평균 완료율 0%'));
+  assert(!nodes(tree).some((node) => node.type === 'ProgressBar'));
+});
+
+test('four-day summary uses eligible habits, newest-first dates and live completion changes', () => {
+  const ui = harness('src/screens/habit/HabitTodayProgress.tsx');
+  const props = {
+    total: 2,
+    done: 2,
+    today,
+    habits: [
+      { id: 1, initial_started_at: '2026-10-12T00:00:00' },
+      { id: 2, initial_started_at: '2026-10-14T00:00:00' },
+    ],
+    records: [
+      { habit_id: 1, date: today },
+      { habit_id: 2, date: today },
+      { habit_id: 1, date: '2026-10-12' },
+      { habit_id: 1, date: '2026-10-12' },
+      { habit_id: 2, date: '2026-10-12' },
+      { habit_id: 99, date: '2026-10-12' },
+    ],
+  };
+  assert(nodes(ui.render(props)).some((node) => node.props.children === '평균 완료율 67%'));
+  const bars = nodes(ui.render(props)).filter((node) => node.props.accessibilityRole === 'image');
+  assert.equal(bars.length, 4);
+  for (const [index, bar] of bars.entries()) {
+    assert(bar.props.accessibilityLabel.startsWith(shiftDate(today, -index)));
+  }
+  assert.deepEqual(
+    bars.map((bar) => bar.props.children[0].props.children),
+    ['오늘', '화', '월', '일'],
+  );
+  assert.match(bars[0].props.accessibilityLabel, /오늘, 2개 중 2개 완료, 100%/);
+  assert.match(bars[1].props.accessibilityLabel, /1개 중 0개 완료, 0%/);
+  assert.match(bars[2].props.accessibilityLabel, /1개 중 1개 완료, 100%/);
+  assert.match(bars[3].props.accessibilityLabel, /시작한 습관 없음/);
+  props.records.splice(1, 1);
+  assert(nodes(ui.render(props)).some((node) => node.props.children === '평균 완료율 50%'));
+  const updated = nodes(ui.render({ ...props, done: 1 })).filter(
+    (node) => node.props.accessibilityRole === 'image',
+  );
+  assert.match(updated[0].props.accessibilityLabel, /2개 중 1개 완료, 50%/);
+  assert.equal(updated[0].props.children[1].props.children.props.style.height, '50%');
+});
+
+test('habit boxes label the first day today and retain weekday labels and completion actions', () => {
+  const ui = harness('src/screens/habit/HabitBox.tsx');
+  const toggles: unknown[] = [];
+  const tree = ui.render({
+    habit: { ...habit(1, 0), icon_color: 'sky' },
+    today,
+    records: [],
+    disabled: false,
+    onToggle: (...args: unknown[]) => toggles.push(args),
+  });
+  const days = nodes(tree).filter((node) => node.props.accessibilityRole === 'checkbox');
+  assert.deepEqual(
+    days.map((node) => node.props.children[0].props.children),
+    ['오늘', '화', '월', '일'],
+  );
+  days[0].props.onPress();
+  assert.deepEqual(toggles, [[1, today, true]]);
+});
+
 test('habit filters combine exact stars with today completion and retain total progress', () => {
   const results = {
     habits: { data: [habit(1, 0), habit(2, 1), habit(3, 1)], isError: false },
@@ -196,6 +376,64 @@ test('habit filters combine exact stars with today completion and retain total p
   assert.equal(
     nodes(ui.render()).find((node) => node.type === 'EmptyState').props.title,
     '선택한 조건의 습관이 없어요.',
+  );
+});
+
+test('sober footer adds only between one item and capacity, regardless of filters', () => {
+  const results = {
+    sobers: { data: [] as any[], isError: false },
+    restarts: { data: [], isError: false },
+  };
+  const ui = harness('app/(tabs)/sober.tsx', results);
+  const add = () =>
+    nodes(ui.render()).find(
+      (node) => node.type === 'Pressable' && node.props.accessibilityLabel === '거리두기 추가',
+    );
+  assert(!add());
+  const emptyList = soberRows(ui);
+  assert.equal(
+    nodes(emptyList.props.renderItem({ item: emptyList.props.data[0], index: 0 })).find(
+      (node) => node.type === 'EmptyState',
+    ).props.title,
+    '아직 시작한 거리두기가 없어요.',
+  );
+  results.sobers.data = [sober(1, 1)];
+  assert(add());
+  assert.equal(
+    nodes(add())
+      .find((node) => node.type === 'Text')
+      .props.children.join(''),
+    `(1/${MAX_SOBER_COUNT})`,
+  );
+  add().props.onPress();
+  assert.equal(ui.routes[0], '/sober/new');
+  const list = soberRows(ui);
+  const last = nodes(list.props.renderItem({ item: list.props.data[0], index: 0 })).find(
+    (node) => node.type === 'SoberBox',
+  );
+  assert.equal(last.props.isLast, false);
+  applyPageFilter(ui, 'Sober', { priorityOnly: true, minimumDays: 30 });
+  assert(add());
+  assert.equal(
+    nodes(add())
+      .find((node) => node.type === 'Text')
+      .props.children.join(''),
+    `(1/${MAX_SOBER_COUNT})`,
+  );
+  results.sobers.data = Array.from({ length: MAX_SOBER_COUNT }, (_, i) => sober(i + 1, 1));
+  assert(!add());
+  results.sobers.data.pop();
+  assert(add());
+  results.restarts.isError = true;
+  assert.equal(add().props.disabled, true);
+  add().props.onPress();
+  assert.equal(ui.routes.length, 1);
+  const loading = harness('app/(tabs)/sober.tsx', {
+    sobers: { data: undefined },
+    restarts: { data: undefined },
+  });
+  assert(
+    !nodes(loading.render()).some((node) => node.props.accessibilityLabel === '거리두기 추가'),
   );
 });
 
@@ -270,191 +508,27 @@ test('filtered empty lists cannot bypass full habit or sober add limits', () => 
   }
 });
 
-
-test('habit grid pins total progress first and pads rows after including the summary', () => {
-  for (const count of [1, 2, 3, 4]) {
-    const results = {
-      habits: { data: Array.from({ length: count }, (_, index) => habit(index + 1, 0)) },
-      completions: { data: [{ habit_id: 1, date: today }] },
-    };
-    const ui = harness('app/(tabs)/habit.tsx', results);
-    const tree = ui.render();
-    const grid = nodes(tree).find((node) => node.props.className === 'flex-row flex-wrap');
-    const cells = grid.props.children;
-    assert.equal(cells.length, Math.ceil((count + 2) / 2) * 2);
-    assert.equal(cells[0].props.children.type, 'HabitTodayProgress');
-    assert.equal(cells[0].props.children.props.habits.length, count);
-    assert.equal(nodes(tree).filter((node) => node.type === 'HabitTodayProgress').length, 1);
-    assert.equal(nodes(tree).filter((node) => node.type === 'HabitBox').length, count);
-    assert.equal(cells.at(-1).props.children === null, count % 2 === 1);
-    const add = nodes(tree).find(
-      (node) => node.type === 'Pressable' && node.props.accessibilityLabel === '습관 추가',
+test('year chart uses standalone rounded bars with a minimal zero marker', () => {
+  const ui = harness('src/screens/habit/HabitYearChart.tsx');
+  for (const monthly of [
+    [0, 2, 4],
+    [0, 0, 0],
+  ]) {
+    const bars = nodes(ui.render({ monthly })).filter(
+      (node) => typeof node.props.style?.height === 'number',
     );
-    assert(add);
-    assert.equal(
-      nodes(add)
-        .find((node) => node.type === 'Text')
-        .props.children.join(''),
-      `(${count}/${MAX_HABIT_COUNT})`,
-    );
-    assert.equal(cells[count + 1].props.children, add);
-    add.props.onPress();
-    assert.equal(ui.routes[0], '/habit/new');
-    for (const [index, cell] of cells.entries()) {
-      assert(cell.props.className.includes(index < cells.length - 2 ? 'border-b ' : 'border-b-0'));
-      assert(cell.props.className.includes(index % 2 === 0 ? 'border-r' : 'border-r-0'));
-    }
-    applyPageFilter(ui, 'Habit', { completedOnly: true, priorities: [2] });
-    const filtered = ui.render();
-    assert.equal(nodes(filtered).filter((node) => node.type === 'HabitBox').length, 0);
-    const summary = nodes(filtered).find((node) => node.type === 'HabitTodayProgress');
-    assert.equal(summary.props.habits.length, count);
-    assert.equal(summary.props.records, results.completions.data);
-    const filteredAdd = nodes(filtered).find(
-      (node) => node.type === 'Pressable' && node.props.accessibilityLabel === '습관 추가',
-    );
-    assert.equal(
-      nodes(filteredAdd)
-        .find((node) => node.type === 'Text')
-        .props.children.join(''),
-      `(${count}/${MAX_HABIT_COUNT})`,
-    );
-    assert.equal(
-      nodes(filtered).find((node) => node.type === 'EmptyState').props.title,
-      '선택한 조건의 습관이 없어요.',
-    );
+    assert.equal(bars.length, monthly.length);
+    bars.forEach((bar, index) => {
+      const count = monthly[index];
+      assert.equal(
+        bar.props.style.height,
+        count ? Math.max((count / Math.max(...monthly)) * 160, 8) : 4,
+      );
+      assert(bar.props.className.includes('rounded-[3px]'));
+      assert.equal(bar.props.children, undefined);
+    });
   }
-  const empty = harness('app/(tabs)/habit.tsx', {
-    habits: { data: [] },
-    completions: { data: [] },
-  }).render();
-  assert(!nodes(empty).some((node) => node.type === 'HabitTodayProgress'));
-  assert.equal(
-    nodes(empty).find((node) => node.type === 'EmptyState').props.title,
-    '아직 만든 습관이 없어요.',
-  );
-  const loading = harness('app/(tabs)/habit.tsx', {
-    habits: { data: undefined },
-    completions: { data: undefined },
-  }).render();
-  assert(nodes(loading).some((node) => node.type === 'HabitListSkeleton'));
-  assert(!nodes(loading).some((node) => node.type === 'HabitTodayProgress'));
 });
-
-
-test('habit grid hides add at the total limit even when filters hide habits', () => {
-  const results = {
-    habits: { data: Array.from({ length: MAX_HABIT_COUNT }, (_, index) => habit(index + 1, 0)) },
-    completions: { data: [], isError: false },
-  };
-  const ui = harness('app/(tabs)/habit.tsx', results);
-  const addButton = (tree: any) =>
-    nodes(tree).find(
-      (node) => node.type === 'Pressable' && node.props.accessibilityLabel === '습관 추가',
-    );
-  assert(!addButton(ui.render()));
-  applyPageFilter(ui, 'Habit', { completedOnly: true, priorities: [] });
-  assert(!addButton(ui.render()));
-  results.habits.data.pop();
-  const available = addButton(ui.render());
-  assert(available);
-  assert.equal(available.props.disabled, false);
-  results.completions.isError = true;
-  const failed = addButton(ui.render());
-  assert.equal(failed.props.disabled, true);
-  failed.props.onPress();
-  assert.equal(ui.routes.length, 0);
-  const emptyUi = harness('app/(tabs)/habit.tsx', {
-    habits: { data: [] },
-    completions: { data: [] },
-  });
-  assert(!addButton(emptyUi.render()));
-  const loading = harness('app/(tabs)/habit.tsx', {
-    habits: { data: undefined },
-    completions: { data: undefined },
-  });
-  assert(!addButton(loading.render()));
-});
-
-
-test('habit summary shows average completion without created capacity', () => {
-  const ui = harness('src/screens/habit/HabitTodayProgress.tsx');
-  const tree = ui.render({ total: 8, done: 6, today, habits: [], records: [] });
-  const labels = nodes(tree)
-    .filter((node) => node.type === 'Text')
-    .map((node) =>
-      Array.isArray(node.props.children) ? node.props.children.join('') : node.props.children,
-    );
-  assert(!labels.some((label) => String(label).includes('생성')));
-  assert(labels.includes('습관 흐름'));
-  assert(labels.includes('최근 4일'));
-  assert(labels.includes('평균 완료율 0%'));
-  assert(!nodes(tree).some((node) => node.type === 'ProgressBar'));
-});
-
-
-test('four-day summary uses eligible habits, newest-first dates and live completion changes', () => {
-  const ui = harness('src/screens/habit/HabitTodayProgress.tsx');
-  const props = {
-    total: 2,
-    done: 2,
-    today,
-    habits: [
-      { id: 1, initial_started_at: '2026-10-12T00:00:00' },
-      { id: 2, initial_started_at: '2026-10-14T00:00:00' },
-    ],
-    records: [
-      { habit_id: 1, date: today },
-      { habit_id: 2, date: today },
-      { habit_id: 1, date: '2026-10-12' },
-      { habit_id: 1, date: '2026-10-12' },
-      { habit_id: 2, date: '2026-10-12' },
-      { habit_id: 99, date: '2026-10-12' },
-    ],
-  };
-  assert(nodes(ui.render(props)).some((node) => node.props.children === '평균 완료율 67%'));
-  const bars = nodes(ui.render(props)).filter((node) => node.props.accessibilityRole === 'image');
-  assert.equal(bars.length, 4);
-  for (const [index, bar] of bars.entries()) {
-    assert(bar.props.accessibilityLabel.startsWith(shiftDate(today, -index)));
-  }
-  assert.deepEqual(
-    bars.map((bar) => bar.props.children[0].props.children),
-    ['오늘', '화', '월', '일'],
-  );
-  assert.match(bars[0].props.accessibilityLabel, /오늘, 2개 중 2개 완료, 100%/);
-  assert.match(bars[1].props.accessibilityLabel, /1개 중 0개 완료, 0%/);
-  assert.match(bars[2].props.accessibilityLabel, /1개 중 1개 완료, 100%/);
-  assert.match(bars[3].props.accessibilityLabel, /시작한 습관 없음/);
-  props.records.splice(1, 1);
-  assert(nodes(ui.render(props)).some((node) => node.props.children === '평균 완료율 50%'));
-  const updated = nodes(ui.render({ ...props, done: 1 })).filter(
-    (node) => node.props.accessibilityRole === 'image',
-  );
-  assert.match(updated[0].props.accessibilityLabel, /2개 중 1개 완료, 50%/);
-  assert.equal(updated[0].props.children[1].props.children.props.style.height, '50%');
-});
-
-
-test('habit boxes label the first day today and retain weekday labels and completion actions', () => {
-  const ui = harness('src/screens/habit/HabitBox.tsx');
-  const toggles: unknown[] = [];
-  const tree = ui.render({
-    habit: { ...habit(1, 0), icon_color: 'sky' },
-    today,
-    records: [],
-    disabled: false,
-    onToggle: (...args: unknown[]) => toggles.push(args),
-  });
-  const days = nodes(tree).filter((node) => node.props.accessibilityRole === 'checkbox');
-  assert.deepEqual(
-    days.map((node) => node.props.children[0].props.children),
-    ['오늘', '화', '월', '일'],
-  );
-  days[0].props.onPress();
-  assert.deepEqual(toggles, [[1, today, true]]);
-});
-
 
 test('habit multi-priority filters combine with completed-only and select-all restores all priorities', () => {
   const ui = harness('app/(tabs)/habit.tsx', {

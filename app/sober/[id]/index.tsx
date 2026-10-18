@@ -4,7 +4,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { twMerge } from 'tailwind-merge';
 import { BottomSheetPage } from '../../../src/components/BottomSheetPage';
 import { Button } from '../../../src/components/Button';
 import { QueryState } from '../../../src/components/QueryState';
@@ -15,11 +14,11 @@ import { getSoberAchievements, getSoberSummary } from '../../../src/domain/sober
 import { useCurrentMinute } from '../../../src/hooks/useCurrentMinute';
 import { useModalNavigation } from '../../../src/navigation/ModalNavigationProvider';
 import { soberQueries } from '../../../src/queries';
-import { SoberGauge } from '../../../src/screens/sober/SoberGauge';
 import { SoberLongRecords } from '../../../src/screens/sober/SoberLongRecords';
 import { SoberMenu } from '../../../src/screens/sober/SoberMenu';
 import { SoberMonthCalendar } from '../../../src/screens/sober/SoberMonthCalendar';
 import { SoberStatisticsSummary } from '../../../src/screens/sober/SoberStatisticsSummary';
+import { SoberStatus } from '../../../src/screens/sober/SoberStatus';
 
 export default function SoberDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -67,8 +66,8 @@ export default function SoberDetail() {
       menuAction={<SoberMenu sober={sober} onDeleted={() => router.dismissTo('/sober')} />}
     >
       <View className="gap-12">
-        <View className="gap-5 items-center">
-          <SoberGauge
+        <View className="gap-8 items-center">
+          <SoberStatus
             progress={summary.progress}
             goalDays={summary.goalDays}
             duration={summary.duration}
@@ -77,32 +76,32 @@ export default function SoberDetail() {
             iconColor={sober.icon_color}
           />
           <SoberStatisticsSummary summary={summary} initialStartedAt={sober.initial_started_at} />
-          <Button
-            labelWeight="normal"
-            className="w-full"
-            label="다시 시작하기"
-            onPress={() =>
-              openModal({ pathname: '/sober/[id]/restart/new', params: { id: String(soberId) } })
-            }
-          />
-          <Button
-            subtle
-            labelWeight="normal"
-            className="w-full"
-            label="메모 기록보기"
-            onPress={() =>
-              openModal({ pathname: '/sober/[id]/memos', params: { id: String(soberId) } })
-            }
-          />
+          <View className="w-full gap-3">
+            <Button
+              labelWeight="normal"
+              className="w-full"
+              label="다시 시작하기"
+              onPress={() =>
+                openModal({ pathname: '/sober/[id]/restart/new', params: { id: String(soberId) } })
+              }
+            />
+            <Button
+              subtle
+              labelWeight="normal"
+              className="w-full"
+              label="메모 기록보기"
+              onPress={() =>
+                openModal({ pathname: '/sober/[id]/memos', params: { id: String(soberId) } })
+              }
+            />
+          </View>
         </View>
         {!!sober.description && (
           <View className="gap-3">
             <Text accessibilityRole="header" className="text-xl font-semibold">
               나의 다짐
             </Text>
-            <Text className={twMerge("text-base text-theme-text-secondary", 'px-2')}>
-              {sober.description}
-            </Text>
+            <Text className="px-2 text-base text-theme-text-secondary">{sober.description}</Text>
           </View>
         )}
         <SoberMonthCalendar

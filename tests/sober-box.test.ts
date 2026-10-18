@@ -55,13 +55,15 @@ for (const [label, record, events, elapsed] of [
     runInNewContext(source, {
       exports,
       require: (name: string) => {
+        if (name.endsWith('theme/colors')) return require('../src/theme/colors');
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
+        if (name.endsWith('domain/constants')) return require('../src/domain/constants');
         if (name === 'date-fns') return require(name);
         if (name.endsWith('/ModalNavigationProvider'))
           return { useModalNavigation: () => ({ openModal: () => undefined }) };
         if (name === 'expo-router') return { useRouter: () => ({ push: () => undefined }) };
         if (name.endsWith('AppThemeProvider'))
-          return { useAppTheme: () => ({ colors: {}, iconSizes: {} }) };
+          return { useAppTheme: () => ({ colors: { accent: '#8CADE2' }, iconSizes: {} }) };
         if (name.endsWith('domain/sober'))
           return {
             ...soberDomain,
@@ -98,6 +100,20 @@ for (const [label, record, events, elapsed] of [
     });
     const progress = nodes.find((node) => node.type === 'ProgressBar');
     assert.equal(progress.props.value, expected.progress);
+    const percentage = nodes.find(
+      (node) =>
+        node.type === 'Text' &&
+        node.props.className === 'text-3xl font-bold text-theme-text-primary',
+    );
+    assert.equal(percentage.props.children, `${Number(expected.progress.toFixed(1))}%`);
+    assert.equal(percentage.props.style, undefined);
+    assert(
+      nodes.some(
+        (node) =>
+          node.type === 'Text' &&
+          node.props.children === `목표 ${soberDomain.formatSoberGoal(expected.goalDays)}`,
+      ),
+    );
     assert(nodes.some((node) => node.type === 'View' && node.props.className?.includes('pb-0')));
     assert(
       nodes.some(
@@ -123,6 +139,6 @@ for (const [label, record, events, elapsed] of [
       isFirst: true,
       isLast: false,
     });
-    assert(nodes.some((node) => node.type === 'View' && node.props.className?.includes('pb-5')));
+    assert(nodes.some((node) => node.type === 'View' && node.props.className?.includes('pb-7')));
   });
 }

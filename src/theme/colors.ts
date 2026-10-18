@@ -50,3 +50,20 @@ export function themeColors(accent: keyof typeof ACCENT_PALETTES, mode: 'light' 
     colors[alias as keyof typeof tokens.colors.aliases] = colors[name as ThemeColorName];
   return colors;
 }
+
+// Positive amounts blend toward white; negative amounts blend toward black.
+export function adjustColorBrightness(color: string, amount: number) {
+  const fraction = Math.min(1, Math.abs(amount));
+  const target = amount >= 0 ? 255 : 0;
+  return (
+    '#' +
+    [1, 3, 5]
+      .map((start) => {
+        const channel = parseInt(color.slice(start, start + 2), 16);
+        return Math.round(channel * (1 - fraction) + target * fraction)
+          .toString(16)
+          .padStart(2, '0');
+      })
+      .join('')
+  );
+}
