@@ -31,9 +31,9 @@ export function ThemePage({
           취향에 맞게 고르고, 언제든 다시 바꿔요.
         </Text>
       </View>
-      <View className="gap-6 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-4">
-        <View className="gap-1">
-          <Text className="text-center text-sm font-semibold">감정 아이콘</Text>
+      <View className="gap-6 p-4">
+        <View className="gap-4">
+          <Text className="text-center text-base font-semibold">감정 아이콘</Text>
           <EmotionIconStyleSelector
             compact
             value={settings.emotionStyle}
@@ -41,8 +41,8 @@ export function ThemePage({
             onChange={(emotionStyle) => void onChange({ emotionStyle })}
           />
         </View>
-        <View className="gap-1">
-          <Text className="text-center text-sm font-semibold">강조 색상</Text>
+        <View className="gap-4">
+          <Text className="text-center text-base font-semibold">강조 색상</Text>
           <View className="flex-row gap-1">
             {ACCENT_KEYS.map((accent) => (
               <View key={accent} className="flex-1">
@@ -69,8 +69,8 @@ export function ThemePage({
             ))}
           </View>
         </View>
-        <View className="gap-1">
-          <Text className="text-center text-sm font-semibold">배경 색상</Text>
+        <View className="gap-4">
+          <Text className="text-center text-base font-semibold">배경 색상</Text>
           <View className="flex-row gap-2">
             {Object.entries(modes).map(([value, label]) => (
               <View key={value} className="flex-1">
@@ -93,8 +93,8 @@ export function ThemePage({
             ))}
           </View>
         </View>
-        <View className="gap-1">
-          <Text className="text-center text-sm font-semibold">글자 크기</Text>
+        <View className="gap-4">
+          <Text className="text-center text-base font-semibold">글자 크기</Text>
           <View className="flex-row gap-2">
             {Object.entries(sizes).map(([value, label]) => (
               <View key={value} className="flex-1">

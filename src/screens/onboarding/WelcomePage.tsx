@@ -42,7 +42,7 @@ export function WelcomePage({ onOpenWeb }: { onOpenWeb: () => void }) {
           </Pressable>
         </View>
       </View>
-      <Text className="text-center text-xs text-theme-text-secondary">
+      <Text className="text-center text-sm text-theme-text-secondary">
         앱과 웹의 기록은 자동으로 연동되지 않아요.
       </Text>
     </View>

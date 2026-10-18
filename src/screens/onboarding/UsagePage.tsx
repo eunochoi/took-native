@@ -19,7 +19,7 @@ export function UsagePage({ imageWidth }: { imageWidth: number }) {
       </View>
       <View className="gap-6 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-6">
         <View className="items-center gap-2">
-          <Text className="text-center text-sm font-semibold">맨 위로 이동하기</Text>
+          <Text className="text-center text-base font-semibold">맨 위로 이동하기</Text>
           <Image
             source={navigationPreview}
             accessibilityLabel="현재 메뉴를 원형 점선으로 표시한 네비게이션 바"
@@ -37,7 +37,7 @@ export function UsagePage({ imageWidth }: { imageWidth: number }) {
         </View>
         <View className="h-px bg-theme-border/50" />
         <View className="items-center gap-2">
-          <Text className="text-center text-sm font-semibold">이번 달로 돌아오기</Text>
+          <Text className="text-center text-base font-semibold">이번 달로 돌아오기</Text>
           <Image
             source={diaryPreview}
             accessibilityLabel="날짜를 점선으로 표시한 달력 헤더"
