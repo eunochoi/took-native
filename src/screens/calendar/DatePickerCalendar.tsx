@@ -12,6 +12,7 @@ export function DatePickerCalendar({
   today,
   selected,
   minDate,
+  compact = false,
   onMonthChange,
   onSelect,
 }: {
@@ -19,6 +20,7 @@ export function DatePickerCalendar({
   today: string;
   selected: string;
   minDate?: string;
+  compact?: boolean;
   onMonthChange: (month: string) => void;
   onSelect: (date: string) => void;
 }) {
@@ -27,12 +29,7 @@ export function DatePickerCalendar({
   const swipe = useMonthSwipe(navigation.changeMonth);
   return (
     <View className="gap-4">
-      <CalendarHeader
-        month={month}
-        today={today}
-        navigation={navigation}
-        centerTitle
-      />
+      <CalendarHeader month={month} today={today} navigation={navigation} centerTitle />
       <CalendarGrid {...swipe.panHandlers} accessibilityLabel={`${month} 날짜 선택 달력`}>
         {days.map((date) => {
           const unavailable = !navigation.isDateAvailable(date);
@@ -46,6 +43,7 @@ export function DatePickerCalendar({
               disabled={unavailable}
               dimmed={unavailable}
               onSelect={onSelect}
+              className={compact ? 'aspect-auto h-10' : undefined}
             />
           );
         })}

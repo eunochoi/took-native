@@ -11,7 +11,7 @@ import { useNotice } from '../../components/NoticeProvider';
 import { QueryState } from '../../components/QueryState';
 import { Text } from '../../components/Text';
 import { saveSoberRestart } from '../../db/sober';
-import { dateTimeDraft, isDate, parseDateTime, todayString } from '../../domain/date';
+import { dateTimeDraft, isDate, parseDateTime } from '../../domain/date';
 import { SOBER_MEMO_MAX_LENGTH } from '../../domain/limits';
 import { validateSoberRestart } from '../../domain/sober';
 import { soberQueries, useRecordMutation } from '../../queries';
@@ -171,14 +171,8 @@ export function SoberRestartForm({
       }
     >
       <View className="gap-5">
-        {!editing && (
-          <Text className="text-center text-sm leading-relaxed text-theme-text-secondary mb-2">
-            {(initialDate ?? todayString()) === todayString()
-              ? '선택한 시각부터 거리를 둔 시간을 새로 세어요.'
-              : '다시 거리를 두기 시작한 시각과 그때의 마음을 남겨요.'}
-          </Text>
-        )}
         <DateTimeFields
+          compactCalendar
           draft={draft}
           minTime={item.initial_started_at}
           disabled={busy}

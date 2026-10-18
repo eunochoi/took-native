@@ -16,12 +16,14 @@ export function DateTimeFields({
   draft,
   minTime,
   collapsible = false,
+  compactCalendar = false,
   disabled = false,
   onChange,
 }: {
   draft: ReturnType<typeof dateTimeDraft>;
   minTime?: string;
   collapsible?: boolean;
+  compactCalendar?: boolean;
   disabled?: boolean;
   onChange: (draft: ReturnType<typeof dateTimeDraft>) => void;
 }) {
@@ -47,6 +49,7 @@ export function DateTimeFields({
       {expanded && (
         <View className="gap-5" pointerEvents={disabled ? 'none' : 'auto'}>
           <DatePickerCalendar
+            compact={compactCalendar}
             month={month}
             selected={draft.date}
             today={today}
