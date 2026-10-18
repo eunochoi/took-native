@@ -40,7 +40,7 @@ export function HabitYearHeader({
     );
   });
   return (
-    <View className="flex-row items-center justify-between">
+    <View className="h-10 flex-row items-start justify-between">
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${year}년, 올해로 이동`}

@@ -23,10 +23,18 @@ export function HabitYearStatistics({
     [year, dates, startedDate, today],
   );
   return (
-    <View className="gap-4">
+    <View className="gap-6">
       <Text accessibilityRole="header" className="text-xl font-semibold">
         연간 기록
       </Text>
+      <HabitStatisticsSummary
+        stats={[
+          { label: '실천 횟수', value: yearly.completed, unit: '회' },
+          { label: '놓친 횟수', value: yearly.missed, unit: '회' },
+          { label: '실천율', value: yearly.rate ?? '—', unit: '%' },
+        ]}
+        unavailable={unavailable}
+      />
       <View className="px-2 gap-4">
         <HabitYearHeader
           year={year}
@@ -34,14 +42,7 @@ export function HabitYearStatistics({
           today={today}
           onYearChange={setYear}
         />
-        <HabitStatisticsSummary
-          stats={[
-            { label: '실천 횟수', value: yearly.completed, unit: '회' },
-            { label: '놓친 횟수', value: yearly.missed, unit: '회' },
-            { label: '실천율', value: yearly.rate ?? '—', unit: '%' },
-          ]}
-          unavailable={unavailable}
-        />
+
         <HabitYearChart monthly={yearly.monthly} />
       </View>
     </View>

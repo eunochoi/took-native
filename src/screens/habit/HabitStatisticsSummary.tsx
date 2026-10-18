@@ -9,7 +9,7 @@ export function HabitStatisticsSummary({
   unavailable: boolean;
 }) {
   return (
-    <View className="flex-row py-4 bg-theme-accent-light/50 ios:curve-continuous rounded-theme">
+    <View className="flex-row py-4 bg-theme-accent-light mx-1 bg-theme-accent-light/50 ios:curve-continuous rounded-theme">
       {stats.map((stat, index) => (
         <View
           key={stat.label}

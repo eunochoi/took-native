@@ -35,21 +35,20 @@ export function HabitMonthStatistics({
   const swipe = useMonthSwipe(navigation.changeMonth);
   const completedDates = useMemo(() => new Set(dates), [dates]);
   return (
-    <View className="gap-4">
+    <View className="gap-6">
       <Text accessibilityRole="header" className="text-xl font-semibold">
         월간 기록
       </Text>
-      <View className="px-2 gap-3">
+      <HabitStatisticsSummary
+        stats={[
+          { label: '실천 횟수', value: summary.completed, unit: '회' },
+          { label: '놓친 횟수', value: summary.missed, unit: '회' },
+          { label: '실천율', value: summary.rate ?? '—', unit: '%' },
+        ]}
+        unavailable={unavailable}
+      />
+      <View className="px-2">
         <CalendarHeader month={month} today={today} navigation={navigation} />
-        <HabitStatisticsSummary
-          stats={[
-            { label: '실천 횟수', value: summary.completed, unit: '회' },
-            { label: '놓친 횟수', value: summary.missed, unit: '회' },
-            { label: '실천율', value: summary.rate ?? '—', unit: '%' },
-          ]}
-          unavailable={unavailable}
-        />
-
         <CalendarGrid {...swipe.panHandlers} accessibilityLabel={`${month} 습관 실천 달력`}>
           {days.map((date) => {
             const outside = date.slice(0, 7) !== month;
