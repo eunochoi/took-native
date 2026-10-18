@@ -2,7 +2,7 @@
   "expo": {
     "name": "툭 로그",
     "slug": "took-native",
-    "version": "2.1.5",
+    "version": "2.1.6",
     "scheme": "took-local",
     "orientation": "portrait",
     "platforms": [
@@ -13,7 +13,7 @@
     "icon": "./assets/icon.png",
     "ios": {
       "bundleIdentifier": "com.took",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "supportsTablet": false,
       "entitlements": {
         "com.apple.security.application-groups": [
@@ -36,7 +36,7 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
-      "versionCode": 25
+      "versionCode": 26
     },
     "plugins": [
       "@bacons/apple-targets",
