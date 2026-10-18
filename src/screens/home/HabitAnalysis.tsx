@@ -69,7 +69,7 @@ export function HabitAnalysis({
                 />
               </View>
               <View className="flex-row items-baseline gap-1">
-                <Text className="text-theme-accent font-semibold text-2xl">{habit.count}</Text>
+                <Text className="text-theme-text-secondary font-semibold text-2xl">{habit.count}</Text>
                 <Text className="text-theme-text-secondary text-sm">회</Text>
               </View>
             </Pressable>

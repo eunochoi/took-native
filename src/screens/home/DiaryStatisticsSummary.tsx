@@ -28,7 +28,7 @@ export function DiaryStatisticsSummary({ current, longest }: { current: number; 
           <AppIcon name={stat.icon} size={iconSizes.lg} color={colors.accent} />
           <Text className="text-theme-text-secondary text-sm">{stat.label}</Text>
           <View className="flex-row items-baseline gap-1">
-            <Text className="text-theme-accent font-bold text-2xl leading-none">
+            <Text className="text-theme-text-secondary font-bold text-2xl leading-none">
               {stat.value}
             </Text>
             <Text className="text-theme-text-secondary font-bold text-sm">일</Text>

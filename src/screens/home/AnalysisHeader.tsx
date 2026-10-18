@@ -8,7 +8,7 @@ export function AnalysisHeader({ title, children }: { title: string; children: R
       <Text accessibilityRole="header" className="font-bold text-xl">
         {title}
       </Text>
-      <Text className="text-theme-accent text-sm font-medium">{children}</Text>
+      <Text className="text-theme-text-secondary text-sm font-medium">{children}</Text>
     </View>
   );
 }

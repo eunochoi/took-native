@@ -22,7 +22,9 @@ export function DiaryAnalysis({
           <View key={index} className="flex-1 items-center gap-1.5">
             <View className="h-32 justify-end items-center gap-1">
               {count > 0 && (
-                <Text className="text-theme-accent text-sm font-medium leading-none">{count}</Text>
+                <Text className="text-theme-text-secondary text-sm font-medium leading-none">
+                  {count}
+                </Text>
               )}
               <View
                 style={{

@@ -50,7 +50,7 @@ export function EmotionStats({
                     )}
                   </View>
                   <View className="flex-row items-baseline gap-1">
-                    <Text className="text-theme-accent font-semibold text-xl">{counts[id]}</Text>
+                    <Text className="text-theme-text-secondary font-semibold text-xl">{counts[id]}</Text>
                     <Text className="text-theme-text-secondary text-sm">회</Text>
                   </View>
                   <Text className="text-theme-text-tertiary text-sm">{emotion.name}</Text>
