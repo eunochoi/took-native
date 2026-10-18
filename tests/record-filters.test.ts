@@ -16,7 +16,12 @@ const today = '2026-10-14';
 function nodes(tree: any): any[] {
   if (Array.isArray(tree)) return tree.flatMap(nodes);
   if (!tree || typeof tree !== 'object') return [];
-  return [tree, ...nodes(tree.props?.children), ...nodes(tree.props?.ListHeaderComponent)];
+  return [
+    tree,
+    ...nodes(tree.props?.children),
+    ...nodes(tree.props?.ListHeaderComponent),
+    ...nodes(tree.props?.ListFooterComponent),
+  ];
 }
 function harness(file: string, results: Record<string, any> = {}) {
   const state: any[] = [];
@@ -35,6 +40,9 @@ function harness(file: string, results: Record<string, any> = {}) {
       {
         exports,
         require: (name: string) => {
+          if (name.endsWith('theme/classes')) return require('../src/theme/classes');
+          if (name.endsWith('theme/colors')) return require('../src/theme/colors');
+          if (name.endsWith('domain/selection')) return require('../src/domain/selection');
           if (name === 'react/jsx-runtime')
             return {
               jsx: (type: any, props: any) => ({ type, props }),
@@ -61,10 +69,13 @@ function harness(file: string, results: Record<string, any> = {}) {
           if (name === 'react-native')
             return {
               View: 'View',
+              Pressable: 'Pressable',
               Switch: 'Switch',
               ScrollView: 'ScrollView',
               FlatList: 'FlatList',
             };
+          if (name === 'date-fns' || name === 'date-fns/locale') return require(name);
+          if (name.endsWith('/domain/constants')) return require('../src/domain/constants');
           if (name === 'expo-router') return { useScrollToTop: () => {} };
           if (name === 'expo-sqlite') return { useSQLiteContext: () => ({}) };
           if (name === '@tanstack/react-query')
@@ -97,10 +108,10 @@ function harness(file: string, results: Record<string, any> = {}) {
           if (name.endsWith('/NoticeProvider'))
             return { useNotice: () => ({ showNotice: (notice: any) => notices.push(notice) }) };
           if (name.endsWith('/AppThemeProvider'))
-            return { useAppTheme: () => ({ colors: {}, rem: 15 }) };
+            return { useAppTheme: () => ({ colors: {}, rem: 15, iconSizes: { sm: 13.125 } }) };
           if (name.endsWith('/db/habit')) return { sortHabits };
           if (name.endsWith('/db/sober')) return { sortSobers };
-          if (name.endsWith('/domain/date')) return { shiftDate };
+          if (name.endsWith('/domain/date')) return require('../src/domain/date');
           if (name.endsWith('/domain/sober')) return { getCurrentSoberStart, SOBER_DAY_MS };
           if (name.endsWith('/domain/limits')) return { MAX_HABIT_COUNT, MAX_SOBER_COUNT };
           if (name.endsWith('/useCurrentMinute')) return { useCurrentMinute: () => now };
@@ -168,20 +179,20 @@ test('habit filters combine exact stars with today completion and retain total p
   };
   const ui = harness('app/(tabs)/habit.tsx', results);
   assert.deepEqual(habitIds(ui), [3, 2, 1]);
-  applyPageFilter(ui, 'Habit', { completion: 'UNDONE', priority: 1 });
+  applyPageFilter(ui, 'Habit', { completedOnly: false, priorities: [1] });
   assert.deepEqual(habitIds(ui), [3, 2]);
   const progress = nodes(ui.render()).find((node) => node.type === 'HabitTodayProgress');
   assert.equal(progress.props.total, 3);
   assert.equal(progress.props.done, 1);
   results.completions.data.push({ habit_id: 2, date: today });
-  assert.deepEqual(habitIds(ui), [3]);
-  applyPageFilter(ui, 'Habit', { completion: 'DONE', priority: 1 });
+  assert.deepEqual(habitIds(ui), [3, 2]);
+  applyPageFilter(ui, 'Habit', { completedOnly: true, priorities: [1] });
   assert.deepEqual(habitIds(ui), [2]);
   assert.equal(
     nodes(ui.render()).find((node) => node.type === 'ToolbarFilterButton').props.label,
     '완료 · ★★',
   );
-  applyPageFilter(ui, 'Habit', { completion: 'DONE', priority: 2 });
+  applyPageFilter(ui, 'Habit', { completedOnly: true, priorities: [2] });
   assert.equal(
     nodes(ui.render()).find((node) => node.type === 'EmptyState').props.title,
     '선택한 조건의 습관이 없어요.',
@@ -248,7 +259,7 @@ test('filtered empty lists cannot bypass full habit or sober add limits', () => 
       ui,
       kind === 'habit' ? 'Habit' : 'Sober',
       kind === 'habit'
-        ? { completion: 'DONE', priority: null }
+        ? { completedOnly: true, priorities: [] }
         : { priorityOnly: true, minimumDays: 30 },
     );
     nodes(ui.render())
@@ -257,4 +268,27 @@ test('filtered empty lists cannot bypass full habit or sober add limits', () => 
     assert.equal(ui.routes.length, 0);
     assert.equal(ui.notices.length, 1);
   }
+});
+
+
+test('habit multi-priority filters combine with completed-only and select-all restores all priorities', () => {
+  const ui = harness('app/(tabs)/habit.tsx', {
+    habits: { data: [habit(1, 0), habit(2, 1), habit(3, 2)] },
+    completions: {
+      data: [
+        { habit_id: 1, date: today },
+        { habit_id: 3, date: today },
+      ],
+    },
+  });
+  applyPageFilter(ui, 'Habit', { completedOnly: false, priorities: [2, 0] });
+  assert.deepEqual(habitIds(ui), [3, 1]);
+  applyPageFilter(ui, 'Habit', { completedOnly: true, priorities: [1, 2] });
+  assert.deepEqual(habitIds(ui), [3]);
+  applyPageFilter(ui, 'Habit', { completedOnly: false, priorities: [2, 1, 0] });
+  assert.deepEqual(habitIds(ui), [3, 2, 1]);
+  assert.equal(
+    nodes(ui.render()).find((node) => node.type === 'ToolbarFilterButton').props.label,
+    '필터',
+  );
 });

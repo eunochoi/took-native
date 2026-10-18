@@ -1,3 +1,4 @@
+import { selectionSummary } from '../../src/domain/selection';
 import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { PageTopSection } from '../../src/components/PageTopSection';
 import { AppIcon } from '../../src/components/AppIcon';
@@ -22,11 +23,7 @@ import { habitQueries, useRecordMutation, useToday } from '../../src/queries';
 import { HabitBox } from '../../src/screens/habit/HabitBox';
 import { HabitListSkeleton } from '../../src/screens/habit/HabitListSkeleton';
 import { HabitTodayProgress } from '../../src/screens/habit/HabitTodayProgress';
-import {
-  HabitFilterPicker,
-  DEFAULT_HABIT_FILTER,
-  HABIT_COMPLETION_FILTERS,
-} from '../../src/screens/habit/HabitFilterPicker';
+import { HabitFilterPicker, DEFAULT_HABIT_FILTER } from '../../src/screens/habit/HabitFilterPicker';
 import { ToolbarFilterButton } from '../../src/components/ToolbarFilterButton';
 import { Toolbar } from '../../src/components/Toolbar';
 import { ToolbarSortButton } from '../../src/components/ToolbarSortButton';
@@ -79,21 +76,24 @@ export default function HabitList() {
       });
   };
   const sorted = sortHabits(list.data ?? [], settings);
-  const hasFilter = filter.completion !== 'ALL' || filter.priority !== null;
+  const hasFilter =
+    filter.completedOnly || (filter.priorities.length > 0 && filter.priorities.length < 3);
   const todayDone = new Set(
     (completions.data ?? []).filter((item) => item.date === today).map((item) => item.habit_id),
   );
   const filtered = sorted.filter(
     (habit) =>
-      (filter.priority === null || habit.priority === filter.priority) &&
-      (filter.completion === 'ALL' || todayDone.has(habit.id) === (filter.completion === 'DONE')),
+      (filter.priorities.length === 0 || filter.priorities.includes(habit.priority)) &&
+      (!filter.completedOnly || todayDone.has(habit.id)),
   );
   const filterLabel =
     [
-      filter.completion === 'ALL'
-        ? null
-        : HABIT_COMPLETION_FILTERS.find((option) => option.value === filter.completion)?.label,
-      filter.priority === null ? null : '★'.repeat(filter.priority + 1),
+      filter.completedOnly ? '완료' : null,
+      selectionSummary(
+        filter.priorities.map((priority) => '★'.repeat(priority + 1)),
+        3,
+        '',
+      ) || null,
     ]
       .filter(Boolean)
       .join(' · ') || '필터';
@@ -148,7 +148,10 @@ export default function HabitList() {
             />
             <ToolbarFilterButton
               label={filterLabel}
-              accessibilityLabel={`습관 필터, 오늘 ${HABIT_COMPLETION_FILTERS.find((option) => option.value === filter.completion)?.label}, ${filter.priority === null ? '별표 전체' : `별표 ${filter.priority + 1}개`}`}
+              accessibilityLabel={`습관 필터, ${filter.completedOnly ? '오늘 완료' : '완료 상태 전체'}, 중요도 ${selectionSummary(
+                filter.priorities.map((priority) => '★'.repeat(priority + 1)),
+                3,
+              )}`}
               onPress={() => setFilterOpen(true)}
             />
             <ToolbarAddButton

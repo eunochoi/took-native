@@ -343,6 +343,7 @@ test('all filters keep reset in the header and apply in the footer', () => {
   assert(choices.every((node) => node.props.compact));
   for (const ui of [
     filterPicker(),
+    picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', { filter: { completedOnly: false, priorities: [] } }),
   ]) {
     const view = ui.render();
     assert(
@@ -508,32 +509,30 @@ test('canceling the year picker leaves an all-year seasonal filter unchanged', (
   assert.deepEqual(ui.applied, [[null, ['spring'], []]]);
 });
 
-test('habit filter drafts combine completion and exact stars after closing, and reset to all', () => {
+test('habit filter combines completed-only with multiple priorities and resets all drafts', () => {
   const ui = picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
-    filter: { completion: 'ALL', priority: null },
+    filter: { completedOnly: false, priorities: [] },
   });
   const choices = ui.render().content.filter((node) => node.type === 'PickerOption');
-  assert.equal(choices[0].props.accessibilityLabel, '오늘 전체');
-  assert.equal(choices[3].props.accessibilityLabel, '별표 전체');
-  ui.press('오늘 미완료');
+  assert.deepEqual(
+    choices.map((node) => node.props.accessibilityLabel),
+    ['별표 3개', '별표 2개', '별표 1개'],
+  );
+  assert(choices.every((node) => node.props.checkbox));
+  ui.press('완료한 항목만 보기');
+  ui.press('별표 1개');
   ui.press('별표 2개');
-  assert.equal(ui.applied.length, 0);
   ui.press('적용하기');
   assert.equal(ui.applied.length, 0);
   ui.finish();
-  assert.deepEqual(JSON.parse(JSON.stringify(ui.applied)), [
-    [{ completion: 'UNDONE', priority: 1 }],
-  ]);
+  assert.deepEqual(ui.applied, [[{ completedOnly: true, priorities: [1, 0] }]]);
   const reset = picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
-    filter: { completion: 'DONE', priority: 2 },
+    filter: { completedOnly: true, priorities: [2] },
   });
   reset.press('선택 초기화');
-  assert.equal(reset.applied.length, 0);
   reset.press('적용하기');
   reset.finish();
-  assert.deepEqual(JSON.parse(JSON.stringify(reset.applied)), [
-    [{ completion: 'ALL', priority: null }],
-  ]);
+  assert.deepEqual(reset.applied, [[{ completedOnly: false, priorities: [] }]]);
 });
 
 test('sober filters draft importance and one minimum period, with cancel and reset', () => {
@@ -756,6 +755,21 @@ test('a removed diary year becomes all years on the next filter application with
   ui.press('일기 필터 적용');
   ui.finish();
   assert.deepEqual(ui.applied, [[null, ['summer'], ['neutral']]]);
+});
+
+
+test('all checked habit priorities summarize as all and can be deselected individually', () => {
+  const ui = picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
+    filter: { completedOnly: false, priorities: [] },
+  });
+  for (const label of ['별표 1개', '별표 2개', '별표 3개']) ui.press(label);
+  assert(
+    ui.render().content.some((node) => node.type === 'Text' && node.props.children === '전체'),
+  );
+  ui.press('별표 2개');
+  ui.press('적용하기');
+  ui.finish();
+  assert.deepEqual(ui.applied, [[{ completedOnly: false, priorities: [2, 0] }]]);
 });
 
 
