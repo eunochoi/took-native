@@ -44,7 +44,6 @@ struct SoberWidgetProvider: AppIntentTimelineProvider {
 }
 
 struct SoberWidgetView: View {
-  @Environment(\.widgetFamily) private var family
   @Environment(\.colorScheme) private var colorScheme
   @Environment(\.showsWidgetContainerBackground) private var showsBackground
   let entry: SoberWidgetEntry
@@ -84,19 +83,10 @@ struct SoberWidgetView: View {
     Group {
       if let record = entry.record {
         let summary = record.summary(at: entry.date, goals: entry.snapshot.goals)
-        if family == .systemMedium {
-          HStack(spacing: 20) {
-            heading(record)
-              .frame(maxWidth: .infinity)
-            statistics(summary)
-              .frame(maxWidth: .infinity)
-          }
-        } else {
-          VStack(spacing: 8) {
-            heading(record)
-            Spacer(minLength: 0)
-            statistics(summary)
-          }
+        VStack(spacing: 8) {
+          heading(record)
+          Spacer(minLength: 0)
+          statistics(summary)
         }
       } else {
         VStack(spacing: 8) {
@@ -124,14 +114,14 @@ struct SoberWidgetView: View {
   private func heading(_ record: SoberWidgetRecord) -> some View {
     VStack(spacing: 6) {
       Text(record.iconGlyph)
-        .font(.custom(record.iconFont, size: record.iconFont == "TmoneyRoundWind-ExtraBold" ? 22 : (family == .systemMedium ? 28 : 24)))
+        .font(.custom(record.iconFont, size: record.iconFont == "TmoneyRoundWind-ExtraBold" ? 22 : 24))
         .foregroundStyle(.white)
-        .frame(width: family == .systemMedium ? 44 : 36, height: family == .systemMedium ? 44 : 36)
+        .frame(width: 36, height: 36)
         .background(accent, in: Circle())
         .widgetAccentable()
         .accessibilityHidden(true)
       Text(record.name)
-        .font(.custom("TmoneyRoundWind-ExtraBold", size: family == .systemMedium ? 16 : 15))
+        .font(.custom("TmoneyRoundWind-ExtraBold", size: 15))
         .lineLimit(1)
         .minimumScaleFactor(0.65)
     }
@@ -140,7 +130,7 @@ struct SoberWidgetView: View {
   private func statistics(_ summary: SoberWidgetSummary) -> some View {
     VStack(spacing: 6) {
       Text(summary.elapsedText)
-        .font(.custom("TmoneyRoundWind-ExtraBold", size: family == .systemMedium ? 17 : 16))
+        .font(.custom("TmoneyRoundWind-ExtraBold", size: 16))
         .lineLimit(1)
         .minimumScaleFactor(0.5)
         .monospacedDigit()
@@ -152,7 +142,7 @@ struct SoberWidgetView: View {
             .widgetAccentable()
         }
       }
-      .frame(height: family == .systemMedium ? 10 : 8)
+      .frame(height: 8)
       .accessibilityLabel("진행률")
       .accessibilityValue("\(summary.progress, specifier: "%.1f")퍼센트")
       HStack(spacing: 4) {
@@ -176,7 +166,7 @@ struct TookSoberWidget: Widget {
     }
     .configurationDisplayName("오늘 툭 거리두기")
     .description("선택한 거리두기의 경과 시간과 목표를 확인해요.")
-    .supportedFamilies([.systemSmall, .systemMedium])
+    .supportedFamilies([.systemSmall])
   }
 }
 
