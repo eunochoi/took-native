@@ -23,7 +23,7 @@ export function BackupSection({
           <View className="gap-2">
             <Text className="text-base font-semibold">기록 보관</Text>
             <Text className={MUTED_DESCRIPTION_CLASS_NAME}>
-              기록·사진·설정을 파일로 저장해요. 자동 업로드는 하지 않아요.
+              기록·사진·설정을 파일로 저장해요.
             </Text>
           </View>
           <View className="gap-2 border-t border-theme-border/50 pt-4">
