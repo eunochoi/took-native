@@ -54,9 +54,6 @@ export function UsagePage({ imageWidth }: { imageWidth: number }) {
           </Text>
         </View>
       </View>
-      <Text className="text-center text-xs text-theme-text-secondary">
-        이번 달 이동은 일기·습관, 습관 상세,{'\n'}거리두기 달력에서 사용할 수 있어요.
-      </Text>
     </View>
   );
 }
