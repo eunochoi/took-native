@@ -10,6 +10,7 @@ import { useSettings } from '../../settings/SettingsProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import tokens from '../../theme/tokens.json';
 import { BackupPage } from './BackupPage';
+import { CalendarGuidePage } from './CalendarGuidePage';
 import { ThemePage } from './ThemePage';
 import { UsagePage } from './UsagePage';
 import { WelcomePage } from './WelcomePage';
@@ -19,6 +20,7 @@ const titles = [
   '하루를 기록하는 TOOK',
   '나에게 맞게 설정해요',
   '편리하게 사용해요',
+  '달력 기록을 읽어요',
   ...(Platform.OS === 'android' ? ['위젯으로 바로 확인해요'] : []),
   '기록을 안전하게 보관해요',
 ] as const;
@@ -191,13 +193,26 @@ export function OnboardingSheet({
             <WelcomePage key="welcome" onOpenWeb={openWeb} />,
             <ThemePage key="theme" settings={settings} busy={busy} onChange={change} />,
             <UsagePage key="usage" imageWidth={imageWidth} />,
+            <CalendarGuidePage key="calendar" />,
             ...(Platform.OS === 'android'
               ? [<WidgetPage key="widget" imageWidth={imageWidth} />]
               : []),
             <BackupPage key="backup" busy={busy} onConfirm={() => confirm(close)} />,
           ].map((content) => (
             <View key={content.key} className="h-full justify-center py-6" style={{ width }}>
-              <View className="w-full max-w-lg self-center px-6">{content}</View>
+              {content.key === 'calendar' ? (
+                <ScrollView
+                  nestedScrollEnabled
+                  directionalLockEnabled
+                  showsVerticalScrollIndicator={false}
+                  className="flex-1 min-h-0 w-full max-w-lg self-center"
+                  contentContainerClassName="grow justify-center px-6"
+                >
+                  {content}
+                </ScrollView>
+              ) : (
+                <View className="w-full max-w-lg self-center px-6">{content}</View>
+              )}
             </View>
           ))}
         </ScrollView>

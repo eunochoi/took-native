@@ -107,6 +107,7 @@ function harness(values = new Map<string, string>(), platform = 'android') {
     './WelcomePage': { WelcomePage: 'WelcomePage' },
     './ThemePage': { ThemePage: 'ThemePage' },
     './UsagePage': { UsagePage: 'UsagePage' },
+    './CalendarGuidePage': { CalendarGuidePage: 'CalendarGuidePage' },
     // Test sheet behavior independently of the static page markup.
     './WidgetPage': { WidgetPage: 'WidgetPage' },
     './BackupPage': {
@@ -159,7 +160,7 @@ function harness(values = new Map<string, string>(), platform = 'android') {
 async function lastPage(h: ReturnType<typeof harness>, firstRun = true) {
   h.renderSheet(firstRun).body.props.onLayout({ nativeEvent: { layout: { width: 360 } } });
   h.renderSheet(firstRun).body.props.onMomentumScrollEnd({
-    nativeEvent: { contentOffset: { x: 1440 } },
+    nativeEvent: { contentOffset: { x: 1800 } },
   });
   return h.renderSheet(firstRun);
 }
@@ -197,20 +198,21 @@ test('visiting all pages leaves completion absent and relaunch shows the guide',
   assert.equal(relaunch.renderGate(true).props.firstRun, true);
   assert.equal(
     harness(h.values).renderSheet().body.props.accessibilityLabel,
-    '앱 안내, 5단계 중 1단계',
+    '앱 안내, 6단계 중 1단계',
   );
 });
 
-test('iOS onboarding omits the Android widget page and can complete its four steps', async () => {
+test('iOS onboarding includes the calendar guide, omits the Android widget page and completes five steps', async () => {
   const h = harness(new Map(), 'ios');
   const first = h.renderSheet();
-  assert.equal(first.body.props.accessibilityLabel, '앱 안내, 4단계 중 1단계');
+  assert.equal(first.body.props.accessibilityLabel, '앱 안내, 5단계 중 1단계');
+  assert.equal(nodes(first.body, 'CalendarGuidePage').length, 1);
   assert.equal(nodes(first.body, 'WidgetPage').length, 0);
   first.body.props.onLayout({ nativeEvent: { layout: { width: 390 } } });
   const laidOut = h.renderSheet();
-  laidOut.body.props.onMomentumScrollEnd({ nativeEvent: { contentOffset: { x: 390 * 3 } } });
+  laidOut.body.props.onMomentumScrollEnd({ nativeEvent: { contentOffset: { x: 390 * 4 } } });
   const last = h.renderSheet();
-  assert.equal(last.body.props.accessibilityLabel, '앱 안내, 4단계 중 4단계');
+  assert.equal(last.body.props.accessibilityLabel, '앱 안내, 5단계 중 5단계');
   await last.buttons.at(-1).props.onPress();
   assert.equal(await h.storage.hasCompletedOnboarding(), true);
   assert.equal(h.closes(), 1);
@@ -249,7 +251,7 @@ test('failed completion stays on the last page and can be retried', async () => 
   assert.equal(await h.storage.hasCompletedOnboarding(), false);
   assert.equal(h.closes(), 0);
   const failed = h.renderSheet();
-  assert.equal(failed.body.props.accessibilityLabel, '앱 안내, 5단계 중 5단계');
+  assert.equal(failed.body.props.accessibilityLabel, '앱 안내, 6단계 중 6단계');
   assert(nodes(failed.footer, 'Text').some((node) => node.props.accessibilityRole === 'alert'));
   assert.equal(failed.buttons.at(-1).props.disabled, false);
   h.setPersist(async () => {});
