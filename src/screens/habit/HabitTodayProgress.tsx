@@ -1,12 +1,12 @@
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { View } from 'react-native';
-import { PROGRESS_TRACK_CLASS_NAME, PROGRESS_FILL_CLASS_NAME } from '../../theme/classes';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
 import type { Completion, Habit } from '../../db/types';
 import { localDate, shiftDate } from '../../domain/date';
 import { useAppTheme } from '../../theme/AppThemeProvider';
+import { PROGRESS_FILL_CLASS_NAME, PROGRESS_TRACK_CLASS_NAME } from '../../theme/classes';
 
 export function HabitTodayProgress({
   today,
@@ -67,7 +67,7 @@ export function HabitTodayProgress({
               <Text className="h-5 text-sm leading-5 text-theme-text-secondary">
                 {date === today ? '오늘' : format(parseISO(date), 'eee', { locale: ko })}
               </Text>
-              <View className={`h-12 w-4/5 justify-end rounded-lg ${PROGRESS_TRACK_CLASS_NAME}`}>
+              <View className={`h-12 w-[70%] justify-end rounded-lg ${PROGRESS_TRACK_CLASS_NAME}`}>
                 {total ? (
                   <View
                     className={`w-full ${PROGRESS_FILL_CLASS_NAME}`}
