@@ -2,7 +2,7 @@ import { format, parseISO } from 'date-fns';
 import { View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
-import { formatSoberDuration, formatSoberGoal, type getSoberSummary } from '../../domain/sober';
+import { formatSoberGoal, type getSoberSummary } from '../../domain/sober';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 
 export function SoberStatisticsSummary({
@@ -13,40 +13,62 @@ export function SoberStatisticsSummary({
   initialStartedAt: string;
 }) {
   const { rem: appRem } = useAppTheme();
+  const longestMinutes = Math.max(0, Math.floor(summary.longest / 60000));
+  const initialStart = parseISO(initialStartedAt);
   return (
     <View className="w-full flex-row">
       {(
         [
           {
-            icon: 'emoji-events',
-            label: '최고 기록',
-            value: formatSoberDuration(summary.longest).replace(/\s+/g, ''),
-          },
-          {
             icon: 'flag',
-            label: `목표 ${formatSoberGoal(summary.goalDays)}`,
-            value: `${summary.progress.toFixed(1)}%`,
+            label: '목표 진행률',
+            value: `${summary.progress.toFixed(0)}%`,
+            note: `목표 ${formatSoberGoal(summary.goalDays)}`,
           },
           {
             icon: 'play-circle-outline',
             label: '첫 시작일',
-            value: format(parseISO(initialStartedAt), 'yy년M월d일'),
+            value: format(initialStart, 'M월 d일'),
+            note: format(initialStart, 'yyyy년'),
+          },
+          {
+            icon: 'emoji-events',
+            label: '최고 기록',
+            value: `${Math.floor(longestMinutes / 1440)}일`,
+            note: `${Math.floor((longestMinutes % 1440) / 60)}시간 ${longestMinutes % 60}분`,
           },
         ] as const
       ).map((stat, index) => (
         <View
           key={stat.label}
-          className={`${index === 1 ? 'flex-[0.85]' : 'flex-1'} min-w-0 items-center gap-2 px-1 border-theme-border-muted ${index < 2 ? 'border-r' : ''}`}
+          className={`flex-1 min-w-0 items-center gap-3.5 px-1 border-theme-border-muted ${index < 2 ? 'border-r' : ''}`}
         >
-          <AppIcon name={stat.icon} size={appRem * 2} className="text-theme-accent" />
-          <Text className="text-center text-sm text-theme-text-secondary">{stat.label}</Text>
-          <Text
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            className="text-center text-sm tracking-tighter font-bold leading-snug text-theme-text-primary"
-          >
-            {stat.value}
-          </Text>
+          <View className="flex gap-1 items-center">
+            <AppIcon name={stat.icon} size={appRem * 2} className="text-theme-accent" />
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              className="w-full text-center text-sm font-semibold text-theme-accent"
+            >
+              {stat.label}
+            </Text>
+          </View>
+          <View className="flex gap-1 items-center">
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              className="tracking-tighter w-full text-center text-2xl font-bold leading-snug text-theme-text-primary"
+            >
+              {stat.value}
+            </Text>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              className="w-full text-center text-sm text-theme-text-secondary"
+            >
+              {stat.note}
+            </Text>
+          </View>
         </View>
       ))}
     </View>
