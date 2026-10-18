@@ -26,7 +26,12 @@ export function DiaryHabitMonthCalendar(props: {
   fillHeight?: boolean;
 }) {
   const days = useMemo(() => calendarDays(props.month), [props.month]);
-  const navigation = useCalendarNavigation(props.month, props.onMonthChange, undefined, props.today);
+  const navigation = useCalendarNavigation(
+    props.month,
+    props.onMonthChange,
+    undefined,
+    props.today,
+  );
   const swipe = useMonthSwipe(navigation.changeMonth);
   const db = useSQLiteContext();
   const diaries = useQuery(diaryQueries.month(db, props.month));
@@ -49,7 +54,7 @@ export function DiaryHabitMonthCalendar(props: {
     [habits.data],
   );
   return (
-    <View className={props.fillHeight ? 'flex-1 min-h-0 gap-2' : 'gap-2'}>
+    <View className={props.fillHeight ? 'flex-1 min-h-0' : ''}>
       {(diaries.isError || completions.isError || habits.isError) && (
         <QueryError
           className="flex-row gap-2"
@@ -61,12 +66,8 @@ export function DiaryHabitMonthCalendar(props: {
           }}
         />
       )}
-      <View className='px-2'>
-        <CalendarHeader
-          month={props.month}
-          today={props.today}
-          navigation={navigation}
-        />
+      <View className="px-1">
+        <CalendarHeader month={props.month} today={props.today} navigation={navigation} />
       </View>
       <CalendarGrid
         minimumRows={6}
@@ -79,8 +80,8 @@ export function DiaryHabitMonthCalendar(props: {
           const diary = outside ? undefined : diaryByDate.get(date);
           const count = outside ? 0 : (counts.get(date) ?? 0);
           const total = outside ? 0 : habitStartDates.filter((start) => start <= date).length;
-          const progressReady = habits.data !== undefined && !habits.isError && !completions.isError;
-          const hasDecoration = diary !== undefined || count > 0;
+          const progressReady =
+            habits.data !== undefined && !habits.isError && !completions.isError;
           const rotation = diary ? -10 + ((new Date(diary.created_at).getTime() % 10) * 20) / 9 : 0;
           const weekday = getDay(parseISO(date));
           return (
@@ -92,42 +93,44 @@ export function DiaryHabitMonthCalendar(props: {
               selected={props.selected}
               fillHeight={props.fillHeight}
               showSelectedIndicator={false}
+              showTodayIndicator={false}
               disabled={!navigation.isDateAvailable(date)}
               dimmed={!navigation.isDateAvailable(date)}
               onSelect={props.onSelect}
               onMonthChange={navigation.changeToMonth}
               label={[
                 date,
-                diary ? `일기 있음, ${EMOTIONS[diary.emotion]?.name}` : count > 0 ? '일기 없음' : '',
+                diary
+                  ? `일기 있음, ${EMOTIONS[diary.emotion]?.name}`
+                  : count > 0
+                    ? '일기 없음'
+                    : '',
                 count ? `습관 ${progressReady ? `${count}/${total}` : count}개 완료` : '',
               ]
                 .filter(Boolean)
                 .join(', ')}
             >
-              {hasDecoration ? (
+              <View key="day-content" className="items-center w-full flex-1 min-h-0 gap-1 py-1">
                 <View
-                  key={diary ? 'diary-decoration' : 'habit-decoration'}
-                  className="items-center w-full flex-1 min-h-0 gap-1 pb-2"
+                  className="w-full flex-1 min-h-0 items-center justify-center"
+                  style={{ transform: [{ rotate: `${rotation}deg` }] }}
                 >
-                  <View
-                    className="w-full flex-1 min-h-0 items-center justify-center"
-                    style={{ transform: [{ rotate: `${rotation}deg` }] }}
-                  >
-                    {diary ? (
-                      <EmotionImage emotion={diary.emotion} fill />
-                    ) : (
-                      <Text
-                        className={`text-xs ${weekday === 6 ? 'text-theme-calendar-saturday' : weekday === 0 ? 'text-theme-calendar-sunday' : 'text-theme-text-secondary'}`}
-                      >
-                        {Number(date.slice(-2))}
-                      </Text>
-                    )}
-                  </View>
-                  <View className="h-1.5 w-full px-2 shrink-0">
-                    {count > 0 && progressReady && <CalendarHabitProgress done={count} total={total} />}
-                  </View>
+                  {diary ? (
+                    <EmotionImage emotion={diary.emotion} fill />
+                  ) : (
+                    <Text
+                      className={`text-xs ${weekday === 6 ? 'text-theme-calendar-saturday' : weekday === 0 ? 'text-theme-calendar-sunday' : 'text-theme-text-secondary'}`}
+                    >
+                      {Number(date.slice(-2))}
+                    </Text>
+                  )}
                 </View>
-              ) : undefined}
+                <View className="h-2 w-full px-2.5 shrink-0">
+                  {count > 0 && progressReady && (
+                    <CalendarHabitProgress done={count} total={total} />
+                  )}
+                </View>
+              </View>
             </CalendarDay>
           );
         })}

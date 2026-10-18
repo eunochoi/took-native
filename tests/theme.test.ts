@@ -53,3 +53,12 @@ test('calendar empty color stays neutral and visible across accents and modes', 
     }
   }
 });
+
+test('completion bands use the same softened palette in both modes', () => {
+  for (const mode of ['light', 'dark'] as const) {
+    const colors = themeColors('blue', mode);
+    assert.equal(colors.progressLow, '#E599A5');
+    assert.equal(colors.progressMedium, '#EFBE48');
+    assert.equal(colors.progressHigh, '#7BBDAD');
+  }
+});

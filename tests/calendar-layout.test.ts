@@ -87,9 +87,9 @@ function load(path: string, states: unknown[], date = '2026-09-30') {
             useToday: () => '2026-10-05',
             useRecordMutation: () => ({ isPending: false }),
             diaryQueries: { month: () => ({}) },
-            habitQueries: { completions: () => ({}) },
+            habitQueries: { completions: () => ({}), list: () => ({}) },
           };
-        if (name.endsWith('domain/calendar')) return { calendarDays };
+        if (name.endsWith('domain/calendar')) return require('../src/domain/calendar');
         if (name.endsWith('useCalendarNavigation')) return { useCalendarNavigation };
         if (name.endsWith('domain/date')) return require('../src/domain/date');
         if (name.endsWith('useMonthSwipe'))

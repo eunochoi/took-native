@@ -55,6 +55,7 @@ function section(path: string, name: string, initialProps: Record<string, unknow
           };
         if (dependency.endsWith('useCalendarNavigation')) return { useCalendarNavigation };
         if (dependency.endsWith('domain/date')) return require('../src/domain/date');
+        if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (dependency === 'react-native') return { View: 'View', Pressable: 'Pressable' };
         if (dependency.endsWith('hooks/useMonthSwipe'))

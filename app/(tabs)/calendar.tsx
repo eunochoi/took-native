@@ -1,14 +1,14 @@
-import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { PageTopSection } from '../../src/components/PageTopSection';
+import { calendarHabitProgressCounts } from '../../src/domain/calendar';
 import { ColorView } from '../../src/components/ColorTransition';
+import { PageTopSection } from '../../src/components/PageTopSection';
 import { Toolbar } from '../../src/components/Toolbar';
+import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { diaryQueries, habitQueries, useToday } from '../../src/queries';
-import { CalendarDiaryCount } from '../../src/screens/calendar/CalendarDiaryCount';
-import { CalendarHabitCompletionCount } from '../../src/screens/calendar/CalendarHabitCompletionCount';
+import { CalendarRecordCounts } from '../../src/screens/calendar/CalendarRecordCounts';
 import { DiaryHabitMonthCalendar } from '../../src/screens/calendar/DiaryHabitMonthCalendar';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
 import { PAGE_CLASS_NAME } from '../../src/theme/classes';
@@ -22,17 +22,27 @@ export default function CalendarScreen() {
   const [month, setMonth] = useState(today.slice(0, 7));
   const diaries = useQuery(diaryQueries.month(db, month));
   const completions = useQuery(habitQueries.completions(db, `${month}-01`, `${month}-31`));
+  const habits = useQuery(habitQueries.list(db));
+  const progressCounts = useMemo(
+    () =>
+      habits.data && completions.data && !habits.isError && !completions.isError
+        ? calendarHabitProgressCounts(habits.data, completions.data, month, today)
+        : null,
+    [habits.data, completions.data, habits.isError, completions.isError, month, today],
+  );
   return (
     <ColorView className={PAGE_CLASS_NAME}>
       <PageTopSection title="월간 기록" hashtags="#기록 #발자국">
         <Toolbar>
-          <CalendarDiaryCount count={diaries.data?.length ?? 0} />
-          <CalendarHabitCompletionCount count={completions.data?.length ?? 0} />
+          <CalendarRecordCounts diaryCount={diaries.data?.length ?? 0} counts={progressCounts} />
         </Toolbar>
       </PageTopSection>
       <View
         className="flex-1 min-h-0 pt-6"
-        style={{ paddingHorizontal: '5%', paddingBottom: navigationBottom + navigationHeight + rem }}
+        style={{
+          paddingHorizontal: '5%',
+          paddingBottom: navigationBottom + navigationHeight + rem,
+        }}
       >
         <DiaryHabitMonthCalendar
           fillHeight

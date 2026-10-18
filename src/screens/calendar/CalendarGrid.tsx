@@ -17,7 +17,7 @@ export function CalendarGrid({
   const days = Children.toArray(children);
   return (
     <View {...props} className={twMerge(fillHeight ? 'flex-1 min-h-0' : undefined, className)}>
-      <View className="h-10 flex-row items-center">
+      <View className="h-10 mb-1.5 flex-row items-center">
         {['월', '화', '수', '목', '금', '토', '일'].map((day, index) => (
           <Text
             key={day}

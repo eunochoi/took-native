@@ -60,7 +60,7 @@ export function DayInfo({ date, today }: { date: string; today: string }) {
               <View className="h-16 w-full">
                 <EmotionImage emotion={diary.data.emotion} fill />
               </View>
-              <View className='px-2'>
+              <View className="px-2">
                 <CalendarHabitProgress
                   done={rows.filter((habit) => habit.completed).length}
                   total={rows.length}

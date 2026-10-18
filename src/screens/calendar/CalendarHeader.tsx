@@ -37,7 +37,7 @@ export function CalendarHeader({
     );
   });
   return (
-    <View className="flex-row items-center justify-between">
+    <View className="h-10 flex-row items-center justify-between">
       {centerTitle && arrows[0]}
       <Pressable
         accessibilityRole="button"
