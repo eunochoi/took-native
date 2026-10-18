@@ -24,7 +24,7 @@ test('iOS widget and host declare the same App Group and extension credentials',
   const group = config.ios.infoPlist.TookWidgetAppGroup;
   assert.deepEqual(target.entitlements['com.apple.security.application-groups'], [group]);
   const extension = readFileSync(join(root, 'targets/sober-widget/Info.plist'), 'utf8');
-  assert(extension.includes(`<string>${group}</string>`));
+  assert(extension.includes('<string>$(TOOK_WIDGET_APP_GROUP)</string>'));
   assert.equal(target.bundleIdentifier, '.sober-widget');
   assert.equal(target.deploymentTarget, '17.0');
 });

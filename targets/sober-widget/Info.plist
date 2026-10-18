@@ -8,7 +8,7 @@
     <string>com.apple.widgetkit-extension</string>
   </dict>
   <key>TookWidgetAppGroup</key>
-  <string>group.com.took.widgets</string>
+  <string>$(TOOK_WIDGET_APP_GROUP)</string>
   <key>UIAppFonts</key>
   <array>
     <string>TmoneyRoundWindRegular.otf</string>

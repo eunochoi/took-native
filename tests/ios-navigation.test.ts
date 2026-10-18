@@ -6,6 +6,62 @@ import { join } from 'node:path';
 import { runInNewContext } from 'node:vm';
 import test from 'node:test';
 
+test('iOS widget builds resolve the App Group from the host configuration', () => {
+  const module: any = { exports: {} };
+  let action: any;
+  runInNewContext(
+    readFileSync(new URL('../plugins/withIosBuildSettings.cjs', import.meta.url), 'utf8'),
+    {
+      module,
+      require: () => ({
+        withXcodeProject: (config: any, callback: any) => {
+          action = callback;
+          return config;
+        },
+      }),
+    },
+  );
+  const widget = {
+    buildSettings: { INFOPLIST_FILE: '"../targets/sober-widget/Info.plist"' },
+  };
+  const host = { buildSettings: { INFOPLIST_FILE: 'app/Info.plist' } };
+  const mod = {
+    modResults: {
+      hash: {
+        project: {
+          objects: {
+            PBXShellScriptBuildPhase: {},
+            XCBuildConfiguration: { widget, host, widget_comment: 'Debug' },
+          },
+        },
+      },
+    },
+  };
+  for (const group of ['group.com.everstamp.widgets', 'group.com.took.widgets']) {
+    module.exports({
+      ios: {
+        infoPlist: { TookWidgetAppGroup: group },
+        entitlements: { 'com.apple.security.application-groups': [group] },
+      },
+    });
+    action(mod);
+    assert.equal((widget.buildSettings as any).TOOK_WIDGET_APP_GROUP, JSON.stringify(group));
+    assert.equal((host.buildSettings as any).TOOK_WIDGET_APP_GROUP, JSON.stringify(group));
+  }
+  assert.throws(
+    () =>
+      module.exports({
+        ios: {
+          infoPlist: { TookWidgetAppGroup: 'group.com.took.widgets' },
+          entitlements: {
+            'com.apple.security.application-groups': ['group.com.everstamp.widgets'],
+          },
+        },
+      }),
+    /App Group must be included/,
+  );
+});
+
 test('iOS bundle script executes a native script whose path contains spaces after regeneration', () => {
   const module: any = { exports: {} };
   let action: any;
