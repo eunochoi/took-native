@@ -26,14 +26,23 @@ test('iOS bundle script executes a native script whose path contains spaces afte
     shellScript: JSON.stringify('`"$NODE_BINARY" --print "react-native-xcode.sh"`\n'),
   };
   const other = { shellScript: JSON.stringify('echo other') };
+  const literalLines = {
+    shellScript: JSON.stringify('`"$NODE_BINARY" --print "react-native-xcode.sh"`\n').replace(
+      /\\n/g,
+      '\n',
+    ),
+  };
   const mod = {
-    modResults: { hash: { project: { objects: { PBXShellScriptBuildPhase: { phase, other } } } } },
+    modResults: {
+      hash: { project: { objects: { PBXShellScriptBuildPhase: { phase, other, literalLines } } } },
+    },
   };
   action(mod);
   const fixed = phase.shellScript;
   action(mod);
   assert.equal(phase.shellScript, fixed);
   assert.equal(other.shellScript, JSON.stringify('echo other'));
+  assert.equal(literalLines.shellScript, fixed);
   const root = mkdtempSync(join(tmpdir(), 'took ios scripts-'));
   try {
     const nativeScript = join(root, 'react-native-xcode.sh');
