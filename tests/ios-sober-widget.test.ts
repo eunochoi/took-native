@@ -30,7 +30,7 @@ test('iOS widget and host declare the same App Group and extension credentials',
 });
 
 test(
-  'Swift widget calculations match the app at restart, goal and year boundaries',
+  'Swift widget calculations match the app at restart and goal boundaries and for long durations',
   {
     skip: process.platform !== 'darwin',
     timeout: 120000,
@@ -68,6 +68,7 @@ test(
         ...SOBER_GOALS.flatMap((day) => [day * 86400 - 1, day * 86400]),
         364 * 86400 + 86340,
         365 * 86400 + 86340,
+        366 * 86400 + 8 * 3600 + 15 * 60,
         1094 * 86400 + 86340,
       ].map((offset) => start / 1000 + offset);
       const invalid = [

@@ -199,11 +199,7 @@ export function getSoberProgress(duration: number, goalDays: number) {
 export function formatSoberDuration(duration: number) {
   const minutes = Math.max(0, Math.floor(duration / 60000));
   const days = Math.floor(minutes / 1440);
-  if (days >= 365) {
-    const remainingDays = days % 365;
-    return `${Math.floor(days / 365)}년 ${remainingDays ? `${remainingDays}일 ` : ''}${Math.floor((minutes % 1440) / 60)}시간`;
-  }
-  return `${Math.floor(minutes / 1440)}일 ${Math.floor((minutes % 1440) / 60)}시간 ${minutes % 60}분`;
+  return `${days}일 ${Math.floor((minutes % 1440) / 60)}시간 ${minutes % 60}분`;
 }
 export function formatSoberGoal(days: number) {
   return (

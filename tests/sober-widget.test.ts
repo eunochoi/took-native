@@ -404,12 +404,13 @@ test('actual library serializes selected icons, transparent background and share
   assert.equal(nodes.filter((node) => node.type === 'IconWidget').length, 1);
   for (const [days, expected] of [
     [364, '364일 23시간 59분'],
-    [365, '1년 23시간'],
-    [730, '2년 23시간'],
-    [1094, '2년 364일 23시간'],
+    [365, '365일 23시간 59분'],
+    [366, '366일 23시간 59분'],
+    [730, '730일 23시간 59분'],
+    [1094, '1094일 23시간 59분'],
   ] as const) {
     for (const size of [110, 180]) {
-      const yearTree = buildWidgetTree(
+      const durationTree = buildWidgetTree(
         SoberWidget({
           settings: defaultWidgetSettings(1),
           sober,
@@ -418,11 +419,11 @@ test('actual library serializes selected icons, transparent background and share
           now: Date.parse(sober.initial_started_at) + days * 86400000 + 1439 * 60000,
         }),
       );
-      const elapsed = flatten(yearTree).find((node) => node.props.text === expected);
+      const elapsed = flatten(durationTree).find((node) => node.props.text === expected);
       assert(elapsed, `Missing elapsed text: ${expected}`);
       assert.equal(elapsed.props.maxLines, 1);
       assert.equal(elapsed.props.adjustsFontSizeToFit, true);
-      assert(yearTree.props.accessibilityLabel.includes(expected));
+      assert(durationTree.props.accessibilityLabel.includes(expected));
     }
   }
   assert.doesNotThrow(() =>

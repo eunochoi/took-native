@@ -30,10 +30,6 @@ struct SoberWidgetSummary {
     let minutes = Int(max(0, floor(duration / 60)))
     let days = minutes / 1440
     let hours = (minutes % 1440) / 60
-    if days >= 365 {
-      let remaining = days % 365
-      return "\(days / 365)년 \(remaining > 0 ? "\(remaining)일 " : "")\(hours)시간"
-    }
     return "\(days)일 \(hours)시간 \(minutes % 60)분"
   }
 
