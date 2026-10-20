@@ -2,30 +2,37 @@ import { differenceInCalendarDays, endOfMonth, format, parseISO } from 'date-fns
 import type { Completion, Habit } from '../db/types';
 import { localDate, shiftDate } from './date';
 
-export function getHabitFlowStats(
-  today: string,
-  habits: Pick<Habit, 'id' | 'initial_started_at'>[],
+type SummaryHabit = Pick<Habit, 'id' | 'initial_started_at' | 'priority'>;
+
+export function getHabitDaySummary(
+  date: string,
+  habits: SummaryHabit[],
   records: Pick<Completion, 'habit_id' | 'date'>[],
 ) {
-  const starts = habits.map((habit) => ({
-    id: habit.id,
-    date: localDate(habit.initial_started_at),
-  }));
-  const completedByDate = new Map<string, Set<number>>();
-  for (const record of records) {
-    if (!completedByDate.has(record.date)) completedByDate.set(record.date, new Set());
-    completedByDate.get(record.date)!.add(record.habit_id);
-  }
+  const eligible = habits.filter((habit) => localDate(habit.initial_started_at) <= date);
+  const completedIds = new Set(
+    records.filter((record) => record.date === date).map((record) => record.habit_id),
+  );
+  const counted = eligible.filter((habit) => habit.priority > 0);
+  const completed = counted.filter((habit) => completedIds.has(habit.id)).length;
+  return {
+    total: counted.length,
+    completed,
+    percent: counted.length ? (completed / counted.length) * 100 : null,
+    excludedCompleted: eligible.filter(
+      (habit) => habit.priority === 0 && completedIds.has(habit.id),
+    ).length,
+  };
+}
+
+export function getHabitFlowStats(
+  today: string,
+  habits: SummaryHabit[],
+  records: Pick<Completion, 'habit_id' | 'date'>[],
+) {
   const days = Array.from({ length: 14 }, (_, index) => {
     const date = shiftDate(today, index - 13);
-    const eligible = starts.filter((habit) => habit.date <= date);
-    const completed = eligible.filter((habit) => completedByDate.get(date)?.has(habit.id)).length;
-    return {
-      date,
-      total: eligible.length,
-      completed,
-      percent: eligible.length ? (completed / eligible.length) * 100 : null,
-    };
+    return { date, ...getHabitDaySummary(date, habits, records) };
   });
   const [previous, recent] = [0, 7].map((offset) => {
     const periodDays = days.slice(offset, offset + 7);

@@ -56,8 +56,8 @@ test('settings validate on restore and custom ordering ignores priority but surv
     habitPriorityFirst: true,
     habitOrder: [2, 1],
   });
-  const a = { id: 1, name: 'A', priority: 2, created_at: '2026-10-01' } as Habit;
-  const b = { id: 2, name: 'B', priority: 0, created_at: '2026-10-02' } as Habit;
+  const a = { id: 1, name: 'A', priority: 3, created_at: '2026-10-01' } as Habit;
+  const b = { id: 2, name: 'B', priority: 1, created_at: '2026-10-02' } as Habit;
   assert.deepEqual(
     sortHabits([a, b], settings).map((habit) => habit.id),
     [2, 1],

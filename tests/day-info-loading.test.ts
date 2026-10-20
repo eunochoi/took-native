@@ -12,7 +12,7 @@ const ts = require('typescript');
 const habits = Array.from({ length: 6 }, (_, index) => ({
   id: index + 1,
   name: `습관 ${index + 1}`,
-  priority: index % 3,
+  priority: (index % 3) + 1,
   initial_started_at: '2026-10-01T00:00:00.000Z',
   created_at: '2026-10-01T00:00:00Z',
   icon_key: 'goal',
@@ -161,7 +161,9 @@ test('day info shows emotion and exact habit progress before the sections only w
   assert.equal(h.render().find((node) => node.type === 'CalendarHabitProgress').props.done, 3);
   h.results.diary.data = null;
   const withoutDiary = h.render();
-  assert(!withoutDiary.some((node) => ['EmotionImage', 'CalendarHabitProgress'].includes(node.type)));
+  assert(
+    !withoutDiary.some((node) => ['EmotionImage', 'CalendarHabitProgress'].includes(node.type)),
+  );
   assert(withoutDiary.some((node) => node.type === 'DayInfoHabitSection'));
 });
 

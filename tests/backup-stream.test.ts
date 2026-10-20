@@ -103,3 +103,13 @@ test('streaming restore refuses a previous backup schema', async () => {
   files['manifest.json'] = strToU8(JSON.stringify(manifest));
   await assert.rejects(decode(zipSync(files)), /백업 버전/);
 });
+
+test('streaming restore accepts a v5 manifest with unchanged file validation', async () => {
+  const files = unzipSync(createArchive({ 'took.db': db, 'media/test.jpg': jpg }));
+  const manifest = JSON.parse(new TextDecoder().decode(files['manifest.json']));
+  manifest.schemaVersion = 5;
+  files['manifest.json'] = strToU8(JSON.stringify(manifest));
+  const decoded = await decode(zipSync(files));
+  assert.deepEqual(decoded.extracted['took.db'], [...db]);
+  assert.deepEqual(decoded.extracted['media/test.jpg'], [...jpg]);
+});

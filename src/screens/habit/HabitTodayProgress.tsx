@@ -1,3 +1,4 @@
+import { getHabitDaySummary } from '../../domain/habitStats';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Pressable, View } from 'react-native';
@@ -5,7 +6,7 @@ import { twMerge } from 'tailwind-merge';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
 import type { Completion, Habit } from '../../db/types';
-import { localDate, shiftDate } from '../../domain/date';
+import { shiftDate } from '../../domain/date';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { PROGRESS_FILL_CLASS_NAME, PROGRESS_TRACK_CLASS_NAME } from '../../theme/classes';
 
@@ -16,20 +17,14 @@ export function HabitTodayProgress({
   onPress,
 }: {
   today: string;
-  habits: Pick<Habit, 'id' | 'initial_started_at'>[];
+  habits: Pick<Habit, 'id' | 'initial_started_at' | 'priority'>[];
   records: Pick<Completion, 'habit_id' | 'date'>[];
   onPress: () => void;
 }) {
   const { colors, rem: appRem } = useAppTheme();
   const days = Array.from({ length: 4 }, (_, index) => {
     const date = shiftDate(today, -index);
-    const eligible = habits.filter((habit) => localDate(habit.initial_started_at) <= date);
-    const completedIds = new Set(
-      records.filter((record) => record.date === date).map((record) => record.habit_id),
-    );
-    const completed = eligible.filter((habit) => completedIds.has(habit.id)).length;
-    const percent = eligible.length ? (completed / eligible.length) * 100 : 0;
-    return { date, total: eligible.length, completed, percent };
+    return { date, ...getHabitDaySummary(date, habits, records) };
   });
   return (
     <View className="flex-1 gap-4 bg-theme-surface px-2 py-4">
@@ -60,7 +55,7 @@ export function HabitTodayProgress({
               key={date}
               accessible
               accessibilityRole="image"
-              accessibilityLabel={`${date}${date === today ? ', 오늘' : ''}, ${total ? `${total}개 중 ${completed}개 완료, ${Math.round(percent)}%` : '시작한 습관 없음'}`}
+              accessibilityLabel={`${date}${date === today ? ', 오늘' : ''}, ${total ? `${total}개 중 ${completed}개 완료, ${Math.round(percent ?? 0)}%` : '시작한 습관 없음'}`}
               className="flex-1 min-w-0 items-center gap-1 px-1"
             >
               <Text
@@ -75,7 +70,7 @@ export function HabitTodayProgress({
                 {total ? (
                   <View
                     className={`w-full ${PROGRESS_FILL_CLASS_NAME}`}
-                    style={{ height: `${percent}%` }}
+                    style={{ height: `${percent ?? 0}%` }}
                   />
                 ) : (
                   <Text className="text-sm text-center text-theme-text-disabled">–</Text>

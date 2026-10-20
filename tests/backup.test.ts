@@ -20,7 +20,7 @@ async function fixture() {
   });
   await saveHabit(value.db, {
     name: '보관할 습관',
-    priority: 1,
+    priority: 2,
     icon_key: 'goal',
     icon_color: 'lavender',
   });
@@ -113,7 +113,7 @@ test('expanded habit and sober icons survive saving and archive restore', async 
   ] as const;
   const now = Date.parse('2026-10-09T00:00:00.000Z');
   for (const icon_key of habitIcons)
-    await saveHabit(source.db, { name: icon_key, priority: 0, icon_key }, now);
+    await saveHabit(source.db, { name: icon_key, priority: 1, icon_key }, now);
   for (const icon_key of soberIcons)
     await saveSober(
       source.db,
@@ -155,7 +155,7 @@ test('failed restore transaction preserves current diary, habit and settings', a
   const records = await readBackupDatabase(snapshot.db, source.files);
   const target = await database();
   await saveDiary(target.db, { date: '2023-01-01', text: '원래 일기', emotion: 2, files: [] });
-  await saveHabit(target.db, { name: '원래 습관', priority: 0, icon_key: 'goal' });
+  await saveHabit(target.db, { name: '원래 습관', priority: 1, icon_key: 'goal' });
   target.raw.run('INSERT INTO settings VALUES (?, ?)', [
     'preferences',
     JSON.stringify(DEFAULT_SETTINGS),

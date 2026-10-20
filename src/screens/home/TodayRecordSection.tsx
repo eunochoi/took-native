@@ -1,3 +1,4 @@
+import { getHabitDaySummary } from '../../domain/habitStats';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -41,6 +42,7 @@ export function TodayRecordSection({ today }: { today: string }) {
     enabled: !!sobers.data?.length,
   });
   const sober = sortSobers(sobers.data ?? [], settings, restarts.data ?? [], now)[0];
+  const habitSummary = getHabitDaySummary(today, habits.data ?? [], completions.data ?? []);
   const habitPending = habits.isPending || completions.isPending;
   const habitError = habits.isError || completions.isError;
   const soberPending = sobers.isPending || (!!sober && restarts.isPending);
@@ -125,7 +127,11 @@ export function TodayRecordSection({ today }: { today: string }) {
               <Text numberOfLines={1} className={recordStatusClass} style={recordTextStyle}>
                 {habitError
                   ? '불러오기 실패'
-                  : `${completions.data?.length ?? 0}/${habits.data?.length ?? 0}`}
+                  : habitSummary.total
+                    ? `${habitSummary.completed}/${habitSummary.total}`
+                    : habits.data?.some((habit) => habit.priority === 0)
+                      ? `${habitSummary.excludedCompleted}건 기록`
+                      : '0/0'}
               </Text>
             )}
           </View>

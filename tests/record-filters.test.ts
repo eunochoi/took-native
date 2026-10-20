@@ -177,7 +177,7 @@ function soberRows(ui: ReturnType<typeof harness>) {
 test('habit grid pins total progress first and pads rows after including the summary', () => {
   for (const count of [1, 2, 3, 4]) {
     const results = {
-      habits: { data: Array.from({ length: count }, (_, index) => habit(index + 1, 0)) },
+      habits: { data: Array.from({ length: count }, (_, index) => habit(index + 1, 1)) },
       completions: { data: [{ habit_id: 1, date: today }] },
     };
     const ui = harness('app/(tabs)/habit.tsx', results);
@@ -246,7 +246,7 @@ test('habit grid pins total progress first and pads rows after including the sum
 
 test('habit grid hides add at the total limit even when filters hide habits', () => {
   const results = {
-    habits: { data: Array.from({ length: MAX_HABIT_COUNT }, (_, index) => habit(index + 1, 0)) },
+    habits: { data: Array.from({ length: MAX_HABIT_COUNT }, (_, index) => habit(index + 1, 1)) },
     completions: { data: [], isError: false },
   };
   const ui = harness('app/(tabs)/habit.tsx', results);
@@ -307,8 +307,8 @@ test('four-day summary uses eligible habits, newest-first dates and live complet
     done: 2,
     today,
     habits: [
-      { id: 1, initial_started_at: '2026-10-12T00:00:00' },
-      { id: 2, initial_started_at: '2026-10-14T00:00:00' },
+      { id: 1, priority: 1, initial_started_at: '2026-10-12T00:00:00' },
+      { id: 2, priority: 1, initial_started_at: '2026-10-14T00:00:00' },
     ],
     records: [
       { habit_id: 1, date: today },
@@ -383,7 +383,7 @@ test('habit filters combine exact stars with today completion and retain total p
   assert.deepEqual(habitIds(ui), [2]);
   assert.equal(
     nodes(ui.render()).find((node) => node.type === 'ToolbarFilterButton').props.label,
-    '완료 · ★★',
+    '완료 · ★',
   );
   applyPageFilter(ui, 'Habit', { completedOnly: true, priorities: [2] });
   assert.equal(
@@ -567,7 +567,7 @@ test('habit multi-priority filters combine with completed-only and select-all re
   assert.deepEqual(habitIds(ui), [3, 1]);
   applyPageFilter(ui, 'Habit', { completedOnly: true, priorities: [1, 2] });
   assert.deepEqual(habitIds(ui), [3]);
-  applyPageFilter(ui, 'Habit', { completedOnly: false, priorities: [2, 1, 0] });
+  applyPageFilter(ui, 'Habit', { completedOnly: false, priorities: [0, 1, 2, 3] });
   assert.deepEqual(habitIds(ui), [3, 2, 1]);
   assert.equal(
     nodes(ui.render()).find((node) => node.type === 'ToolbarFilterButton').props.label,
@@ -599,7 +599,7 @@ test('habit flow sheet keeps loading and errors distinct from zero completion', 
   let retries = 0;
   const results: any = { completions: { data: undefined, isError: false } };
   const ui = harness('src/screens/habit/HabitFlowSheet.tsx', results);
-  const props = { today, habits: [habit(1, 0)], onClose: () => {} };
+  const props = { today, habits: [habit(1, 1)], onClose: () => {} };
   assert.equal(
     nodes(ui.render(props)).some((node) => node.type === 'ActivityIndicator'),
     true,
@@ -661,4 +661,27 @@ test('habit and sober keep only the toolbar sticky for empty, loading and popula
       ),
     );
   }
+});
+
+test('exclusion-only filter hides the achievement card and keeps recorded items filterable', () => {
+  const ui = harness('app/(tabs)/habit.tsx', {
+    habits: { data: [habit(1, 0), habit(2, 1), habit(3, 0)] },
+    completions: {
+      data: [
+        { habit_id: 1, date: today },
+        { habit_id: 2, date: today },
+      ],
+    },
+  });
+  applyPageFilter(ui, 'Habit', { completedOnly: false, priorities: [0] });
+  assert.deepEqual(habitIds(ui), [3, 1]);
+  assert(!nodes(ui.render()).some((node) => node.type === 'HabitTodayProgress'));
+  assert.equal(
+    nodes(ui.render()).find((node) => node.type === 'ToolbarFilterButton').props.label,
+    '비정기 기록',
+  );
+  applyPageFilter(ui, 'Habit', { completedOnly: true, priorities: [0] });
+  assert.deepEqual(habitIds(ui), [1]);
+  applyPageFilter(ui, 'Habit', { completedOnly: false, priorities: [] });
+  assert(nodes(ui.render()).some((node) => node.type === 'HabitTodayProgress'));
 });

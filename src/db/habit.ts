@@ -56,7 +56,7 @@ export function validateHabit(input: HabitInput, now = Date.now()) {
   if (
     !Number.isInteger(input.priority) ||
     input.priority < 0 ||
-    input.priority > 2 ||
+    input.priority > 3 ||
     !isHabitIcon(input.icon_key) ||
     !isHabitIconColor(input.icon_color ?? DEFAULT_HABIT_ICON_COLOR)
   )

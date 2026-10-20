@@ -3,7 +3,7 @@ export { MAX_BACKUP_BYTES, MAX_BACKUP_FILES, MAX_BACKUP_PART_BYTES } from '../do
 export interface BackupManifest {
   format: 'took-backup';
   version: 1 | 2;
-  schemaVersion: typeof SCHEMA_VERSION;
+  schemaVersion: 5 | typeof SCHEMA_VERSION;
   createdAt: string;
   set?: BackupSetPart;
   files: Record<string, { size: number; sha256: string }>;

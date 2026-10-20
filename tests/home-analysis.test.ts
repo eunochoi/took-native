@@ -45,6 +45,7 @@ function render(
         if (dependency === 'react-native') return { View: 'View', Pressable: 'Pressable' };
         if (dependency.endsWith('AppThemeProvider'))
           return { useAppTheme: () => ({ rem: 15, iconSizes: {}, colors: {} }) };
+        if (dependency.endsWith('domain/habitStats')) return require('../src/domain/habitStats');
         if (dependency.endsWith('domain/constants')) return { EMOTIONS };
         if (dependency.endsWith('domain/diaryFilters'))
           return require('../src/domain/diaryFilters');
@@ -174,8 +175,16 @@ test('recorded diary names its emotion in quotes and opens the diary', () => {
 test('today habits show completed count before total count', () => {
   const tree = render('TodayRecordSection', { today: '2026-10-05' }, undefined, {
     results: {
-      habits: { data: Array.from({ length: 8 }, (_, id) => ({ id })) },
-      completions: { data: Array.from({ length: 3 }, (_, habit_id) => ({ habit_id })) },
+      habits: {
+        data: Array.from({ length: 8 }, (_, id) => ({
+          id,
+          priority: 1,
+          initial_started_at: '2026-10-01T00:00:00',
+        })),
+      },
+      completions: {
+        data: Array.from({ length: 3 }, (_, habit_id) => ({ habit_id, date: '2026-10-05' })),
+      },
     },
   });
   const habitButton = nodes(tree).find(
@@ -327,8 +336,8 @@ test('emotion proportions show an empty track or a single full segment without i
 
 test('habit retains Top 3 selection without annual summaries or the full list', () => {
   const all = [
-    { id: 1, name: '걷기', count: 3, priority: 0, icon_key: 'walking' },
-    { id: 2, name: '독서', count: 0, priority: 0, icon_key: 'reading' },
+    { id: 1, name: '걷기', count: 3, priority: 1, icon_key: 'walking' },
+    { id: 2, name: '독서', count: 0, priority: 1, icon_key: 'reading' },
   ];
   const tree = render('HabitAnalysis', {
     stats: { all, top: [all[0]], bottom: [all[0]] },

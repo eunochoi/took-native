@@ -24,7 +24,10 @@ export function DayInfoHabitSection({
   const { colors, iconSizes } = useAppTheme();
   const { openModal } = useModalNavigation();
   const editable = date >= shiftDate(today, -3) && date <= today;
-  const done = habits.filter((habit) => habit.completed).length;
+  const counted = habits.filter((habit) => habit.priority > 0);
+  const done = counted.filter((habit) => habit.completed).length;
+  const excluded = habits.filter((habit) => habit.priority === 0);
+  const excludedDone = excluded.filter((habit) => habit.completed).length;
   const renderHabit = (habit: Habit & { completed: boolean }) => {
     const habitColor = resolveIconColor(habit.icon_color, colors.accent);
     const disabled =
@@ -36,6 +39,7 @@ export function DayInfoHabitSection({
       >
         <Pressable
           accessibilityRole="checkbox"
+          accessibilityLabel={`${habit.name}${habit.priority === 0 ? ', 비정기 기록' : ''}`}
           accessibilityState={{ checked: habit.completed, disabled }}
           disabled={disabled}
           onPress={() => onToggle(habit.id, !habit.completed)}
@@ -55,6 +59,9 @@ export function DayInfoHabitSection({
           <Text numberOfLines={1} className="flex-1 text-sm">
             {habit.name}
           </Text>
+          {habit.priority === 0 && (
+            <Text className="text-xs text-theme-text-secondary">비정기 기록</Text>
+          )}
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -75,17 +82,23 @@ export function DayInfoHabitSection({
         <Text accessibilityRole="header" className="text-base font-semibold">
           습관 목록
         </Text>
-        {habits.length > 0 &&
-          (editable ? (
-            <Text className="text-sm text-theme-accent">
-              {done}/{habits.length} 완료
-            </Text>
-          ) : (
-            <View className="flex-row items-center gap-1">
+        {habits.length > 0 && (
+          <View className="items-end gap-1">
+            {!editable && (
               <AppIcon name="lock-outline" size={iconSizes.sm} color={colors.tertiary} />
-              <Text className="text-xs text-theme-text-tertiary">{done}개 완료</Text>
-            </View>
-          ))}
+            )}
+            {counted.length > 0 && (
+              <Text className="text-sm text-theme-accent">
+                집계 대상 {done}/{counted.length}
+              </Text>
+            )}
+            {excluded.length > 0 && (
+              <Text className="text-xs text-theme-text-secondary">
+                비정기 기록 {excludedDone}건
+              </Text>
+            )}
+          </View>
+        )}
       </View>
       <View className="px-1 pt-3">
         {habits.length ? (

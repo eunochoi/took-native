@@ -41,11 +41,15 @@ export function HabitMonthStatistics({
         월간 기록
       </Text>
       <HabitStatisticsSummary
-        stats={[
-          { label: '실천 횟수', icon: 'check', value: summary.completed, unit: '회' },
-          { label: '놓친 횟수', icon: 'close', value: summary.missed, unit: '회' },
-          { label: '실천율', icon: 'habit-rate', value: summary.rate ?? '—', unit: '%' },
-        ]}
+        stats={
+          habit.priority === 0
+            ? [{ label: '기록 횟수', icon: 'check', value: summary.completed, unit: '회' }]
+            : [
+                { label: '실천 횟수', icon: 'check', value: summary.completed, unit: '회' },
+                { label: '놓친 횟수', icon: 'close', value: summary.missed, unit: '회' },
+                { label: '실천율', icon: 'habit-rate', value: summary.rate ?? '—', unit: '%' },
+              ]
+        }
         unavailable={unavailable}
       />
       <View className="px-1">
@@ -54,7 +58,7 @@ export function HabitMonthStatistics({
           {days.map((date) => {
             const outside = date.slice(0, 7) !== month;
             const available = navigation.isDateAvailable(date);
-            const completed = !outside && available && completedDates.has(date);
+            const completed = !unavailable && !outside && available && completedDates.has(date);
             const empty = !unavailable && !outside && available && !completed;
             return (
               <CalendarDay

@@ -20,7 +20,7 @@ export function HabitFlowSheet({
   onClose,
 }: {
   today: string;
-  habits: Pick<Habit, 'id' | 'initial_started_at'>[];
+  habits: Pick<Habit, 'id' | 'initial_started_at' | 'priority'>[];
   onClose: () => void;
 }) {
   const db = useSQLiteContext();
@@ -128,7 +128,9 @@ export function HabitFlowSheet({
               </Text>
             </View>
             <View className="gap-2">
-              <InfoNotice>날짜별 완료율의 평균이며, 시작 전 날짜는 제외해요.</InfoNotice>
+              <InfoNotice>
+                별 1개 이상 항목의 날짜별 완료율 평균이며, 시작 전 날짜는 제외해요.
+              </InfoNotice>
               <InfoNotice>오늘의 체크에 따라 완료율이 달라져요.</InfoNotice>
             </View>
           </>

@@ -23,9 +23,9 @@ const soberInput = {
 
 test('habit and sober saves accept maximum name length and reject one extra character without writing records', async () => {
   const { db, raw } = await database();
-  await saveHabit(db, { name: '가'.repeat(HABIT_NAME_MAX_LENGTH), priority: 0, icon_key: 'goal' });
+  await saveHabit(db, { name: '가'.repeat(HABIT_NAME_MAX_LENGTH), priority: 1, icon_key: 'goal' });
   await assert.rejects(
-    saveHabit(db, { name: '나'.repeat(HABIT_NAME_MAX_LENGTH + 1), priority: 0, icon_key: 'goal' }),
+    saveHabit(db, { name: '나'.repeat(HABIT_NAME_MAX_LENGTH + 1), priority: 1, icon_key: 'goal' }),
   );
   await saveSober(db, { ...soberInput, name: '가'.repeat(SOBER_NAME_MAX_LENGTH) });
   await assert.rejects(
@@ -39,12 +39,12 @@ test('habit and sober saves accept maximum name length and reject one extra char
 test('habit and sober item limits still allow editing existing items when full', async () => {
   const { db, raw } = await database();
   for (let i = 0; i < MAX_HABIT_COUNT; i++)
-    await saveHabit(db, { name: `습관${i}`, priority: 0, icon_key: 'goal' });
+    await saveHabit(db, { name: `습관${i}`, priority: 1, icon_key: 'goal' });
   for (let i = 0; i < MAX_SOBER_COUNT; i++)
     await saveSober(db, { ...soberInput, name: `거리두기${i}` });
-  await assert.rejects(saveHabit(db, { name: '초과', priority: 0, icon_key: 'goal' }));
+  await assert.rejects(saveHabit(db, { name: '초과', priority: 1, icon_key: 'goal' }));
   await assert.rejects(saveSober(db, { ...soberInput, name: '초과' }));
-  await saveHabit(db, { id: 1, name: '이름 수정', priority: 1, icon_key: 'goal' });
+  await saveHabit(db, { id: 1, name: '이름 수정', priority: 2, icon_key: 'goal' });
   await saveSober(db, { ...soberInput, id: 1, name: '이름 수정' });
   assert.equal(rows(raw, 'SELECT count(*) FROM habits')[0][0], MAX_HABIT_COUNT);
   assert.equal(rows(raw, 'SELECT count(*) FROM sobers')[0][0], MAX_SOBER_COUNT);
@@ -53,7 +53,7 @@ test('habit and sober item limits still allow editing existing items when full',
 
 test('backup validation uses the same habit and sober count and name limits', async () => {
   const { db, raw } = await database();
-  await saveHabit(db, { name: '습관', priority: 0, icon_key: 'goal' });
+  await saveHabit(db, { name: '습관', priority: 1, icon_key: 'goal' });
   await saveSober(db, { ...soberInput, name: '거리두기' });
   const habits = await db.getAllAsync<any>('SELECT * FROM habits');
   const sobers = await db.getAllAsync<any>('SELECT * FROM sobers');

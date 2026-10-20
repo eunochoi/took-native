@@ -28,7 +28,7 @@ const input: SoberInput = {
 
 test('Sober create/read/edit/restart CRUD and cascade preserve independent Habit records', async () => {
   const { db, raw } = await database();
-  const habitId = await saveHabit(db, { name: '독서', priority: 1, icon_key: 'reading' });
+  const habitId = await saveHabit(db, { name: '독서', priority: 2, icon_key: 'reading' });
   const id = await saveSober(db, input, now);
   assert.equal((await getSoberList(db)).length, 1);
   assert.equal((await getSoberById(db, id))?.description, null);
@@ -121,7 +121,7 @@ test('both habits and sober starts stay immutable even without completion or res
   const { db, raw } = await database();
   const habit = await saveHabit(
     db,
-    { name: '독서', priority: 1, icon_key: 'reading', initial_started_at: start },
+    { name: '독서', priority: 2, icon_key: 'reading', initial_started_at: start },
     now,
   );
   const sober = await saveSober(db, input, now);
@@ -129,7 +129,7 @@ test('both habits and sober starts stay immutable even without completion or res
     await assert.rejects(
       saveHabit(
         db,
-        { id: habit, name: '변경', priority: 1, icon_key: 'reading', initial_started_at: changed },
+        { id: habit, name: '변경', priority: 2, icon_key: 'reading', initial_started_at: changed },
         now,
       ),
       /저장 후 변경/,
@@ -146,7 +146,7 @@ test('both habits and sober starts stay immutable even without completion or res
       db,
       {
         name: '미래',
-        priority: 0,
+        priority: 1,
         icon_key: 'goal',
         initial_started_at: new Date(now + 1).toISOString(),
       },

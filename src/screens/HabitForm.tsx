@@ -38,7 +38,7 @@ export function HabitForm({ id }: { id?: number }) {
   const db = useSQLiteContext();
   const query = useQuery({ ...habitQueries.byId(db, id ?? 0), enabled: id !== undefined });
   const [name, setName] = useState('');
-  const [priority, setPriority] = useState(0);
+  const [priority, setPriority] = useState(1);
   const [icon, setIcon] = useState<HabitIconKey>('goal');
   const [iconColor, setIconColor] = useState<HabitIconColorKey>(DEFAULT_HABIT_ICON_COLOR);
   const [initialStartedAt, setInitialStartedAt] = useState(() =>
@@ -182,12 +182,15 @@ export function HabitForm({ id }: { id?: number }) {
           우선순위
         </Text>
         <FormPickerRow
-          label={HABIT_PRIORITY_LABELS[priority]}
+          label={
+            priority === 0 ? '없음 · 비정기 기록' : `${HABIT_PRIORITY_LABELS[priority]} · 매일 기록`
+          }
           accessibilityLabel="우선순위 선택"
           disabled={mutation.isPending}
           onPress={() => setPicker('priority')}
           leading={<HabitStars priority={priority} size={appRem * 1.25} />}
         />
+        {priority === 0 && <InfoNotice>완료율과 달성 개수 계산에는 포함되지 않아요.</InfoNotice>}
       </View>
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>

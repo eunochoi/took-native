@@ -8,7 +8,7 @@ import { QueryError } from '../../components/QueryError';
 import { Text } from '../../components/Text';
 import { calendarDays } from '../../domain/calendar';
 import { EMOTIONS } from '../../domain/constants';
-import { localDate } from '../../domain/date';
+import { getHabitDaySummary } from '../../domain/habitStats';
 import { useCalendarNavigation } from '../../hooks/useCalendarNavigation';
 import { useMonthSwipe } from '../../hooks/useMonthSwipe';
 import { diaryQueries, habitQueries } from '../../queries';
@@ -43,16 +43,6 @@ export function DiaryHabitMonthCalendar(props: {
     () => new Map((diaries.data ?? []).map((diary) => [diary.date, diary])),
     [diaries.data],
   );
-  const counts = useMemo(() => {
-    const result = new Map<string, number>();
-    for (const record of completions.data ?? [])
-      result.set(record.date, (result.get(record.date) ?? 0) + 1);
-    return result;
-  }, [completions.data]);
-  const habitStartDates = useMemo(
-    () => (habits.data ?? []).map((habit) => localDate(habit.initial_started_at)),
-    [habits.data],
-  );
   return (
     <View className={props.fillHeight ? 'flex-1 min-h-0' : ''}>
       {(diaries.isError || completions.isError || habits.isError) && (
@@ -78,10 +68,16 @@ export function DiaryHabitMonthCalendar(props: {
         {days.map((date) => {
           const outside = date.slice(0, 7) !== props.month;
           const diary = outside ? undefined : diaryByDate.get(date);
-          const count = outside ? 0 : (counts.get(date) ?? 0);
-          const total = outside ? 0 : habitStartDates.filter((start) => start <= date).length;
+          const summary = getHabitDaySummary(date, habits.data ?? [], completions.data ?? []);
           const progressReady =
-            habits.data !== undefined && !habits.isError && !completions.isError;
+            !outside &&
+            date <= props.today &&
+            habits.data !== undefined &&
+            completions.data !== undefined &&
+            !habits.isError &&
+            !completions.isError;
+          const count = progressReady ? summary.completed : 0;
+          const total = summary.total;
           const rotation = diary ? -10 + ((new Date(diary.created_at).getTime() % 10) * 20) / 9 : 0;
           const weekday = getDay(parseISO(date));
           return (
@@ -105,7 +101,7 @@ export function DiaryHabitMonthCalendar(props: {
                   : count > 0
                     ? '일기 없음'
                     : '',
-                count ? `습관 ${progressReady ? `${count}/${total}` : count}개 완료` : '',
+                count ? `집계 대상 ${count}/${total}개 완료` : '',
               ]
                 .filter(Boolean)
                 .join(', ')}

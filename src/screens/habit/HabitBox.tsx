@@ -32,13 +32,14 @@ export function HabitBox({
     records.some((record) => record.habit_id === habit.id && record.date === date);
   const startedDate = localDate(habit.initial_started_at);
   const done = checked(today);
+  const excluded = habit.priority === 0;
   return (
     <View className="flex-1 gap-4 bg-theme-surface px-2 py-4">
       <View>
         <View className="relative mb-2">
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`${habit.name} 습관 정보`}
+            accessibilityLabel={`${habit.name}${excluded ? ', 비정기 기록' : ''} 습관 정보`}
             onPress={() => openModal(`/habit/${habit.id}`)}
             className="items-center gap-2"
           >
@@ -57,7 +58,13 @@ export function HabitBox({
           </View>
         </View>
         <View className="h-5 items-center justify-center">
-          <HabitStars priority={habit.priority} color={habitColor} size={appRem} />
+          {excluded ? (
+            <Text className="h-5 text-sm leading-5 text-center text-theme-text-secondary">
+              비정기 기록
+            </Text>
+          ) : (
+            <HabitStars priority={habit.priority} color={habitColor} size={appRem} />
+          )}
         </View>
       </View>
       <View className="flex-row justify-around">
@@ -68,7 +75,7 @@ export function HabitBox({
             <Pressable
               key={date}
               accessibilityRole="checkbox"
-              accessibilityLabel={`${habit.name} ${format(parseISO(date), 'M월 d일')} 완료`}
+              accessibilityLabel={`${habit.name} ${format(parseISO(date), 'M월 d일')} ${excluded ? '기록' : '완료'}`}
               accessibilityState={{ checked: completed, disabled: locked }}
               disabled={locked}
               onPress={() => onToggle(habit.id, date, !completed)}
@@ -104,7 +111,7 @@ export function HabitBox({
       >
         {done && <AppIcon name="check" size={iconSizes.sm} color={colors.textSecondary} />}
         <Text className={`text-sm text-theme-text-secondary`}>
-          {done ? '완료' : '오늘 완료하기'}
+          {excluded ? (done ? '기록됨' : '오늘 기록하기') : done ? '완료' : '오늘 완료하기'}
         </Text>
       </Pressable>
     </View>

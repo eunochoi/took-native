@@ -39,7 +39,7 @@ export async function getDiaryStats(db: SQLiteDatabase, year: number) {
 export async function getHabitStats(db: SQLiteDatabase, year: number) {
   assertYear(year);
   const habits = await db.getAllAsync<Habit & { count: number }>(
-    `SELECT h.*, count(c.date) AS count FROM habits h LEFT JOIN habit_completions c ON c.habit_id = h.id AND c.date BETWEEN ? AND ? GROUP BY h.id ORDER BY count DESC, h.id`,
+    `SELECT h.*, count(c.date) AS count FROM habits h LEFT JOIN habit_completions c ON c.habit_id = h.id AND c.date BETWEEN ? AND ? WHERE h.priority > 0 GROUP BY h.id ORDER BY count DESC, h.id`,
     `${year}-01-01`,
     `${year}-12-31`,
   );

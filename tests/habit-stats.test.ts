@@ -198,8 +198,8 @@ test('habit flow uses adjacent rolling windows across years and distinguishes no
 
 test('habit flow averages daily rates equally and ignores duplicate, unknown and pre-start completions', () => {
   const habits = [
-    { id: 1, initial_started_at: '2026-10-18T00:00:00' },
-    { id: 2, initial_started_at: '2026-10-19T00:00:00' },
+    { id: 1, priority: 1, initial_started_at: '2026-10-18T00:00:00' },
+    { id: 2, priority: 1, initial_started_at: '2026-10-19T00:00:00' },
   ];
   const stats = getHabitFlowStats('2026-10-19', habits, [
     { habit_id: 1, date: '2026-10-18' },
@@ -218,7 +218,7 @@ test('habit flow averages daily rates equally and ignores duplicate, unknown and
 });
 
 test('habit flow reports percentage point increases, decreases and unchanged rates', () => {
-  const habits = [{ id: 1, initial_started_at: '2026-01-01T00:00:00' }];
+  const habits = [{ id: 1, priority: 1, initial_started_at: '2026-01-01T00:00:00' }];
   const recent = Array.from({ length: 7 }, (_, i) => ({ habit_id: 1, date: `2026-10-${13 + i}` }));
   const previous = Array.from({ length: 7 }, (_, i) => ({
     habit_id: 1,

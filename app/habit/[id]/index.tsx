@@ -47,6 +47,9 @@ export default function HabitDetail() {
                 </View>
                 <HabitStars priority={habit.priority} size={appRem * 1.3} />
                 <Text className="text-sm text-theme-text-secondary">
+                  {habit.priority === 0 ? '비정기 기록' : `별 ${habit.priority}개`}
+                </Text>
+                <Text className="text-sm text-theme-text-secondary">
                   {format(parseISO(habit.initial_started_at), 'yyyy년 M월 d일 HH:mm')} 시작
                 </Text>
               </View>
@@ -56,10 +59,12 @@ export default function HabitDetail() {
                 today={today}
                 unavailable={records.isPending || records.isError}
               />
-              <View className="gap-2">
-                <InfoNotice>실천 가능일은 선택 기간 내 시작일~오늘이에요.</InfoNotice>
-                <InfoNotice>실천율 = 실천 횟수 ÷ 실천 가능일 × 100</InfoNotice>
-              </View>
+              {habit.priority > 0 && (
+                <View className="gap-2">
+                  <InfoNotice>실천 가능일은 선택 기간 내 시작일~오늘이에요.</InfoNotice>
+                  <InfoNotice>실천율 = 실천 횟수 ÷ 실천 가능일 × 100</InfoNotice>
+                </View>
+              )}
             </>
           ) : !query.isPending && !query.error ? (
             <Text>습관을 찾을 수 없습니다.</Text>

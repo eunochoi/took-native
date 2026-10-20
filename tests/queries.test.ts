@@ -239,7 +239,7 @@ test('habit check, rename and deletion refresh the actual diary joins and statis
   try {
     const today = todayString();
     const year = Number(today.slice(0, 4));
-    const habit = await saveHabit(db, { name: '걷기', priority: 1, icon_key: 'walking' });
+    const habit = await saveHabit(db, { name: '걷기', priority: 2, icon_key: 'walking' });
     const diary = await saveDiary(db, { date: today, text: '오늘의 기록', emotion: 0, files: [] });
     const options = [
       module.diaryQueries.byId(db, diary.id),
@@ -261,11 +261,19 @@ test('habit check, rename and deletion refresh the actual diary joins and statis
     assert.equal((client.getQueryData(options[3].queryKey) as unknown[]).length, 1);
     assert.equal((client.getQueryData(options[4].queryKey) as any).top[0].count, 1);
     await mutate(
-      () => saveHabit(db, { id: habit, name: '산책', priority: 2, icon_key: 'walking' }),
+      () => saveHabit(db, { id: habit, name: '산책', priority: 3, icon_key: 'walking' }),
       'habit',
     );
     for (const entry of options.slice(0, 2))
       assert.equal((client.getQueryData(entry.queryKey) as any).completedHabits[0].name, '산책');
+    await mutate(
+      () => saveHabit(db, { id: habit, name: '산책', priority: 0, icon_key: 'walking' }),
+      'habit',
+    );
+    assert.equal((client.getQueryData(options[4].queryKey) as any).top.length, 0);
+    for (const entry of options.slice(0, 2))
+      assert.equal((client.getQueryData(entry.queryKey) as any).completedHabits[0].priority, 0);
+    assert.equal((client.getQueryData(options[2].queryKey) as unknown[]).length, 1);
     await mutate(() => deleteHabit(db, habit), 'habit');
     for (const entry of options.slice(0, 2))
       assert.equal((client.getQueryData(entry.queryKey) as any).completedHabits.length, 0);

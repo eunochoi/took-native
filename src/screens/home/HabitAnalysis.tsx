@@ -22,7 +22,7 @@ export function HabitAnalysis({
   const habits = stats[tab].slice(0, 3);
   return (
     <View className="gap-4">
-      <AnalysisHeader title="습관 기록">{year}년 기준</AnalysisHeader>
+      <AnalysisHeader title="습관 기록">{year}년 · 별 1개 이상 기준</AnalysisHeader>
       <View accessibilityRole="tablist" className={UNDERLINE_TAB_LIST_CLASS_NAME}>
         {(
           [
@@ -65,7 +65,7 @@ export function HabitAnalysis({
                   priority={habit.priority}
                   size={appRem}
                   className="opacity-80"
-                  accessibilityLabel={`중요도 ${habit.priority + 1}`}
+                  accessibilityLabel={`중요도 ${habit.priority}`}
                 />
               </View>
               <View className="flex-row items-baseline gap-1">
@@ -79,7 +79,7 @@ export function HabitAnalysis({
         </View>
       ) : (
         <Text className="px-2 py-8 text-center text-theme-text-secondary text-sm">
-          {year}년에 완료한 습관이 없어요.
+          {year}년에 완료한 집계 대상 습관이 없어요.
         </Text>
       )}
     </View>

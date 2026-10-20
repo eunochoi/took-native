@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { Habit } from '../../db/types';
 import { localDate } from '../../domain/date';
 import { getHabitMonthSummary } from '../../domain/habitStats';
+import { HabitRecentRecord } from './HabitRecentRecord';
 import { HabitMonthStatistics } from './HabitMonthStatistics';
 import { HabitYearStatistics } from './HabitYearStatistics';
 
@@ -24,6 +25,14 @@ export function HabitStatistics({
   );
   return (
     <>
+      {habit.priority === 0 && (
+        <HabitRecentRecord
+          dates={dates}
+          startedDate={startedDate}
+          today={today}
+          unavailable={unavailable}
+        />
+      )}
       <HabitMonthStatistics
         habit={habit}
         dates={dates}
@@ -33,12 +42,14 @@ export function HabitStatistics({
         summary={summary}
         unavailable={unavailable}
       />
-      <HabitYearStatistics
-        dates={dates}
-        startedDate={startedDate}
-        today={today}
-        unavailable={unavailable}
-      />
+      {habit.priority > 0 && (
+        <HabitYearStatistics
+          dates={dates}
+          startedDate={startedDate}
+          today={today}
+          unavailable={unavailable}
+        />
+      )}
     </>
   );
 }

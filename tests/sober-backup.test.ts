@@ -40,7 +40,7 @@ async function fixture() {
 test('Sober and restart with memo survive ZIP backup and atomic record replacement', async () => {
   const source = await fixture();
   const decoded = readArchive(createArchive(source.files));
-  assert.equal(decoded.manifest.schemaVersion, 5);
+  assert.equal(decoded.manifest.schemaVersion, 6);
   const snapshot = await database(decoded.files['took.db']);
   const records = await readBackupDatabase(snapshot.db, decoded.files);
   const target = await database();

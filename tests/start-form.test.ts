@@ -17,7 +17,7 @@ function form(name: 'HabitForm' | 'SoberForm', id?: number) {
   const record = {
     id,
     name: '기록',
-    priority: 1,
+    priority: 2,
     icon_key: name === 'HabitForm' ? 'goal' : 'favorite',
     icon_color: 'theme',
     initial_started_at: start,

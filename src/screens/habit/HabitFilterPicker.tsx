@@ -6,6 +6,7 @@ import { PickerOption } from '../../components/PickerOption';
 import { Text } from '../../components/Text';
 import { selectionSummary } from '../../domain/selection';
 import { useAppTheme } from '../../theme/AppThemeProvider';
+import { HABIT_PRIORITY_LABELS } from './HabitPriorityPicker';
 import { HabitStars } from './HabitStars';
 
 export interface HabitFilter {
@@ -49,35 +50,49 @@ export function HabitFilterPicker({
           <Text className="text-base font-semibold">중요도</Text>
           <Text className="shrink text-sm text-theme-text-secondary">
             {selectionSummary(
-              draft.priorities.map((priority) => '★'.repeat(priority + 1)),
-              3,
+              draft.priorities.map((priority) =>
+                priority === 0 ? '비정기 기록' : '★'.repeat(priority),
+              ),
+              4,
             )}
           </Text>
         </View>
-        <View className="flex-row gap-3">
-          {[2, 1, 0].map((priority) => {
-            const selected = draft.priorities.includes(priority);
-            return (
-              <View key={priority} className="flex-1 min-w-0">
-                <PickerOption
-                  compact
-                  checkbox
-                  selected={selected}
-                  accessibilityLabel={`별표 ${priority + 1}개`}
-                  onPress={() =>
-                    setDraft({
-                      ...draft,
-                      priorities: [2, 1, 0].filter((value) =>
-                        value === priority ? !selected : draft.priorities.includes(value),
-                      ),
-                    })
-                  }
-                >
-                  <HabitStars priority={priority} size={rem * 1.125} />
-                </PickerOption>
-              </View>
-            );
-          })}
+        <View className="gap-3">
+          {[
+            [0, 1],
+            [2, 3],
+          ].map((row) => (
+            <View key={row[0]} className="flex-row gap-3">
+              {row.map((priority) => {
+                const selected = draft.priorities.includes(priority);
+                return (
+                  <View key={priority} className="flex-1 min-w-0">
+                    <PickerOption
+                      compact
+                      checkbox
+                      selected={selected}
+                      accessibilityLabel={priority === 0 ? '비정기 기록' : `별표 ${priority}개`}
+                      onPress={() =>
+                        setDraft({
+                          ...draft,
+                          priorities: [0, 1, 2, 3].filter((value) =>
+                            value === priority ? !selected : draft.priorities.includes(value),
+                          ),
+                        })
+                      }
+                    >
+                      <HabitStars priority={priority} size={rem * 1.125} />
+                      <Text
+                        className={`text-sm ${selected ? 'text-theme-accent' : 'text-theme-text-secondary'}`}
+                      >
+                        {HABIT_PRIORITY_LABELS[priority]}
+                      </Text>
+                    </PickerOption>
+                  </View>
+                );
+              })}
+            </View>
+          ))}
         </View>
       </View>
       <InfoNotice>중요도는 여러 개 선택할 수 있어요.</InfoNotice>

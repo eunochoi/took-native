@@ -13,14 +13,14 @@ test('schema initialization is repeatable and refuses future versions without de
   const { db, raw } = await database();
   await saveDiary(db, { date: today, emotion: 0, text: '남길 기록', files: [] });
   await initializeDatabase(db);
-  raw.exec('PRAGMA user_version = 6;');
+  raw.exec('PRAGMA user_version = 7;');
   await assert.rejects(initializeDatabase(db));
   assert.equal(rows(raw, 'SELECT count(*) FROM diaries')[0][0], 1);
   raw.close();
 });
 test('diary deletion leaves habit completions and returns media for cleanup', async () => {
   const { db, raw } = await database();
-  const habit = await saveHabit(db, { name: '걷기', priority: 1, icon_key: 'walking' });
+  const habit = await saveHabit(db, { name: '걷기', priority: 2, icon_key: 'walking' });
   await setHabitCompletion(db, habit, today, true);
   assert.equal(rows(raw, 'SELECT count(*) FROM diaries')[0][0], 0);
   const diary = await saveDiary(db, { date: today, emotion: 1, text: '산책', files: ['one.jpg'] });
@@ -31,7 +31,7 @@ test('diary deletion leaves habit completions and returns media for cleanup', as
 });
 test('habit deletion cascades only completions, not diaries', async () => {
   const { db, raw } = await database();
-  const habit = await saveHabit(db, { name: '독서', priority: 2, icon_key: 'reading' });
+  const habit = await saveHabit(db, { name: '독서', priority: 3, icon_key: 'reading' });
   await setHabitCompletion(db, habit, today, true);
   await saveDiary(db, { date: today, emotion: 0, text: '책', files: [] });
   await deleteHabit(db, habit);
@@ -41,8 +41,8 @@ test('habit deletion cascades only completions, not diaries', async () => {
 });
 test('habit name uniqueness, item limit, valid icons and four-day edits are enforced in data layer', async () => {
   const { db, raw } = await database();
-  const first = await saveHabit(db, { name: '매일 걷기', priority: 1, icon_key: 'walking' });
-  await assert.rejects(saveHabit(db, { name: ' 매일 걷기 ', priority: 1, icon_key: 'walking' }));
+  const first = await saveHabit(db, { name: '매일 걷기', priority: 2, icon_key: 'walking' });
+  await assert.rejects(saveHabit(db, { name: ' 매일 걷기 ', priority: 2, icon_key: 'walking' }));
   await assert.rejects(setHabitCompletion(db, first, shiftDate(today, -1), true));
   await assert.rejects(setHabitCompletion(db, first, shiftDate(today, 1), true));
   raw.run('UPDATE habits SET initial_started_at = ?', [
@@ -51,8 +51,8 @@ test('habit name uniqueness, item limit, valid icons and four-day edits are enfo
   await setHabitCompletion(db, first, shiftDate(today, -3), true);
   await assert.rejects(setHabitCompletion(db, first, shiftDate(today, -4), true));
   for (let i = 1; i < MAX_HABIT_COUNT; i++)
-    await saveHabit(db, { name: `습관${i}`, priority: 0, icon_key: 'goal' });
-  await assert.rejects(saveHabit(db, { name: '초과', priority: 0, icon_key: 'goal' }));
+    await saveHabit(db, { name: `습관${i}`, priority: 1, icon_key: 'goal' });
+  await assert.rejects(saveHabit(db, { name: '초과', priority: 1, icon_key: 'goal' }));
   raw.close();
 });
 test('same-date diaries are rejected and failed image update rolls back text and images', async () => {
@@ -114,7 +114,7 @@ test('year-specific stats do not constrain lifetime streaks and zero completions
   assert.equal(stats.longest, 2);
   assert.equal(stats.monthly[0], 1);
   assert.equal(stats.halves[0][0], 1);
-  const id = await saveHabit(db, { name: '운동', priority: 1, icon_key: 'running' });
+  const id = await saveHabit(db, { name: '운동', priority: 2, icon_key: 'running' });
   const year = Number(today.slice(0, 4));
   assert.deepEqual((await getHabitStats(db, year)).top, []);
   await setHabitCompletion(db, id, today, true);
@@ -124,7 +124,7 @@ test('year-specific stats do not constrain lifetime streaks and zero completions
 
 test('diary pages batch ordered photos and only the independent completions on each date', async () => {
   const { db, raw } = await database();
-  const habit = await saveHabit(db, { name: '산책', priority: 1, icon_key: 'walking' });
+  const habit = await saveHabit(db, { name: '산책', priority: 2, icon_key: 'walking' });
   raw.run('UPDATE habits SET initial_started_at = ?', [
     new Date(`${shiftDate(today, -10)}T00:00:00`).toISOString(),
   ]);
@@ -183,8 +183,8 @@ test('diary pages batch ordered photos and only the independent completions on e
 
 test('habit detail reads only its own lifetime completions in date order', async () => {
   const { db, raw } = await database();
-  const first = await saveHabit(db, { name: '걷기', priority: 0, icon_key: 'walking' });
-  const other = await saveHabit(db, { name: '독서', priority: 1, icon_key: 'reading' });
+  const first = await saveHabit(db, { name: '걷기', priority: 1, icon_key: 'walking' });
+  const other = await saveHabit(db, { name: '독서', priority: 2, icon_key: 'reading' });
   for (const [id, date] of [
     [first, '2020-12-31'],
     [other, '2020-12-31'],
@@ -214,7 +214,7 @@ test('habit colors persist through edits and reject unknown palette keys', async
   const { db, raw } = await database();
   const id = await saveHabit(db, {
     name: '독서 색상',
-    priority: 1,
+    priority: 2,
     icon_key: 'reading',
     icon_color: 'coral',
   });
@@ -222,7 +222,7 @@ test('habit colors persist through edits and reject unknown palette keys', async
   await saveHabit(db, {
     id,
     name: '독서 색상',
-    priority: 2,
+    priority: 3,
     icon_key: 'reading',
     icon_color: 'mint',
   });
@@ -231,7 +231,7 @@ test('habit colors persist through edits and reject unknown palette keys', async
     saveHabit(db, {
       id,
       name: '독서 색상',
-      priority: 2,
+      priority: 3,
       icon_key: 'reading',
       icon_color: 'invalid' as never,
     }),
@@ -242,19 +242,19 @@ test('habit colors persist through edits and reject unknown palette keys', async
 
 test('new habits default to the theme color and can return to it after a fixed color', async () => {
   const { db, raw } = await database();
-  const id = await saveHabit(db, { name: '기본색 습관', priority: 1, icon_key: 'walking' });
+  const id = await saveHabit(db, { name: '기본색 습관', priority: 2, icon_key: 'walking' });
   assert.equal(rows(raw, 'SELECT icon_color FROM habits')[0][0], 'theme');
   await saveHabit(db, {
     id,
     name: '기본색 습관',
-    priority: 1,
+    priority: 2,
     icon_key: 'walking',
     icon_color: 'pink',
   });
   await saveHabit(db, {
     id,
     name: '기본색 습관',
-    priority: 1,
+    priority: 2,
     icon_key: 'walking',
     icon_color: 'theme',
   });
@@ -312,7 +312,7 @@ test('a past habit start controls available dates while the last four days remai
   const initialStartedAt = new Date(`${shiftDate(today, -10)}T23:30:00`).toISOString();
   const id = await saveHabit(db, {
     name: '과거 시작',
-    priority: 0,
+    priority: 1,
     icon_key: 'goal',
     initial_started_at: initialStartedAt,
   });
@@ -323,7 +323,7 @@ test('a past habit start controls available dates while the last four days remai
   await saveHabit(db, {
     id,
     name: '이름 수정',
-    priority: 1,
+    priority: 2,
     icon_key: 'goal',
     initial_started_at: initialStartedAt,
   });
@@ -458,7 +458,7 @@ test('diary year choices contain only distinct diary years and drop a year after
   const last = await saveDiary(db, { date: '2024-02-01', emotion: 0, text: '기록', files: [] });
   const habit = await saveHabit(db, {
     name: '걷기',
-    priority: 0,
+    priority: 1,
     icon_key: 'walking',
     initial_started_at: '2022-01-01T00:00:00.000Z',
   });

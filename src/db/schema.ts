@@ -10,7 +10,13 @@ import {
 } from '../domain/limits';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
+const HABIT_COLUMNS = `
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE CHECK(length(trim(name)) BETWEEN 1 AND ${HABIT_NAME_MAX_LENGTH}),
+  priority INTEGER NOT NULL CHECK(priority BETWEEN 0 AND 3),
+  icon_key TEXT NOT NULL, icon_color TEXT NOT NULL DEFAULT '${DEFAULT_HABIT_ICON_COLOR}', initial_started_at TEXT NOT NULL,
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL`;
 const SCHEMA = `
 CREATE TABLE diaries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,12 +25,7 @@ CREATE TABLE diaries (
   text TEXT NOT NULL CHECK(length(trim(text)) BETWEEN 1 AND ${DIARY_TEXT_MAX_LENGTH}),
   created_at TEXT NOT NULL, updated_at TEXT NOT NULL
 );
-CREATE TABLE habits (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL UNIQUE CHECK(length(trim(name)) BETWEEN 1 AND ${HABIT_NAME_MAX_LENGTH}),
-  priority INTEGER NOT NULL CHECK(priority BETWEEN 0 AND 2),
-  icon_key TEXT NOT NULL, icon_color TEXT NOT NULL DEFAULT '${DEFAULT_HABIT_ICON_COLOR}', initial_started_at TEXT NOT NULL,
-  created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+CREATE TABLE habits (${HABIT_COLUMNS}
 );
 CREATE TABLE habit_completions (
   habit_id INTEGER NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
@@ -71,9 +72,29 @@ export async function initializeDatabase(db: SQLiteDatabase) {
   const version =
     (await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version ?? 0;
   if (version === SCHEMA_VERSION) return;
-  if (version !== 0) throw new Error('지원하지 않는 DB 버전입니다.');
-  await db.withTransactionAsync(async () => {
-    await db.execAsync(SCHEMA);
-    await db.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION};`);
-  });
+  if (version !== 0 && version !== 5) throw new Error('지원하지 않는 DB 버전입니다.');
+  // Rebuild only the CHECK constraint. Keep stored priorities and all referenced records.
+  // Foreign keys must be disabled before BEGIN to avoid cascading completion deletion.
+  if (version === 5) await db.execAsync('PRAGMA foreign_keys = OFF;');
+  try {
+    await db.withTransactionAsync(async () => {
+      if (version === 5) {
+        await db.execAsync(`
+          CREATE TABLE habits_next (${HABIT_COLUMNS});
+          INSERT INTO habits_next (id, name, priority, icon_key, icon_color, initial_started_at, created_at, updated_at)
+            SELECT id, name, priority, icon_key, icon_color, initial_started_at, created_at, updated_at FROM habits;
+          UPDATE sqlite_sequence SET seq = MAX(seq, COALESCE((SELECT seq FROM sqlite_sequence WHERE name = 'habits'), 0)) WHERE name = 'habits_next';
+          DROP TABLE habits;
+          ALTER TABLE habits_next RENAME TO habits;
+        `);
+        if ((await db.getAllAsync('PRAGMA foreign_key_check')).length)
+          throw new Error('습관 기록의 연결을 확인하지 못했습니다.');
+      } else {
+        await db.execAsync(SCHEMA);
+      }
+      await db.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION};`);
+    });
+  } finally {
+    if (version === 5) await db.execAsync('PRAGMA foreign_keys = ON;');
+  }
 }

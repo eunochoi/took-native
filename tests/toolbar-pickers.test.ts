@@ -27,6 +27,8 @@ function picker(path: string, name: string, initial: Record<string, unknown>) {
     {
       exports,
       require: (dependency: string) => {
+        if (dependency.endsWith('/HabitPriorityPicker'))
+          return { HABIT_PRIORITY_LABELS: ['비정기 기록', '낮음', '보통', '높음'] };
         if (dependency.endsWith('/FilterSheet')) {
           const sheetExports: Record<string, Function> = {};
           runInNewContext(
@@ -519,7 +521,7 @@ test('habit filter combines completed-only with multiple priorities and resets a
   const choices = ui.render().content.filter((node) => node.type === 'PickerOption');
   assert.deepEqual(
     choices.map((node) => node.props.accessibilityLabel),
-    ['별표 3개', '별표 2개', '별표 1개'],
+    ['비정기 기록', '별표 1개', '별표 2개', '별표 3개'],
   );
   assert(choices.every((node) => node.props.checkbox));
   ui.press('완료한 항목만 보기');
@@ -528,7 +530,7 @@ test('habit filter combines completed-only with multiple priorities and resets a
   ui.press('적용하기');
   assert.equal(ui.applied.length, 0);
   ui.finish();
-  assert.deepEqual(ui.applied, [[{ completedOnly: true, priorities: [1, 0] }]]);
+  assert.deepEqual(ui.applied, [[{ completedOnly: true, priorities: [1, 2] }]]);
   const reset = picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
     filter: { completedOnly: true, priorities: [2] },
   });
@@ -691,14 +693,14 @@ test('all checked habit priorities summarize as all and can be deselected indivi
   const ui = picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
     filter: { completedOnly: false, priorities: [] },
   });
-  for (const label of ['별표 1개', '별표 2개', '별표 3개']) ui.press(label);
+  for (const label of ['비정기 기록', '별표 1개', '별표 2개', '별표 3개']) ui.press(label);
   assert(
     ui.render().content.some((node) => node.type === 'Text' && node.props.children === '전체'),
   );
   ui.press('별표 2개');
   ui.press('적용하기');
   ui.finish();
-  assert.deepEqual(ui.applied, [[{ completedOnly: false, priorities: [2, 0] }]]);
+  assert.deepEqual(ui.applied, [[{ completedOnly: false, priorities: [0, 1, 3] }]]);
 });
 
 test('emotion icon style cards share checked and unchecked appearance and remain single selection', () => {
@@ -768,4 +770,49 @@ test('a removed diary year becomes all years on the next filter application with
   ui.press('일기 필터 적용');
   ui.finish();
   assert.deepEqual(ui.applied, [[null, ['summer'], ['neutral']]]);
+});
+
+test('habit priority picker has four choices in two rows and explains exclusion', () => {
+  const ui = picker('src/screens/habit/HabitPriorityPicker.tsx', 'HabitPriorityPicker', {
+    value: 1,
+  });
+  const view = ui.render();
+  const options = view.content.filter((node) => node.type === 'PickerOption');
+  assert.deepEqual(
+    options.map((node) => node.props.accessibilityLabel),
+    ['없음 · 비정기 기록', '낮음 · 매일 기록', '보통 · 매일 기록', '높음 · 매일 기록'],
+  );
+  const gridRows = view.content.filter(
+    (node) => node.type === 'View' && node.props.className === 'flex-row gap-3',
+  );
+  assert.equal(gridRows.length, 2);
+  assert(gridRows.every((row) => row.props.children.length === 2));
+  ui.press('없음 · 비정기 기록');
+  assert(
+    ui
+      .render()
+      .content.some(
+        (node) =>
+          node.props.children === '비정기 기록 항목은 완료율과 달성 개수 계산에 포함되지 않아요.',
+      ),
+  );
+  ui.press('선택 완료');
+  ui.finish();
+  assert.deepEqual(ui.applied, [[0]]);
+});
+
+test('habit filter places exclusion and stars in a two-by-two grid', () => {
+  const ui = picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
+    filter: { completedOnly: false, priorities: [] },
+  });
+  const gridRows = ui
+    .render()
+    .content.filter((node) => node.type === 'View' && node.props.className === 'flex-row gap-3');
+  assert.equal(gridRows.length, 2);
+  assert(gridRows.every((row) => row.props.children.length === 2));
+  ui.press('비정기 기록');
+  ui.press('별표 3개');
+  ui.press('적용하기');
+  ui.finish();
+  assert.deepEqual(ui.applied, [[{ completedOnly: false, priorities: [0, 3] }]]);
 });

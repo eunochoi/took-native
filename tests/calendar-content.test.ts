@@ -43,6 +43,7 @@ function evaluate(
           return {
             useAppTheme: () => ({ colors: { achievement: '#DCC17D' }, iconSizes: { lg: 24 } }),
           };
+        if (name.endsWith('domain/habitStats')) return require('../src/domain/habitStats');
         if (name.endsWith('domain/calendar')) return require('../src/domain/calendar');
         if (name.endsWith('useCalendarNavigation')) return { useCalendarNavigation };
         if (name.endsWith('domain/date')) return require('../src/domain/date');
@@ -258,9 +259,17 @@ test('diary calendar owns decorations and future-date limits while using the def
             ? [{ date: day.date, emotion: 0, created_at: '2026-10-07T00:00:00Z' }]
             : kind === 'habits'
               ? ['2026-10-01', '2026-10-01', '2026-10-01', '2026-10-07', '2026-10-08'].map(
-                  (date) => ({ initial_started_at: `${date}T00:00:00Z` }),
+                  (date, index) => ({
+                    id: index + 1,
+                    priority: 1,
+                    initial_started_at: `${date}T00:00:00Z`,
+                  }),
                 )
-              : [{ date: day.date }, { date: day.date }, { date: '2026-10-06' }],
+              : [
+                  { habit_id: 1, date: day.date },
+                  { habit_id: 2, date: day.date },
+                  { habit_id: 1, date: '2026-10-06' },
+                ],
       }),
     },
   });
@@ -295,13 +304,13 @@ test('diary calendar owns decorations and future-date limits while using the def
   assert.equal(progress.props.done, 2);
   assert.equal(progress.props.total, 4);
   assert(!content.some((node) => node.type === 'Badge'));
-  assert.match(cell(tree, day.date).props.label, /습관 2\/4개 완료/);
+  assert.match(cell(tree, day.date).props.label, /집계 대상 2\/4개 완료/);
   const decoration = cell(tree, day.date).props.children;
   const [artwork, progressSlot] = decoration.props.children;
   assert.equal(artwork.props.className, 'w-full flex-1 min-h-0 items-center justify-center');
   assert.match(progressSlot.props.className, /h-2 w-full/);
   assert.match(progressSlot.props.className, /shrink-0/);
-  assert.equal(progressSlot.props.children, progress);
+  assert(nodes(progressSlot).includes(progress));
   assert.equal(
     cell(tree, '2026-10-06').props.children.props.className,
     'items-center w-full flex-1 min-h-0 gap-1 py-1',
@@ -354,7 +363,12 @@ test('diary calendar owns decorations and future-date limits while using the def
 test('habit calendar shows habit icons on completed dates without enabling record changes', () => {
   const { HabitMonthStatistics } = load('src/screens/habit/HabitMonthStatistics.tsx');
   const tree = HabitMonthStatistics({
-    habit: { initial_started_at: '2026-09-01T00:00:00.000Z', icon_key: 'book', icon_color: 'blue' },
+    habit: {
+      priority: 1,
+      initial_started_at: '2026-09-01T00:00:00.000Z',
+      icon_key: 'book',
+      icon_color: 'blue',
+    },
     month: '2026-09',
     today: '2026-10-07',
     dates: ['2026-09-10', '2026-09-12', '2026-09-13'],
@@ -392,7 +406,12 @@ test('habit calendar shows habit icons on completed dates without enabling recor
 test('habit calendar does not mark missing records as empty while data is unavailable', () => {
   const { HabitMonthStatistics } = load('src/screens/habit/HabitMonthStatistics.tsx');
   const tree = HabitMonthStatistics({
-    habit: { initial_started_at: '2026-09-01T00:00:00.000Z', icon_key: 'book', icon_color: 'blue' },
+    habit: {
+      priority: 1,
+      initial_started_at: '2026-09-01T00:00:00.000Z',
+      icon_key: 'book',
+      icon_color: 'blue',
+    },
     month: '2026-09',
     today: '2026-10-07',
     dates: [],
@@ -560,7 +579,7 @@ test('habit start and future boundaries block adjacent cells and share guarded m
   const { HabitMonthStatistics } = load('src/screens/habit/HabitMonthStatistics.tsx');
   const months: string[] = [];
   const props = {
-    habit: { initial_started_at: '2026-09-15T12:00:00.000Z' },
+    habit: { priority: 1, initial_started_at: '2026-09-15T12:00:00.000Z' },
     month: '2026-09',
     today: '2026-10-08',
     dates: [],
@@ -610,7 +629,7 @@ test('habit detail only queries completion records and exposes no write action t
     name: '독서',
     icon_key: 'reading',
     icon_color: 'theme',
-    priority: 1,
+    priority: 2,
     initial_started_at: '2026-10-01T00:00:00.000Z',
   };
   const { default: HabitDetail } = load('app/habit/[id]/index.tsx', {
@@ -762,16 +781,18 @@ test('calendar progress uses completion bands at the exact 25 and 75 percent bou
 
 test('monthly progress counts match visible days, start dates, boundaries and month navigation', () => {
   const habits = Array.from({ length: 4 }, (_, index) => ({
+    id: index + 1,
+    priority: 1,
     initial_started_at: index === 0 ? '2026-09-01T00:00:00' : '2026-10-02T00:00:00',
   }));
   const records = [
-    ...Array.from({ length: 4 }, () => ({ date: '2026-10-04' })),
-    { date: '2026-10-01' },
-    { date: '2026-10-02' },
-    ...Array.from({ length: 3 }, () => ({ date: '2026-10-03' })),
-    { date: '2026-11-01' },
-    { date: '2026-08-31' },
-    { date: '2026-09-01' },
+    ...Array.from({ length: 4 }, (_, index) => ({ habit_id: index + 1, date: '2026-10-04' })),
+    { habit_id: 1, date: '2026-10-01' },
+    { habit_id: 1, date: '2026-10-02' },
+    ...Array.from({ length: 3 }, (_, index) => ({ habit_id: index + 1, date: '2026-10-03' })),
+    { habit_id: 1, date: '2026-11-01' },
+    { habit_id: 1, date: '2026-08-31' },
+    { habit_id: 1, date: '2026-09-01' },
   ];
   // Oct 1 is full with only one started habit; Oct 2 is 25%; Oct 3 is 75%.
   assert.deepEqual(calendarHabitProgressCounts(habits, records, '2026-10', '2026-10-03'), {
@@ -796,8 +817,8 @@ test('monthly progress counts match visible days, start dates, boundaries and mo
   });
   assert.deepEqual(
     calendarHabitProgressCounts(
-      Array.from({ length: 5 }, () => habits[0]),
-      [{ date: '2026-10-01' }],
+      Array.from({ length: 5 }, (_, index) => ({ ...habits[0], id: index + 1 })),
+      [{ habit_id: 1, date: '2026-10-01' }],
       '2026-10',
       '2026-10-03',
     ),

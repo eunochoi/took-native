@@ -62,8 +62,8 @@ export function DayInfo({ date, today }: { date: string; today: string }) {
               </View>
               <View className="px-2">
                 <CalendarHabitProgress
-                  done={rows.filter((habit) => habit.completed).length}
-                  total={rows.length}
+                  done={rows.filter((habit) => habit.priority > 0 && habit.completed).length}
+                  total={rows.filter((habit) => habit.priority > 0).length}
                 />
               </View>
             </View>

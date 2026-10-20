@@ -80,6 +80,8 @@ function section(path: string, name: string, initialProps: Record<string, unknow
             },
           };
         }
+        if (dependency.endsWith('/HabitRecentRecord'))
+          return { HabitRecentRecord: 'HabitRecentRecord' };
         if (dependency.endsWith('/HabitYearStatistics'))
           return { HabitYearStatistics: 'HabitYearStatistics' };
         if (dependency.endsWith('/HabitMonthStatistics'))
@@ -138,7 +140,7 @@ const records: SoberStreak[] = Array.from({ length: 25 }, (_, index) => ({
 const habit: Habit = {
   id: 1,
   name: '걷기',
-  priority: 1,
+  priority: 2,
   icon_key: 'walking',
   icon_color: 'theme',
   initial_started_at: '2024-03-01T00:00:00.000Z',
@@ -291,7 +293,7 @@ test('day habits show all rows in order and retain totals and completion actions
   assert.equal(expandButton(all.nodes), undefined);
   assert(
     all.nodes.some(
-      (node) => JSON.stringify(node.props.children) === JSON.stringify([4, '/', 6, ' 완료']),
+      (node) => JSON.stringify(node.props.children) === JSON.stringify(['집계 대상 ', 4, '/', 6]),
     ),
   );
   assert.deepEqual(
@@ -370,7 +372,7 @@ test('day habits retain the recent-four-day lock and empty state for dates witho
   );
   assert(
     unchecked.nodes.some(
-      (node) => JSON.stringify(node.props.children) === JSON.stringify([0, '/', 6, ' 완료']),
+      (node) => JSON.stringify(node.props.children) === JSON.stringify(['집계 대상 ', 0, '/', 6]),
     ),
   );
   assert(
@@ -616,4 +618,32 @@ test('yearly habit rate displays a dash when the habit has not started yet', () 
     )
     .map((node) => node.props.children);
   assert.deepEqual(values, [0, 0, '—']);
+});
+
+test('excluded habit detail retains the calendar and recent record but hides yearly statistics', () => {
+  const ui = section('src/screens/habit/HabitStatistics.tsx', 'HabitStatistics', {
+    habit: { ...habit, priority: 0 },
+    dates: ['2024-03-09'],
+    today: '2024-03-10',
+    unavailable: false,
+  });
+  const view = ui.render();
+  assert(view.nodes.some((node) => node.type === 'HabitRecentRecord'));
+  assert(!view.nodes.some((node) => node.type === 'HabitYearStatistics'));
+});
+
+test('recent record uses the latest eligible date and distinguishes missing data from empty history', () => {
+  const ui = section('src/screens/habit/HabitRecentRecord.tsx', 'HabitRecentRecord', {
+    dates: ['2024-03-08', '2024-03-09', '2024-03-11', '2024-02-29'],
+    startedDate: '2024-03-01',
+    today: '2024-03-10',
+    unavailable: false,
+  });
+  assert(ui.render().nodes.some((node) => node.props.children === '2024년 3월 9일 · 1일 전'));
+  assert(ui.render({ unavailable: true }).nodes.some((node) => node.props.children === '—'));
+  assert(
+    ui
+      .render({ unavailable: false, dates: [] })
+      .nodes.some((node) => node.props.children === '아직 기록이 없어요.'),
+  );
 });

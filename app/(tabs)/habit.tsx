@@ -80,7 +80,7 @@ export default function HabitList() {
   };
   const sorted = sortHabits(list.data ?? [], settings);
   const hasFilter =
-    filter.completedOnly || (filter.priorities.length > 0 && filter.priorities.length < 3);
+    filter.completedOnly || (filter.priorities.length > 0 && filter.priorities.length < 4);
   const todayDone = new Set(
     (completions.data ?? []).filter((item) => item.date === today).map((item) => item.habit_id),
   );
@@ -93,8 +93,10 @@ export default function HabitList() {
     [
       filter.completedOnly ? '완료' : null,
       selectionSummary(
-        filter.priorities.map((priority) => '★'.repeat(priority + 1)),
-        3,
+        filter.priorities.map((priority) =>
+          priority === 0 ? '비정기 기록' : '★'.repeat(priority),
+        ),
+        4,
         '',
       ) || null,
     ]
@@ -112,7 +114,10 @@ export default function HabitList() {
   const gridEntries =
     ready && sorted.length > 0
       ? [
-          'progress' as const,
+          ...(!(filter.priorities.length === 1 && filter.priorities[0] === 0) &&
+          sorted.some((habit) => habit.priority > 0)
+            ? ['progress' as const]
+            : []),
           ...filtered,
           ...(sorted.length < MAX_HABIT_COUNT ? ['add' as const] : []),
         ]
@@ -160,8 +165,10 @@ export default function HabitList() {
           <ToolbarFilterButton
             label={filterLabel}
             accessibilityLabel={`습관 필터, ${filter.completedOnly ? '오늘 완료' : '완료 상태 전체'}, 중요도 ${selectionSummary(
-              filter.priorities.map((priority) => '★'.repeat(priority + 1)),
-              3,
+              filter.priorities.map((priority) =>
+                priority === 0 ? '비정기 기록' : '★'.repeat(priority),
+              ),
+              4,
             )}`}
             onPress={() => setFilterOpen(true)}
           />
