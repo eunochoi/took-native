@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getHabitMonthSummary, getHabitYearSummary } from '../src/domain/habitStats';
+import {
+  getHabitFlowStats,
+  getHabitMonthSummary,
+  getHabitYearSummary,
+} from '../src/domain/habitStats';
 import { format } from 'date-fns';
 
 test('monthly habit stats exclude days before the initial start and count recent uncompleted days as missed', () => {
@@ -178,4 +182,49 @@ test('rates handle today as the first eligible day and periods before the start'
   assert.equal(getHabitMonthSummary('2024-03', '2024-03-21', [], '2024-03-20').rate, null);
   assert.equal(getHabitYearSummary(2024, [], '2024-03-21', '2024-03-20').rate, null);
   assert.equal(getHabitYearSummary(2025, [], '2024-03-15', '2024-03-20').rate, null);
+});
+
+test('habit flow uses adjacent rolling windows across years and distinguishes no eligible days', () => {
+  const stats = getHabitFlowStats('2026-01-03', [], []);
+  assert.equal(stats.recent.start, '2025-12-28');
+  assert.equal(stats.recent.end, '2026-01-03');
+  assert.equal(stats.previous.start, '2025-12-21');
+  assert.equal(stats.previous.end, '2025-12-27');
+  assert.equal(stats.recent.days.length, 7);
+  assert.equal(stats.recent.average, null);
+  assert.equal(stats.previous.average, null);
+  assert.equal(stats.change, null);
+});
+
+test('habit flow averages daily rates equally and ignores duplicate, unknown and pre-start completions', () => {
+  const habits = [
+    { id: 1, initial_started_at: '2026-10-18T00:00:00' },
+    { id: 2, initial_started_at: '2026-10-19T00:00:00' },
+  ];
+  const stats = getHabitFlowStats('2026-10-19', habits, [
+    { habit_id: 1, date: '2026-10-18' },
+    { habit_id: 1, date: '2026-10-18' },
+    { habit_id: 2, date: '2026-10-18' },
+    { habit_id: 99, date: '2026-10-19' },
+    { habit_id: 1, date: '2026-10-19' },
+  ]);
+  assert.equal(stats.recent.eligibleDays, 2);
+  assert.equal(stats.recent.average, 75);
+  assert.equal(stats.recent.days[5].percent, 100);
+  assert.equal(stats.recent.days[6].percent, 50);
+  assert.equal(stats.change, null);
+  const empty = getHabitFlowStats('2026-10-19', habits, []);
+  assert.equal(empty.recent.average, 0);
+});
+
+test('habit flow reports percentage point increases, decreases and unchanged rates', () => {
+  const habits = [{ id: 1, initial_started_at: '2026-01-01T00:00:00' }];
+  const recent = Array.from({ length: 7 }, (_, i) => ({ habit_id: 1, date: `2026-10-${13 + i}` }));
+  const previous = Array.from({ length: 7 }, (_, i) => ({
+    habit_id: 1,
+    date: `2026-10-${String(6 + i).padStart(2, '0')}`,
+  }));
+  assert.equal(getHabitFlowStats('2026-10-19', habits, recent).change, 100);
+  assert.equal(getHabitFlowStats('2026-10-19', habits, previous).change, -100);
+  assert.equal(getHabitFlowStats('2026-10-19', habits, [...recent, ...previous]).change, 0);
 });

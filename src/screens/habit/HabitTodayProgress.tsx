@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
 import type { Completion, Habit } from '../../db/types';
@@ -12,10 +12,12 @@ export function HabitTodayProgress({
   today,
   habits,
   records,
+  onPress,
 }: {
   today: string;
   habits: Pick<Habit, 'id' | 'initial_started_at'>[];
   records: Pick<Completion, 'habit_id' | 'date'>[];
+  onPress: () => void;
 }) {
   const { colors, rem: appRem } = useAppTheme();
   const days = Array.from({ length: 4 }, (_, index) => {
@@ -28,10 +30,6 @@ export function HabitTodayProgress({
     const percent = eligible.length ? (completed / eligible.length) * 100 : 0;
     return { date, total: eligible.length, completed, percent };
   });
-  const eligibleDays = days.filter((day) => day.total > 0);
-  const average = eligibleDays.length
-    ? Math.round(eligibleDays.reduce((sum, day) => sum + day.percent, 0) / eligibleDays.length)
-    : 0;
   return (
     <View className="flex-1 gap-4 bg-theme-surface px-2 py-4">
       <View>
@@ -81,9 +79,15 @@ export function HabitTodayProgress({
           );
         })}
       </View>
-      <View className="mt-auto min-h-9 ios:curve-continuous rounded-xl px-3 py-1.5 items-center justify-center bg-theme-surface-muted border border-theme-text-secondary/5">
-        <Text className="text-sm text-theme-text-secondary">{`평균 완료율 ${average}%`}</Text>
-      </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="습관 흐름 상세보기"
+        accessibilityHint="최근 7일 완료율과 이전 7일 비교를 확인해요."
+        onPress={onPress}
+        className="mt-auto min-h-9 ios:curve-continuous rounded-xl px-3 py-1.5 items-center justify-center bg-theme-surface-muted border border-theme-text-secondary/5 active:opacity-65"
+      >
+        <Text className="text-sm text-theme-text-secondary">상세보기</Text>
+      </Pressable>
     </View>
   );
 }

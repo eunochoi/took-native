@@ -24,6 +24,7 @@ import { habitQueries, useRecordMutation, useToday } from '../../src/queries';
 import { HabitBox } from '../../src/screens/habit/HabitBox';
 import { HabitListSkeleton } from '../../src/screens/habit/HabitListSkeleton';
 import { HabitTodayProgress } from '../../src/screens/habit/HabitTodayProgress';
+import { HabitFlowSheet } from '../../src/screens/habit/HabitFlowSheet';
 import { HabitFilterPicker, DEFAULT_HABIT_FILTER } from '../../src/screens/habit/HabitFilterPicker';
 import { ToolbarFilterButton } from '../../src/components/ToolbarFilterButton';
 import { Toolbar } from '../../src/components/Toolbar';
@@ -35,6 +36,7 @@ import { useAppTheme } from '../../src/theme/AppThemeProvider';
 export default function HabitList() {
   const [sortOpen, setSortOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [flowOpen, setFlowOpen] = useState(false);
   const [filter, setFilter] = useState(DEFAULT_HABIT_FILTER);
   const { showNotice } = useNotice();
   const { colors, rem: appRem } = useAppTheme();
@@ -192,6 +194,7 @@ export default function HabitList() {
                       today={today}
                       habits={sorted}
                       records={completions.data ?? []}
+                      onPress={() => setFlowOpen(true)}
                     />
                   ) : item === 'add' ? (
                     <Pressable
@@ -238,6 +241,9 @@ export default function HabitList() {
       <ScrollEdgeFade edge="top" visible={fade.topVisible} />
       <ScrollEdgeFade edge="bottom" visible={fade.bottomVisible} />
 
+      {flowOpen && (
+        <HabitFlowSheet today={today} habits={sorted} onClose={() => setFlowOpen(false)} />
+      )}
       {filterOpen && (
         <HabitFilterPicker
           filter={filter}

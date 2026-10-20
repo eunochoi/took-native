@@ -21,6 +21,11 @@ function nodes(tree: any): any[] {
     ...nodes(tree.props?.children),
     ...nodes(tree.props?.ListHeaderComponent),
     ...nodes(tree.props?.ListFooterComponent),
+    ...(tree.type === 'FlatList'
+      ? tree.props.data.flatMap((item: any, index: number) =>
+          item.kind === 'toolbar' ? nodes(tree.props.renderItem({ item, index })) : [],
+        )
+      : []),
   ];
 }
 function harness(file: string, results: Record<string, any> = {}) {
@@ -69,12 +74,14 @@ function harness(file: string, results: Record<string, any> = {}) {
           if (name === 'react-native')
             return {
               View: 'View',
+              ActivityIndicator: 'ActivityIndicator',
               Pressable: 'Pressable',
               Switch: 'Switch',
               ScrollView: 'ScrollView',
               FlatList: 'FlatList',
             };
           if (name === 'date-fns' || name === 'date-fns/locale') return require(name);
+          if (name === 'tailwind-merge') return require(name);
           if (name.endsWith('/domain/constants')) return require('../src/domain/constants');
           if (name === 'expo-router') return { useScrollToTop: () => {} };
           if (name === 'expo-sqlite') return { useSQLiteContext: () => ({}) };
@@ -111,6 +118,7 @@ function harness(file: string, results: Record<string, any> = {}) {
             return { useAppTheme: () => ({ colors: {}, rem: 15, iconSizes: { sm: 13.125 } }) };
           if (name.endsWith('/db/habit')) return { sortHabits };
           if (name.endsWith('/db/sober')) return { sortSobers };
+          if (name.endsWith('/domain/habitStats')) return require('../src/domain/habitStats');
           if (name.endsWith('/domain/date')) return require('../src/domain/date');
           if (name.endsWith('/domain/sober')) return { getCurrentSoberStart, SOBER_DAY_MS };
           if (name.endsWith('/domain/limits')) return { MAX_HABIT_COUNT, MAX_SOBER_COUNT };
@@ -270,9 +278,10 @@ test('habit grid hides add at the total limit even when filters hide habits', ()
   assert(!addButton(loading.render()));
 });
 
-test('habit summary shows average completion without created capacity', () => {
+test('habit summary opens details only through its footer button', () => {
   const ui = harness('src/screens/habit/HabitTodayProgress.tsx');
-  const tree = ui.render({ total: 8, done: 6, today, habits: [], records: [] });
+  let opened = 0;
+  const tree = ui.render({ today, habits: [], records: [], onPress: () => opened++ });
   const labels = nodes(tree)
     .filter((node) => node.type === 'Text')
     .map((node) =>
@@ -281,7 +290,13 @@ test('habit summary shows average completion without created capacity', () => {
   assert(!labels.some((label) => String(label).includes('생성')));
   assert(labels.includes('습관 흐름'));
   assert(labels.includes('최근 4일'));
-  assert(labels.includes('평균 완료율 0%'));
+  assert(labels.includes('상세보기'));
+  assert.equal(tree.type, 'View');
+  assert.equal(tree.props.onPress, undefined);
+  const buttons = nodes(tree).filter((node) => node.type === 'Pressable');
+  assert.equal(buttons.length, 1);
+  buttons[0].props.onPress();
+  assert.equal(opened, 1);
   assert(!nodes(tree).some((node) => node.type === 'ProgressBar'));
 });
 
@@ -304,7 +319,6 @@ test('four-day summary uses eligible habits, newest-first dates and live complet
       { habit_id: 99, date: '2026-10-12' },
     ],
   };
-  assert(nodes(ui.render(props)).some((node) => node.props.children === '평균 완료율 67%'));
   const bars = nodes(ui.render(props)).filter((node) => node.props.accessibilityRole === 'image');
   assert.equal(bars.length, 4);
   for (const [index, bar] of bars.entries()) {
@@ -319,7 +333,6 @@ test('four-day summary uses eligible habits, newest-first dates and live complet
   assert.match(bars[2].props.accessibilityLabel, /1개 중 1개 완료, 100%/);
   assert.match(bars[3].props.accessibilityLabel, /시작한 습관 없음/);
   props.records.splice(1, 1);
-  assert(nodes(ui.render(props)).some((node) => node.props.children === '평균 완료율 50%'));
   const updated = nodes(ui.render({ ...props, done: 1 })).filter(
     (node) => node.props.accessibilityRole === 'image',
   );
@@ -549,5 +562,62 @@ test('habit multi-priority filters combine with completed-only and select-all re
   assert.equal(
     nodes(ui.render()).find((node) => node.type === 'ToolbarFilterButton').props.label,
     '필터',
+  );
+});
+
+test('habit flow opens from the summary with all habits and closes', () => {
+  const habits = [habit(1, 0), habit(2, 1)];
+  const ui = harness('app/(tabs)/habit.tsx', { habits: { data: habits } });
+  assert.equal(
+    nodes(ui.render()).some((node) => node.type === 'HabitFlowSheet'),
+    false,
+  );
+  nodes(ui.render())
+    .find((node) => node.type === 'HabitTodayProgress')
+    .props.onPress();
+  const sheet = nodes(ui.render()).find((node) => node.type === 'HabitFlowSheet');
+  assert.equal(sheet.props.habits.length, 2);
+  assert.equal(sheet.props.today, today);
+  sheet.props.onClose();
+  assert.equal(
+    nodes(ui.render()).some((node) => node.type === 'HabitFlowSheet'),
+    false,
+  );
+});
+
+test('habit flow sheet keeps loading and errors distinct from zero completion', () => {
+  let retries = 0;
+  const results: any = { completions: { data: undefined, isError: false } };
+  const ui = harness('src/screens/habit/HabitFlowSheet.tsx', results);
+  const props = { today, habits: [habit(1, 0)], onClose: () => {} };
+  assert.equal(
+    nodes(ui.render(props)).some((node) => node.type === 'ActivityIndicator'),
+    true,
+  );
+  results.completions = { isError: true, refetch: () => retries++ };
+  const error = nodes(ui.render(props)).find((node) => node.type === 'QueryError');
+  error.props.onRetry();
+  assert.equal(retries, 1);
+  results.completions = { data: [], isError: false };
+  const chart = nodes(ui.render(props)).filter((node) => node.props.accessibilityRole === 'image');
+  assert.equal(chart.length, 7);
+  assert.match(chart[0].props.accessibilityLabel, /오늘.*0%/);
+  for (const [index, bar] of chart.entries()) {
+    assert(bar.props.accessibilityLabel.startsWith(shiftDate(today, -index)));
+  }
+  results.completions.data = [{ habit_id: 1, date: today }];
+  assert.match(
+    nodes(ui.render(props)).filter((node) => node.props.accessibilityRole === 'image')[0].props
+      .accessibilityLabel,
+    /100%/,
+  );
+  results.completions.isError = true;
+  assert.equal(
+    nodes(ui.render(props)).filter((node) => node.props.accessibilityRole === 'image').length,
+    7,
+  );
+  assert.equal(
+    nodes(ui.render(props)).some((node) => node.type === 'QueryError'),
+    true,
   );
 });

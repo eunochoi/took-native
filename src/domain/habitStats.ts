@@ -1,4 +1,54 @@
 import { differenceInCalendarDays, endOfMonth, format, parseISO } from 'date-fns';
+import type { Completion, Habit } from '../db/types';
+import { localDate, shiftDate } from './date';
+
+export function getHabitFlowStats(
+  today: string,
+  habits: Pick<Habit, 'id' | 'initial_started_at'>[],
+  records: Pick<Completion, 'habit_id' | 'date'>[],
+) {
+  const starts = habits.map((habit) => ({
+    id: habit.id,
+    date: localDate(habit.initial_started_at),
+  }));
+  const completedByDate = new Map<string, Set<number>>();
+  for (const record of records) {
+    if (!completedByDate.has(record.date)) completedByDate.set(record.date, new Set());
+    completedByDate.get(record.date)!.add(record.habit_id);
+  }
+  const days = Array.from({ length: 14 }, (_, index) => {
+    const date = shiftDate(today, index - 13);
+    const eligible = starts.filter((habit) => habit.date <= date);
+    const completed = eligible.filter((habit) => completedByDate.get(date)?.has(habit.id)).length;
+    return {
+      date,
+      total: eligible.length,
+      completed,
+      percent: eligible.length ? (completed / eligible.length) * 100 : null,
+    };
+  });
+  const [previous, recent] = [0, 7].map((offset) => {
+    const periodDays = days.slice(offset, offset + 7);
+    const eligibleDays = periodDays.filter((day) => day.percent !== null);
+    return {
+      start: periodDays[0].date,
+      end: periodDays[6].date,
+      days: periodDays,
+      eligibleDays: eligibleDays.length,
+      average: eligibleDays.length
+        ? eligibleDays.reduce((sum, day) => sum + day.percent!, 0) / eligibleDays.length
+        : null,
+    };
+  });
+  return {
+    recent,
+    previous,
+    change:
+      recent.average !== null && previous.average !== null
+        ? recent.average - previous.average
+        : null,
+  };
+}
 
 export function getHabitMonthSummary(
   month: string,
