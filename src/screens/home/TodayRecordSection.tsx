@@ -1,4 +1,3 @@
-import { getHabitDaySummary } from '../../domain/habitStats';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -8,6 +7,7 @@ import { SoberIcon } from '../../components/SoberIcon';
 import { Text } from '../../components/Text';
 import { sortSobers } from '../../db/sober';
 import { EMOTIONS } from '../../domain/constants';
+import { getHabitDaySummary } from '../../domain/habitStats';
 import { getSoberSummary, SOBER_DAY_MS } from '../../domain/sober';
 import { useCurrentMinute } from '../../hooks/useCurrentMinute';
 import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
@@ -50,12 +50,12 @@ export function TodayRecordSection({ today }: { today: string }) {
   const soberDays =
     sober && restarts.data
       ? Math.floor(
-          getSoberSummary(
-            sober,
-            restarts.data.filter((item) => item.sober_id === sober.id),
-            now,
-          ).duration / SOBER_DAY_MS,
-        ) + 1
+        getSoberSummary(
+          sober,
+          restarts.data.filter((item) => item.sober_id === sober.id),
+          now,
+        ).duration / SOBER_DAY_MS,
+      ) + 1
       : null;
   return (
     <View className="py-1 gap-2">
@@ -75,7 +75,7 @@ export function TodayRecordSection({ today }: { today: string }) {
           className="min-h-10 min-w-0 flex-1 flex-row items-center gap-3 active:opacity-70"
         >
           <View className={recordIconContainerClass}>
-            <AppIcon name="diary" size={appRem * 1.75} className={recordIconClass} />
+            <AppIcon name="diary" size={appRem * 2} className={recordIconClass} />
           </View>
           <View className={recordContentClass}>
             <Text numberOfLines={1} className={recordTitleClass} style={recordTextStyle}>
@@ -112,7 +112,7 @@ export function TodayRecordSection({ today }: { today: string }) {
           className="min-h-10 min-w-0 flex-1 flex-row items-center gap-3 active:opacity-70"
         >
           <View className={recordIconContainerClass}>
-            <AppIcon name="habit" size={appRem * 1.75} className={recordIconClass} />
+            <AppIcon name="habit" size={appRem * 2} className={recordIconClass} />
           </View>
           <View className={recordContentClass}>
             <Text numberOfLines={1} className={recordTitleClass} style={recordTextStyle}>
@@ -145,9 +145,9 @@ export function TodayRecordSection({ today }: { today: string }) {
       >
         <View className={recordIconContainerClass}>
           {sober ? (
-            <SoberIcon name={sober.icon_key} colorKey={sober.icon_color} size={appRem * 1.75} />
+            <SoberIcon name={sober.icon_key} colorKey={sober.icon_color} size={appRem * 2} />
           ) : (
-            <AppIcon name="sober" size={appRem * 1.75} className={recordIconClass} />
+            <AppIcon name="sober" size={appRem * 2} className={recordIconClass} />
           )}
         </View>
         <View className={recordContentClass}>
@@ -182,7 +182,7 @@ export function TodayRecordSection({ today }: { today: string }) {
         className={recordCardClass}
       >
         <View className={recordIconContainerClass}>
-          <AppIcon name="description" size={appRem * 1.75} className={recordIconClass} />
+          <AppIcon name="description" size={appRem * 2} className={recordIconClass} />
         </View>
         <View className={recordContentClass}>
           <Text numberOfLines={1} className={recordTitleClass} style={recordTextStyle}>
