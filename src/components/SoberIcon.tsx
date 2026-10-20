@@ -37,7 +37,5 @@ export function SoberIcon({
       </Svg>
     );
   const Icon = SOBER_RECORD_ICONS[name];
-  return (
-    <Icon color={color} size={iconSize} weight={name === 'skinPicking' ? 'regular' : 'fill'} />
-  );
+  return <Icon color={color} size={iconSize} weight={name === 'skinPicking' ? 'bold' : 'fill'} />;
 }

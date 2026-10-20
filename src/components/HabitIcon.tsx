@@ -27,7 +27,7 @@ export function HabitIcon({
     <Icon
       color={color}
       size={resolvedSize}
-      weight={name === 'language' || name === 'coding' ? 'fill' : 'fill'}
+      weight={name === 'language' || name === 'coding' ? 'bold' : 'fill'}
     />
   );
 }

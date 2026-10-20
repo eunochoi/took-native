@@ -11,7 +11,7 @@ export function StarIcon({
   className?: string;
   filled?: boolean;
 }) {
-  return <PhosphorStarIcon size={size} color={color} weight={filled ? 'fill' : 'regular'} />;
+  return <PhosphorStarIcon size={size} color={color} weight={filled ? 'fill' : 'bold'} />;
 }
 
 cssInterop(StarIcon, {

@@ -94,13 +94,13 @@ test('record icons preserve theme color, fixed colors and rem-based sizes with P
   const { HabitIcon } = loadIcon('src/components/HabitIcon.tsx', modules);
   const { SoberIcon } = loadIcon('src/components/SoberIcon.tsx', modules);
   assert.equal(HabitIcon({ name: 'walking' }).type, 'PersonSimpleWalkIcon');
-  assert.equal(HabitIcon({ name: 'language' }).props.weight, 'fill');
-  assert.equal(HabitIcon({ name: 'coding' }).props.weight, 'fill');
+  assert.equal(HabitIcon({ name: 'language' }).props.weight, 'bold');
+  assert.equal(HabitIcon({ name: 'coding' }).props.weight, 'bold');
   assert.equal(HabitIcon({ name: 'cleaning' }).type, 'SprayBottleIcon');
   assert.equal(HabitIcon({ name: 'cleaning' }).props.weight, 'fill');
   assert.equal(HabitIcon({ name: 'meditation' }).props.name, 'meditation');
   assert.equal(SoberIcon({ name: 'skinPicking' }).type, 'HandGrabbingIcon');
-  assert.equal(SoberIcon({ name: 'skinPicking' }).props.weight, 'regular');
+  assert.equal(SoberIcon({ name: 'skinPicking' }).props.weight, 'bold');
   assert.equal(SoberIcon({ name: 'coffee' }).type, 'CoffeeIcon');
   for (const [render, name] of [
     [HabitIcon, 'walking'],
@@ -128,7 +128,7 @@ test('Phosphor star retains filled and outline importance states', () => {
   for (const filled of [false, true]) {
     const icon = StarIcon({ size: 18, color: '#8CADE2', filled });
     assert.equal(icon.type, 'StarIcon');
-    assert.equal(icon.props.weight, filled ? 'fill' : 'regular');
+    assert.equal(icon.props.weight, filled ? 'fill' : 'bold');
     assert.equal(icon.props.color, '#8CADE2');
     assert.equal(icon.props.size, 18);
   }

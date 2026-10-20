@@ -217,20 +217,21 @@ test('shared navigation icons preserve screen size, color, style and accessibili
   assert.equal(interop.className.nativeStyleToProp.color, true);
 });
 
-test('checks use bold and disclosure chevrons use regular shapes while other icons retain their weights', () => {
+test('line icons use bold while filled icons retain their weights', () => {
   const { AppIcon } = loadAppIcon();
   for (const [name, type, weight] of [
     ['habit', 'CheckIcon', 'bold'],
     ['check', 'CheckIcon', 'bold'],
-    ['habit-flow', 'ChartLineIcon', 'regular'],
-    ['habit-rate', 'PercentIcon', 'regular'],
-    ['chevron-left', 'CaretLeftIcon', 'regular'],
-    ['chevron-right', 'CaretRightIcon', 'regular'],
-    ['today', 'CalendarDotIcon', 'regular'],
-    ['add', 'PlusIcon', 'regular'],
-    ['filter-list', 'FunnelSimpleIcon', 'regular'],
-    ['more-vert', 'DotsThreeVerticalIcon', 'regular'],
-    ['low-priority', 'ListNumbersIcon', 'regular'],
+    ['close', 'XIcon', 'bold'],
+    ['habit-flow', 'ChartLineIcon', 'bold'],
+    ['habit-rate', 'PercentIcon', 'bold'],
+    ['chevron-left', 'CaretLeftIcon', 'bold'],
+    ['chevron-right', 'CaretRightIcon', 'bold'],
+    ['today', 'CalendarDotIcon', 'bold'],
+    ['add', 'PlusIcon', 'bold'],
+    ['filter-list', 'FunnelSimpleIcon', 'bold'],
+    ['more-vert', 'DotsThreeVerticalIcon', 'bold'],
+    ['low-priority', 'ListNumbersIcon', 'bold'],
     ['edit', 'PencilSimpleIcon', 'fill'],
     ['delete-outline', 'TrashIcon', 'fill'],
     ['auto-awesome', 'SparkleIcon', 'fill'],

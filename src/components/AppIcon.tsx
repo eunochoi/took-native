@@ -13,7 +13,6 @@ import { CaretRightIcon } from 'phosphor-react-native/src/icons/CaretRight';
 import { CaretUpIcon } from 'phosphor-react-native/src/icons/CaretUp';
 import { ChartBarIcon } from 'phosphor-react-native/src/icons/ChartBar';
 import { ChartLineIcon } from 'phosphor-react-native/src/icons/ChartLine';
-import { PercentIcon } from 'phosphor-react-native/src/icons/Percent';
 import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
 import { DotsSixVerticalIcon } from 'phosphor-react-native/src/icons/DotsSixVertical';
 import { DotsThreeVerticalIcon } from 'phosphor-react-native/src/icons/DotsThreeVertical';
@@ -31,6 +30,7 @@ import { PaletteIcon } from 'phosphor-react-native/src/icons/Palette';
 import { PencilSimpleIcon } from 'phosphor-react-native/src/icons/PencilSimple';
 import { PlayCircleIcon } from 'phosphor-react-native/src/icons/PlayCircle';
 import { PlusIcon } from 'phosphor-react-native/src/icons/Plus';
+import { PercentIcon } from 'phosphor-react-native/src/icons/Percent';
 import { ShareNetworkIcon } from 'phosphor-react-native/src/icons/ShareNetwork';
 import { ShieldCheckIcon } from 'phosphor-react-native/src/icons/ShieldCheck';
 import { SmileyIcon } from 'phosphor-react-native/src/icons/Smiley';
@@ -98,8 +98,11 @@ export function AppIcon({
 }: Omit<SvgProps, 'name' | 'color' | 'style'> &
   IconProps & { name: AppIconName; className?: string }) {
   const Icon = APP_ICONS[name];
-  const bold = name === 'habit' || name === 'check';
-  const regular = [
+  const bold = [
+    'habit',
+    'check',
+    'close',
+    'habit-rate',
     'filter-list',
     'add',
     'more-vert',
@@ -108,9 +111,8 @@ export function AppIcon({
     'chevron-right',
     'today',
     'habit-flow',
-    'habit-rate',
   ].includes(name);
-  return <Icon {...props} weight={bold ? 'bold' : regular ? 'regular' : 'fill'} />;
+  return <Icon {...props} weight={bold ? 'bold' : 'fill'} />;
 }
 
 cssInterop(AppIcon, {
