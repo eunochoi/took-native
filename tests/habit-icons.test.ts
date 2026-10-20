@@ -48,6 +48,8 @@ function loadIcon(path: string, modules: Record<string, any> = {}) {
           const icon = name.split('/').at(-1) + 'Icon';
           return { [icon]: icon };
         }
+        if (name === '@expo/vector-icons')
+          return { MaterialCommunityIcons: 'MaterialCommunityIcons' };
         if (name === 'react') return { useId: () => 'mask' };
         if (name === 'react-native-svg')
           return {
@@ -68,13 +70,13 @@ function loadIcon(path: string, modules: Record<string, any> = {}) {
   return exports;
 }
 
-test('all saved habit and sober choices have distinct Phosphor mappings except the retained 19 badge', () => {
+test('habit and sober Phosphor mappings exclude the dedicated meditation and 19 icons', () => {
   const { HABIT_RECORD_ICONS, SOBER_RECORD_ICONS } = loadIcon('src/components/recordIcons.ts');
   assert.deepEqual(
     Object.keys(HABIT_RECORD_ICONS),
-    constants.HABIT_ICON_OPTIONS.map(({ key }) => key),
+    constants.HABIT_ICON_OPTIONS.map(({ key }) => key).filter((key) => key !== 'meditation'),
   );
-  assert.equal(new Set(Object.values(HABIT_RECORD_ICONS)).size, 50);
+  assert.equal(new Set(Object.values(HABIT_RECORD_ICONS)).size, 49);
   assert.deepEqual(
     Object.keys(SOBER_RECORD_ICONS),
     Object.keys(SOBER_ICONS).filter((key) => key !== 'age19'),
@@ -92,6 +94,13 @@ test('record icons preserve theme color, fixed colors and rem-based sizes with P
   const { HabitIcon } = loadIcon('src/components/HabitIcon.tsx', modules);
   const { SoberIcon } = loadIcon('src/components/SoberIcon.tsx', modules);
   assert.equal(HabitIcon({ name: 'walking' }).type, 'PersonSimpleWalkIcon');
+  assert.equal(HabitIcon({ name: 'language' }).props.weight, 'fill');
+  assert.equal(HabitIcon({ name: 'coding' }).props.weight, 'fill');
+  assert.equal(HabitIcon({ name: 'cleaning' }).type, 'SprayBottleIcon');
+  assert.equal(HabitIcon({ name: 'cleaning' }).props.weight, 'fill');
+  assert.equal(HabitIcon({ name: 'meditation' }).props.name, 'meditation');
+  assert.equal(SoberIcon({ name: 'skinPicking' }).type, 'HandGrabbingIcon');
+  assert.equal(SoberIcon({ name: 'skinPicking' }).props.weight, 'regular');
   assert.equal(SoberIcon({ name: 'coffee' }).type, 'CoffeeIcon');
   for (const [render, name] of [
     [HabitIcon, 'walking'],

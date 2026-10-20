@@ -10,7 +10,7 @@ import { BowlFoodIcon } from 'phosphor-react-native/src/icons/BowlFood';
 import { BowlSteamIcon } from 'phosphor-react-native/src/icons/BowlSteam';
 import { BriefcaseIcon } from 'phosphor-react-native/src/icons/Briefcase';
 import { BriefcaseMetalIcon } from 'phosphor-react-native/src/icons/BriefcaseMetal';
-import { BroomIcon } from 'phosphor-react-native/src/icons/Broom';
+import { SprayBottleIcon } from 'phosphor-react-native/src/icons/SprayBottle';
 import { CakeIcon } from 'phosphor-react-native/src/icons/Cake';
 import { CalculatorIcon } from 'phosphor-react-native/src/icons/Calculator';
 import { CalendarCheckIcon } from 'phosphor-react-native/src/icons/CalendarCheck';
@@ -35,9 +35,8 @@ import { DiscoBallIcon } from 'phosphor-react-native/src/icons/DiscoBall';
 import { DogIcon } from 'phosphor-react-native/src/icons/Dog';
 import { DoorOpenIcon } from 'phosphor-react-native/src/icons/DoorOpen';
 import { DropIcon } from 'phosphor-react-native/src/icons/Drop';
-import { FingerprintIcon } from 'phosphor-react-native/src/icons/Fingerprint';
+import { HandGrabbingIcon } from 'phosphor-react-native/src/icons/HandGrabbing';
 import { FlagIcon } from 'phosphor-react-native/src/icons/Flag';
-import { FlowerLotusIcon } from 'phosphor-react-native/src/icons/FlowerLotus';
 import { ForkKnifeIcon } from 'phosphor-react-native/src/icons/ForkKnife';
 import { GameControllerIcon } from 'phosphor-react-native/src/icons/GameController';
 import { GlobeIcon } from 'phosphor-react-native/src/icons/Globe';
@@ -113,13 +112,12 @@ export const HABIT_RECORD_ICONS = {
   language: TranslateIcon,
   writing: PencilLineIcon,
   coding: CodeIcon,
-  meditation: FlowerLotusIcon,
   breathing: LeafIcon,
   gratitude: HeartIcon,
   journaling: NotebookIcon,
   rest: CoffeeIcon,
   waking: AlarmIcon,
-  cleaning: BroomIcon,
+  cleaning: SprayBottleIcon,
   organizing: TrayIcon,
   cooking: CookingPotIcon,
   plants: PlantIcon,
@@ -147,7 +145,7 @@ export const HABIT_RECORD_ICONS = {
   planning: CalendarCheckIcon,
   budgeting: CalculatorIcon,
   volunteering: HandHeartIcon,
-} as const satisfies Record<HabitIconKey, Icon>;
+} as const satisfies Record<Exclude<HabitIconKey, 'meditation'>, Icon>;
 
 export const SOBER_RECORD_ICONS = {
   favorite: HeartIcon,
@@ -194,7 +192,7 @@ export const SOBER_RECORD_ICONS = {
   overworking: BriefcaseMetalIcon,
   prolongedSitting: ChairIcon,
   nailBiting: HandIcon,
-  skinPicking: FingerprintIcon,
+  skinPicking: HandGrabbingIcon,
   swearing: ChatSlashIcon,
   gossip: MegaphoneIcon,
   complaining: SmileySadIcon,

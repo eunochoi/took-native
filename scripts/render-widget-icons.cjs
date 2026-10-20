@@ -41,7 +41,7 @@ function buildIconAssets() {
     const weights = loadModule(path.join(definitions, `${icon}.tsx`), (name) =>
       name === 'react-native-svg' ? svgElements : require(name),
     ).default;
-    const body = renderToStaticMarkup(weights.get('fill'));
+    const body = renderToStaticMarkup(weights.get(key === 'skinPicking' ? 'regular' : 'fill'));
     if (!body) throw new Error(`Missing fill icon: ${key}`);
     icons[key] =
       `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="currentColor">${body}</svg>`;

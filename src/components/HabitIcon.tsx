@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../theme/AppThemeProvider';
 import { HABIT_RECORD_ICONS } from './recordIcons';
 import {
@@ -17,8 +18,16 @@ export function HabitIcon({
   size?: number;
 }) {
   const { colors, rem: appRem } = useAppTheme();
-  const Icon = HABIT_RECORD_ICONS[name];
   const color = resolveIconColor(colorKey, colors.accent);
   const resolvedSize = size ?? appRem * 1.75;
-  return <Icon color={color} size={resolvedSize} weight="fill" />;
+  if (name === 'meditation')
+    return <MaterialCommunityIcons name="meditation" color={color} size={resolvedSize} />;
+  const Icon = HABIT_RECORD_ICONS[name];
+  return (
+    <Icon
+      color={color}
+      size={resolvedSize}
+      weight={name === 'language' || name === 'coding' ? 'fill' : 'fill'}
+    />
+  );
 }
