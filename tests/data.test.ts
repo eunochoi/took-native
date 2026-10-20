@@ -288,6 +288,25 @@ test('diary aggregates isolate years and preserve monthly and emotion totals', a
   raw.close();
 });
 
+test('monthly diary average follows the selected year and excludes future months this year', async () => {
+  const { db, raw } = await database();
+  const currentYear = Number(today.slice(0, 4));
+  assert.equal((await getDiaryStats(db, currentYear)).monthlyAverage, 0);
+  for (const date of [
+    today,
+    `${currentYear - 1}-01-01`,
+    `${currentYear - 1}-01-02`,
+    `${currentYear - 1}-01-03`,
+  ])
+    await saveDiary(db, { date, emotion: 0, text: '월평균 집계', files: [] });
+  assert.equal(
+    (await getDiaryStats(db, currentYear)).monthlyAverage,
+    1 / Number(today.slice(5, 7)),
+  );
+  assert.equal((await getDiaryStats(db, currentYear - 1)).monthlyAverage, 3 / 12);
+  raw.close();
+});
+
 test('a past habit start controls available dates while the last four days remain the only editable window', async () => {
   const { db, raw } = await database();
   const initialStartedAt = new Date(`${shiftDate(today, -10)}T23:30:00`).toISOString();

@@ -17,7 +17,11 @@ export function DiaryAnalysis({
       <AnalysisHeader title="일기 기록">
         {year}년 {stats.total}개
       </AnalysisHeader>
-      <DiaryStatisticsSummary current={stats.current} longest={stats.longest} />
+      <DiaryStatisticsSummary
+        current={stats.current}
+        longest={stats.longest}
+        monthlyAverage={stats.monthlyAverage}
+      />
       <View className="p-2 flex-row">
         {stats.monthly.map((count, index) => (
           <View key={index} className="flex-1 items-center gap-1.5">
@@ -40,6 +44,7 @@ export function DiaryAnalysis({
       </View>
       <View className="gap-2">
         <InfoNotice>연속·최고 기록은 전체 기간 기준이에요.</InfoNotice>
+        <InfoNotice>월평균은 선택 연도 기준, 올해는 현재 월까지예요.</InfoNotice>
       </View>
     </View>
   );

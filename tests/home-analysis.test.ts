@@ -209,14 +209,39 @@ test('today sober card uses the latest restart and opens the selected record', (
   assert(!text(failed).includes('일째'));
 });
 
-test('diary retains the monthly graph and streaks without extra summaries', () => {
-  const stats = { ...emptyStats(), current: 3, longest: 7, total: 6 };
+test('diary shows three summary columns with monthly average and retains monthly graph', () => {
+  const stats = { ...emptyStats(), current: 3, longest: 7, total: 6, monthlyAverage: 0.5 };
   const tree = render('DiaryAnalysis', { stats, year: 2024 });
   assert(text(tree).includes('현재 연속 기록'));
   assert(text(tree).includes('역대 최고 기록'));
+  const summary = tree.props.children[1];
+  const columns = summary.props.children;
+  assert.equal(columns.length, 3);
+  assert(text(columns[0]).includes('3일'));
+  assert(text(columns[1]).includes('7일'));
+  assert(text(columns[2]).includes('월평균 일기0.5개'));
+  assert(columns[1].props.className.includes('border-l'));
+  assert(columns[2].props.className.includes('border-l'));
+  assert(
+    text(render('DiaryAnalysis', { stats: emptyStats(), year: 2024 })).includes('월평균 일기0개'),
+  );
   assert.equal(tree.props.children[2].props.children.length, 12);
   assert(!text(tree).includes('돌아보기'));
   assert(!text(tree).includes('분기'));
+});
+
+test('diary monthly average rounds to one decimal and omits trailing zeroes', () => {
+  for (const [monthlyAverage, expected] of [
+    [1.26, '1.3'],
+    [2, '2'],
+    [0, '0'],
+  ] as const) {
+    const tree = render('DiaryAnalysis', {
+      stats: { ...emptyStats(), monthlyAverage },
+      year: 2024,
+    });
+    assert(text(tree.props.children[1].props.children[2]).includes(`월평균 일기${expected}개`));
+  }
 });
 
 test('emotion counts keep period filtering and tied badges without added summaries', () => {

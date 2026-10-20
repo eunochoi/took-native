@@ -16,6 +16,8 @@ export async function getDiaryStats(db: SQLiteDatabase, year: number) {
     'SELECT date, emotion FROM diaries ORDER BY date',
   );
   const selected = diaries.filter((diary) => diary.date.startsWith(String(year)));
+  const today = todayString();
+  const monthCount = year === Number(today.slice(0, 4)) ? Number(today.slice(5, 7)) : 12;
   const monthly = Array<number>(12).fill(0);
   const emotions = Array<number>(10).fill(0);
   const halves = [Array<number>(10).fill(0), Array<number>(10).fill(0)];
@@ -27,6 +29,7 @@ export async function getDiaryStats(db: SQLiteDatabase, year: number) {
   }
   return {
     total: selected.length,
+    monthlyAverage: selected.length / monthCount,
     monthly,
     emotions,
     halves,
