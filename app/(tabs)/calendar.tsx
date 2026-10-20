@@ -34,7 +34,11 @@ export default function CalendarScreen() {
     <ColorView className={PAGE_CLASS_NAME}>
       <PageTopSection title="월간 기록" hashtags="#기록 #발자국">
         <Toolbar>
-          <CalendarRecordCounts diaryCount={diaries.data?.length ?? 0} counts={progressCounts} />
+          <CalendarRecordCounts
+            diaryCount={diaries.data?.length ?? 0}
+            counts={progressCounts}
+            unavailable={habits.isError || completions.isError}
+          />
         </Toolbar>
       </PageTopSection>
       <View

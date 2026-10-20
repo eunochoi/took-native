@@ -7,9 +7,11 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 export function CalendarRecordCounts({
   diaryCount,
   counts,
+  unavailable = false,
 }: {
   diaryCount: number;
   counts: ReturnType<typeof calendarHabitProgressCounts> | null;
+  unavailable?: boolean;
 }) {
   const { iconSizes } = useAppTheme();
   return (
@@ -32,8 +34,8 @@ export function CalendarRecordCounts({
           key: band,
           icon: 'habit' as const,
           className,
-          value: counts ? `${counts[band]}일` : '–',
-          label: `습관 완료율 ${label}, ${counts ? `${counts[band]}일` : '불러오지 못함'}`,
+          value: unavailable ? '–' : `${counts?.[band] ?? 0}일`,
+          label: `습관 완료율 ${label}, ${unavailable ? '불러오지 못함' : `${counts?.[band] ?? 0}일`}`,
         })),
       ].map(({ key, icon, className, value, label }) => (
         <View

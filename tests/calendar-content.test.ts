@@ -758,3 +758,20 @@ test('monthly progress counts match visible days, start dates, boundaries and mo
     { low: 1, medium: 0, high: 0 },
   );
 });
+
+test('monthly toolbar starts at zero and distinguishes query errors from empty records', () => {
+  const { CalendarRecordCounts } = load('src/screens/calendar/CalendarRecordCounts.tsx');
+  const values = (counts: any, unavailable = false) =>
+    nodes(
+      CalendarRecordCounts({
+        diaryCount: 0,
+        counts,
+        unavailable,
+      }),
+    )
+      .filter((node) => node.type === 'Text')
+      .map((node) => node.props.children);
+  assert.deepEqual(values(null), ['0개', '0일', '0일', '0일']);
+  assert.deepEqual(values({ low: 2, medium: 3, high: 4 }), ['0개', '2일', '3일', '4일']);
+  assert.deepEqual(values(null, true), ['0개', '–', '–', '–']);
+});
