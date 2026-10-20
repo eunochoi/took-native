@@ -12,6 +12,8 @@ import { CaretLeftIcon } from 'phosphor-react-native/src/icons/CaretLeft';
 import { CaretRightIcon } from 'phosphor-react-native/src/icons/CaretRight';
 import { CaretUpIcon } from 'phosphor-react-native/src/icons/CaretUp';
 import { ChartBarIcon } from 'phosphor-react-native/src/icons/ChartBar';
+import { ChartLineIcon } from 'phosphor-react-native/src/icons/ChartLine';
+import { PercentIcon } from 'phosphor-react-native/src/icons/Percent';
 import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
 import { DotsSixVerticalIcon } from 'phosphor-react-native/src/icons/DotsSixVertical';
 import { DotsThreeVerticalIcon } from 'phosphor-react-native/src/icons/DotsThreeVertical';
@@ -62,6 +64,8 @@ const APP_ICONS = {
   edit: PencilSimpleIcon,
   check: CheckIcon,
   statistics: ChartBarIcon,
+  'habit-flow': ChartLineIcon,
+  'habit-rate': PercentIcon,
   'arrow-forward': ArrowRightIcon,
   'open-in-new': ArrowSquareOutIcon,
   'drag-indicator': DotsSixVerticalIcon,
@@ -103,6 +107,8 @@ export function AppIcon({
     'chevron-left',
     'chevron-right',
     'today',
+    'habit-flow',
+    'habit-rate',
   ].includes(name);
   return <Icon {...props} weight={bold ? 'bold' : regular ? 'regular' : 'fill'} />;
 }

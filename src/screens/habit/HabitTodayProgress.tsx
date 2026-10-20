@@ -39,7 +39,7 @@ export function HabitTodayProgress({
             className="items-center justify-center"
             style={{ width: appRem * 1.875, height: appRem * 1.875 }}
           >
-            <AppIcon name="statistics" size={appRem * 1.875} color={colors.accent} />
+            <AppIcon name="habit-flow" size={appRem * 1.875} color={colors.accent} />
           </View>
           <Text
             accessibilityRole="header"

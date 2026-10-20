@@ -222,6 +222,8 @@ test('checks use bold and disclosure chevrons use regular shapes while other ico
   for (const [name, type, weight] of [
     ['habit', 'CheckIcon', 'bold'],
     ['check', 'CheckIcon', 'bold'],
+    ['habit-flow', 'ChartLineIcon', 'regular'],
+    ['habit-rate', 'PercentIcon', 'regular'],
     ['chevron-left', 'CaretLeftIcon', 'regular'],
     ['chevron-right', 'CaretRightIcon', 'regular'],
     ['today', 'CalendarDotIcon', 'regular'],

@@ -31,7 +31,7 @@ export function HabitYearStatistics({
         stats={[
           { label: '실천 횟수', icon: 'check', value: yearly.completed, unit: '회' },
           { label: '놓친 횟수', icon: 'close', value: yearly.missed, unit: '회' },
-          { label: '실천율', icon: 'statistics', value: yearly.rate ?? '—', unit: '%' },
+          { label: '실천율', icon: 'habit-rate', value: yearly.rate ?? '—', unit: '%' },
         ]}
         unavailable={unavailable}
       />
