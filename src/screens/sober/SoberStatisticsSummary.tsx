@@ -21,7 +21,7 @@ export function SoberStatisticsSummary({
         [
           {
             icon: 'flag',
-            label: '목표 진행률',
+            label: '진행률',
             value: `${summary.progress.toFixed(0)}%`,
             note: `목표 ${formatSoberGoal(summary.goalDays)}`,
           },
@@ -41,19 +41,19 @@ export function SoberStatisticsSummary({
       ).map((stat, index) => (
         <View
           key={stat.label}
-          className={`flex-1 min-w-0 items-center gap-2 px-1 border-theme-border-muted ${index < 2 ? 'border-r' : ''}`}
+          className={`flex-1 min-w-0 items-center gap-2.5 px-1 py-3 border-theme-border-muted ${index < 2 ? 'border-r' : ''}`}
         >
-          <View className="flex gap-1 items-center">
-            <AppIcon name={stat.icon} size={appRem * 2} className="text-theme-accent" />
+          <View className="flex-col gap-1.5 items-center">
+            <AppIcon name={stat.icon} size={appRem * 1.7} className="text-theme-accent" />
             <Text
               numberOfLines={1}
               adjustsFontSizeToFit
-              className="w-full text-center text-sm font-semibold text-theme-accent"
+              className="tracking-tighter text-sm text-theme-text-secondary"
             >
               {stat.label}
             </Text>
           </View>
-          <View className="flex gap-1 items-center">
+          <View className="flex gap-0.5 items-center">
             <Text
               numberOfLines={1}
               adjustsFontSizeToFit
@@ -64,7 +64,7 @@ export function SoberStatisticsSummary({
             <Text
               numberOfLines={1}
               adjustsFontSizeToFit
-              className="w-full text-center text-sm text-theme-text-secondary"
+              className="tracking-tighter w-full text-center text-sm text-theme-text-secondary"
             >
               {stat.note}
             </Text>

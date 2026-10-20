@@ -1,14 +1,14 @@
-import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
-import { UNDERLINE_TAB_LIST_CLASS_NAME } from '../../theme/classes';
-import { UnderlineTab } from '../../components/UnderlineTab';
-import { AnalysisHeader } from './AnalysisHeader';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { HabitIcon } from '../../components/HabitIcon';
-import { HabitStars } from '../habit/HabitStars';
 import { Text } from '../../components/Text';
+import { UnderlineTab } from '../../components/UnderlineTab';
 import type { getHabitStats } from '../../db/stats';
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
+import { UNDERLINE_TAB_LIST_CLASS_NAME } from '../../theme/classes';
+import { HabitStars } from '../habit/HabitStars';
+import { AnalysisHeader } from './AnalysisHeader';
 export function HabitAnalysis({
   stats,
   year,
@@ -69,7 +69,9 @@ export function HabitAnalysis({
                 />
               </View>
               <View className="flex-row items-baseline gap-1">
-                <Text className="text-theme-text-secondary font-semibold text-2xl">{habit.count}</Text>
+                <Text className="text-theme-text-primary font-semibold text-2xl">
+                  {habit.count}
+                </Text>
                 <Text className="text-theme-text-secondary text-sm">회</Text>
               </View>
             </Pressable>

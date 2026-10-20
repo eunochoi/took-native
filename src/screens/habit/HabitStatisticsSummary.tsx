@@ -1,25 +1,41 @@
+import type { ComponentProps } from 'react';
 import { View } from 'react-native';
+import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
+import { useAppTheme } from '../../theme/AppThemeProvider';
 
 export function HabitStatisticsSummary({
   stats,
   unavailable,
 }: {
-  stats: { label: string; value: number | string; unit: string }[];
+  stats: {
+    label: string;
+    icon: ComponentProps<typeof AppIcon>['name'];
+    value: number | string;
+    unit: string;
+  }[];
   unavailable: boolean;
 }) {
+  const { colors, iconSizes } = useAppTheme();
   return (
-    <View className="flex-row py-4 bg-theme-accent-light mx-1 bg-theme-accent-light/50 ios:curve-continuous rounded-theme">
+    <View className="flex-row py-2 bg-theme-accent-light mx-1 bg-theme-accent-light/50 ios:curve-continuous rounded-theme">
       {stats.map((stat, index) => (
         <View
           key={stat.label}
-          className={`flex-1 gap-1 px-2 items-center ${index > 0 ? 'border-l border-theme-border/50' : ''}`}
+          className={`flex-1 items-center gap-2.5 py-2 border-theme-border/50 ${index > 0 ? 'border-l' : 'border-l-0'}`}
         >
-          <Text className="text-sm text-theme-text-secondary">{stat.label}</Text>
-          <Text className="text-2xl font-bold text-theme-accent">
-            {unavailable ? '—' : stat.value}
-            <Text className="text-sm font-semibold text-theme-text-secondary"> {stat.unit}</Text>
-          </Text>
+          <AppIcon name={stat.icon} size={iconSizes.lg} color={colors.accent} />
+          <Text className="text-theme-text-secondary text-sm">{stat.label}</Text>
+          <View className="flex-row items-baseline gap-1">
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              className="text-theme-text-primary font-bold text-2xl leading-none"
+            >
+              {unavailable ? '—' : stat.value}
+            </Text>
+            <Text className="text-theme-text-secondary font-bold text-sm">{stat.unit}</Text>
+          </View>
         </View>
       ))}
     </View>

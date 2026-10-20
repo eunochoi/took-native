@@ -1,17 +1,17 @@
-import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
-import { UNDERLINE_TAB_LIST_CLASS_NAME } from '../../theme/classes';
-import { UnderlineTab } from '../../components/UnderlineTab';
-import { AnalysisHeader } from './AnalysisHeader';
-import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
+import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { SoberIcon } from '../../components/SoberIcon';
-import { Text } from '../../components/Text';
 import { InfoNotice } from '../../components/InfoNotice';
+import { Text } from '../../components/Text';
+import { UnderlineTab } from '../../components/UnderlineTab';
 import type { Sober, SoberRestart } from '../../db/types';
 import { formatSoberDuration, getSoberStreaks } from '../../domain/sober';
 import { useCurrentMinute } from '../../hooks/useCurrentMinute';
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
+import { UNDERLINE_TAB_LIST_CLASS_NAME } from '../../theme/classes';
+import { AnalysisHeader } from './AnalysisHeader';
 
 export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts: SoberRestart[] }) {
   const { openModal } = useModalNavigation();
@@ -37,7 +37,7 @@ export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts:
     .slice(0, 3);
   return (
     <View className="gap-4">
-      <AnalysisHeader title="거리두기 기록">전체 거리두기 항목 {sobers.length}개</AnalysisHeader>
+      <AnalysisHeader title="거리두기 기록">전체 항목 {sobers.length}개</AnalysisHeader>
       <View accessibilityRole="tablist" className={UNDERLINE_TAB_LIST_CLASS_NAME}>
         {(
           [
@@ -78,14 +78,16 @@ export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts:
                   <Text numberOfLines={1} className="text-base leading-relaxed">
                     {sober.name}
                   </Text>
-                  <Text className="text-base font-bold text-theme-text-primary">
+                  <Text className="text-lg font-bold text-theme-text-primary">
                     {formatSoberDuration(record.duration)}
                   </Text>
-                  <Text className="text-sm text-theme-text-secondary">
-                    시작 시간 : {format(parseISO(record.start), 'yy년 M월 d일 HH:mm')}
-                  </Text>
-                  <Text className="text-sm text-theme-text-secondary">
-                    종료 시간 :{' '}
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    className="tracking-tighter text-sm text-theme-text-secondary"
+                  >
+                    {format(parseISO(record.start), 'yy년 M월 d일 HH:mm')}
+                    {` ~ `}
                     {record.current ? (
                       <Text className="text-sm text-theme-accent">진행 중</Text>
                     ) : (

@@ -1,12 +1,12 @@
-import { useCalendarNavigation } from './helpers/calendar-navigation';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import test from 'node:test';
 import { URL } from 'node:url';
 import { runInNewContext } from 'node:vm';
-import test from 'node:test';
 import type { Habit, Sober, SoberRestart } from '../src/db/types';
 import type { SoberStreak } from '../src/domain/sober';
+import { useCalendarNavigation } from './helpers/calendar-navigation';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
@@ -197,12 +197,16 @@ test('sober analysis ranks individual past and current streaks across items', ()
     3,
   );
   const header = longest.nodes.find((node) => node.type === 'AnalysisHeader');
-  assert.equal(header.props.children.join(''), '전체 거리두기 항목 2개');
+  assert.equal(header.props.children.join(''), '전체 항목 2개');
   const timeRows = longest.nodes
-    .filter((node) => node.type === 'Text' && Array.isArray(node.props.children))
+    .filter(
+      (node) =>
+        node.type === 'Text' &&
+        node.props.className === 'tracking-tighter text-sm text-theme-text-secondary',
+    )
     .map((node) => node.props.children.join(''));
-  assert.equal(timeRows.filter((text) => text.startsWith('시작 시간 : ')).length, 3);
-  assert.equal(timeRows.filter((text) => text.startsWith('종료 시간 : ')).length, 3);
+  assert.equal(timeRows.length, 3);
+  assert(timeRows.every((text) => /^\d{2}년 \d{1,2}월 \d{1,2}일 \d{2}:\d{2} ~ /.test(text)));
   assert(
     longest.nodes.some(
       (node) =>
@@ -221,7 +225,7 @@ test('sober analysis ranks individual past and current streaks across items', ()
       (node) =>
         node.type === 'Text' &&
         Array.isArray(node.props.children) &&
-        node.props.children[0] === '종료 시간 :' &&
+        node.props.className === 'tracking-tighter text-sm text-theme-text-secondary' &&
         node.props.children.some(
           (child: any) =>
             child?.props?.children === '진행 중' &&
@@ -433,8 +437,9 @@ test('habit statistics refresh replacement records while every date remains read
   const press = (props: Record<string, unknown>) => dateCell.render(props).result.props.onPress();
   const currentNodes = monthUi.render().nodes;
   assert.equal(
-    currentNodes.filter((node) => node.props.className === 'text-2xl font-bold text-theme-accent')
-      .length,
+    currentNodes.filter(
+      (node) => node.props.className === 'text-theme-text-primary font-bold text-2xl leading-none',
+    ).length,
     3,
   );
   for (const date of ['2024-03-06', '2024-03-10', '2024-03-11']) {
@@ -470,9 +475,9 @@ test('yearly statistics refresh records, return to this year and preserve disabl
   const updated = ui.render({ dates: ['2024-03-07', '2024-03-10'] }).nodes;
   assert.equal(ui.calls.year, 2);
   const completed = updated.find(
-    (node) => node.props.className === 'text-2xl font-bold text-theme-accent',
+    (node) => node.props.className === 'text-theme-text-primary font-bold text-2xl leading-none',
   );
-  assert.equal(completed.props.children[0], 2);
+  assert.equal(completed.props.children, 2);
   const bars = updated.filter(
     (node) => node.type === 'View' && typeof node.props.style?.height === 'number',
   );
@@ -497,8 +502,11 @@ test('yearly statistics refresh records, return to this year and preserve disabl
   const hidden = ui.render({ unavailable: true }).nodes;
   assert(
     hidden
-      .filter((node) => node.props.className === 'text-2xl font-bold text-theme-accent')
-      .every((node) => node.props.children[0] === '—'),
+      .filter(
+        (node) =>
+          node.props.className === 'text-theme-text-primary font-bold text-2xl leading-none',
+      )
+      .every((node) => node.props.children === '—'),
   );
   hidden.find((node) => node.props.accessibilityLabel === '이전 연도').props.onPress();
   const past = ui.render().nodes;
@@ -577,14 +585,17 @@ test('yearly habit summary uses monthly label order and refreshes missed counts 
   const view = ui.render().nodes;
   assert.deepEqual(
     view
-      .filter((node) => node.props.className === 'text-sm text-theme-text-secondary')
+      .filter((node) => node.props.className === 'text-theme-text-secondary text-sm')
       .map((node) => node.props.children),
     ['실천 횟수', '놓친 횟수', '실천율'],
   );
   const values = (nodes: any[]) =>
     nodes
-      .filter((node) => node.props.className === 'text-2xl font-bold text-theme-accent')
-      .map((node) => node.props.children[0]);
+      .filter(
+        (node) =>
+          node.props.className === 'text-theme-text-primary font-bold text-2xl leading-none',
+      )
+      .map((node) => node.props.children);
   assert.deepEqual(values(view), [2, 68, '2.9']);
   assert.deepEqual(values(ui.render({ today: '2024-03-12' }).nodes), [2, 70, '2.8']);
   assert.equal(ui.calls.year, 2);
@@ -600,7 +611,9 @@ test('yearly habit rate displays a dash when the habit has not started yet', () 
   });
   const values = ui
     .render()
-    .nodes.filter((node) => node.props.className === 'text-2xl font-bold text-theme-accent')
-    .map((node) => node.props.children[0]);
+    .nodes.filter(
+      (node) => node.props.className === 'text-theme-text-primary font-bold text-2xl leading-none',
+    )
+    .map((node) => node.props.children);
   assert.deepEqual(values, [0, 0, '—']);
 });

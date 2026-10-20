@@ -354,7 +354,7 @@ test('sober rankings compare past and current streaks in both directions across 
   rows[0].props.onPress();
   rows[2].props.onPress();
   assert.deepEqual(routes, ['/sober/1', '/sober/4']);
-  assert(text(tree).includes('전체 거리두기 항목 5개'));
+  assert(text(tree).includes('전체 항목 5개'));
   assert.deepEqual(
     Array.from(rows, (row: any) => Number(row.key.split(':')[0])),
     [1, 3, 4],
