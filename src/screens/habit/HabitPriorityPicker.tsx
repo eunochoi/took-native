@@ -41,7 +41,7 @@ export function HabitPriorityPicker({
             >
               <HabitStars priority={priority} />
               <Text
-                className={`text-sm font-normal ${draft === priority ? 'text-theme-accent' : 'text-theme-text-secondary'}`}
+                className={`text-sm font-normal ${draft === priority ? 'text-theme-accent-deep' : 'text-theme-text-secondary'}`}
               >
                 {label}
               </Text>

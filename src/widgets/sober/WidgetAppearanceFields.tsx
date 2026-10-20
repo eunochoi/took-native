@@ -50,7 +50,7 @@ export function WidgetAppearanceFields({
                 onPress={() => onChange({ background })}
               >
                 <Text
-                  className={`text-base ${widgetSettings?.background === background ? 'text-theme-accent' : ''}`}
+                  className={`text-base ${widgetSettings?.background === background ? 'text-theme-accent-deep' : ''}`}
                 >
                   {background === 'white' ? '흰색' : background === 'black' ? '검정' : '투명'}
                 </Text>
@@ -72,7 +72,7 @@ export function WidgetAppearanceFields({
                 onPress={() => onChange({ textColor })}
               >
                 <Text
-                  className={`text-base ${widgetSettings?.textColor === textColor ? 'text-theme-accent' : ''}`}
+                  className={`text-base ${widgetSettings?.textColor === textColor ? 'text-theme-accent-deep' : ''}`}
                 >
                   {textColor === 'black' ? '검정' : '흰색'}
                 </Text>

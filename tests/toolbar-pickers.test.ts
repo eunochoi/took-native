@@ -711,9 +711,9 @@ test('emotion icon style cards share checked and unchecked appearance and remain
   const options = ui.render().content.filter((node) => node.props.accessibilityRole === 'radio');
   assert.equal(options.length, 3);
   assert.equal(options.filter((node) => node.props.accessibilityState.checked).length, 1);
-  assert(options[1].props.className.includes('bg-theme-accent/10'));
+  assert(options[1].props.className.includes('bg-theme-accent-light/50'));
   assert(options[0].props.className.includes('bg-transparent'));
-  assert(options[0].props.className.includes('border-theme-accent/40'));
+  assert(options[0].props.className.includes('border-theme-border'));
   options[0].props.onPress();
   assert.equal(changed, 'basic');
 });

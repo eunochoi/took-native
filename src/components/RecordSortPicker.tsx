@@ -89,7 +89,7 @@ export function RecordSortPicker({
                     onPress={() => setRecordSort(value)}
                   >
                     <Text
-                      className={`text-base ${draftRecordSort === value ? 'text-theme-accent' : ''}`}
+                      className={`text-base ${draftRecordSort === value ? 'text-theme-accent-deep' : ''}`}
                     >
                       {value === 'DESC' ? '내림차순' : '오름차순'}
                     </Text>
@@ -114,7 +114,7 @@ export function RecordSortPicker({
                   }}
                 >
                   <Text
-                    className={`text-base ${draftSort === option.value ? 'text-theme-accent' : ''}`}
+                    className={`text-base ${draftSort === option.value ? 'text-theme-accent-deep' : ''}`}
                   >
                     {option.label}
                   </Text>

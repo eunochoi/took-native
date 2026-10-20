@@ -66,7 +66,7 @@ export function AppearanceSettingsPicker<T extends string>({
             }}
           >
             <Text
-              className={`text-base ${selected === option ? 'text-theme-accent' : 'text-theme-text-primary'}`}
+              className={`text-base ${selected === option ? 'text-theme-accent-deep' : 'text-theme-text-primary'}`}
             >
               {labels[option]}
             </Text>

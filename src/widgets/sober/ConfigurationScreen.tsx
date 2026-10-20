@@ -189,7 +189,7 @@ function ConfigurationContent({
                 }}
               >
                 <Text
-                  className={`text-base ${settings?.soberId === item.id ? 'text-theme-accent' : ''}`}
+                  className={`text-base ${settings?.soberId === item.id ? 'text-theme-accent-deep' : ''}`}
                 >
                   {item.name}
                 </Text>

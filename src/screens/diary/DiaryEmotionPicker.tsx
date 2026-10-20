@@ -51,7 +51,9 @@ export function DiaryEmotionPicker({
                     onPress={() => setDraft(allowDeselect && selected ? null : id)}
                   >
                     <EmotionImage emotion={id} size={appRem * 2.75} />
-                    <Text className={`text-xs font-normal ${selected ? 'text-theme-accent' : ''}`}>
+                    <Text
+                      className={`text-xs font-normal ${selected ? 'text-theme-accent-deep' : ''}`}
+                    >
                       {emotion.name}
                     </Text>
                   </PickerOption>

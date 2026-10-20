@@ -37,7 +37,7 @@ export function PickerAction({
       <AppIcon name={icon} size={iconSizes.lg} color={danger ? colors.danger : colors.accent} />
       <View className="flex-1 gap-1">
         <Text
-          className={`text-base font-semibold ${danger ? 'text-theme-danger' : selected ? 'text-theme-accent' : 'text-theme-text-primary'}`}
+          className={`text-base font-semibold ${danger ? 'text-theme-danger' : selected ? 'text-theme-accent-deep' : 'text-theme-text-primary'}`}
         >
           {title}
         </Text>

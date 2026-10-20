@@ -1,20 +1,20 @@
-import { InfoNotice } from '../../components/InfoNotice';
 import type { UseQueryResult } from '@tanstack/react-query';
-import { QueryState } from '../../components/QueryState';
-import { selectionSummary } from '../../domain/selection';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
-import { FormPickerRow } from '../../components/FormPickerRow';
 import { FilterSheet } from '../../components/FilterSheet';
+import { FormPickerRow } from '../../components/FormPickerRow';
+import { InfoNotice } from '../../components/InfoNotice';
 import { PickerOption } from '../../components/PickerOption';
+import { QueryState } from '../../components/QueryState';
 import { Text } from '../../components/Text';
 import {
-  DIARY_SEASONS,
   DIARY_EMOTION_GROUPS,
-  type DiarySeason,
+  DIARY_SEASONS,
   type DiaryEmotionGroup,
+  type DiarySeason,
 } from '../../domain/diaryFilters';
+import { selectionSummary } from '../../domain/selection';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 
 export function DiaryFilterPicker({
@@ -109,7 +109,7 @@ export function DiaryFilterPicker({
                         )
                       }
                     >
-                      <Text className={`text-base ${selected ? 'text-theme-accent' : ''}`}>
+                      <Text className={`text-base ${selected ? 'text-theme-accent-deep' : ''}`}>
                         {DIARY_SEASONS[value].label}
                       </Text>
                     </PickerOption>
@@ -158,7 +158,7 @@ export function DiaryFilterPicker({
                     )
                   }
                 >
-                  <Text className={`text-base ${selected ? 'text-theme-accent' : ''}`}>
+                  <Text className={`text-base ${selected ? 'text-theme-accent-deep' : ''}`}>
                     {DIARY_EMOTION_GROUPS[value].label}
                   </Text>
                   <View className="min-h-8 w-full items-center justify-center">
@@ -189,7 +189,7 @@ export function DiaryFilterPicker({
                   onPress={() => close(() => setYear(value))}
                 >
                   <Text
-                    className={`text-base ${selectedYear === value ? 'text-theme-accent' : ''}`}
+                    className={`text-base ${selectedYear === value ? 'text-theme-accent-deep' : ''}`}
                   >
                     {value === null ? '전체 연도' : `${value}년`}
                   </Text>

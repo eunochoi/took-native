@@ -51,7 +51,7 @@ export function EmotionIconStyleSelector({
             <EmotionImage emotion={6} iconStyle={style} size={appRem * 1.75} />
           </View>
           <Text
-            className={`text-center text-sm font-medium ${value === style ? 'text-theme-accent' : 'text-theme-text-primary'}`}
+            className={`text-center text-sm font-medium ${value === style ? 'text-theme-accent-deep' : 'text-theme-text-primary'}`}
           >
             {['기본형', '단순형', '이모지'][index]}
           </Text>

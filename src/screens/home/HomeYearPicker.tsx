@@ -72,7 +72,7 @@ export function HomeYearPicker({
                       onPress={() => setTempYear(value)}
                     >
                       <Text
-                        className={`text-base font-normal ${tempYear === value ? 'text-theme-accent' : 'text-theme-text-primary'}`}
+                        className={`text-base font-normal ${tempYear === value ? 'text-theme-accent-deep' : 'text-theme-text-primary'}`}
                       >
                         {value}년
                       </Text>

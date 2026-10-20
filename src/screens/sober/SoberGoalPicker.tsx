@@ -121,7 +121,7 @@ export function SoberGoalPicker({
                           onPress={() => setEditor({ ...editor, days: String(value) })}
                         >
                           <Text
-                            className={`text-sm ${Number(editor.days) === value ? 'text-theme-accent' : 'text-theme-text-primary'}`}
+                            className={`text-sm ${Number(editor.days) === value ? 'text-theme-accent-deep' : 'text-theme-text-primary'}`}
                           >
                             {formatSoberGoal(value)}
                           </Text>

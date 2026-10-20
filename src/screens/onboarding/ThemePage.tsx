@@ -60,7 +60,7 @@ export function ThemePage({
                     style={{ backgroundColor: ACCENT_PALETTES[accent].accent }}
                   />
                   <Text
-                    className={`text-center text-xs ${settings.themeAccent === accent ? 'text-theme-accent' : 'text-theme-text-primary'}`}
+                    className={`text-center text-xs ${settings.themeAccent === accent ? 'text-theme-accent-deep' : 'text-theme-text-primary'}`}
                   >
                     {accent === 'yellow' ? '청록' : ACCENT_LABELS[accent]}
                   </Text>
@@ -84,7 +84,7 @@ export function ThemePage({
                   onPress={() => void onChange({ themeMode: value as Settings['themeMode'] })}
                 >
                   <Text
-                    className={`text-center text-sm ${settings.themeMode === value ? 'text-theme-accent' : 'text-theme-text-primary'}`}
+                    className={`text-center text-sm ${settings.themeMode === value ? 'text-theme-accent-deep' : 'text-theme-text-primary'}`}
                   >
                     {label}
                   </Text>
@@ -108,7 +108,7 @@ export function ThemePage({
                   onPress={() => void onChange({ fontSize: value as Settings['fontSize'] })}
                 >
                   <Text
-                    className={`text-center text-sm ${settings.fontSize === value ? 'text-theme-accent' : 'text-theme-text-primary'}`}
+                    className={`text-center text-sm ${settings.fontSize === value ? 'text-theme-accent-deep' : 'text-theme-text-primary'}`}
                   >
                     {label}
                   </Text>

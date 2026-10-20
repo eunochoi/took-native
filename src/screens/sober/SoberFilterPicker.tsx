@@ -77,7 +77,7 @@ export function SoberFilterPicker({
                     onPress={() => close(() => setDraft({ ...draft, minimumDays: option.days }))}
                   >
                     <Text
-                      className={`text-base ${draft.minimumDays === option.days ? 'text-theme-accent' : ''}`}
+                      className={`text-base ${draft.minimumDays === option.days ? 'text-theme-accent-deep' : ''}`}
                     >
                       {option.label}
                     </Text>
