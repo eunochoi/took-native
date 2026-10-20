@@ -16,7 +16,7 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 import { RECORD_SURFACE_CLASS_NAME } from '../../theme/classes';
 
 const recordCardClass = `${RECORD_SURFACE_CLASS_NAME} flex-row items-center gap-3 min-h-12 p-3.5 ios:curve-continuous rounded-2xl active:opacity-70`;
-const recordIconContainerClass = '-ml-1 h-10 w-10 shrink-0 items-center justify-center';
+const recordIconContainerClass = 'h-10 w-7 shrink-0 items-center justify-center';
 const recordIconClass = 'text-theme-accent';
 const recordChevronClass = 'text-theme-text-tertiary';
 const recordContentClass = 'flex-1 min-w-0 gap-1';
@@ -48,12 +48,12 @@ export function TodayRecordSection({ today }: { today: string }) {
   const soberDays =
     sober && restarts.data
       ? Math.floor(
-        getSoberSummary(
-          sober,
-          restarts.data.filter((item) => item.sober_id === sober.id),
-          now,
-        ).duration / SOBER_DAY_MS,
-      ) + 1
+          getSoberSummary(
+            sober,
+            restarts.data.filter((item) => item.sober_id === sober.id),
+            now,
+          ).duration / SOBER_DAY_MS,
+        ) + 1
       : null;
   return (
     <View className="py-1 gap-2">
@@ -70,8 +70,11 @@ export function TodayRecordSection({ today }: { today: string }) {
                 : { pathname: '/diary/new', params: { date: today } },
             )
           }
-          className="min-h-10 min-w-0 flex-1 flex-row items-center gap-1 active:opacity-70"
+          className="min-h-10 min-w-0 flex-1 flex-row items-center gap-3 active:opacity-70"
         >
+          <View className={recordIconContainerClass}>
+            <AppIcon name="diary" size={appRem * 1.75} className={recordIconClass} />
+          </View>
           <View className={recordContentClass}>
             <Text numberOfLines={1} className={recordTitleClass} style={recordTextStyle}>
               오늘의 일기
@@ -93,7 +96,7 @@ export function TodayRecordSection({ today }: { today: string }) {
                   ? '불러오기 실패'
                   : diary.data
                     ? `'${EMOTIONS[diary.data.emotion].name}' 기록`
-                    : '아직 기록 없음'}
+                    : '기록 없음'}
               </Text>
             )}
           </View>
@@ -104,8 +107,11 @@ export function TodayRecordSection({ today }: { today: string }) {
           accessibilityRole="button"
           accessibilityLabel="오늘의 습관 이동"
           onPress={() => router.push('/habit')}
-          className="min-h-10 min-w-0 flex-1 flex-row items-center gap-1 active:opacity-70"
+          className="min-h-10 min-w-0 flex-1 flex-row items-center gap-3 active:opacity-70"
         >
+          <View className={recordIconContainerClass}>
+            <AppIcon name="habit" size={appRem * 1.75} className={recordIconClass} />
+          </View>
           <View className={recordContentClass}>
             <Text numberOfLines={1} className={recordTitleClass} style={recordTextStyle}>
               오늘의 습관
@@ -119,7 +125,7 @@ export function TodayRecordSection({ today }: { today: string }) {
               <Text numberOfLines={1} className={recordStatusClass} style={recordTextStyle}>
                 {habitError
                   ? '불러오기 실패'
-                  : `${habits.data?.length ?? 0}개 중 ${completions.data?.length ?? 0}개 완료`}
+                  : `${completions.data?.length ?? 0}/${habits.data?.length ?? 0}`}
               </Text>
             )}
           </View>
@@ -133,9 +139,9 @@ export function TodayRecordSection({ today }: { today: string }) {
       >
         <View className={recordIconContainerClass}>
           {sober ? (
-            <SoberIcon name={sober.icon_key} colorKey={sober.icon_color} size={appRem * 2.25} />
+            <SoberIcon name={sober.icon_key} colorKey={sober.icon_color} size={appRem * 1.75} />
           ) : (
-            <AppIcon name="sober" size={appRem * 2.25} className={recordIconClass} />
+            <AppIcon name="sober" size={appRem * 1.75} className={recordIconClass} />
           )}
         </View>
         <View className={recordContentClass}>
@@ -170,7 +176,7 @@ export function TodayRecordSection({ today }: { today: string }) {
         className={recordCardClass}
       >
         <View className={recordIconContainerClass}>
-          <AppIcon name="description" size={appRem * 2.25} className={recordIconClass} />
+          <AppIcon name="description" size={appRem * 1.75} className={recordIconClass} />
         </View>
         <View className={recordContentClass}>
           <Text numberOfLines={1} className={recordTitleClass} style={recordTextStyle}>

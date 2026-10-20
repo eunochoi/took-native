@@ -125,8 +125,9 @@ test('today diary and habit share one card with separate navigation and loading 
   assert.equal(tree.props.children.length, 3);
   const buttons = nodes(tree).filter((node) => node.type === 'Pressable');
   assert.equal(buttons.length, 4);
-  assert(text(buttons[0]).includes('아직 기록 없음'));
-  assert(text(buttons[1]).includes('0개 중 0개 완료'));
+  assert(text(buttons[0]).includes('오늘의 일기'));
+  assert(text(buttons[0]).includes('기록 없음'));
+  assert(text(buttons[1]).includes('0/0'));
   buttons.forEach((button) => button.props.onPress());
   assert.deepEqual(JSON.parse(JSON.stringify(routes)), [
     { pathname: '/diary/new', params: { date: '2026-10-05' } },
@@ -159,13 +160,28 @@ test('recorded diary names its emotion in quotes and opens the diary', () => {
   });
   assert(text(tree.props.children[0]).includes("'기쁨' 기록"));
   assert(!text(tree.props.children[0]).includes('확인하기'));
-  const description = nodes(tree.props.children[0]).find((node) => text(node) === "'기쁨' 기록");
+  const description = nodes(tree.props.children[0]).find(
+    (node) => node.type === 'Text' && text(node) === "'기쁨' 기록",
+  );
   assert.equal(description.props.numberOfLines, 1);
   assert.equal(description.props.adjustsFontSizeToFit, true);
   nodes(tree)
     .find((node) => node.props.accessibilityLabel === '오늘의 감정 일기 이동')
     .props.onPress();
   assert.deepEqual(routes, ['/diary/42']);
+});
+
+test('today habits show completed count before total count', () => {
+  const tree = render('TodayRecordSection', { today: '2026-10-05' }, undefined, {
+    results: {
+      habits: { data: Array.from({ length: 8 }, (_, id) => ({ id })) },
+      completions: { data: Array.from({ length: 3 }, (_, habit_id) => ({ habit_id })) },
+    },
+  });
+  const habitButton = nodes(tree).find(
+    (node) => node.props.accessibilityLabel === '오늘의 습관 이동',
+  );
+  assert(nodes(habitButton).some((node) => node.type === 'Text' && text(node) === '3/8'));
 });
 
 test('today sober card uses the latest restart and opens the selected record', () => {
