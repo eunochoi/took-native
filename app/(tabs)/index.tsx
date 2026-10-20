@@ -34,12 +34,12 @@ export default function Home() {
 
   return (
     <ColorView className="flex-1 min-h-0 overflow-hidden bg-theme-accent-light px-[5%] pt-[5%]">
-      <View className="mb-8 shrink-0 flex-row items-center gap-2">
+      <View className="mb-10 shrink-0 flex-row items-center gap-2">
         <Wordmark size={appRem * 3} color={colors.text} accentColor={colors.accent} />
       </View>
-      <View className="mb-10 shrink-0 gap-5">
+      <View className="mb-10 shrink-0 gap-3">
         <View className="gap-1">
-          <Text className="text-theme-accent-deep font-semibold text-lg">
+          <Text className="px-0.5 text-theme-accent-deep font-semibold text-lg">
             {format(parseISO(today), 'M월 d일 EEEE', {
               locale: ko,
             })}
@@ -61,7 +61,7 @@ export default function Home() {
             </Animated.View>
           </View>
         </View>
-        <Text className="text-theme-accent-deep text-base font-semibold">
+        <Text className="px-0.5 text-theme-accent-deep text-base font-semibold">
           #감정기록 #습관관리 #거리두기
         </Text>
       </View>
