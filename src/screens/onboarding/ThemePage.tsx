@@ -49,7 +49,7 @@ export function ThemePage({
                 <PickerOption
                   compact
                   dense
-
+                  className="aspect-square min-h-0 p-0"
                   selected={settings.themeAccent === accent}
                   disabled={busy}
                   accessibilityLabel={`${ACCENT_LABELS[accent]} 강조 색상`}
@@ -59,11 +59,6 @@ export function ThemePage({
                     className="h-6 w-6 ios:curve-continuous rounded-full"
                     style={{ backgroundColor: ACCENT_PALETTES[accent].accent }}
                   />
-                  <Text
-                    className={`text-center text-xs ${settings.themeAccent === accent ? 'text-theme-accent-deep' : 'text-theme-text-primary'}`}
-                  >
-                    {accent === 'yellow' ? '청록' : ACCENT_LABELS[accent]}
-                  </Text>
                 </PickerOption>
               </View>
             ))}
