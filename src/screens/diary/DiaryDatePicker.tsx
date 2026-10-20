@@ -15,17 +15,25 @@ export function DiaryDatePicker({
   onClose,
   onApply,
 }: {
-  value: string;
+  value: string | null;
   onClose: () => void;
   onApply: (date: string) => void;
 }) {
   const db = useSQLiteContext();
   const today = useToday();
   const [draft, setDraft] = useState(value);
-  const [month, setMonth] = useState(value.slice(0, 7));
-  const existing = useQuery(diaryQueries.byDate(db, draft));
+  const [month, setMonth] = useState((value ?? today).slice(0, 7));
+  const existing = useQuery({
+    ...diaryQueries.byDate(db, draft ?? ''),
+    enabled: draft !== null,
+  });
   const disabled =
-    existing.isPending || existing.isError || !!existing.data || !isDate(draft) || draft > today;
+    draft === null ||
+    existing.isPending ||
+    existing.isError ||
+    !!existing.data ||
+    !isDate(draft) ||
+    draft > today;
   return (
     <BottomSheetModal
       visible
@@ -36,7 +44,7 @@ export function DiaryDatePicker({
           label="선택 완료"
           disabled={disabled}
           onPress={() => {
-            if (!disabled) close(() => onApply(draft));
+            if (!disabled && draft !== null) close(() => onApply(draft));
           }}
         />
       )}
@@ -45,7 +53,7 @@ export function DiaryDatePicker({
         <DatePickerCalendar
           month={month}
           today={today}
-          selected={draft}
+          selected={draft ?? ''}
           minDate="1900-01-01"
           onMonthChange={setMonth}
           onSelect={(next) => {
@@ -54,18 +62,20 @@ export function DiaryDatePicker({
             setMonth(next.slice(0, 7));
           }}
         />
-        {existing.isError ? (
+        {draft !== null && existing.isError ? (
           <QueryError
             message="선택한 날짜의 일기를 확인하지 못했어요."
             onRetry={() => void existing.refetch()}
           />
         ) : (
           <InfoNotice>
-            {existing.isPending
-              ? '선택한 날짜의 일기를 확인하고 있어요.'
-              : existing.data
-                ? '이미 일기가 있는 날짜예요. 다른 날짜를 선택해주세요.'
-                : '날짜를 바꿔도 작성 중인 내용과 사진은 유지돼요.'}
+            {draft === null
+              ? '일기를 작성할 날짜를 선택해주세요.'
+              : existing.isPending
+                ? '선택한 날짜의 일기를 확인하고 있어요.'
+                : existing.data
+                  ? '이미 일기가 있는 날짜예요. 다른 날짜를 선택해주세요.'
+                  : '날짜를 바꿔도 작성 중인 내용과 사진은 유지돼요.'}
           </InfoNotice>
         )}
       </View>

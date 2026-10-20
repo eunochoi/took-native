@@ -31,14 +31,22 @@ import { DiaryDatePicker } from './diary/DiaryDatePicker';
 import { DiaryEmotionPicker } from './diary/DiaryEmotionPicker';
 import { DiaryImagesPicker } from './diary/DiaryImagesPicker';
 
-export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: string }) {
+export function DiaryForm({
+  id,
+  initialDate,
+  allowDateChange = false,
+}: {
+  id?: number;
+  initialDate?: string;
+  allowDateChange?: boolean;
+}) {
   const { showNotice } = useNotice();
   const { colors, rem: appRem, iconSizes } = useAppTheme();
   const db = useSQLiteContext();
   const today = useToday();
   const query = useQuery({ ...diaryQueries.byId(db, id ?? 0), enabled: id !== undefined });
-  const [date, setDate] = useState(
-    isDate(initialDate) && initialDate <= today ? initialDate : today,
+  const [date, setDate] = useState<string | null>(
+    isDate(initialDate) && initialDate <= today ? initialDate : allowDateChange ? null : today,
   );
   const [text, setText] = useState('');
   const [keyboardVisible, setKeyboardVisible] = useState(() => Keyboard.isVisible());
@@ -83,6 +91,8 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
   }, []);
   const mutation = useRecordMutation(
     async () => {
+      if (date === null || !isDate(date) || date > today)
+        throw new Error('일기 날짜를 선택해주세요.');
       if (emotion === null) throw new Error('오늘의 감정을 선택해주세요.');
       return saveDiaryImages(db, { id, date, emotion, text }, images);
     },
@@ -108,7 +118,9 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
       return next;
     });
   }, []);
-  const title = format(parseISO(date), 'yyyy. M. d. EEEE', { locale: ko });
+  const title = date
+    ? format(parseISO(date), 'yyyy. M. d. EEEE', { locale: ko })
+    : '날짜를 선택해주세요';
   const onClosed = saved
     ? () =>
         showNotice({
@@ -138,7 +150,7 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
       onClosed={onClosed}
       title={title}
       titleAction={
-        id === undefined
+        id === undefined && allowDateChange
           ? {
               accessibilityLabel: `${title}, 일기 날짜 선택`,
               disabled: busy || dragging || picker !== null,
@@ -163,14 +175,14 @@ export function DiaryForm({ id, initialDate }: { id?: number; initialDate?: stri
       footer={
         <FormSubmitButton
           loading={mutation.isPending}
-          disabled={busy || dragging || emotion === null || !text.trim()}
+          disabled={busy || dragging || date === null || emotion === null || !text.trim()}
           onPress={() => mutation.mutate(undefined)}
           label={mutation.isPending ? '저장 중...' : id ? '수정한 기록 저장하기' : '기록 저장하기'}
         />
       }
       overlays={
         <>
-          {picker === 'date' && (
+          {id === undefined && allowDateChange && picker === 'date' && (
             <DiaryDatePicker
               value={date}
               onClose={() => setPicker(null)}

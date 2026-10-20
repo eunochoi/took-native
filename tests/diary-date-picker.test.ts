@@ -23,6 +23,7 @@ function harness(path: string, status: { dates?: Record<string, any>; busy?: boo
   let deferred: (() => void) | undefined;
   const applied: string[] = [];
   const saved: any[] = [];
+  const queries: any[] = [];
   const exports: any = {};
   const jsx = (type: unknown, props: any) => ({ type, props });
   runInNewContext(
@@ -70,10 +71,13 @@ function harness(path: string, status: { dates?: Record<string, any>; busy?: boo
         if (name === 'date-fns/locale') return require(name);
         if (name === '@tanstack/react-query')
           return {
-            useQuery: ({ date, id }: any) =>
-              id !== undefined
+            useQuery: (options: any) => {
+              queries.push(options);
+              const { date, id } = options;
+              return id !== undefined
                 ? { data: { id, date: today, text: '', emotion: 0, images: [] }, isPending: false }
-                : { data: null, isPending: false, isError: false, ...status.dates?.[date] },
+                : { data: null, isPending: false, isError: false, ...status.dates?.[date] };
+            },
           };
         if (name.endsWith('/queries'))
           return {
@@ -127,6 +131,7 @@ function harness(path: string, status: { dates?: Record<string, any>; busy?: boo
     },
     applied,
     saved,
+    queries,
     finish: () => {
       deferred?.();
       deferred = undefined;
@@ -189,32 +194,90 @@ test('date confirmation waits for lookup and blocks duplicates and errors', () =
   assert.equal(retried, true);
 });
 
-test('changing new diary date preserves text, emotion and photos in the same form', async () => {
+test('an undated picker opens this month without selecting today or querying a date', () => {
+  const ui = harness('src/screens/diary/DiaryDatePicker.tsx');
+  const render = () => ui.render({ value: null });
+  const tree = render();
+  const calendar = nodes(tree).find((node) => node.type === 'DatePickerCalendar');
+  assert.equal(calendar.props.month, '2026-10');
+  assert.equal(calendar.props.selected, '');
+  assert.equal(ui.queries.at(-1).enabled, false);
+  assert.equal(tree.props.footer.props.disabled, true);
+  tree.props.footer.props.onPress();
+  ui.finish();
+  assert.equal(ui.applied.length, 0);
+  calendar.props.onSelect('2026-10-08');
+  const selected = render();
+  assert.equal(ui.queries.at(-1).enabled, true);
+  assert.equal(selected.props.footer.props.disabled, false);
+  selected.props.footer.props.onPress();
+  ui.finish();
+  assert.deepEqual(ui.applied, ['2026-10-08']);
+});
+
+test('an undated form requires a date even when its emotion and text are ready', async () => {
   const ui = harness('src/screens/DiaryForm.tsx');
-  nodes(ui.render())
+  const render = () => ui.render({ allowDateChange: true });
+  assert.equal(render().props.title, '날짜를 선택해주세요');
+  nodes(render())
     .find((node) => node.type === 'TextInput')
-    .props.onChangeText('작성 중인 일기');
-  nodes(ui.render())
+    .props.onChangeText('작성 중');
+  nodes(render())
     .find((node) => node.props.accessibilityLabel === '오늘의 감정 선택')
     .props.onPress();
-  nodes(ui.render())
+  nodes(render())
     .find((node) => node.type === 'DiaryEmotionPicker')
     .props.onApply(2);
-  nodes(ui.render())
+  assert.equal(render().props.footer.props.disabled, true);
+  await assert.rejects(render().props.footer.props.onPress(), /일기 날짜를 선택해주세요/);
+  assert.equal(ui.saved.length, 0);
+  render().props.titleAction.onPress();
+  const picker = nodes(render()).find((node) => node.type === 'DiaryDatePicker');
+  assert.equal(picker.props.value, null);
+  picker.props.onApply('2026-10-08');
+  assert.equal(render().props.footer.props.disabled, false);
+  await render().props.footer.props.onPress();
+  assert.equal(ui.saved[0].input.date, '2026-10-08');
+});
+
+test('date-specific creation and all edit forms keep the title noninteractive', () => {
+  const fixed = harness('src/screens/DiaryForm.tsx').render({ initialDate: '2026-10-08' });
+  assert(fixed.props.title.includes('2026. 10. 8.'));
+  assert.equal(fixed.props.titleAction, undefined);
+  assert.equal(
+    harness('src/screens/DiaryForm.tsx').render({ id: 42, allowDateChange: true }).props
+      .titleAction,
+    undefined,
+  );
+});
+
+test('changing new diary date preserves text, emotion and photos in the same form', async () => {
+  const ui = harness('src/screens/DiaryForm.tsx');
+  const render = () => ui.render({ allowDateChange: true, initialDate: today });
+  nodes(render())
+    .find((node) => node.type === 'TextInput')
+    .props.onChangeText('작성 중인 일기');
+  nodes(render())
+    .find((node) => node.props.accessibilityLabel === '오늘의 감정 선택')
+    .props.onPress();
+  nodes(render())
+    .find((node) => node.type === 'DiaryEmotionPicker')
+    .props.onApply(2);
+  nodes(render())
     .find((node) => node.props.accessibilityLabel === '사진 관리, 0장')
     .props.onPress();
-  nodes(ui.render())
+  nodes(render())
     .find((node) => node.type === 'DiaryImagesPicker')
     .props.onPick();
   await new Promise<void>((resolve) => setTimeout(resolve, 0));
-  nodes(ui.render())
+  nodes(render())
     .find((node) => node.type === 'DiaryImagesPicker')
     .props.onClose();
-  ui.render().props.titleAction.onPress();
-  const picker = nodes(ui.render()).find((node) => node.type === 'DiaryDatePicker');
+  render().props.titleAction.onPress();
+  const picker = nodes(render()).find((node) => node.type === 'DiaryDatePicker');
   assert.equal(picker.props.value, today);
   picker.props.onApply('2026-10-10');
-  const form = ui.render();
+  const form = render();
   assert(form.props.title.includes('2026. 10. 10.'));
   assert.equal(nodes(form).find((node) => node.type === 'TextInput').props.value, '작성 중인 일기');
   assert.equal(nodes(form).find((node) => node.type === 'EmotionImage').props.emotion, 2);
@@ -228,7 +291,8 @@ test('changing new diary date preserves text, emotion and photos in the same for
     undefined,
   );
   assert.equal(
-    harness('src/screens/DiaryForm.tsx', { busy: true }).render().props.titleAction.disabled,
+    harness('src/screens/DiaryForm.tsx', { busy: true }).render({ allowDateChange: true }).props
+      .titleAction.disabled,
     true,
   );
 });

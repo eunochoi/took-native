@@ -156,7 +156,7 @@ test('QueryState keeps loading, failure retry and ready states separate', () => 
   assert.equal(QueryState({ query }), null);
 });
 
-test('diary toolbar creates today or edits its existing diary independently of list results', () => {
+test('diary toolbar always opens an undated editable-date form independently of today lookup', () => {
   for (const existing of [null, { id: 42 }]) {
     const routes: unknown[] = [];
     const { default: DiaryList } = load(
@@ -179,13 +179,12 @@ test('diary toolbar creates today or edits its existing diary independently of l
       ['ToolbarSortButton', 'ToolbarFilterButton', 'ToolbarAddButton'],
     );
     const add = header.find((node) => node.type === 'ToolbarAddButton');
-    assert.equal(add.props.label, existing ? '오늘 일기 수정' : '오늘 일기 작성');
-    assert.equal(add.props.disabled, false);
+    assert.equal(add.props.label, '일기 추가');
+    assert.equal(add.props.disabled, undefined);
     add.props.onPress();
-    assert.deepEqual(
-      JSON.parse(JSON.stringify(routes)),
-      existing ? ['/diary/42/edit'] : [{ pathname: '/diary/new', params: { date: '2026-10-07' } }],
-    );
+    assert.deepEqual(JSON.parse(JSON.stringify(routes)), [
+      { pathname: '/diary/new', params: { allowDateChange: 'true' } },
+    ]);
   }
   for (const status of [{ isPending: true }, { isError: true }]) {
     const { default: DiaryList } = load('app/(tabs)/diary.tsx', {
@@ -197,7 +196,7 @@ test('diary toolbar creates today or edits its existing diary independently of l
       nodes(list.props.renderItem({ item: list.props.data[0], index: 0 })).find(
         (node) => node.type === 'ToolbarAddButton',
       ).props.disabled,
-      true,
+      undefined,
     );
   }
 });

@@ -44,7 +44,6 @@ export default function DiaryList() {
   const db = useSQLiteContext();
   const fade = useScrollFade();
   const today = useToday();
-  const todayDiary = useQuery(diaryQueries.byDate(db, today));
   const { openModal } = useModalNavigation();
   const { settings, updateSettings } = useSettings();
   const scroll = useRef<FlatList<Row>>(null);
@@ -153,14 +152,9 @@ export default function DiaryList() {
                   onPress={() => setPicker('filter')}
                 />
                 <ToolbarAddButton
-                  label={todayDiary.data ? '오늘 일기 수정' : '오늘 일기 작성'}
-                  disabled={todayDiary.isPending || todayDiary.isError}
+                  label="일기 추가"
                   onPress={() =>
-                    openModal(
-                      todayDiary.data
-                        ? `/diary/${todayDiary.data.id}/edit`
-                        : { pathname: '/diary/new', params: { date: today } },
-                    )
+                    openModal({ pathname: '/diary/new', params: { allowDateChange: 'true' } })
                   }
                 />
               </Toolbar>
