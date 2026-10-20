@@ -226,3 +226,35 @@ test('static icon color values do not trigger the Worklets inline shared-value w
   });
   assert.equal(code.includes('getUseOfValueInStyleWarning'), false);
 });
+
+test('toolbar fade starts below its surface and keeps the normal top fade position elsewhere', () => {
+  const { ScrollEdgeFade } = load('../src/components/ScrollEdgeFade.tsx', false);
+  const toolbarFade = ScrollEdgeFade({ edge: 'top', visible: true, outside: true });
+  const pageFade = ScrollEdgeFade({ edge: 'top', visible: true });
+  assert.match(toolbarFade.props.className, /top-full/);
+  assert.match(pageFade.props.className, /top-0/);
+  assert.equal(toolbarFade.props.pointerEvents, 'none');
+  assert.equal(toolbarFade.props.children.props.colors[0], '#FFFFFFFF');
+  assert.equal(toolbarFade.props.children.props.colors.at(-1), '#FFFFFF00');
+});
+
+test('page titles retain the shared compact height at every app font size', () => {
+  for (const rem of [14, 15, 16]) {
+    const { PageTopSection } = load('../src/components/PageTopSection.tsx', false, true, [], {
+      rem,
+      bottom: 24,
+    });
+    const onLayout = () => {};
+    const header = PageTopSection({
+      title: '일기 목록',
+      hashtags: '#감정',
+      onLayout,
+    });
+    assert.match(header.props.className, /h-\[100px\]/);
+    assert.equal(header.props.onLayout, onLayout);
+    assert.match(header.props.children.props.className, /pb-1/);
+    const plain = PageTopSection({ title: '앱 설정', hashtags: '#맞춤' });
+    assert.equal(plain.props.style, undefined);
+    assert.match(plain.props.className, /h-\[100px\]/);
+  }
+});

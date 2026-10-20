@@ -115,11 +115,11 @@ test('calendar pushes the selected date sheet while preserving the selected mont
   const render = load('app/(tabs)/calendar.tsx', []);
   const tree = render('default');
   assert(!nodes(tree).some((node) => String(node.type).includes('ScrollView')));
-  assert.equal(tree.props.children[1].props.style.paddingBottom, 89.5);
-  tree.props.children[1].props.children.props.onSelect('2026-09-30');
+  assert.equal(tree.props.children[2].props.style.paddingBottom, 89.5);
+  tree.props.children[2].props.children.props.onSelect('2026-09-30');
   assert.equal(render.navigations[0].pathname, '/calendar/[date]');
   assert.equal(render.navigations[0].params.date, '2026-09-30');
-  const calendar = render('default').props.children[1].props.children;
+  const calendar = render('default').props.children[2].props.children;
   assert.equal(calendar.props.selected, '2026-09-30');
   assert.equal(calendar.props.month, '2026-09');
 });

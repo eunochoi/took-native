@@ -15,7 +15,7 @@ export function CalendarRecordCounts({
 }) {
   const { iconSizes } = useAppTheme();
   return (
-    <View className="min-w-0 shrink flex-row items-center gap-2 px-3.5">
+    <View className="min-w-0 shrink flex-row items-center gap-2.5 ml-1">
       {[
         {
           key: 'diary',
@@ -42,7 +42,7 @@ export function CalendarRecordCounts({
           key={key}
           accessible
           accessibilityLabel={label}
-          className="min-w-0 shrink flex-row items-center gap-1"
+          className="min-w-0 shrink flex-row items-center gap-1.5"
         >
           <AppIcon name={icon} size={iconSizes.md} className={className} />
           <Text

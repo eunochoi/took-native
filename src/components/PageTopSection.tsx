@@ -1,5 +1,4 @@
-import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { View, type ViewProps } from 'react-native';
 import { TOP_HASHTAG_CLASS_NAME } from '../theme/classes';
 import { ColorView } from './ColorTransition';
 import { Text } from './Text';
@@ -7,15 +6,15 @@ import { Text } from './Text';
 export function PageTopSection({
   title,
   hashtags,
-  children,
+  onLayout,
 }: {
   title: string;
   hashtags: string;
-  children?: ReactNode;
+  onLayout?: ViewProps['onLayout'];
 }) {
   return (
-    <ColorView className="h-[160px] shrink-0 bg-theme-surface">
-      <View className="gap-5 px-[5%] min-w-0 flex-1 justify-end">
+    <ColorView className="h-[100px] shrink-0" onLayout={onLayout}>
+      <View className="pb-1 px-[5%] min-w-0 flex-1 justify-end">
         <View className="gap-1 items-start">
           <Text numberOfLines={1} ellipsizeMode="tail" className={TOP_HASHTAG_CLASS_NAME}>
             {hashtags}
@@ -29,7 +28,6 @@ export function PageTopSection({
             {title}
           </Text>
         </View>
-        <View>{children}</View>
       </View>
     </ColorView>
   );

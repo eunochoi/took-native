@@ -36,7 +36,7 @@ import { SoberBox } from '../../src/screens/sober/SoberBox';
 import { useSettings } from '../../src/settings/SettingsProvider';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
 
-type Row = { kind: 'state' } | { kind: 'sober'; sober: Sober };
+type Row = { kind: 'toolbar' } | { kind: 'state' } | { kind: 'sober'; sober: Sober };
 export default function SoberList() {
   const db = useSQLiteContext();
   const { colors, rem: appRem } = useAppTheme();
@@ -77,10 +77,12 @@ export default function SoberList() {
   const failed = list.isError || restarts.isError;
   const disabledAdd = !ready || failed;
   const showAdd = ready && sorted.length > 0 && sorted.length < MAX_SOBER_COUNT;
-  const rows: Row[] =
-    ready && filtered.length
+  const rows: Row[] = [
+    { kind: 'toolbar' },
+    ...(ready && filtered.length
       ? filtered.map((sober): Row => ({ kind: 'sober', sober }))
-      : [{ kind: 'state' }];
+      : [{ kind: 'state' } as const]),
+  ];
   const change = (patch: Parameters<typeof updateSettings>[0]) =>
     void updateSettings(patch)
       .then(() => scroll.current?.scrollToOffset({ offset: 0, animated: true }))
@@ -101,53 +103,60 @@ export default function SoberList() {
         onContentSizeChange={fade.onContentSizeChange}
         scrollEventThrottle={16}
         contentContainerClassName="grow"
+        stickyHeaderIndices={[1]}
         ListHeaderComponent={
-          <PageTopSection title="거리두기" hashtags="#절제 #디톡스">
-            <Toolbar>
-              <ToolbarSortButton
-                sort={settings.soberSort}
-                recordSort={settings.soberRecordSort}
-                priorityFirst={settings.soberPriorityFirst}
-                ascendingLabel="과거순"
-                accessibilityLabel="거리두기 항목 정렬"
-                onPress={() => setSortOpen(true)}
-              />
-              <ToolbarFilterButton
-                label={filterLabel}
-                accessibilityLabel={`거리두기 필터, ${filter.priorityOnly ? '중요한 항목만' : '중요도 전체'}, 현재 기록 ${periodFilter.label}`}
-                onPress={() => setFilterOpen(true)}
-              />
-              <ToolbarAddButton
-                disabled={disabledAdd}
-                onPress={() => {
-                  if (sorted.length >= MAX_SOBER_COUNT) {
-                    showNotice({
-                      tone: 'info',
-                      title: `거리두기는 최대 ${MAX_SOBER_COUNT}개까지 만들 수 있어요.`,
-                    });
-                    return;
-                  }
-                  openModal('/sober/new');
-                }}
-              />
-            </Toolbar>
-          </PageTopSection>
+          <PageTopSection
+            title="거리두기"
+            hashtags="#절제 #디톡스"
+            onLayout={fade.onHeaderLayout}
+          />
         }
         renderItem={({ item, index }) => {
+          if (item.kind === 'toolbar')
+            return (
+              <Toolbar fadeVisible={fade.topVisible}>
+                <ToolbarSortButton
+                  sort={settings.soberSort}
+                  recordSort={settings.soberRecordSort}
+                  priorityFirst={settings.soberPriorityFirst}
+                  ascendingLabel="과거순"
+                  accessibilityLabel="거리두기 항목 정렬"
+                  onPress={() => setSortOpen(true)}
+                />
+                <ToolbarFilterButton
+                  label={filterLabel}
+                  accessibilityLabel={`거리두기 필터, ${filter.priorityOnly ? '중요한 항목만' : '중요도 전체'}, 현재 기록 ${periodFilter.label}`}
+                  onPress={() => setFilterOpen(true)}
+                />
+                <ToolbarAddButton
+                  disabled={disabledAdd}
+                  onPress={() => {
+                    if (sorted.length >= MAX_SOBER_COUNT) {
+                      showNotice({
+                        tone: 'info',
+                        title: `거리두기는 최대 ${MAX_SOBER_COUNT}개까지 만들 수 있어요.`,
+                      });
+                      return;
+                    }
+                    openModal('/sober/new');
+                  }}
+                />
+              </Toolbar>
+            );
           if (item.kind === 'sober')
             return (
               <View
-                className={index === 0 ? 'pt-8' : undefined}
+                className={index === 1 ? 'pt-8' : undefined}
                 style={{ paddingHorizontal: '5%' }}
               >
                 <View
-                  className={`border-theme-border/50 ${index === 0 ? 'border-t-0' : 'border-t'}`}
+                  className={`border-theme-border/50 ${index === 1 ? 'border-t-0' : 'border-t'}`}
                 >
                   <SoberBox
                     sober={item.sober}
                     restarts={grouped.get(item.sober.id) ?? []}
                     now={now}
-                    isFirst={index === 0}
+                    isFirst={index === 1}
                     isLast={index === rows.length - 1 && !failed && !showAdd}
                   />
                 </View>
@@ -220,7 +229,6 @@ export default function SoberList() {
           </>
         }
       />
-      <ScrollEdgeFade edge="top" visible={fade.topVisible} />
       <ScrollEdgeFade edge="bottom" visible={fade.bottomVisible} />
 
       {filterOpen && (

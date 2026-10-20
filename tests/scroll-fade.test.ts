@@ -51,3 +51,21 @@ test('overscroll and content shrink cannot leave false boundaries visible', () =
     bottomVisible: false,
   });
 });
+
+test('sticky toolbar fade waits for the title to leave and resets when returning or resizing', () => {
+  for (const titleHeight of [112, 115, 118]) {
+    for (const offset of [0, titleHeight - 1, titleHeight, titleHeight + 6]) {
+      assert.equal(getScrollFadeState(offset, 800, 1600, titleHeight).topVisible, false);
+    }
+    assert.deepEqual(getScrollFadeState(titleHeight + 7, 800, 1600, titleHeight), {
+      topVisible: true,
+      bottomVisible: true,
+    });
+    assert.equal(getScrollFadeState(-30, 800, 1600, titleHeight).topVisible, false);
+    assert.equal(getScrollFadeState(500, 800, 830, titleHeight).topVisible, false);
+    assert.deepEqual(getScrollFadeState(800, 800, 1600, titleHeight), {
+      topVisible: true,
+      bottomVisible: false,
+    });
+  }
+});

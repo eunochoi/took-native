@@ -35,7 +35,8 @@ import { useSettings } from '../../src/settings/SettingsProvider';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
 import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 
-type Row = { kind: 'state' } | { kind: 'diary'; diary: DiaryDetail; first: boolean };
+type Row =
+  { kind: 'toolbar' } | { kind: 'state' } | { kind: 'diary'; diary: DiaryDetail; first: boolean };
 
 export default function DiaryList() {
   const { showNotice } = useNotice();
@@ -63,9 +64,12 @@ export default function DiaryList() {
     (emotionGroups.length > 0 && emotionGroups.length < 3);
   const failedWithoutData = list.isError && !list.data;
   const diaries = list.data?.pages.flat() ?? [];
-  const rows: Row[] = diaries.length
-    ? diaries.map((diary, index): Row => ({ kind: 'diary', diary, first: index === 0 }))
-    : [{ kind: 'state' }];
+  const rows: Row[] = [
+    { kind: 'toolbar' },
+    ...(diaries.length
+      ? diaries.map((diary, index): Row => ({ kind: 'diary', diary, first: index === 0 }))
+      : [{ kind: 'state' } as const]),
+  ];
   const emptyContent = failedWithoutData ? (
     <QueryError
       className="min-h-64"
@@ -101,59 +105,66 @@ export default function DiaryList() {
         keyExtractor={(row) => (row.kind === 'diary' ? String(row.diary.id) : row.kind)}
         removeClippedSubviews={false}
         contentContainerClassName="grow"
+        stickyHeaderIndices={[1]}
         ListHeaderComponent={
-          <PageTopSection title="일기 목록" hashtags="#감정 #끄적끄적">
-            <Toolbar>
-              <ToolbarSortButton
-                sort={settings.diarySort}
-                sortLabel="날짜"
-                accessibilityLabel="일기 정렬"
-                onPress={() => setPicker('sort')}
-              />
-              <ToolbarFilterButton
-                label={
-                  [
-                    year === null
-                      ? null
-                      : year === Number(today.slice(0, 4))
-                        ? '올해'
-                        : `${String(year % 100).padStart(2, '0')}년`,
-                    selectionSummary(
-                      seasons.map((season) => DIARY_SEASONS[season].label),
-                      4,
-                      '',
-                    ) || null,
-                    selectionSummary(
-                      emotionGroups.map((group) => DIARY_EMOTION_GROUPS[group].label),
-                      3,
-                      '',
-                    ) || null,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ') || '필터'
-                }
-                accessibilityLabel={`일기 필터, ${diaryPeriodLabel(year, seasons)} · ${selectionSummary(
-                  emotionGroups.map((group) => DIARY_EMOTION_GROUPS[group].label),
-                  3,
-                  '전체 감정',
-                )}`}
-                onPress={() => setPicker('filter')}
-              />
-              <ToolbarAddButton
-                label={todayDiary.data ? '오늘 일기 수정' : '오늘 일기 작성'}
-                disabled={todayDiary.isPending || todayDiary.isError}
-                onPress={() =>
-                  openModal(
-                    todayDiary.data
-                      ? `/diary/${todayDiary.data.id}/edit`
-                      : { pathname: '/diary/new', params: { date: today } },
-                  )
-                }
-              />
-            </Toolbar>
-          </PageTopSection>
+          <PageTopSection
+            title="일기 목록"
+            hashtags="#감정 #끄적끄적"
+            onLayout={fade.onHeaderLayout}
+          />
         }
         renderItem={({ item, index }) => {
+          if (item.kind === 'toolbar')
+            return (
+              <Toolbar fadeVisible={fade.topVisible}>
+                <ToolbarSortButton
+                  sort={settings.diarySort}
+                  sortLabel="날짜"
+                  accessibilityLabel="일기 정렬"
+                  onPress={() => setPicker('sort')}
+                />
+                <ToolbarFilterButton
+                  label={
+                    [
+                      year === null
+                        ? null
+                        : year === Number(today.slice(0, 4))
+                          ? '올해'
+                          : `${String(year % 100).padStart(2, '0')}년`,
+                      selectionSummary(
+                        seasons.map((season) => DIARY_SEASONS[season].label),
+                        4,
+                        '',
+                      ) || null,
+                      selectionSummary(
+                        emotionGroups.map((group) => DIARY_EMOTION_GROUPS[group].label),
+                        3,
+                        '',
+                      ) || null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ') || '필터'
+                  }
+                  accessibilityLabel={`일기 필터, ${diaryPeriodLabel(year, seasons)} · ${selectionSummary(
+                    emotionGroups.map((group) => DIARY_EMOTION_GROUPS[group].label),
+                    3,
+                    '전체 감정',
+                  )}`}
+                  onPress={() => setPicker('filter')}
+                />
+                <ToolbarAddButton
+                  label={todayDiary.data ? '오늘 일기 수정' : '오늘 일기 작성'}
+                  disabled={todayDiary.isPending || todayDiary.isError}
+                  onPress={() =>
+                    openModal(
+                      todayDiary.data
+                        ? `/diary/${todayDiary.data.id}/edit`
+                        : { pathname: '/diary/new', params: { date: today } },
+                    )
+                  }
+                />
+              </Toolbar>
+            );
           if (item.kind === 'state') return <View className="pt-8">{emptyContent}</View>;
           return (
             <View className={item.first ? 'pt-8' : undefined} style={{ paddingHorizontal: '5%' }}>
@@ -200,7 +211,6 @@ export default function DiaryList() {
         }}
         onEndReachedThreshold={0.4}
       />
-      <ScrollEdgeFade edge="top" visible={fade.topVisible} />
       <ScrollEdgeFade edge="bottom" visible={fade.bottomVisible} />
 
       {picker === 'sort' && (

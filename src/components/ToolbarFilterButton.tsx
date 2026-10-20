@@ -18,7 +18,7 @@ export function ToolbarFilterButton({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
-      className="min-w-0 shrink flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65"
+      className="min-w-0 shrink flex-row items-center justify-center gap-1.5 active:opacity-65"
     >
       <AppIcon name="filter-list" size={appRem * 1.2} className="text-theme-accent" />
       <Text

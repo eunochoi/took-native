@@ -2,10 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { calendarHabitProgressCounts } from '../../src/domain/calendar';
 import { ColorView } from '../../src/components/ColorTransition';
 import { PageTopSection } from '../../src/components/PageTopSection';
 import { Toolbar } from '../../src/components/Toolbar';
+import { calendarHabitProgressCounts } from '../../src/domain/calendar';
 import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { diaryQueries, habitQueries, useToday } from '../../src/queries';
 import { CalendarRecordCounts } from '../../src/screens/calendar/CalendarRecordCounts';
@@ -32,15 +32,14 @@ export default function CalendarScreen() {
   );
   return (
     <ColorView className={PAGE_CLASS_NAME}>
-      <PageTopSection title="월간 기록" hashtags="#기록 #발자국">
-        <Toolbar>
-          <CalendarRecordCounts
-            diaryCount={diaries.data?.length ?? 0}
-            counts={progressCounts}
-            unavailable={habits.isError || completions.isError}
-          />
-        </Toolbar>
-      </PageTopSection>
+      <PageTopSection title="월간 기록" hashtags="#기록 #발자국" />
+      <Toolbar>
+        <CalendarRecordCounts
+          diaryCount={diaries.data?.length ?? 0}
+          counts={progressCounts}
+          unavailable={habits.isError || completions.isError}
+        />
+      </Toolbar>
       <View
         className="flex-1 min-h-0 pt-6"
         style={{

@@ -18,7 +18,7 @@ export function ToolbarAddButton({
       accessibilityLabel={label}
       disabled={disabled}
       onPress={onPress}
-      className={`shrink-0 flex-row items-center justify-center px-3.5 active:opacity-65 ${disabled ? 'opacity-50' : 'opacity-100'}`}
+      className={`ml-auto w-10 shrink-0 flex-row items-center justify-end active:opacity-65 ${disabled ? 'opacity-50' : 'opacity-100'}`}
     >
       <AppIcon name="add" size={appRem * 1.2} className="text-theme-accent" />
     </GesturePressable>

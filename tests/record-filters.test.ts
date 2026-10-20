@@ -405,7 +405,7 @@ test('sober footer adds only between one item and capacity, regardless of filter
   assert(!add());
   const emptyList = soberRows(ui);
   assert.equal(
-    nodes(emptyList.props.renderItem({ item: emptyList.props.data[0], index: 0 })).find(
+    nodes(emptyList.props.renderItem({ item: emptyList.props.data[1], index: 1 })).find(
       (node) => node.type === 'EmptyState',
     ).props.title,
     '아직 시작한 거리두기가 없어요.',
@@ -421,9 +421,10 @@ test('sober footer adds only between one item and capacity, regardless of filter
   add().props.onPress();
   assert.equal(ui.routes[0], '/sober/new');
   const list = soberRows(ui);
-  const last = nodes(list.props.renderItem({ item: list.props.data[0], index: 0 })).find(
+  const last = nodes(list.props.renderItem({ item: list.props.data[1], index: 1 })).find(
     (node) => node.type === 'SoberBox',
   );
+  assert.equal(last.props.isFirst, true);
   assert.equal(last.props.isLast, false);
   applyPageFilter(ui, 'Sober', { priorityOnly: true, minimumDays: 30 });
   assert(add());
@@ -467,13 +468,19 @@ test('sober period thresholds are inclusive exact durations and honor restarts a
   ] as const) {
     applyPageFilter(ui, 'Sober', { priorityOnly: false, minimumDays: days });
     assert.deepEqual(
-      Array.from(soberRows(ui).props.data, (row: any) => row.sober.id),
+      Array.from(
+        soberRows(ui).props.data.filter((row: any) => row.kind === 'sober'),
+        (row: any) => row.sober.id,
+      ),
       ids,
     );
   }
   applyPageFilter(ui, 'Sober', { priorityOnly: true, minimumDays: 7 });
   assert.deepEqual(
-    Array.from(soberRows(ui).props.data, (row: any) => row.sober.id),
+    Array.from(
+      soberRows(ui).props.data.filter((row: any) => row.kind === 'sober'),
+      (row: any) => row.sober.id,
+    ),
     [1, 3],
   );
   results.restarts.data.push({
@@ -482,12 +489,15 @@ test('sober period thresholds are inclusive exact durations and honor restarts a
     restarted_at: new Date(now - SOBER_DAY_MS).toISOString(),
   });
   assert.deepEqual(
-    Array.from(soberRows(ui).props.data, (row: any) => row.sober.id),
+    Array.from(
+      soberRows(ui).props.data.filter((row: any) => row.kind === 'sober'),
+      (row: any) => row.sober.id,
+    ),
     [3],
   );
   applyPageFilter(ui, 'Sober', { priorityOnly: true, minimumDays: 30 });
   const list = soberRows(ui);
-  const empty = nodes(list.props.renderItem({ item: list.props.data[0], index: 0 })).find(
+  const empty = nodes(list.props.renderItem({ item: list.props.data[1], index: 1 })).find(
     (node) => node.type === 'EmptyState',
   );
   assert.equal(empty.props.title, '선택한 조건의 거리두기가 없어요.');
@@ -620,4 +630,35 @@ test('habit flow sheet keeps loading and errors distinct from zero completion', 
     nodes(ui.render(props)).some((node) => node.type === 'QueryError'),
     true,
   );
+});
+
+test('habit and sober keep only the toolbar sticky for empty, loading and populated lists', () => {
+  for (const ready of [false, true]) {
+    const habitPage = harness('app/(tabs)/habit.tsx', {
+      habits: { data: ready ? [habit(1, 0)] : undefined },
+      completions: { data: ready ? [] : undefined },
+    });
+    const scroll = nodes(habitPage.render()).find((node) => node.type === 'ScrollView');
+    assert.deepEqual(Array.from(scroll.props.stickyHeaderIndices), [1]);
+    assert.equal(scroll.props.children[0].type, 'PageTopSection');
+    assert.equal(scroll.props.children[1].type, 'Toolbar');
+    const soberPage = harness('app/(tabs)/sober.tsx', {
+      sobers: { data: ready ? [sober(1, 1)] : undefined },
+      restarts: { data: ready ? [] : undefined },
+    });
+    const list = soberRows(soberPage);
+    assert.deepEqual(Array.from(list.props.stickyHeaderIndices), [1]);
+    assert.equal(list.props.ListHeaderComponent.type, 'PageTopSection');
+    assert.equal(list.props.renderItem({ item: list.props.data[0], index: 0 }).type, 'Toolbar');
+    assert.equal(list.props.data[1].kind, ready ? 'sober' : 'state');
+    assert.equal(
+      new Set(list.props.data.map(list.props.keyExtractor)).size,
+      list.props.data.length,
+    );
+    assert(
+      !nodes(soberPage.render()).some(
+        (node) => node.type === 'ScrollEdgeFade' && node.props.edge === 'top',
+      ),
+    );
+  }
 });

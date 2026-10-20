@@ -20,8 +20,14 @@ function harness() {
   const notices: any[] = [];
   const exports: any = {};
   const onScroll = () => {};
+  const onHeaderLayout = () => {};
+  const routes: unknown[] = [];
+  const openedUrls: string[] = [];
   const names = [
     'ColorScrollView',
+    'Toolbar',
+    'AppIcon',
+    'OnboardingSheet',
     'TabBottomSpacer',
     'ConfirmModal',
     'ScrollEdgeFade',
@@ -101,7 +107,9 @@ function harness() {
             }),
           };
         if (name.endsWith('/ModalNavigationProvider'))
-          return { useModalNavigation: () => ({ openModal: () => undefined }) };
+          return {
+            useModalNavigation: () => ({ openModal: (route: unknown) => routes.push(route) }),
+          };
         if (name === 'expo-router')
           return { useRouter: () => ({ push: () => {} }), useScrollToTop: () => {} };
         if (name === 'expo-sqlite') return { useSQLiteContext: () => ({}) };
@@ -116,14 +124,19 @@ function harness() {
               },
             }),
           };
-        if (name.includes('useScrollFade')) return { useScrollFade: () => ({ onScroll }) };
+        if (name.includes('useScrollFade'))
+          return { useScrollFade: () => ({ onScroll, onHeaderLayout, topVisible: true }) };
         if (name === 'react-native')
           return {
             ScrollView: 'ScrollView',
             View: 'View',
             Pressable: 'Pressable',
             Alert: {},
-            Linking: {},
+            Linking: {
+              openURL: async (url: string) => {
+                openedUrls.push(url);
+              },
+            },
           };
         return Object.fromEntries(names.map((value) => [value, value]));
       },
@@ -150,6 +163,11 @@ function harness() {
     discarded,
     scroll: () => find(tree, 'ScrollView'),
     onScroll,
+    onHeaderLayout,
+    routes,
+    openedUrls,
+    toolbar: () => find(tree, 'Toolbar'),
+    onboarding: () => find(tree, 'OnboardingSheet'),
     backup: () => find(tree, 'BackupSection').props,
     confirm: () => find(tree, 'ConfirmModal').props,
     notice: () => notices.at(-1),
@@ -363,4 +381,54 @@ test('an in-flight restore keeps its files through unmount and refreshes shared 
   await tick();
   assert.deepEqual(h.events, ['cancel', 'restore', 'widget', 'reload', 'reset']);
   assert.deepEqual(h.discarded, [['cache/a.zip']]);
+});
+
+test('settings restores the three actions to a sticky toolbar below the shared title', async () => {
+  const ui = harness();
+  const scroll = ui.scroll();
+  assert.deepEqual(Array.from(scroll.props.stickyHeaderIndices), [1]);
+  const [title, toolbar, body] = scroll.props.children;
+  assert.equal(title.type, 'PageTopSection');
+  assert.equal(title.props.onLayout, ui.onHeaderLayout);
+  assert.equal(toolbar.type, 'Toolbar');
+  assert.equal(toolbar.props.fadeVisible, true);
+  assert.equal(body.props.children[0].type, 'NotificationSettingsSection');
+  const [guide, privacy, web] = toolbar.props.children;
+  assert.equal(guide.props.children[0].props.name, 'info');
+  assert.equal(guide.props.children[1].props.children, '소개');
+  assert.equal(privacy.props.accessibilityLabel, '개인정보처리방침');
+  assert.equal(web.props.accessibilityLabel, 'TOOK 웹');
+  assert.equal(privacy.props.children[0].type, 'AppIcon');
+  assert.equal(privacy.props.children[1].props.children, '개인정보처리방침');
+  assert.equal(web.props.children.type, 'AppIcon');
+  guide.props.onPress();
+  ui.render();
+  assert(ui.onboarding());
+  privacy.props.onPress();
+  await web.props.onPress();
+  assert.deepEqual(ui.routes, ['/privacy']);
+  assert.deepEqual(ui.openedUrls, ['https://to-ok.me']);
+});
+
+test('settings toolbar stays disabled while a settings save is running', async () => {
+  const ui = harness();
+  let finish!: () => void;
+  ui.setUpdate(
+    () =>
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const saving = ui.appearance().onApply({ themeMode: 'dark' });
+  ui.render();
+  for (const button of ui.toolbar().props.children) {
+    assert.equal(button.props.disabled, true);
+    assert.equal(button.props.accessibilityState.disabled, true);
+  }
+  finish();
+  await saving;
+  ui.render();
+  for (const button of ui.toolbar().props.children) {
+    assert.equal(button.props.disabled, false);
+  }
 });

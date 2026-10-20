@@ -12,10 +12,12 @@ export function ScrollEdgeFade({
   edge,
   visible,
   includeBottomInset = true,
+  outside = false,
 }: {
   edge: 'top' | 'bottom';
   includeBottomInset?: boolean;
   visible: boolean;
+  outside?: boolean;
 }) {
   const { colors, rem: appRem, reducedMotion } = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -26,7 +28,7 @@ export function ScrollEdgeFade({
       accessible={false}
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      className={`absolute inset-x-0 z-20 ${edge === 'top' ? 'top-0' : 'bottom-0'}`}
+      className={`absolute inset-x-0 z-20 ${edge === 'top' ? (outside ? 'top-full' : 'top-0') : outside ? 'bottom-full' : 'bottom-0'}`}
       style={{
         height: appRem * 3 + (edge === 'bottom' && includeBottomInset ? insets.bottom : 0),
         opacity: visible ? 1 : 0,

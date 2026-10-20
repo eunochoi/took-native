@@ -147,38 +147,38 @@ export default function HabitList() {
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
         contentContainerClassName="grow"
+        stickyHeaderIndices={[1]}
       >
-        <PageTopSection title="습관 관리" hashtags="#실천 #성장">
-          <Toolbar>
-            <ToolbarSortButton
-              sort={settings.habitSort}
-              priorityFirst={settings.habitPriorityFirst}
-              accessibilityLabel="습관 정렬"
-              onPress={() => setSortOpen(true)}
-            />
-            <ToolbarFilterButton
-              label={filterLabel}
-              accessibilityLabel={`습관 필터, ${filter.completedOnly ? '오늘 완료' : '완료 상태 전체'}, 중요도 ${selectionSummary(
-                filter.priorities.map((priority) => '★'.repeat(priority + 1)),
-                3,
-              )}`}
-              onPress={() => setFilterOpen(true)}
-            />
-            <ToolbarAddButton
-              disabled={!ready || failed}
-              onPress={() => {
-                if (sorted.length >= MAX_HABIT_COUNT) {
-                  showNotice({
-                    tone: 'info',
-                    title: `습관은 최대 ${MAX_HABIT_COUNT}개까지 만들 수 있어요.`,
-                  });
-                  return;
-                }
-                openModal('/habit/new');
-              }}
-            />
-          </Toolbar>
-        </PageTopSection>
+        <PageTopSection title="습관 관리" hashtags="#실천 #성장" onLayout={fade.onHeaderLayout} />
+        <Toolbar fadeVisible={fade.topVisible}>
+          <ToolbarSortButton
+            sort={settings.habitSort}
+            priorityFirst={settings.habitPriorityFirst}
+            accessibilityLabel="습관 정렬"
+            onPress={() => setSortOpen(true)}
+          />
+          <ToolbarFilterButton
+            label={filterLabel}
+            accessibilityLabel={`습관 필터, ${filter.completedOnly ? '오늘 완료' : '완료 상태 전체'}, 중요도 ${selectionSummary(
+              filter.priorities.map((priority) => '★'.repeat(priority + 1)),
+              3,
+            )}`}
+            onPress={() => setFilterOpen(true)}
+          />
+          <ToolbarAddButton
+            disabled={!ready || failed}
+            onPress={() => {
+              if (sorted.length >= MAX_HABIT_COUNT) {
+                showNotice({
+                  tone: 'info',
+                  title: `습관은 최대 ${MAX_HABIT_COUNT}개까지 만들 수 있어요.`,
+                });
+                return;
+              }
+              openModal('/habit/new');
+            }}
+          />
+        </Toolbar>
         <View className="pt-8" style={{ paddingHorizontal: '5%' }}>
           {gridItems.length === 0 ? (
             emptyContent
@@ -238,7 +238,6 @@ export default function HabitList() {
         </View>
         <TabBottomSpacer />
       </ScrollView>
-      <ScrollEdgeFade edge="top" visible={fade.topVisible} />
       <ScrollEdgeFade edge="bottom" visible={fade.bottomVisible} />
 
       {flowOpen && (

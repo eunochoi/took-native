@@ -191,47 +191,50 @@ export default function SettingsScreen() {
         onContentSizeChange={fade.onContentSizeChange}
         scrollEventThrottle={16}
         className="flex-1 bg-transparent"
+        stickyHeaderIndices={[1]}
       >
-        <PageTopSection title="앱 설정" hashtags="#맞춤 #공간">
-          <Toolbar>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled }}
-              disabled={disabled}
-              onPress={() => setOnboardingOpen(true)}
-              className={`shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
-            >
-              <AppIcon name="info" size={appRem * 1.2} className="text-theme-accent" />
-              <Text className="text-sm leading-snug text-theme-text-secondary">앱 가이드</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled }}
-              disabled={disabled}
-              onPress={() => openModal('/privacy')}
-              className={`shrink-0 flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
-            >
-              <AppIcon name="privacy-tip" size={appRem * 1.2} className="text-theme-accent" />
-            </Pressable>
-            <Pressable
-              accessibilityRole="link"
-              accessibilityState={{ disabled }}
-              disabled={disabled}
-              onPress={() => {
-                void Linking.openURL('https://to-ok.me').catch(() =>
-                  showNotice({
-                    tone: 'error',
-                    title: 'TOOK 웹을 열지 못했어요',
-                    message: '인터넷 연결을 확인하고 다시 시도해주세요.',
-                  }),
-                );
-              }}
-              className={`min-w-0 shrink flex-row items-center justify-center gap-1.5 px-3.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
-            >
-              <AppIcon name="open-in-new" size={appRem * 1.2} className="text-theme-accent" />
-            </Pressable>
-          </Toolbar>
-        </PageTopSection>
+        <PageTopSection title="앱 설정" hashtags="#맞춤 #취향" onLayout={fade.onHeaderLayout} />
+        <Toolbar fadeVisible={fade.topVisible}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled }}
+            disabled={disabled}
+            onPress={() => setOnboardingOpen(true)}
+            className={`shrink-0 flex-row items-center justify-center gap-1.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
+          >
+            <AppIcon name="info" size={appRem * 1.2} className="text-theme-accent" />
+            <Text className="text-sm leading-snug text-theme-text-secondary">소개</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled }}
+            disabled={disabled}
+            accessibilityLabel="개인정보처리방침"
+            onPress={() => openModal('/privacy')}
+            className={`shrink-0 flex-row items-center justify-center gap-1.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
+          >
+            <AppIcon name="privacy-tip" size={appRem * 1.2} className="text-theme-accent" />
+            <Text className="text-sm leading-snug text-theme-text-secondary">개인정보처리방침</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel="TOOK 웹"
+            accessibilityState={{ disabled }}
+            disabled={disabled}
+            onPress={() => {
+              void Linking.openURL('https://to-ok.me').catch(() =>
+                showNotice({
+                  tone: 'error',
+                  title: 'TOOK 웹을 열지 못했어요',
+                  message: '인터넷 연결을 확인하고 다시 시도해주세요.',
+                }),
+              );
+            }}
+            className={`ml-auto shrink-0 flex-row items-center justify-center gap-1.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
+          >
+            <AppIcon name="open-in-new" size={appRem * 1.2} className="text-theme-accent" />
+          </Pressable>
+        </Toolbar>
         <View className="pt-6 gap-12" style={{ paddingHorizontal: '5%' }}>
           <NotificationSettingsSection disabled={disabled} />
           <View className="gap-3">
@@ -282,7 +285,6 @@ export default function SettingsScreen() {
         </View>
         <TabBottomSpacer />
       </ScrollView>
-      <ScrollEdgeFade edge="top" visible={fade.topVisible} />
       <ScrollEdgeFade edge="bottom" visible={fade.bottomVisible} />
       {onboardingOpen && <OnboardingSheet onClose={() => setOnboardingOpen(false)} />}
       {backupPicker && (

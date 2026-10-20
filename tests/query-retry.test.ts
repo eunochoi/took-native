@@ -168,7 +168,10 @@ test('diary toolbar creates today or edits its existing diary independently of l
       routes,
     );
     const list = nodes(DiaryList()).find((node) => node.type === 'FlatList');
-    const header = nodes(list.props.ListHeaderComponent);
+    assert.deepEqual(Array.from(list.props.stickyHeaderIndices), [1]);
+    assert.equal(list.props.ListHeaderComponent.type, 'PageTopSection');
+    assert.equal(list.props.ListHeaderComponent.props.children, undefined);
+    const header = nodes(list.props.renderItem({ item: list.props.data[0], index: 0 }));
     assert.deepEqual(
       header
         .filter((node) => node.type.startsWith('Toolbar') && node.type !== 'Toolbar')
@@ -191,8 +194,9 @@ test('diary toolbar creates today or edits its existing diary independently of l
     });
     const list = nodes(DiaryList()).find((node) => node.type === 'FlatList');
     assert.equal(
-      nodes(list.props.ListHeaderComponent).find((node) => node.type === 'ToolbarAddButton').props
-        .disabled,
+      nodes(list.props.renderItem({ item: list.props.data[0], index: 0 })).find(
+        (node) => node.type === 'ToolbarAddButton',
+      ).props.disabled,
       true,
     );
   }
