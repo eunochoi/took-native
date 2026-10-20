@@ -70,6 +70,7 @@ export function getHabitMonthSummary(
   const valid = [...new Set(dates)].filter((date) => date >= start && date <= end && date <= today);
   return {
     completed: valid.length,
+    averageInterval: valid.length ? target / valid.length : null,
     missed: Math.max(0, target - valid.length),
     rate: target ? ((valid.length / target) * 100).toFixed(1) : null,
   };

@@ -14,21 +14,24 @@ test('monthly habit stats exclude days before the initial start and count recent
     ['2024-02-01', '2024-02-10', '2024-02-17', '2024-02-17', '2024-02-20', '2024-02-21'],
     '2024-02-20',
   );
-  assert.deepEqual(summary, { completed: 3, missed: 8, rate: '27.3' });
+  assert.deepEqual(summary, { completed: 3, averageInterval: 11 / 3, missed: 8, rate: '27.3' });
 });
 test('future and pre-start months have no eligible days; a completed leap month uses 29 days', () => {
   assert.deepEqual(getHabitMonthSummary('2024-01', '2024-02-10', [], '2024-03-10'), {
     completed: 0,
+    averageInterval: null,
     missed: 0,
     rate: null,
   });
   assert.deepEqual(getHabitMonthSummary('2024-04', '2024-02-10', [], '2024-03-10'), {
     completed: 0,
+    averageInterval: null,
     missed: 0,
     rate: null,
   });
   assert.deepEqual(getHabitMonthSummary('2024-02', '2023-01-01', ['2024-02-29'], '2024-03-10'), {
     completed: 1,
+    averageInterval: 29,
     missed: 28,
     rate: '3.4',
   });
@@ -227,4 +230,49 @@ test('habit flow reports percentage point increases, decreases and unchanged rat
   assert.equal(getHabitFlowStats('2026-10-19', habits, recent).change, 100);
   assert.equal(getHabitFlowStats('2026-10-19', habits, previous).change, -100);
   assert.equal(getHabitFlowStats('2026-10-19', habits, [...recent, ...previous]).change, 0);
+});
+
+test('monthly recording period uses elapsed eligible days rather than the gap between records', () => {
+  const dates = ['2024-03-10', '2024-03-11', '2024-03-11', '2024-03-21', '2024-02-29'];
+  const before = [...dates];
+  assert.equal(
+    getHabitMonthSummary('2024-03', '2024-03-01', dates, '2024-03-20').averageInterval,
+    10,
+  );
+  assert.deepEqual(dates, before);
+  assert.equal(
+    getHabitMonthSummary('2024-03', '2024-03-10', dates, '2024-03-20').averageInterval,
+    5.5,
+  );
+  assert.equal(
+    getHabitMonthSummary('2024-03', '2024-03-10', dates, '2024-04-20').averageInterval,
+    22 / 3,
+  );
+});
+
+test('monthly recording period supports one record, zero records, completed leap months and future periods', () => {
+  assert.equal(
+    getHabitMonthSummary('2024-03', '2024-03-01', ['2024-03-02', '2024-03-02'], '2024-03-20')
+      .averageInterval,
+    20,
+  );
+  for (const dates of [[], ['2024-02-29', '2024-03-21']]) {
+    assert.equal(
+      getHabitMonthSummary('2024-03', '2024-03-01', dates, '2024-03-20').averageInterval,
+      null,
+    );
+  }
+  assert.equal(
+    getHabitMonthSummary('2024-02', '2024-02-01', ['2024-02-27', '2024-02-29'], '2024-03-20')
+      .averageInterval,
+    14.5,
+  );
+  assert.equal(
+    getHabitMonthSummary('2024-03', '2024-03-20', ['2024-03-20'], '2024-03-20').averageInterval,
+    1,
+  );
+  assert.equal(
+    getHabitMonthSummary('2024-03', '2024-03-21', ['2024-03-21'], '2024-03-20').averageInterval,
+    null,
+  );
 });

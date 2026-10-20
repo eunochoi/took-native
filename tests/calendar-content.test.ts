@@ -842,3 +842,53 @@ test('monthly toolbar starts at zero and distinguishes query errors from empty r
   assert.deepEqual(values({ low: 2, medium: 3, high: 4 }), ['0개', '2일', '3일', '4일']);
   assert.deepEqual(values(null, true), ['0개', '–', '–', '–']);
 });
+
+test('irregular monthly summary shows record count and rounded interval without achievement stats', () => {
+  const { HabitMonthStatistics } = load('src/screens/habit/HabitMonthStatistics.tsx');
+  const props = {
+    habit: {
+      priority: 0,
+      initial_started_at: '2026-09-01T00:00:00.000Z',
+      icon_key: 'goal',
+      icon_color: 'theme',
+    },
+    month: '2026-09',
+    today: '2026-10-07',
+    dates: [],
+    summary: { completed: 4, missed: 26, rate: '13.3', averageInterval: 10 / 3 },
+    unavailable: false,
+    onMonthChange: () => {},
+  };
+  const tree = HabitMonthStatistics(props);
+  const stats = nodes(tree).find((node) => node.type === 'HabitStatisticsSummary').props.stats;
+  assert.deepEqual(
+    Array.from(stats, (stat: any) => stat.label),
+    ['기록 횟수', '평균 기록 주기'],
+  );
+  assert.equal(stats[1].value, 3.3);
+  assert.equal(stats[1].unit, '일');
+  assert(
+    nodes(tree).some(
+      (node) =>
+        node.type === 'InfoNotice' &&
+        node.props.children === '습관 시작일을 반영한 월간 경과 일수 ÷ 기록 횟수예요.',
+    ),
+  );
+  for (const unavailable of [false, true]) {
+    const empty = HabitMonthStatistics({
+      ...props,
+      summary: { ...props.summary, completed: 0, averageInterval: null },
+      unavailable,
+    });
+    const interval = nodes(empty).find((node) => node.type === 'HabitStatisticsSummary').props
+      .stats[1];
+    assert.equal(interval.value, '—');
+    assert.equal(interval.unit, '');
+  }
+  const daily = HabitMonthStatistics({ ...props, habit: { ...props.habit, priority: 1 } });
+  assert.equal(
+    nodes(daily).find((node) => node.type === 'HabitStatisticsSummary').props.stats.length,
+    3,
+  );
+  assert(!nodes(daily).some((node) => node.type === 'InfoNotice'));
+});

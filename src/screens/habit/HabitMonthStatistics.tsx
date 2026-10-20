@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import { Text } from '../../components/Text';
+import { InfoNotice } from '../../components/InfoNotice';
 import { HabitIcon } from '../../components/HabitIcon';
 import type { Habit } from '../../db/types';
 import { calendarDays } from '../../domain/calendar';
@@ -43,7 +44,18 @@ export function HabitMonthStatistics({
       <HabitStatisticsSummary
         stats={
           habit.priority === 0
-            ? [{ label: '기록 횟수', icon: 'check', value: summary.completed, unit: '회' }]
+            ? [
+                { label: '기록 횟수', icon: 'check', value: summary.completed, unit: '회' },
+                {
+                  label: '평균 기록 주기',
+                  icon: 'date',
+                  value:
+                    summary.averageInterval === null
+                      ? '—'
+                      : Number(summary.averageInterval.toFixed(1)),
+                  unit: unavailable || summary.averageInterval === null ? '' : '일',
+                },
+              ]
             : [
                 { label: '실천 횟수', icon: 'check', value: summary.completed, unit: '회' },
                 { label: '놓친 횟수', icon: 'close', value: summary.missed, unit: '회' },
@@ -52,6 +64,9 @@ export function HabitMonthStatistics({
         }
         unavailable={unavailable}
       />
+      {habit.priority === 0 && (
+        <InfoNotice>습관 시작일을 반영한 월간 경과 일수 ÷ 기록 횟수예요.</InfoNotice>
+      )}
       <View className="px-1">
         <CalendarHeader month={month} today={today} navigation={navigation} />
         <CalendarGrid {...swipe.panHandlers} accessibilityLabel={`${month} 습관 실천 달력`}>
