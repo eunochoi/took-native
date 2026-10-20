@@ -29,7 +29,7 @@ export function BottomNav({ state, navigation }: BottomNavProps) {
       shadowOpacity: 0.1,
       shadowRadius: 12,
     },
-    android: { shadowColor: colors.accentText, elevation: 3 },
+    android: { shadowColor: `${colors.accentText}CC`, elevation: 3 },
   });
   const settingRoute = state.routes.find((route) => route.name === 'setting');
   const settingSelected = state.routes[state.index].key === settingRoute?.key;
