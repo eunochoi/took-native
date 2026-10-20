@@ -6,6 +6,7 @@ import { URL } from 'node:url';
 import { runInNewContext } from 'node:vm';
 import { transpileModule, JsxEmit, ModuleKind } from 'typescript';
 import * as constants from '../src/domain/constants';
+import { SOBER_ICONS } from '../src/domain/sober';
 
 const require = createRequire(import.meta.url);
 
@@ -29,49 +30,97 @@ test('habit options use distinct supported icons and meaningful labels', () => {
     assert(icon.name in glyphs[icon.family], icon.name);
 });
 
-test('default habit icon follows theme changes while a fixed color stays fixed', () => {
-  const code = transpileModule(
-    readFileSync(new URL('../src/components/HabitIcon.tsx', import.meta.url), 'utf8'),
-    { compilerOptions: { jsx: JsxEmit.ReactJSX, module: ModuleKind.CommonJS } },
-  ).outputText;
-  let accent = '#8CADE2';
-  const exports: Record<
-    string,
-    (props: Record<string, unknown>) => { type: string; props: { color: string; name: string } }
-  > = {};
-  runInNewContext(code, {
-    exports,
-    require: (name: string) => {
-      if (name === 'react/jsx-runtime')
-        return { jsx: (type: unknown, props: unknown) => ({ type, props }) };
-      if (name.includes('AppThemeProvider'))
-        return { useAppTheme: () => ({ colors: { accent }, rem: 15 }) };
-      if (name.includes('domain/constants')) return constants;
-      if (name.includes('Ionicons')) return { __esModule: true, default: 'Ionicons' };
-      if (name.includes('MaterialCommunityIcons'))
-        return { __esModule: true, default: 'MaterialCommunityIcons' };
-      throw new Error(name);
+function loadIcon(path: string, modules: Record<string, any> = {}) {
+  const exports: any = {};
+  runInNewContext(
+    transpileModule(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'), {
+      compilerOptions: { jsx: JsxEmit.ReactJSX, module: ModuleKind.CommonJS },
+    }).outputText,
+    {
+      exports,
+      require: (name: string) => {
+        if (name in modules) return modules[name];
+        if (name === 'react/jsx-runtime') {
+          const jsx = (type: unknown, props: any) => ({ type, props });
+          return { jsx, jsxs: jsx };
+        }
+        if (name.startsWith('phosphor-react-native/src/icons/')) {
+          const icon = name.split('/').at(-1) + 'Icon';
+          return { [icon]: icon };
+        }
+        if (name === 'react') return { useId: () => 'mask' };
+        if (name === 'react-native-svg')
+          return {
+            __esModule: true,
+            default: 'Svg',
+            Circle: 'Circle',
+            Defs: 'Defs',
+            Mask: 'Mask',
+            Text: 'SvgText',
+          };
+        if (name === 'nativewind') return { cssInterop() {} };
+        if (name.endsWith('/recordIcons')) return loadIcon('src/components/recordIcons.ts');
+        if (name.endsWith('/constants')) return constants;
+        throw new Error(name);
+      },
     },
-  });
-  assert.equal(exports.HabitIcon({ name: 'walking' }).props.color, accent);
-  for (const key of [
-    'running',
-    'nutrition',
-    'supplements',
-    'meditation',
-    'cleaning',
-    'plants',
-  ] as const) {
-    const rendered = exports.HabitIcon({ name: key });
-    assert.equal(rendered.type, 'MaterialCommunityIcons');
-    assert.equal(rendered.props.name, constants.HABIT_ICONS[key].name);
-  }
-  assert.equal(exports.HabitIcon({ name: 'walking' }).type, 'Ionicons');
-
-  accent = '#83C6B6';
-  assert.equal(exports.HabitIcon({ name: 'walking', colorKey: 'theme' }).props.color, accent);
-  assert.equal(
-    exports.HabitIcon({ name: 'walking', colorKey: 'pink' }).props.color,
-    constants.HABIT_ICON_COLORS.pink.value,
   );
+  return exports;
+}
+
+test('all saved habit and sober choices have distinct Phosphor mappings except the retained 19 badge', () => {
+  const { HABIT_RECORD_ICONS, SOBER_RECORD_ICONS } = loadIcon('src/components/recordIcons.ts');
+  assert.deepEqual(
+    Object.keys(HABIT_RECORD_ICONS),
+    constants.HABIT_ICON_OPTIONS.map(({ key }) => key),
+  );
+  assert.equal(new Set(Object.values(HABIT_RECORD_ICONS)).size, 50);
+  assert.deepEqual(
+    Object.keys(SOBER_RECORD_ICONS),
+    Object.keys(SOBER_ICONS).filter((key) => key !== 'age19'),
+  );
+  assert.equal(Object.keys(SOBER_RECORD_ICONS).length, 49);
+  assert.equal(new Set(Object.values(SOBER_RECORD_ICONS)).size, 49);
+  assert(!('age19' in SOBER_RECORD_ICONS));
+});
+
+test('record icons preserve theme color, fixed colors and rem-based sizes with Phosphor filled weights', () => {
+  let accent = '#8CADE2';
+  const modules = {
+    '../theme/AppThemeProvider': { useAppTheme: () => ({ colors: { accent }, rem: 15 }) },
+  };
+  const { HabitIcon } = loadIcon('src/components/HabitIcon.tsx', modules);
+  const { SoberIcon } = loadIcon('src/components/SoberIcon.tsx', modules);
+  assert.equal(HabitIcon({ name: 'walking' }).type, 'PersonSimpleWalkIcon');
+  assert.equal(SoberIcon({ name: 'coffee' }).type, 'CoffeeIcon');
+  for (const [render, name] of [
+    [HabitIcon, 'walking'],
+    [SoberIcon, 'coffee'],
+  ] as const) {
+    assert.equal(render({ name }).props.color, accent);
+    assert.equal(render({ name }).props.size, 26.25);
+    assert.equal(render({ name }).props.weight, 'fill');
+    accent = '#83C6B6';
+    assert.equal(render({ name, colorKey: 'theme' }).props.color, accent);
+    assert.equal(
+      render({ name, colorKey: 'pink', size: 18 }).props.color,
+      constants.HABIT_ICON_COLORS.pink.value,
+    );
+    assert.equal(render({ name, size: 18 }).props.size, 18);
+  }
+  const badge = SoberIcon({ name: 'age19', size: 30 });
+  assert.equal(badge.type, 'Svg');
+  assert.equal(badge.props.width, 30);
+  assert(JSON.stringify(badge).includes('19'));
+});
+
+test('Phosphor star retains filled and outline importance states', () => {
+  const { StarIcon } = loadIcon('src/components/StarIcon.tsx');
+  for (const filled of [false, true]) {
+    const icon = StarIcon({ size: 18, color: '#8CADE2', filled });
+    assert.equal(icon.type, 'StarIcon');
+    assert.equal(icon.props.weight, filled ? 'fill' : 'regular');
+    assert.equal(icon.props.color, '#8CADE2');
+    assert.equal(icon.props.size, 18);
+  }
 });

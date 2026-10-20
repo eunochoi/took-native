@@ -46,6 +46,7 @@
     "expo-updates": "~57.0.24",
     "fflate": "^0.8.2",
     "nativewind": "^4.2.7",
+    "phosphor-react-native": "3.0.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",

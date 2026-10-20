@@ -1,8 +1,7 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { SOBER_RECORD_ICONS } from './recordIcons';
 import { useId } from 'react';
 import Svg, { Circle, Defs, Mask, Text as SvgText } from 'react-native-svg';
-import { SOBER_ICONS, type SoberIconKey } from '../domain/sober';
+import type { SoberIconKey } from '../domain/sober';
 import {
   resolveIconColor,
   DEFAULT_HABIT_ICON_COLOR,
@@ -21,10 +20,9 @@ export function SoberIcon({
 }) {
   const { colors, rem: appRem } = useAppTheme();
   const maskId = useId();
-  const icon = SOBER_ICONS[name];
   const color = resolveIconColor(colorKey, colors.accent);
   const iconSize = size ?? appRem * 1.75;
-  if (icon.family === 'badge')
+  if (name === 'age19')
     return (
       <Svg width={iconSize} height={iconSize} viewBox="0 0 100 100" accessible={false}>
         <Defs>
@@ -38,9 +36,6 @@ export function SoberIcon({
         <Circle cx="50" cy="50" r="50" fill={color} mask={`url(#${maskId})`} />
       </Svg>
     );
-  return icon.family === 'material-community' ? (
-    <MaterialCommunityIcons name={icon.name} color={color} size={iconSize} />
-  ) : (
-    <Ionicons name={icon.name} color={color} size={iconSize} />
-  );
+  const Icon = SOBER_RECORD_ICONS[name];
+  return <Icon color={color} size={iconSize} weight="fill" />;
 }

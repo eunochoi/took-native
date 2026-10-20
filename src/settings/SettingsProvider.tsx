@@ -1,8 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { loadAsync } from 'expo-font';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSQLiteContext } from 'expo-sqlite';
 import { withWriteLock } from '../db';
 import { DEFAULT_SETTINGS, parseSettings, type Settings } from './model';
@@ -16,9 +13,6 @@ interface Context {
 const SettingsContext = createContext<Context | null>(null);
 const fontAssets = {
   ...wordmarkFont,
-  ...MaterialIcons.font,
-  ...Ionicons.font,
-  ...MaterialCommunityIcons.font,
   Tmoney: require('../../assets/fonts/TmoneyRoundWindRegular.otf'),
   TmoneyBold: require('../../assets/fonts/TmoneyRoundWindExtraBold.otf'),
 };
