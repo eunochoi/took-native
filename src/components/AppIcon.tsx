@@ -14,6 +14,7 @@ import { CaretUpIcon } from 'phosphor-react-native/src/icons/CaretUp';
 import { ChartBarIcon } from 'phosphor-react-native/src/icons/ChartBar';
 import { ChartLineIcon } from 'phosphor-react-native/src/icons/ChartLine';
 import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
+import { CheckSquareIcon } from 'phosphor-react-native/src/icons/CheckSquare';
 import { DotsSixVerticalIcon } from 'phosphor-react-native/src/icons/DotsSixVertical';
 import { DotsThreeVerticalIcon } from 'phosphor-react-native/src/icons/DotsThreeVertical';
 import { DownloadSimpleIcon } from 'phosphor-react-native/src/icons/DownloadSimple';
@@ -59,7 +60,7 @@ const APP_ICONS = {
   calendar: CalendarDotsIcon,
   date: CalendarBlankIcon,
   today: CalendarDotIcon,
-  habit: CheckIcon,
+  habit: CheckSquareIcon,
   settings: GearIcon,
   edit: PencilSimpleIcon,
   check: CheckIcon,
@@ -99,7 +100,6 @@ export function AppIcon({
   IconProps & { name: AppIconName; className?: string }) {
   const Icon = APP_ICONS[name];
   const bold = [
-    'habit',
     'check',
     'close',
     'habit-rate',

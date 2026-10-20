@@ -12,7 +12,7 @@ const icons = [
   'HouseIcon',
   'CalendarDotsIcon',
   'BookOpenIcon',
-  'CheckIcon',
+  'CheckSquareIcon',
   'TimerIcon',
   'GearIcon',
 ];
@@ -178,7 +178,7 @@ for (const os of ['ios', 'android'] as const) {
         renderedIcons.forEach((node, position) => {
           assert(node.props.size >= 22 && node.props.size <= 24);
           assert.equal(node.props.size, renderedIcons[0].props.size);
-          assert.equal(node.props.weight, position === 3 ? 'bold' : 'fill');
+          assert.equal(node.props.weight, 'fill');
           assert.equal(
             node.props.color,
             position === index ? ui.colors.textOnAccent : `${ui.colors.accent}CC`,
@@ -208,7 +208,7 @@ test('shared navigation icons preserve screen size, color, style and accessibili
       assert.equal(tree.type, icons[index]);
       assert.equal(tree.props.size, size);
       assert.equal(tree.props.color, '#83C6B6');
-      assert.equal(tree.props.weight, name === 'habit' ? 'bold' : 'fill');
+      assert.equal(tree.props.weight, 'fill');
       assert.equal(tree.props.style, style);
       assert.equal(tree.props.accessibilityLabel, '기록');
       assert.equal(tree.props.testID, 'record-icon');
@@ -220,7 +220,7 @@ test('shared navigation icons preserve screen size, color, style and accessibili
 test('line icons use bold while filled icons retain their weights', () => {
   const { AppIcon } = loadAppIcon();
   for (const [name, type, weight] of [
-    ['habit', 'CheckIcon', 'bold'],
+    ['habit', 'CheckSquareIcon', 'fill'],
     ['check', 'CheckIcon', 'bold'],
     ['close', 'XIcon', 'bold'],
     ['habit-flow', 'ChartLineIcon', 'bold'],
