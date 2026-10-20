@@ -146,7 +146,12 @@ test('calendar hides progress while the habit denominator is loading or failed a
 });
 
 test('date cell owns weekday color, outside-month dimming and optional today/selection indicators', () => {
-  const tree = CalendarDay({ ...day, selected: day.date });
+  const tree = CalendarDay({
+    ...day,
+    selected: day.date,
+    showTodayIndicator: true,
+    showSelectedIndicator: true,
+  });
   assert.equal(tree.props.accessibilityState.selected, true);
   assert.match(tree.props.accessibilityLabel, /오늘/);
   assert.equal(
@@ -161,8 +166,6 @@ test('date cell owns weekday color, outside-month dimming and optional today/sel
   const hidden = CalendarDay({
     ...day,
     selected: day.date,
-    showTodayIndicator: false,
-    showSelectedIndicator: false,
   });
   assert(!nodes(hidden).some((node) => node.props.className?.includes('h-1.5')));
   assert(!nodes(hidden).some((node) => node.props.className?.includes('bg-theme-accent')));
@@ -207,7 +210,7 @@ test('today and selection use one identical bottom dot, including when both are 
     { ...day, today: '2026-10-08', selected: day.date },
     { ...day, selected: day.date },
   ]) {
-    const tree = CalendarDay(props);
+    const tree = CalendarDay({ ...props, showTodayIndicator: true, showSelectedIndicator: true });
     const markers = nodes(tree).filter((node) =>
       node.props.className?.includes('absolute -bottom-0.5'),
     );
@@ -229,7 +232,13 @@ test('today and selection use one identical bottom dot, including when both are 
     { showTodayIndicator: false, showSelectedIndicator: false },
     { today: '2026-10-08', selected: '2026-10-06' },
   ]) {
-    const hidden = CalendarDay({ ...day, selected: day.date, ...props });
+    const hidden = CalendarDay({
+      ...day,
+      selected: day.date,
+      showTodayIndicator: true,
+      showSelectedIndicator: true,
+      ...props,
+    });
     assert(!nodes(hidden).some((node) => node.props.className?.includes('absolute -bottom-0.5')));
   }
 });
@@ -446,7 +455,7 @@ test('sober calendar shows one restart icon per day and permits only dates insid
   assert(selected.every((date) => date >= '2026-10-01' && date <= day.today));
 });
 
-test('date picker owns its min/future range and default selection indicator', () => {
+test('date picker owns its min/future range without default indicators', () => {
   const { DatePickerCalendar } = load('src/screens/calendar/DatePickerCalendar.tsx');
   const selected: string[] = [];
   const tree = DatePickerCalendar({
@@ -469,11 +478,8 @@ test('date picker owns its min/future range and default selection indicator', ()
     '2026-10-07',
   ]);
   const rendered = CalendarDay(cell(tree, '2026-10-05').props);
-  assert.equal(
-    nodes(rendered).find((node) => node.props.className?.includes('absolute -bottom-0.5')).props
-      .className,
-    'absolute -bottom-0.5 h-1.5 w-1.5 ios:curve-continuous rounded-full bg-theme-accent/70',
-  );
+  assert.equal(rendered.props.accessibilityState.selected, true);
+  assert(!nodes(rendered).some((node) => node.props.className?.includes('absolute -bottom-0.5')));
 });
 
 test('day detail falls back to today for a direct future-date route', () => {
