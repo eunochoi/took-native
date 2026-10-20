@@ -14,6 +14,7 @@ export function PickerOption({
   dense = false,
   disabled = false,
   accessibilityLabel,
+  className,
   onPress,
   children,
 }: {
@@ -23,6 +24,7 @@ export function PickerOption({
   dense?: boolean;
   disabled?: boolean;
   accessibilityLabel: string;
+  className?: string;
   onPress: () => void;
   children: ReactNode;
 }) {
@@ -43,6 +45,7 @@ export function PickerOption({
             ? 'gap-2 min-h-12 px-1 py-3'
             : 'gap-2 min-h-16 p-4',
         disabled ? 'opacity-40' : 'opacity-100',
+        className,
       )}
     >
       {children}

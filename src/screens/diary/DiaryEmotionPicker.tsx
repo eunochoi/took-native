@@ -45,6 +45,7 @@ export function DiaryEmotionPicker({
                 <View key={emotion.key} className="flex-1 min-w-0">
                   <PickerOption
                     compact
+                    className="border-0"
                     selected={selected}
                     accessibilityLabel={emotion.name}
                     onPress={() => setDraft(allowDeselect && selected ? null : id)}

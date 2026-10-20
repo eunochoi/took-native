@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { BottomSheetModal } from './BottomSheetModal';
 import { PickerOption } from './PickerOption';
-import { Text } from './Text';
 import { Button } from './Button';
 
 export function IconPicker<Key extends string>({
@@ -41,19 +40,17 @@ export function IconPicker<Key extends string>({
               <View key={key} className="flex-1 min-w-0">
                 <PickerOption
                   compact
-
+                  className="aspect-square min-h-0 p-0"
                   selected={draft === key}
                   accessibilityLabel={label}
                   onPress={() => setDraft(key)}
                 >
                   {renderIcon(key)}
-                  <Text
-                    className={`text-xs text-center ${draft === key ? 'text-theme-accent' : 'text-theme-text-secondary'}`}
-                  >
-                    {label}
-                  </Text>
                 </PickerOption>
               </View>
+            ))}
+            {Array.from({ length: Math.max(0, 5 - (options.length - row * 5)) }, (_, index) => (
+              <View key={`empty-${index}`} className="flex-1 min-w-0" />
             ))}
           </View>
         ))}
