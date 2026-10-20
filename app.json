@@ -2,23 +2,18 @@
   "expo": {
     "name": "오늘 툭",
     "slug": "took-native",
-    "version": "2.1.6",
+    "version": "2.1.8",
     "scheme": "took-local",
     "orientation": "portrait",
-    "platforms": [
-      "android",
-      "ios"
-    ],
+    "platforms": ["android", "ios"],
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
     "ios": {
       "bundleIdentifier": "com.took",
-      "buildNumber": "2",
+      "buildNumber": "4",
       "supportsTablet": false,
       "entitlements": {
-        "com.apple.security.application-groups": [
-          "group.com.took.widgets"
-        ]
+        "com.apple.security.application-groups": ["group.com.took.widgets"]
       },
       "infoPlist": {
         "TookWidgetAppGroup": "group.com.took.widgets",
@@ -36,7 +31,7 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
-      "versionCode": 26
+      "versionCode": 28
     },
     "plugins": [
       "@bacons/apple-targets",
