@@ -1,6 +1,7 @@
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Pressable, View } from 'react-native';
+import { twMerge } from 'tailwind-merge';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
 import type { Completion, Habit } from '../../db/types';
@@ -43,7 +44,7 @@ export function HabitTodayProgress({
           <Text
             accessibilityRole="header"
             numberOfLines={1}
-            className="w-full text-base text-center font-semibold"
+            className="text-base text-center font-semibold"
           >
             습관 흐름
           </Text>
@@ -62,7 +63,12 @@ export function HabitTodayProgress({
               accessibilityLabel={`${date}${date === today ? ', 오늘' : ''}, ${total ? `${total}개 중 ${completed}개 완료, ${Math.round(percent)}%` : '시작한 습관 없음'}`}
               className="flex-1 min-w-0 items-center gap-1 px-1"
             >
-              <Text className="h-5 text-sm leading-5 text-theme-text-secondary">
+              <Text
+                className={twMerge(
+                  date === today ? 'text-theme-accent' : 'text-theme-text-secondary',
+                  'h-5 text-sm leading-5',
+                )}
+              >
                 {date === today ? '오늘' : format(parseISO(date), 'eee', { locale: ko })}
               </Text>
               <View className={`h-12 w-[70%] justify-end rounded-lg ${PROGRESS_TRACK_CLASS_NAME}`}>

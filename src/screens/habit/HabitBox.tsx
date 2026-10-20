@@ -74,7 +74,10 @@ export function HabitBox({
               onPress={() => onToggle(habit.id, date, !completed)}
               className={`flex-1 min-w-0 items-center gap-1 ${locked ? 'opacity-40' : 'opacity-100'}`}
             >
-              <Text className="h-5 text-sm leading-5 text-theme-text-secondary">
+              <Text
+                className="h-5 text-sm leading-5 text-theme-text-secondary"
+                style={date === today ? { color: habitColor } : undefined}
+              >
                 {date === today ? '오늘' : format(parseISO(date), 'eee', { locale: ko })}
               </Text>
               <Text className="h-5 text-sm leading-5 text-theme-text-secondary">
