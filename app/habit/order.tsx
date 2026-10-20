@@ -1,3 +1,4 @@
+import { InfoNotice } from '../../src/components/InfoNotice';
 import { AppIcon } from '../../src/components/AppIcon';
 import { FormSubmitButton } from '../../src/components/FormSubmitButton';
 import type { ScrollView } from 'react-native';
@@ -116,9 +117,7 @@ export default function HabitOrder() {
       >
         <View>
           <View className="gap-4 mb-4">
-            <Text className="text-sm text-center text-theme-text-secondary">
-              드래그하거나 방향키로 습관 순서를 변경하세요.
-            </Text>
+            <InfoNotice>드래그하거나 방향키로 습관 순서를 변경하세요.</InfoNotice>
 
             <QueryState query={query} />
           </View>

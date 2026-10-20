@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { runInNewContext } from 'node:vm';
 import test from 'node:test';
+import { runInNewContext } from 'node:vm';
 import { sortSobers } from '../src/db/sober';
 import { EMOTIONS } from '../src/domain/constants';
 import {
@@ -46,6 +46,8 @@ function render(
         if (dependency.endsWith('AppThemeProvider'))
           return { useAppTheme: () => ({ rem: 15, iconSizes: {}, colors: {} }) };
         if (dependency.endsWith('domain/constants')) return { EMOTIONS };
+        if (dependency.endsWith('domain/diaryFilters'))
+          return require('../src/domain/diaryFilters');
         if (dependency.endsWith('/ModalNavigationProvider'))
           return {
             useModalNavigation: () => ({
@@ -109,6 +111,7 @@ function text(node: any): string {
 }
 const emptyStats = () => ({
   total: 0,
+  monthlyAverage: 0,
   current: 0,
   longest: 0,
   monthly: Array(12).fill(0),
@@ -211,7 +214,7 @@ test('diary retains the monthly graph and streaks without extra summaries', () =
   const tree = render('DiaryAnalysis', { stats, year: 2024 });
   assert(text(tree).includes('현재 연속 기록'));
   assert(text(tree).includes('역대 최고 기록'));
-  assert.equal(tree.props.children.at(-1).props.children.length, 12);
+  assert.equal(tree.props.children[2].props.children.length, 12);
   assert(!text(tree).includes('돌아보기'));
   assert(!text(tree).includes('분기'));
 });

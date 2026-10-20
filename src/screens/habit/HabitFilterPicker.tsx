@@ -1,4 +1,4 @@
-import { PICKER_DESCRIPTION_CLASS_NAME } from '../../theme/classes';
+import { InfoNotice } from '../../components/InfoNotice';
 import { useState } from 'react';
 import { Switch, View } from 'react-native';
 import { FilterSheet } from '../../components/FilterSheet';
@@ -80,14 +80,7 @@ export function HabitFilterPicker({
           })}
         </View>
       </View>
-      <Text
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.85}
-        className={PICKER_DESCRIPTION_CLASS_NAME}
-      >
-        중요도는 여러 개 선택할 수 있어요.
-      </Text>
+      <InfoNotice>중요도는 여러 개 선택할 수 있어요.</InfoNotice>
     </FilterSheet>
   );
 }

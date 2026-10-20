@@ -287,8 +287,7 @@ test('sort hint reserves the same space for date and custom order', () => {
   const initial = ui
     .render()
     .content.find((node) => node.props.className === 'h-10 justify-center');
-  assert.equal(initial.props.children.props.numberOfLines, 2);
-  assert(initial.props.children.props.className.includes('text-theme-accent'));
+  assert.equal(initial.props.children.type, 'InfoNotice');
   ui.press('커스텀');
   const custom = ui.render().content.find((node) => node.props.className === 'h-10 justify-center');
   assert.equal(custom.props.className, initial.props.className);
@@ -300,7 +299,7 @@ test('diary emotion descriptions live inside buttons and the full season legend 
   const text = () =>
     ui
       .render()
-      .content.filter((node) => node.type === 'Text')
+      .content.filter((node) => node.type === 'Text' || node.type === 'InfoNotice')
       .map((node) => node.props.children);
   for (const [label, description] of [
     ['긍정', '행복, 기쁨\n사랑, 평온'],
@@ -323,7 +322,7 @@ test('diary emotion descriptions live inside buttons and the full season legend 
   ui.press('겨울');
   assert(text().includes('여름 · 겨울'));
   const hint = ui.render().content.find((node) => node.props.children === seasonLegend);
-  assert.equal(hint.props.numberOfLines, 1);
+  assert.equal(hint.type, 'InfoNotice');
   assert(!text().some((value) => typeof value === 'string' && value.includes('2027.02')));
   assert(!text().some((value) => typeof value === 'string' && value.includes('겨울은')));
   ui.press('여름');

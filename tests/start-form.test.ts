@@ -120,7 +120,7 @@ test('habit and sober forms allow start selection only during creation and expla
       const notice = nodes.find(
         (node) => node.props.children === '시작 일시는 저장 후 변경할 수 없어요.',
       );
-      assert(notice.props.className.includes('text-theme-accent'));
+      assert.equal(notice.type, 'InfoNotice');
       row.props.onPress();
       const picker = ui.render().find((node) => node.type === 'DateTimePicker');
       assert.equal(!!picker, id === undefined);

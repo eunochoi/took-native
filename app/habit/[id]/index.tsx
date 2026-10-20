@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import { View } from 'react-native';
 import { BottomSheetPage } from '../../../src/components/BottomSheetPage';
 import { HabitIcon } from '../../../src/components/HabitIcon';
+import { InfoNotice } from '../../../src/components/InfoNotice';
 import { QueryState } from '../../../src/components/QueryState';
 import { Text } from '../../../src/components/Text';
 import { habitQueries, useToday } from '../../../src/queries';
@@ -55,23 +56,9 @@ export default function HabitDetail() {
                 today={today}
                 unavailable={records.isPending || records.isError}
               />
-              <View className="ios:curve-continuous rounded-theme p-4 gap-3 bg-theme-accent-light/50">
-                <View className="gap-1">
-                  <Text className="text-sm leading-5 font-semibold text-theme-accent">
-                    실천 가능일
-                  </Text>
-                  <Text className="text-sm leading-5 text-theme-accent">
-                    해당 기간에서 시작일 이전과 미래를 제외한 날짜
-                  </Text>
-                </View>
-                <View className="gap-1">
-                  <Text className="text-sm leading-5 font-semibold text-theme-accent">
-                    실천율
-                  </Text>
-                  <Text className="text-sm leading-5 text-theme-accent">
-                    실천 횟수 ÷ 실천 가능일 × 100
-                  </Text>
-                </View>
+              <View className="gap-2">
+                <InfoNotice>실천 가능일은 선택 기간 내 시작일~오늘이에요.</InfoNotice>
+                <InfoNotice>실천율 = 실천 횟수 ÷ 실천 가능일 × 100</InfoNotice>
               </View>
             </>
           ) : !query.isPending && !query.error ? (

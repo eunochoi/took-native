@@ -1,3 +1,4 @@
+import { InfoNotice } from '../components/InfoNotice';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { usePreventRemove } from 'expo-router/react-navigation';
@@ -230,9 +231,7 @@ export function HabitForm({ id }: { id?: number }) {
           disabled={id !== undefined || mutation.isPending}
           onPress={() => setPicker('date')}
         />
-        <Text className="px-2 text-sm text-theme-accent">
-          시작 일시는 저장 후 변경할 수 없어요.
-        </Text>
+        <InfoNotice>시작 일시는 저장 후 변경할 수 없어요.</InfoNotice>
       </View>
     </RecordFormLayout>
   );

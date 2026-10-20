@@ -2,6 +2,7 @@ import { View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { Button } from '../../components/Button';
 import { Text } from '../../components/Text';
+import { InfoNotice } from '../../components/InfoNotice';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 
 export function BackupPage({ busy, onConfirm }: { busy: boolean; onConfirm: () => void }) {
@@ -30,9 +31,7 @@ export function BackupPage({ busy, onConfirm }: { busy: boolean; onConfirm: () =
       </View>
       <View className="gap-3">
         <Button label={busy ? '저장 중…' : '확인'} disabled={busy} onPress={onConfirm} />
-        <Text className="text-center text-xs text-theme-text-secondary">
-          이 안내는 설정에서 다시 볼 수 있어요.
-        </Text>
+        <InfoNotice>이 안내는 설정에서 다시 볼 수 있어요.</InfoNotice>
       </View>
     </View>
   );

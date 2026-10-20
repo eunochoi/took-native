@@ -1,3 +1,4 @@
+import { InfoNotice } from '../components/InfoNotice';
 import { SECTION_TITLE_CLASS_NAME, FORM_TEXT_INPUT_CLASS_NAME } from '../theme/classes';
 import { CharacterCount } from '../components/CharacterCount';
 import { RecordFormLayout } from '../components/RecordFormLayout';
@@ -245,9 +246,7 @@ export function SoberForm({ id }: { id?: number }) {
           disabled={id !== undefined || mutation.isPending}
           onPress={() => setPicker('date')}
         />
-        <Text className="px-2 text-sm text-theme-accent">
-          시작 일시는 저장 후 변경할 수 없어요.
-        </Text>
+        <InfoNotice>시작 일시는 저장 후 변경할 수 없어요.</InfoNotice>
       </View>
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>

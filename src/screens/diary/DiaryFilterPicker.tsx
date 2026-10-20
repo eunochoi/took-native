@@ -1,6 +1,6 @@
+import { InfoNotice } from '../../components/InfoNotice';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { QueryState } from '../../components/QueryState';
-import { PICKER_DESCRIPTION_CLASS_NAME } from '../../theme/classes';
 import { selectionSummary } from '../../domain/selection';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -120,19 +120,14 @@ export function DiaryFilterPicker({
           ))}
         </View>
       </View>
-      <Text
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.85}
-        className={PICKER_DESCRIPTION_CLASS_NAME}
-      >
+      <InfoNotice>
         {(Object.keys(DIARY_SEASONS) as DiarySeason[])
           .map(
             (season) =>
               `${DIARY_SEASONS[season].label} ${DIARY_SEASONS[season].monthsLabel.replace('다음 해 ', '다음 ')}`,
           )
           .join(' · ')}
-      </Text>
+      </InfoNotice>
       <View className="gap-4">
         <View className="flex-row items-baseline justify-between gap-3">
           <Text className="text-base font-semibold">감정</Text>
@@ -177,10 +172,10 @@ export function DiaryFilterPicker({
           })}
         </View>
       </View>
-      <Text className={PICKER_DESCRIPTION_CLASS_NAME}>
-        여러 개 선택할 수 있어요. 다시 누르면 해제돼요.{'\n'}계절이나 감정을 선택하지 않으면 전체로
+      <InfoNotice>
+        여러 개 선택할 수 있어요. 다시 누르면 해제돼요. 계절이나 감정을 선택하지 않으면 전체로
         검색해요.
-      </Text>
+      </InfoNotice>
       {yearOpen && (
         <BottomSheetModal visible title="연도 선택" onClose={() => setYearOpen(false)}>
           {(close) => (

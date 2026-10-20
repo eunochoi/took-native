@@ -1,4 +1,4 @@
-import { PICKER_DESCRIPTION_CLASS_NAME } from '../../theme/classes';
+import { InfoNotice } from '../../components/InfoNotice';
 import { useState } from 'react';
 import { Switch, View } from 'react-native';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
@@ -63,14 +63,7 @@ export function SoberFilterPicker({
             onPress={() => setPeriodOpen(true)}
           />
         </View>
-        <Text
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.85}
-          className={PICKER_DESCRIPTION_CLASS_NAME}
-        >
-          현재 기록이 선택한 기간 이상인 항목만 보여요.
-        </Text>
+        <InfoNotice>현재 기록이 선택한 기간 이상인 항목만 보여요.</InfoNotice>
         {periodOpen && (
           <BottomSheetModal visible title="최소 유지 기간" onClose={() => setPeriodOpen(false)}>
             {(close) => (

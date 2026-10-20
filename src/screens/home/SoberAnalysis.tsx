@@ -7,6 +7,7 @@ import { format, parseISO } from 'date-fns';
 import { Pressable, View } from 'react-native';
 import { SoberIcon } from '../../components/SoberIcon';
 import { Text } from '../../components/Text';
+import { InfoNotice } from '../../components/InfoNotice';
 import type { Sober, SoberRestart } from '../../db/types';
 import { formatSoberDuration, getSoberStreaks } from '../../domain/sober';
 import { useCurrentMinute } from '../../hooks/useCurrentMinute';
@@ -101,6 +102,7 @@ export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts:
           아직 거리두기 기록이 없어요.
         </Text>
       )}
+      <InfoNotice>선택 연도와 관계없이 전체 기간 기록이에요.</InfoNotice>
     </View>
   );
 }

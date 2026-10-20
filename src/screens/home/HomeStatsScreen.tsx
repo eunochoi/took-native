@@ -25,7 +25,7 @@ export function HomeStatsScreen({
   onYearChange: (year: number) => void;
 }) {
   const db = useSQLiteContext();
-  const { colors, iconSizes, rem: appRem } = useAppTheme();
+  const { iconSizes } = useAppTheme();
   const [picker, setPicker] = useState(false);
   const years = useQuery(statsQueries.years(db));
   const diary = useQuery(statsQueries.diary(db, year));
@@ -102,16 +102,6 @@ export function HomeStatsScreen({
                   className="text-theme-accent-deep"
                 />
               </Pressable>
-            </View>
-
-            <View className="flex-row items-start gap-2 px-2">
-              <View className="h-5 w-4 shrink-0 items-center justify-center">
-                <AppIcon name="info-outline" size={appRem} color={colors.accent} />
-              </View>
-              <Text className="flex-1 text-sm leading-5 text-theme-accent">
-                일기의 연속·역대 최고 기록과 거리두기 기록은 선택 연도와 관계없이 전체 기간
-                기준이에요.
-              </Text>
             </View>
           </View>
         </View>

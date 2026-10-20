@@ -4,6 +4,7 @@ import { dateTimeDraft, parseDateTime } from '../domain/date';
 import { BottomSheetModal } from './BottomSheetModal';
 import { Button } from './Button';
 import { DateTimeFields } from './DateTimeFields';
+import { InfoNotice } from './InfoNotice';
 import { Text } from './Text';
 
 export function DateTimePicker({
@@ -49,11 +50,7 @@ export function DateTimePicker({
       )}
     >
       <View className="gap-5">
-        {!!description && (
-          <Text className="text-center text-sm leading-relaxed text-theme-text-secondary mb-2">
-            {description}
-          </Text>
-        )}
+        {!!description && <InfoNotice className="mb-2">{description}</InfoNotice>}
         <DateTimeFields
           draft={draft}
           minTime={minTime}

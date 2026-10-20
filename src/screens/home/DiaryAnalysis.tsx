@@ -3,6 +3,7 @@ import { DiaryStatisticsSummary } from './DiaryStatisticsSummary';
 import { View } from 'react-native';
 import { Text } from '../../components/Text';
 import type { getDiaryStats } from '../../db/stats';
+import { InfoNotice } from '../../components/InfoNotice';
 export function DiaryAnalysis({
   stats,
   year,
@@ -36,6 +37,9 @@ export function DiaryAnalysis({
             <Text className="text-theme-text-secondary text-sm">{index + 1}</Text>
           </View>
         ))}
+      </View>
+      <View className="gap-2">
+        <InfoNotice>연속·최고 기록은 전체 기간 기준이에요.</InfoNotice>
       </View>
     </View>
   );

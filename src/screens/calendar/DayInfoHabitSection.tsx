@@ -1,3 +1,4 @@
+import { InfoNotice } from '../../components/InfoNotice';
 import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
@@ -90,9 +91,7 @@ export function DayInfoHabitSection({
         {habits.length ? (
           <View className="min-h-56 gap-2">
             {!editable && (
-              <Text className="mb-2 text-sm leading-relaxed text-theme-accent">
-                습관 체크는 오늘부터 3일 전까지 변경할 수 있어요.
-              </Text>
+              <InfoNotice>습관 체크는 오늘부터 3일 전까지 변경할 수 있어요.</InfoNotice>
             )}
             {habits.map(renderHabit)}
           </View>

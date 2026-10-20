@@ -1,3 +1,4 @@
+import { InfoNotice } from './InfoNotice';
 import { useState } from 'react';
 import { Switch, View } from 'react-native';
 import { useAppTheme } from '../theme/AppThemeProvider';
@@ -123,13 +124,13 @@ export function RecordSortPicker({
           </View>
         </View>
         <View className="h-10 justify-center">
-          <Text numberOfLines={2} className="text-center text-sm leading-5 text-theme-accent">
+          <InfoNotice>
             {draftSort === 'CUSTOM'
               ? '직접 정한 순서로 보여드려요.'
               : recordSort
                 ? '중요도, 현재 기록, 생성일 순으로 정렬해요.'
                 : '중요한 항목부터, 생성일 순으로 정렬해요.'}
-          </Text>
+          </InfoNotice>
         </View>
       </View>
     </BottomSheetModal>

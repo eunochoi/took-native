@@ -1,6 +1,7 @@
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
+import { InfoNotice } from '../../components/InfoNotice';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 
 export function WelcomePage({ onOpenWeb }: { onOpenWeb: () => void }) {
@@ -42,9 +43,7 @@ export function WelcomePage({ onOpenWeb }: { onOpenWeb: () => void }) {
           </Pressable>
         </View>
       </View>
-      <Text className="text-center text-sm text-theme-text-secondary">
-        앱과 웹의 기록은 자동으로 연동되지 않아요.
-      </Text>
+      <InfoNotice>앱과 웹의 기록은 자동으로 연동되지 않아요.</InfoNotice>
     </View>
   );
 }
