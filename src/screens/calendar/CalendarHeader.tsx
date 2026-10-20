@@ -17,6 +17,7 @@ export function CalendarHeader({
   centerTitle?: boolean;
 }) {
   const { colors, rem: appRem } = useAppTheme();
+  const todayAvailable = navigation.isDateAvailable(today);
   const arrows = ([-1, 1] as const).map((amount) => {
     const enabled = amount === -1 ? navigation.canGoPrevious : navigation.canGoNext;
     return (
@@ -42,7 +43,7 @@ export function CalendarHeader({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${month}, 이번 달로 이동`}
-        disabled={!navigation.isDateAvailable(today)}
+        disabled={!todayAvailable}
         onPress={() => navigation.changeToMonth(today.slice(0, 7))}
         className={`flex-1 justify-center ${centerTitle ? 'items-center' : 'items-start'}`}
       >
@@ -50,7 +51,28 @@ export function CalendarHeader({
           {format(parseISO(`${month}-01`), 'yyyy년 M월')}
         </Text>
       </Pressable>
-      {centerTitle ? arrows[1] : <View className="flex-row items-center -mr-2">{arrows}</View>}
+      {centerTitle ? (
+        arrows[1]
+      ) : (
+        <View className="flex-row items-center -mr-2">
+          {arrows[0]}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="오늘로 이동"
+            accessibilityHint="오늘이 속한 월을 보여줘요."
+            accessibilityState={{ disabled: !todayAvailable }}
+            disabled={!todayAvailable}
+            onPress={() => {
+              if (!todayAvailable) return;
+              navigation.changeToMonth(today.slice(0, 7));
+            }}
+            className={`h-10 w-10 items-center justify-center ios:curve-continuous rounded-xl ${todayAvailable ? 'opacity-100' : 'opacity-30'}`}
+          >
+            <AppIcon name="today" size={appRem * 1.1} color={colors.tertiary} />
+          </Pressable>
+          {arrows[1]}
+        </View>
+      )}
     </View>
   );
 }

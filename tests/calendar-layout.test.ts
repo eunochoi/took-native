@@ -305,11 +305,11 @@ test('month header places the title before grouped arrows and preserves navigati
   const buttons = nodes(tree).filter((node) => node.props.accessibilityRole === 'button');
   assert.deepEqual(
     buttons.map((node) => node.props.accessibilityLabel),
-    [titleLabel, '이전 달', '다음 달'],
+    [titleLabel, '이전 달', '오늘로 이동', '다음 달'],
   );
   const group = tree.props.children[2];
   assert.equal(group.type, 'View');
-  assert.equal(group.props.children.length, 2);
+  assert.equal(group.props.children.length, 3);
   buttons.find((node) => node.props.accessibilityLabel === '이전 달').props.onPress();
   buttons.find((node) => node.props.accessibilityLabel === '다음 달').props.onPress();
   buttons.find((node) => node.props.accessibilityLabel === titleLabel).props.onPress();
@@ -399,4 +399,50 @@ test('achievement-only day shows its message without an empty state or restart m
   assert(all.some((node) => node.type === 'Text' && node.props.children === '12:30'));
   assert(!all.some((node) => node.type === 'SoberRestartCard'));
   assert(!all.some((node) => node.props.children === '이날은 다시 시작한 기록이 없어요.'));
+});
+
+test('today button only returns to this month even when a date selection callback is supplied', () => {
+  for (const month of ['2026-09', '2026-10']) {
+    for (const selectable of [false, true]) {
+      const render = load('src/screens/calendar/CalendarHeader.tsx', []);
+      const calls: string[] = [];
+      const tree = render('CalendarHeader', {
+        month,
+        today: '2026-10-08',
+        navigation: useCalendarNavigation(
+          month,
+          (next) => calls.push(next),
+          undefined,
+          '2026-10-08',
+        ),
+        onSelect: selectable ? (date: string) => calls.push(date) : undefined,
+      });
+      const button = nodes(tree).find((node) => node.props.accessibilityLabel === '오늘로 이동');
+      assert.equal(button.props.disabled, false);
+      assert(nodes(button).some((node) => node.type === 'AppIcon' && node.props.name === 'today'));
+      button.props.onPress();
+      assert.deepEqual(calls, ['2026-10']);
+    }
+  }
+});
+
+test('today outside the calendar range cannot navigate or select even if the handler is called', () => {
+  for (const [min, max] of [
+    ['2026-10-09', '2026-11-01'],
+    ['2026-09-01', '2026-10-07'],
+  ]) {
+    const render = load('src/screens/calendar/CalendarHeader.tsx', []);
+    const calls: string[] = [];
+    const tree = render('CalendarHeader', {
+      month: '2026-10',
+      today: '2026-10-08',
+      navigation: useCalendarNavigation('2026-10', (next) => calls.push(next), min, max),
+      onSelect: (date: string) => calls.push(date),
+    });
+    const button = nodes(tree).find((node) => node.props.accessibilityLabel === '오늘로 이동');
+    assert.equal(button.props.disabled, true);
+    assert.equal(button.props.accessibilityState.disabled, true);
+    button.props.onPress();
+    assert.deepEqual(calls, []);
+  }
 });
