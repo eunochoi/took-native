@@ -18,7 +18,7 @@ struct SoberWidgetProvider: AppIntentTimelineProvider {
         version: 1, goals: [3, 7, 14, 30], accents: [:],
         records: [SoberWidgetRecord(
           id: 1, name: "야식 줄이기", startedAt: Date.now.addingTimeInterval(-450000).timeIntervalSince1970,
-          goalMode: "MANUAL", goalDays: 30, iconGlyph: "♥", iconFont: "TmoneyRoundWind-ExtraBold"
+          goalMode: "MANUAL", goalDays: 30, iconGlyph: "♥", iconFont: "TmoneyRoundWind-ExtraBold", iconKey: "food"
         )]
       )
     )
@@ -113,11 +113,13 @@ struct SoberWidgetView: View {
 
   private func heading(_ record: SoberWidgetRecord) -> some View {
     VStack(spacing: 6) {
-      Text(record.iconGlyph)
-        .font(.custom(record.iconFont, size: record.iconFont == "TmoneyRoundWind-ExtraBold" ? 22 : 24))
-        .foregroundStyle(.white)
+      Image(record.iconAssetName)
+        .renderingMode(.template)
+        .resizable()
+        .scaledToFit()
+        .foregroundStyle(accent)
+        .frame(width: 24, height: 24)
         .frame(width: 36, height: 36)
-        .background(accent, in: Circle())
         .widgetAccentable()
         .accessibilityHidden(true)
       Text(record.name)

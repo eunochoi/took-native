@@ -1,16 +1,10 @@
-import Ionicons from '@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Ionicons.json';
-import MaterialCommunityIcons from '@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/MaterialCommunityIcons.json';
-import { FlexWidget, IconWidget, OverlapWidget, TextWidget } from 'react-native-android-widget';
+import { FlexWidget, OverlapWidget, SvgWidget, TextWidget } from 'react-native-android-widget';
 import type { Sober, SoberRestart } from '../../db/types';
-import {
-  SOBER_ICONS,
-  formatSoberDuration,
-  formatSoberGoal,
-  getSoberSummary,
-} from '../../domain/sober';
+import { formatSoberDuration, formatSoberGoal, getSoberSummary } from '../../domain/sober';
 import { ACCENT_PALETTES } from '../../theme/colors';
 import tokens from '../../theme/tokens.json';
 import type { SoberWidgetSettings } from './model';
+import icons from './icons.json';
 
 export function SoberWidget({
   settings,
@@ -51,18 +45,7 @@ export function SoberWidget({
     fontSize: 16 * scale,
     adjustsFontSizeToFit: true,
   };
-  const icon = SOBER_ICONS[sober?.icon_key ?? 'favorite'];
-  const glyph =
-    icon.family === 'badge'
-      ? '19'
-      : String.fromCodePoint(
-          (
-            (icon.family === 'ionicons' ? Ionicons : MaterialCommunityIcons) as Record<
-              string,
-              number
-            >
-          )[icon.name],
-        );
+  const icon = icons[sober?.icon_key ?? 'favorite'].replaceAll('currentColor', accent);
   const trackWidth = Math.max(0, width - 32 * scale);
   const trackHeight = 12 * scale;
   return (
@@ -86,25 +69,11 @@ export function SoberWidget({
           style={{
             width: 44 * scale,
             height: 44 * scale,
-            borderRadius: 22 * scale,
-            backgroundColor: accent,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          {icon.family === 'badge' ? (
-            <TextWidget
-              text="19"
-              style={{ ...boldStyle, color: '#FFFFFF', fontSize: 22 * scale }}
-            />
-          ) : (
-            <IconWidget
-              icon={glyph}
-              font={icon.family === 'ionicons' ? 'Ionicons' : 'MaterialCommunityIcons'}
-              size={28 * scale}
-              style={{ color: '#FFFFFF' }}
-            />
-          )}
+          <SvgWidget svg={icon} style={{ width: 28 * scale, height: 28 * scale }} />
         </FlexWidget>
         <TextWidget
           text={sober ? sober.name : '거리두기'}

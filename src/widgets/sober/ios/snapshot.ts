@@ -26,6 +26,8 @@ export function buildIosSoberWidgetSnapshot(sobers: Sober[], restarts: SoberRest
           ) / 1000,
         goalMode: sober.goal_mode,
         goalDays: sober.goal_days,
+        iconKey: sober.icon_key,
+        // Older installed widget binaries still read these fields.
         iconGlyph:
           icon.family === 'badge'
             ? '19'

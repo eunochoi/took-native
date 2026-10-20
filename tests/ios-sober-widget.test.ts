@@ -12,6 +12,7 @@ import {
   formatSoberGoal,
   getSoberSummary,
   SOBER_GOALS,
+  SOBER_ICONS,
 } from '../src/domain/sober';
 import { buildIosSoberWidgetSnapshot } from '../src/widgets/sober/ios/snapshot';
 
@@ -85,10 +86,26 @@ test(
         'Ionicons.ttf',
         'MaterialCommunityIcons.ttf',
       ];
+      const iconSnapshots: string[] = [];
+      const assetNames: string[] = [];
+      for (const icon_key of Object.keys(SOBER_ICONS) as Sober['icon_key'][]) {
+        const current = buildIosSoberWidgetSnapshot([{ ...sobers[0], icon_key }], []);
+        const { iconKey, ...legacy } = current.records[0];
+        iconSnapshots.push(
+          JSON.stringify(current),
+          JSON.stringify({ ...current, records: [legacy] }),
+        );
+        assetNames.push(`sober-${iconKey}`, `sober-${iconKey}`);
+      }
+      iconSnapshots.push(
+        JSON.stringify({ ...snapshot, records: [{ ...snapshot.records[0], iconKey: 'unknown' }] }),
+      );
+      assetNames.push('sober-coffee');
       const fixture = {
         snapshot,
         dates,
         invalid,
+        iconSnapshots,
         fonts: fontFiles.map((name) => realpathSync(join(root, 'targets/sober-widget', name))),
       };
       writeFileSync(join(temp, 'fixture.json'), JSON.stringify(fixture));
@@ -99,6 +116,7 @@ test(
           '-module-cache-path',
           join(temp, 'cache'),
           join(root, 'targets/sober-widget/SoberWidgetData.swift'),
+          join(root, 'targets/sober-widget/SoberWidgetIcons.swift'),
           join(root, 'tests/native/SoberWidgetDataProbe.swift'),
           '-o',
           join(temp, 'probe'),
@@ -125,6 +143,7 @@ test(
         }),
       );
       assert.deepEqual(result.summaries, expected);
+      assert.deepEqual(result.assetNames, assetNames);
       assert.deepEqual(
         result.invalidAccepted,
         invalid.map(() => false),
@@ -137,6 +156,52 @@ test(
         'Ionicons',
         'MaterialDesignIcons',
       ]);
+    } finally {
+      rmSync(temp, { recursive: true, force: true });
+    }
+  },
+);
+
+test(
+  'iOS widget icon catalog compiles all selectable icons as transparent templates',
+  {
+    skip: process.platform !== 'darwin',
+    timeout: 90000,
+  },
+  () => {
+    const temp = mkdtempSync(join(tmpdir(), 'took-widget-catalog-test-'));
+    try {
+      execFileSync(
+        'xcrun',
+        [
+          'actool',
+          join(root, 'targets/sober-widget/Assets.xcassets'),
+          '--compile',
+          temp,
+          '--platform',
+          'iphoneos',
+          '--minimum-deployment-target',
+          '17.0',
+          '--target-device',
+          'iphone',
+          '--output-format',
+          'human-readable-text',
+          '--output-partial-info-plist',
+          join(temp, 'Info.plist'),
+        ],
+        { timeout: 60000, stdio: 'pipe' },
+      );
+      const entries = JSON.parse(
+        execFileSync('xcrun', ['assetutil', '--info', join(temp, 'Assets.car')], {
+          encoding: 'utf8',
+        }),
+      );
+      for (const key of Object.keys(SOBER_ICONS)) {
+        const icon = entries.find((entry: any) => entry.Name === `sober-${key}`);
+        assert(icon, `Missing compiled icon: ${key}`);
+        assert.equal(icon['Template Mode'], 'template');
+        assert.equal(icon.Opaque, false);
+      }
     } finally {
       rmSync(temp, { recursive: true, force: true });
     }

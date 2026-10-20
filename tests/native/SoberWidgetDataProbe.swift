@@ -9,6 +9,7 @@ struct SoberWidgetDataProbe {
     let dates: [Double]
     let invalid: [String]
     let fonts: [String]
+    let iconSnapshots: [String]
   }
 
   static func main() throws {
@@ -38,6 +39,9 @@ struct SoberWidgetDataProbe {
       "defaultId": snapshot.record(for: nil)?.id as Any,
       "deletedSelectionIsEmpty": snapshot.record(for: "99999") == nil,
       "fontNames": fontNames,
+      "assetNames": try fixture.iconSnapshots.map {
+        try SoberWidgetSnapshot.decode(Data($0.utf8)).records[0].iconAssetName
+      },
     ]
     let resultData = try JSONSerialization.data(withJSONObject: result, options: [.sortedKeys])
     print(String(decoding: resultData, as: UTF8.self))

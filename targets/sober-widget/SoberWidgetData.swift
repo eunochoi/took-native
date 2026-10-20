@@ -8,6 +8,11 @@ struct SoberWidgetRecord: Codable {
   let goalDays: Int?
   let iconGlyph: String
   let iconFont: String
+  let iconKey: String?
+
+  var iconAssetName: String {
+    SoberWidgetIcons.assetName(key: iconKey, glyph: iconGlyph, font: iconFont)
+  }
 
   func summary(at date: Date, goals: [Int]) -> SoberWidgetSummary {
     let duration = max(0, date.timeIntervalSince1970 - startedAt)

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { test } from 'node:test';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import { runInNewContext } from 'node:vm';
 import { defaultWidgetSettings, parseWidgetSettings } from '../src/widgets/sober/model';
@@ -15,6 +17,7 @@ import type { Sober } from '../src/db/types';
 import initSqlJs from 'sql.js';
 import { ACCENT_PALETTES } from '../src/theme/colors';
 import tokens from '../src/theme/tokens.json';
+import icons from '../src/widgets/sober/icons.json';
 import { buildIosSoberWidgetSnapshot } from '../src/widgets/sober/ios/snapshot';
 
 const require = createRequire(import.meta.url);
@@ -28,12 +31,13 @@ function load(path: string, mocks: Record<string, unknown>) {
     },
   }).outputText;
   const exports: Record<string, any> = {};
+  const localRequire = createRequire(new URL(path, import.meta.url));
   runInNewContext(source, {
     exports,
     __DEV__: true,
     Promise,
     console: { warn() {} },
-    require: (name: string) => (name in mocks ? mocks[name] : require(name)),
+    require: (name: string) => (name in mocks ? mocks[name] : localRequire(name)),
   });
   return exports;
 }
@@ -67,6 +71,7 @@ test('iOS snapshot shares current starts and widget colors without copying priva
   assert.equal(snapshot.records[0].startedAt, Date.parse('2026-10-03T00:00:00Z') / 1000);
   assert.equal(snapshot.records[1].startedAt, Date.parse('2026-10-04T00:00:00Z') / 1000);
   assert.equal(snapshot.records[1].iconGlyph, '19');
+  assert.equal(snapshot.records[1].iconKey, 'age19');
   assert(!JSON.stringify(snapshot).includes('private'));
   for (const accent of ACCENT_KEYS)
     assert.equal(snapshot.accents[accent], ACCENT_PALETTES[accent].accent);
@@ -84,6 +89,7 @@ test('iOS snapshot shares current starts and widget colors without copying priva
       ],
       [],
     );
+    assert.equal(result.records[0].iconKey, icon_key);
     assert(result.records[0].iconGlyph);
     assert(result.records[0].iconFont);
   }
@@ -195,14 +201,37 @@ test('widget choices are independent, validated, and use every existing Korean a
     assert.throws(() => parseWidgetSettings({ ...defaultWidgetSettings(1), ...patch }));
 });
 
-test('widget glyphs cover the actual selectable icons', () => {
-  for (const icon of Object.values(SOBER_ICONS)) {
-    if (icon.family === 'badge') continue;
-    const font = icon.family === 'ionicons' ? 'Ionicons' : 'MaterialCommunityIcons';
-    const glyphs = require(
-      `@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/${font}.json`,
+test('widget assets match every current app icon and ship transparent iOS images', () => {
+  const { buildIconAssets } = require('../scripts/render-widget-icons.cjs');
+  const generated = buildIconAssets();
+  assert.deepEqual(JSON.parse(JSON.stringify(generated.icons)), icons);
+  assert.deepEqual(Object.keys(icons).sort(), Object.keys(SOBER_ICONS).sort());
+  assert.equal(
+    fs.readFileSync(
+      new URL('../targets/sober-widget/SoberWidgetIcons.swift', import.meta.url),
+      'utf8',
+    ),
+    generated.swift,
+  );
+  for (const key of Object.keys(icons)) {
+    const asset = `sober-${key}`;
+    const directory = new URL(
+      `../targets/sober-widget/Assets.xcassets/${asset}.imageset/`,
+      import.meta.url,
     );
-    assert.equal(typeof glyphs[icon.name], 'number');
+    const contents = JSON.parse(fs.readFileSync(new URL('Contents.json', directory), 'utf8'));
+    assert.equal(contents.properties['template-rendering-intent'], 'template');
+    const file = new URL(contents.images[0].filename, directory);
+    const png = fs.readFileSync(file);
+    assert.equal(png.subarray(1, 4).toString(), 'PNG');
+    assert.equal(png.readUInt32BE(16), 256);
+    assert.equal(png.readUInt32BE(20), 256);
+    assert.equal(png[25], 6, `${key} must preserve alpha`);
+    assert(
+      png.equals(
+        fs.readFileSync(new URL(`../assets/widgets/sober-icons/${asset}.png`, import.meta.url)),
+      ),
+    );
   }
 });
 
@@ -349,6 +378,18 @@ test('actual library serializes selected icons, transparent background and share
       require(`${library}/widgets/${name}.js`),
     ),
   );
+  Object.assign(
+    widgets,
+    load('../node_modules/react-native-android-widget/lib/commonjs/widgets/SvgWidget.js', {
+      'react-native': {
+        Image: {
+          resolveAssetSource: () => {
+            throw Error('Inline SVG should not resolve assets');
+          },
+        },
+      },
+    }),
+  );
   const { buildWidgetTree } = require(`${library}/api/build-widget-tree.js`);
   const { SoberWidget } = load('../src/widgets/sober/SoberWidget.tsx', {
     'react-native-android-widget': widgets,
@@ -401,7 +442,27 @@ test('actual library serializes selected icons, transparent background and share
         ),
     ),
   );
-  assert.equal(nodes.filter((node) => node.type === 'IconWidget').length, 1);
+  assert.equal(nodes.filter((node) => node.type === 'IconWidget').length, 0);
+  for (const icon_key of Object.keys(icons) as Sober['icon_key'][]) {
+    const selected = buildWidgetTree(
+      SoberWidget({
+        settings: { ...defaultWidgetSettings(1), accent: 'pink' },
+        sober: { ...sober, icon_key },
+        width: 180,
+        height: 180,
+      }),
+    );
+    const icon = flatten(selected).find((node) => node.type === 'SvgWidget');
+    assert.equal(
+      icon.props.svgString,
+      icons[icon_key].replaceAll('currentColor', ACCENT_PALETTES.pink.accent),
+    );
+    const holder = selected.children[0].children[0];
+    assert.equal(holder.props.backgroundColor, undefined);
+    assert.equal(holder.props.borderRadius, undefined);
+    assert.equal(icon.props.width, 28);
+    assert.equal(icon.props.height, 28);
+  }
   for (const [days, expected] of [
     [364, '364일 23시간 59분'],
     [365, '365일 23시간 59분'],
@@ -429,4 +490,37 @@ test('actual library serializes selected icons, transparent background and share
   assert.doesNotThrow(() =>
     buildWidgetTree(SoberWidget({ settings: null, sober: null, width: 180, height: 180 })),
   );
+});
+
+test('native widget sync updates existing Android preview and emits iOS catalog without prebuild', () => {
+  const { syncNativeAssets } = require('../scripts/render-widget-icons.cjs');
+  const project = fs.mkdtempSync(join(tmpdir(), 'took-native-widget-resources-'));
+  try {
+    fs.mkdirSync(join(project, 'src/widgets/sober'), { recursive: true });
+    fs.mkdirSync(join(project, 'assets/widgets/sober-icons'), { recursive: true });
+    fs.writeFileSync(
+      join(project, 'src/widgets/sober/icons.json'),
+      JSON.stringify({ coffee: icons.coffee }),
+    );
+    const png = fs.readFileSync(
+      new URL('../assets/widgets/sober-icons/sober-coffee.png', import.meta.url),
+    );
+    fs.writeFileSync(join(project, 'assets/widgets/sober-icons/sober-coffee.png'), png);
+    const preview = fs.readFileSync(
+      new URL('../assets/widgets/sober-preview.png', import.meta.url),
+    );
+    fs.writeFileSync(join(project, 'assets/widgets/sober-preview.png'), preview);
+    syncNativeAssets(project);
+    assert(!fs.existsSync(join(project, 'android')));
+    const imageset = join(project, 'targets/sober-widget/Assets.xcassets/sober-coffee.imageset');
+    assert(fs.readFileSync(join(imageset, 'icon.png')).equals(png));
+    fs.mkdirSync(join(project, 'android/app/src/main/res/drawable'), { recursive: true });
+    const nativePreview = join(project, 'android/app/src/main/res/drawable/sober_preview.png');
+    fs.writeFileSync(nativePreview, 'old preview');
+    syncNativeAssets(project);
+    assert(fs.readFileSync(nativePreview).equals(preview));
+    assert(fs.readFileSync(join(imageset, 'icon.png')).equals(png));
+  } finally {
+    fs.rmSync(project, { recursive: true, force: true });
+  }
 });
