@@ -45,7 +45,7 @@ export function HabitFlowSheet({
                 {format(parseISO(stats.recent.start), 'yyyy.M.d')} ~{' '}
                 {format(parseISO(stats.recent.end), 'M.d')}
               </Text>
-              <Text className="text-3xl font-semibold text-theme-text-secondary">
+              <Text className="pt-3.5 pb-2 text-4xl font-semibold text-theme-text-secondary">
                 {stats.recent.average === null
                   ? '—'
                   : `${Number(stats.recent.average.toFixed(1))}%`}
