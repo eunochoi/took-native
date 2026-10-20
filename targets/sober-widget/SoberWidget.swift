@@ -67,14 +67,15 @@ struct SoberWidgetView: View {
 
   private var textColor: Color {
     if !showsBackground { return .primary }
+    let primary = Color("WidgetTextPrimaryLight")
     switch entry.configuration.textColor {
     case .white: return .white
-    case .black: return .black
+    case .black: return primary
     case .automatic:
       switch entry.configuration.background {
-      case .white: return .black
+      case .white: return primary
       case .black: return .white
-      case .system: return colorScheme == .dark ? .white : .black
+      case .system: return colorScheme == .dark ? .white : primary
       }
     }
   }
@@ -94,7 +95,7 @@ struct SoberWidgetView: View {
             .font(.system(size: 30))
             .foregroundStyle(accent)
           Text("거리두기")
-            .font(.custom("TmoneyRoundWind-ExtraBold", size: 16))
+            .font(.custom("TmoneyRoundWind-Regular", size: 16))
           Text(entry.configuration.sober == nil
             ? "앱에서 거리두기를 만든 뒤\n위젯을 길게 눌러 선택해주세요."
             : "선택한 거리두기가 없어요.\n위젯 편집에서 다시 선택해주세요.")
@@ -123,7 +124,7 @@ struct SoberWidgetView: View {
         .widgetAccentable()
         .accessibilityHidden(true)
       Text(record.name)
-        .font(.custom("TmoneyRoundWind-ExtraBold", size: 15))
+        .font(.custom("TmoneyRoundWind-Regular", size: 16))
         .lineLimit(1)
         .minimumScaleFactor(0.65)
     }

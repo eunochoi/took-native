@@ -497,6 +497,10 @@ test('native widget sync updates existing Android preview and emits iOS catalog 
   const project = fs.mkdtempSync(join(tmpdir(), 'took-native-widget-resources-'));
   try {
     fs.mkdirSync(join(project, 'src/widgets/sober'), { recursive: true });
+    fs.mkdirSync(join(project, 'src/theme'), { recursive: true });
+    const theme = JSON.parse(JSON.stringify(tokens));
+    theme.colorValues[theme.colors.light.textPrimary] = '#123456';
+    fs.writeFileSync(join(project, 'src/theme/tokens.json'), JSON.stringify(theme));
     fs.mkdirSync(join(project, 'assets/widgets/sober-icons'), { recursive: true });
     fs.writeFileSync(
       join(project, 'src/widgets/sober/icons.json'),
@@ -512,6 +516,18 @@ test('native widget sync updates existing Android preview and emits iOS catalog 
     fs.writeFileSync(join(project, 'assets/widgets/sober-preview.png'), preview);
     syncNativeAssets(project);
     assert(!fs.existsSync(join(project, 'android')));
+    const color = JSON.parse(
+      fs.readFileSync(
+        join(
+          project,
+          'targets/sober-widget/Assets.xcassets/WidgetTextPrimaryLight.colorset/Contents.json',
+        ),
+        'utf8',
+      ),
+    ).colors[0].color.components;
+    assert.equal(Number(color.red), 18 / 255);
+    assert.equal(Number(color.green), 52 / 255);
+    assert.equal(Number(color.blue), 86 / 255);
     const imageset = join(project, 'targets/sober-widget/Assets.xcassets/sober-coffee.imageset');
     assert(fs.readFileSync(join(imageset, 'icon.png')).equals(png));
     fs.mkdirSync(join(project, 'android/app/src/main/res/drawable'), { recursive: true });

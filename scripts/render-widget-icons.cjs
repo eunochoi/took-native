@@ -146,6 +146,36 @@ function syncNativeAssets(projectRoot = root) {
       ) + '\n',
     );
   }
+  const tokens = JSON.parse(
+    fs.readFileSync(path.join(projectRoot, 'src/theme/tokens.json'), 'utf8'),
+  );
+  const textPrimary = tokens.colorValues[tokens.colors.light.textPrimary];
+  const textColor = path.join(catalog, 'WidgetTextPrimaryLight.colorset');
+  fs.mkdirSync(textColor, { recursive: true });
+  fs.writeFileSync(
+    path.join(textColor, 'Contents.json'),
+    JSON.stringify(
+      {
+        colors: [
+          {
+            idiom: 'universal',
+            color: {
+              'color-space': 'srgb',
+              components: {
+                red: String(parseInt(textPrimary.slice(1, 3), 16) / 255),
+                green: String(parseInt(textPrimary.slice(3, 5), 16) / 255),
+                blue: String(parseInt(textPrimary.slice(5, 7), 16) / 255),
+                alpha: '1.000',
+              },
+            },
+          },
+        ],
+        info,
+      },
+      null,
+      2,
+    ) + '\n',
+  );
   const androidResources = path.join(projectRoot, 'android/app/src/main/res');
   if (fs.existsSync(androidResources)) {
     const drawable = path.join(androidResources, 'drawable');

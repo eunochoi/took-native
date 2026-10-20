@@ -196,6 +196,17 @@ test(
           encoding: 'utf8',
         }),
       );
+      const primary = entries.find((entry: any) => entry.Name === 'WidgetTextPrimaryLight');
+      assert.equal(primary?.AssetType, 'Color');
+      const tokens = JSON.parse(readFileSync(join(root, 'src/theme/tokens.json'), 'utf8'));
+      const hex = tokens.colorValues[tokens.colors.light.textPrimary];
+      for (const [index, start] of [1, 3, 5].entries()) {
+        assert(
+          Math.abs(
+            primary['Color components'][index] - parseInt(hex.slice(start, start + 2), 16) / 255,
+          ) < 0.000001,
+        );
+      }
       for (const key of Object.keys(SOBER_ICONS)) {
         const icon = entries.find((entry: any) => entry.Name === `sober-${key}`);
         assert(icon, `Missing compiled icon: ${key}`);
