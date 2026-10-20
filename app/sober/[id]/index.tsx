@@ -109,6 +109,8 @@ export default function SoberDetail() {
           selected={selected}
           today={today}
           firstDate={firstDate}
+          iconKey={sober.icon_key}
+          iconColor={sober.icon_color}
           recordsByDate={grouped}
           achievements={getSoberAchievements(sober, restarts.data ?? [], now)}
           onMonthChange={setMonth}

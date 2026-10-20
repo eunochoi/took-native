@@ -448,7 +448,7 @@ test('habit statistics refresh replacement records while every date remains read
     assert.equal(cell.onSelect, undefined);
     press(cell);
   }
-  assert.match(dayProps(currentNodes, '2024-03-10').contentClassName, /bg-theme-calendar-empty/);
+  assert.equal(dayProps(currentNodes, '2024-03-10').contentClassName, undefined);
   const updatedProps = ui
     .render({ dates: ['2024-03-10'] })
     .nodes.find((node) => node.type === 'HabitMonthStatistics').props;
@@ -456,8 +456,8 @@ test('habit statistics refresh replacement records while every date remains read
   press(checked);
   assert.equal(checked.disabled, true);
   assert.equal(checked.onSelect, undefined);
-  assert.match(checked.contentClassName, /bg-theme-accent/);
-  assert.equal(checked.textClassName, 'font-medium text-theme-text-on-accent');
+  assert.equal(checked.contentClassName, undefined);
+  assert.equal(checked.textClassName, 'font-medium');
   assert.equal(checked.label, '2024-03-10, 완료 기록 있음');
   assert.deepEqual(ui.calls, { month: 2, year: 0, calendar: 0 });
   ui.render({ today: '2024-03-11' });

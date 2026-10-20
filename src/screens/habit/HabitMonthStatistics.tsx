@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import { Text } from '../../components/Text';
+import { HabitIcon } from '../../components/HabitIcon';
 import type { Habit } from '../../db/types';
 import { calendarDays } from '../../domain/calendar';
 import { localDate } from '../../domain/date';
@@ -65,15 +66,14 @@ export function HabitMonthStatistics({
                 disabled={!outside || !available}
                 dimmed={!available}
                 label={`${date}${completed ? ', 완료 기록 있음' : ''}${empty ? ', 실천 기록 없음' : ''}`}
-                contentClassName={
-                  completed
-                    ? 'ios:curve-continuous rounded-full bg-theme-accent'
-                    : empty
-                      ? 'ios:curve-continuous rounded-full bg-theme-calendar-empty'
-                      : undefined
-                }
-                textClassName={completed ? 'font-medium text-theme-text-on-accent' : 'font-medium'}
-              />
+                textClassName="font-medium"
+              >
+                {completed ? (
+                  <View className="w-3/5 aspect-square items-center justify-center">
+                    <HabitIcon name={habit.icon_key} colorKey={habit.icon_color} />
+                  </View>
+                ) : undefined}
+              </CalendarDay>
             );
           })}
         </CalendarGrid>

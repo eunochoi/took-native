@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
+import { SoberIcon } from '../../components/SoberIcon';
+import type { Sober } from '../../db/types';
 import { localDate } from '../../domain/date';
 import type { SoberAchievement } from '../../domain/sober';
 import { useAppTheme } from '../../theme/AppThemeProvider';
@@ -18,6 +20,8 @@ export function SoberMonthCalendar({
   today,
   selected,
   firstDate,
+  iconKey,
+  iconColor,
   recordsByDate,
   achievements = [],
   onMonthChange,
@@ -27,6 +31,8 @@ export function SoberMonthCalendar({
   today: string;
   selected: string;
   firstDate: string;
+  iconKey: Sober['icon_key'];
+  iconColor: Sober['icon_color'];
   recordsByDate: Map<string, SoberRestart[]>;
   achievements?: SoberAchievement[];
   onMonthChange: (month: string) => void;
@@ -55,11 +61,10 @@ export function SoberMonthCalendar({
           {days.map((date) => {
             const outside = date.slice(0, 7) !== month;
             const unavailable = !navigation.isDateAvailable(date);
-            const count = outside || unavailable ? 0 : (recordsByDate.get(date)?.length ?? 0);
+            const hasRestart = !outside && !unavailable && !!recordsByDate.get(date)?.length;
             // Keep earned milestones in the data, but prioritize restarts on the same date.
             const goals =
-              outside || unavailable || count > 0 ? [] : (achievementDates.get(date) ?? []);
-            const noRestart = !outside && !unavailable && count === 0;
+              outside || unavailable || hasRestart ? [] : (achievementDates.get(date) ?? []);
             return (
               <CalendarDay
                 key={date}
@@ -74,24 +79,23 @@ export function SoberMonthCalendar({
                 label={[
                   date,
                   ...goals.map((days) => `${days}일 달성!`),
-                  count
-                    ? `다시 시작 ${count}회`
+                  hasRestart
+                    ? '다시 시작한 날'
                     : !outside && !unavailable
                       ? '리셋 없이 지낸 날'
                       : '',
                 ]
                   .filter(Boolean)
                   .join(', ')}
-                contentClassName={noRestart ? 'ios:curve-continuous rounded-full bg-theme-calendar-empty' : undefined}
                 textClassName="font-medium"
               >
                 {goals.length > 0 ? (
                   <View className="w-3/5 aspect-square items-center justify-center">
                     <AppIcon name="auto-awesome" size={iconSizes.lg} color={colors.achievement} />
                   </View>
-                ) : count > 0 ? (
-                  <View className="w-3/5 aspect-square items-center justify-center ios:curve-continuous rounded-full bg-theme-accent">
-                    <Text className="text-xs font-medium text-theme-text-on-accent">{count}</Text>
+                ) : hasRestart ? (
+                  <View className="w-3/5 aspect-square items-center justify-center">
+                    <SoberIcon name={iconKey} colorKey={iconColor} />
                   </View>
                 ) : undefined}
               </CalendarDay>

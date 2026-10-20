@@ -25,16 +25,18 @@ function evaluate(
       require: (name: string) => {
         if (name in mocks) return mocks[name];
         if (name.endsWith('theme/classes')) return require('../src/theme/classes');
-          if (name.endsWith('theme/colors')) return require('../src/theme/colors');
+        if (name.endsWith('theme/colors')) return require('../src/theme/colors');
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react')
           return {
             useMemo: (factory: Function) => factory(),
             useRef: (current: unknown) => ({ current }),
             createRef: () => ({ current: null }),
-            useState: (initial: any) => [typeof initial === 'function' ? initial() : initial, () => {}],
+            useState: (initial: any) => [
+              typeof initial === 'function' ? initial() : initial,
+              () => {},
+            ],
           };
-        if (name === 'expo-blur') return { BlurTargetView: 'BlurTargetView' };
         if (name === 'react-native') return { Pressable: 'Pressable', View: 'View' };
         if (name === 'date-fns' || name === 'tailwind-merge') return require(name);
         if (name.endsWith('theme/AppThemeProvider'))
@@ -70,11 +72,25 @@ const day = { date: '2026-10-07', month: '2026-10', today: '2026-10-07', onSelec
 
 test('calendar habit bar shows exact percentages including one percent and hides only zero', () => {
   const { CalendarHabitProgress } = load('src/screens/calendar/CalendarHabitProgress.tsx');
-  for (const [done, total] of [[0, 4], [0, 0], [1, 0], [-1, 4], [NaN, 4]])
+  for (const [done, total] of [
+    [0, 4],
+    [0, 0],
+    [1, 0],
+    [-1, 4],
+    [NaN, 4],
+  ])
     assert.equal(CalendarHabitProgress({ done, total }), null);
-  for (const [done, total] of [[1, 100], [1, 5], [1, 6], [1, 3], [3, 4], [99, 100], [4, 4]]) {
+  for (const [done, total] of [
+    [1, 100],
+    [1, 5],
+    [1, 6],
+    [1, 3],
+    [3, 4],
+    [99, 100],
+    [4, 4],
+  ]) {
     const tree = CalendarHabitProgress({ done, total });
-    const percent = done / total * 100;
+    const percent = (done / total) * 100;
     assert.match(tree.props.className, /\bh-2\b/);
     assert.match(tree.props.className, /\boverflow-hidden\b/);
     assert.doesNotMatch(tree.props.className, /\bh-auto\b/);
@@ -85,7 +101,10 @@ test('calendar habit bar shows exact percentages including one percent and hides
     assert.equal(tree.props.children.props.style.width, `${percent}%`);
     assert(!nodes(tree).some((node) => ['Svg', 'Path', 'Circle'].includes(node.type)));
   }
-  assert.equal(CalendarHabitProgress({ done: 5, total: 4 }).props.children.props.style.width, '100%');
+  assert.equal(
+    CalendarHabitProgress({ done: 5, total: 4 }).props.children.props.style.width,
+    '100%',
+  );
 });
 
 test('calendar hides progress while the habit denominator is loading or failed and exposes a retry', () => {
@@ -101,18 +120,28 @@ test('calendar hides progress while the habit denominator is loading or failed a
       useQuery: (kind: string) => ({
         data: kind === 'habits' ? undefined : kind === 'diary' ? [] : [{ date: day.date }],
         isError: kind === 'habits' && isError,
-        refetch: () => { if (kind === 'habits') retries++; },
+        refetch: () => {
+          if (kind === 'habits') retries++;
+        },
       }),
     },
   });
-  const props = { month: day.month, today: day.today, selected: day.date, onMonthChange: () => {}, onSelect: () => {} };
+  const props = {
+    month: day.month,
+    today: day.today,
+    selected: day.date,
+    onMonthChange: () => {},
+    onSelect: () => {},
+  };
   const loading = DiaryHabitMonthCalendar(props);
   assert(!nodes(loading).some((node) => node.type === 'CalendarHabitProgress'));
   assert(!nodes(cell(loading, day.date)).some((node) => node.type === 'EmotionImage'));
   isError = true;
   const failed = DiaryHabitMonthCalendar(props);
   assert(!nodes(failed).some((node) => node.type === 'CalendarHabitProgress'));
-  nodes(failed).find((node) => node.type === 'QueryError').props.onRetry();
+  nodes(failed)
+    .find((node) => node.type === 'QueryError')
+    .props.onRetry();
   assert.equal(retries, 1);
 });
 
@@ -120,9 +149,15 @@ test('date cell owns weekday color, outside-month dimming and optional today/sel
   const tree = CalendarDay({ ...day, selected: day.date });
   assert.equal(tree.props.accessibilityState.selected, true);
   assert.match(tree.props.accessibilityLabel, /오늘/);
-  assert.equal(nodes(tree).filter((node) => node.props.className?.includes('h-1.5 w-1.5')).length, 1);
-  assert.equal(nodes(tree).find((node) => node.props.className?.includes('absolute -bottom-0.5')).props.className,
-    'absolute -bottom-0.5 h-1.5 w-1.5 ios:curve-continuous rounded-full bg-theme-accent/70');
+  assert.equal(
+    nodes(tree).filter((node) => node.props.className?.includes('h-1.5 w-1.5')).length,
+    1,
+  );
+  assert.equal(
+    nodes(tree).find((node) => node.props.className?.includes('absolute -bottom-0.5')).props
+      .className,
+    'absolute -bottom-0.5 h-1.5 w-1.5 ios:curve-continuous rounded-full bg-theme-accent/70',
+  );
   const hidden = CalendarDay({
     ...day,
     selected: day.date,
@@ -173,12 +208,21 @@ test('today and selection use one identical bottom dot, including when both are 
     { ...day, selected: day.date },
   ]) {
     const tree = CalendarDay(props);
-    const markers = nodes(tree).filter((node) => node.props.className?.includes('absolute -bottom-0.5'));
+    const markers = nodes(tree).filter((node) =>
+      node.props.className?.includes('absolute -bottom-0.5'),
+    );
     assert.equal(markers.length, 1);
-    assert.equal(markers[0].props.className, 'absolute -bottom-0.5 h-1.5 w-1.5 ios:curve-continuous rounded-full bg-theme-accent/70');
+    assert.equal(
+      markers[0].props.className,
+      'absolute -bottom-0.5 h-1.5 w-1.5 ios:curve-continuous rounded-full bg-theme-accent/70',
+    );
     assert.match(tree.props.className, /relative/);
     assert(!nodes(tree).some((node) => node.props.className?.includes('top-')));
-    assert(!nodes(tree).find((node) => node.type === 'Text').props.className.includes('rounded-full'));
+    assert(
+      !nodes(tree)
+        .find((node) => node.type === 'Text')
+        .props.className.includes('rounded-full'),
+    );
   }
   for (const props of [
     { month: '2026-09' },
@@ -219,6 +263,10 @@ test('diary calendar owns decorations and future-date limits while using the def
     onMonthChange: () => {},
     onSelect: (date: string) => selected.push(date),
   });
+  assert.equal(
+    nodes(tree).find((node) => node.type === 'CalendarHeader').props.onSelect,
+    undefined,
+  );
   assert.equal(nodes(tree).find((node) => node.type === 'CalendarGrid').props.minimumRows, 6);
   const cells = nodes(tree).filter((node) => node.type === 'CalendarDay');
   assert.equal(cells.length, calendarDays(day.month).length);
@@ -237,7 +285,7 @@ test('diary calendar owns decorations and future-date limits while using the def
   const progress = content.find((node) => node.type === 'CalendarHabitProgress');
   assert.equal(progress.props.done, 2);
   assert.equal(progress.props.total, 4);
-  assert(!content.some((node) => node.type === 'Badge' || node.type === 'BlurTargetView'));
+  assert(!content.some((node) => node.type === 'Badge'));
   assert.match(cell(tree, day.date).props.label, /습관 2\/4개 완료/);
   const decoration = cell(tree, day.date).props.children;
   const [artwork, progressSlot] = decoration.props.children;
@@ -252,17 +300,31 @@ test('diary calendar owns decorations and future-date limits while using the def
   const habitOnly = cell(tree, '2026-10-06');
   const selectedHabitOnly = CalendarDay({ ...habitOnly.props, selected: '2026-10-06' });
   assert.equal(selectedHabitOnly.props.accessibilityState.selected, true);
-  assert(!nodes(selectedHabitOnly).some((node) => node.props.className?.includes('absolute -bottom-0.5')));
+  assert(
+    !nodes(selectedHabitOnly).some((node) =>
+      node.props.className?.includes('absolute -bottom-0.5'),
+    ),
+  );
   const todayCell = CalendarDay(cell(tree, day.today).props);
-  assert.equal(nodes(todayCell).filter((node) => node.props.className?.includes('absolute -bottom-0.5')).length, 0);
+  assert.equal(
+    nodes(todayCell).filter((node) => node.props.className?.includes('absolute -bottom-0.5'))
+      .length,
+    0,
+  );
   assert(!nodes(habitOnly).some((node) => node.type === 'EmotionImage'));
   const dateLabel = nodes(habitOnly).find((node) => node.type === 'Text');
   assert.equal(dateLabel.props.children, 6);
-  assert.equal(dateLabel.props.className,
-    nodes(CalendarDay({ ...day, date: '2026-10-06' })).find((node) => node.type === 'Text').props.className);
+  assert.equal(
+    dateLabel.props.className,
+    nodes(CalendarDay({ ...day, date: '2026-10-06' })).find((node) => node.type === 'Text').props
+      .className,
+  );
   assert.equal(habitOnly.props.children.props.className, decoration.props.className);
   assert.equal(habitOnly.props.children.props.children[0].props.className, artwork.props.className);
-  assert.equal(habitOnly.props.children.props.children[1].props.className, progressSlot.props.className);
+  assert.equal(
+    habitOnly.props.children.props.children[1].props.className,
+    progressSlot.props.className,
+  );
   const emptyProgress = nodes(habitOnly).find((node) => node.type === 'CalendarHabitProgress');
   assert.equal(emptyProgress.props.done, 1);
   assert.equal(emptyProgress.props.total, 3);
@@ -273,15 +335,17 @@ test('diary calendar owns decorations and future-date limits while using the def
     assert.equal(empty.props.children[0].props.className, artwork.props.className);
     assert.equal(empty.props.children[1].props.className, progressSlot.props.className);
     assert(!nodes(empty).some((node) => node.type === 'CalendarHabitProgress'));
-    assert.equal(nodes(empty).find((node) => node.type === 'Text').props.children, Number(date.slice(-2)));
+    assert.equal(
+      nodes(empty).find((node) => node.type === 'Text').props.children,
+      Number(date.slice(-2)),
+    );
   }
-
 });
 
-test('habit calendar colors completed and empty history without enabling record changes', () => {
+test('habit calendar shows habit icons on completed dates without enabling record changes', () => {
   const { HabitMonthStatistics } = load('src/screens/habit/HabitMonthStatistics.tsx');
   const tree = HabitMonthStatistics({
-    habit: { initial_started_at: '2026-09-01T00:00:00.000Z' },
+    habit: { initial_started_at: '2026-09-01T00:00:00.000Z', icon_key: 'book', icon_color: 'blue' },
     month: '2026-09',
     today: '2026-10-07',
     dates: ['2026-09-10', '2026-09-12', '2026-09-13'],
@@ -291,15 +355,14 @@ test('habit calendar colors completed and empty history without enabling record 
   });
   for (const date of ['2026-09-10', '2026-09-12', '2026-09-13']) {
     const item = cell(tree, date);
-    assert.equal(item.props.children, undefined);
-    assert.match(item.props.contentClassName, /bg-theme-accent/);
+    const icon = nodes(item).find((node) => node.type === 'HabitIcon');
+    assert.equal(icon.props.name, 'book');
+    assert.equal(icon.props.colorKey, 'blue');
+    assert.equal(item.props.contentClassName, undefined);
     const rendered = CalendarDay(item.props);
     assert.equal(rendered.props.disabled, true);
     assert.match(rendered.props.className, /opacity-100/);
-    assert.equal(
-      nodes(rendered).find((node) => node.type === 'Text').props.className,
-      'text-xs font-medium text-theme-text-on-accent',
-    );
+    assert(!nodes(rendered).some((node) => node.type === 'Text'));
   }
   for (const [date, color] of [
     ['2026-09-11', 'text-theme-text-secondary'],
@@ -307,7 +370,7 @@ test('habit calendar colors completed and empty history without enabling record 
     ['2026-09-20', 'text-theme-calendar-sunday'],
   ]) {
     const empty = cell(tree, date);
-    assert.match(empty.props.contentClassName, /bg-theme-calendar-empty/);
+    assert.equal(empty.props.contentClassName, undefined);
     assert.equal(
       nodes(CalendarDay(empty.props)).find((node) => node.type === 'Text').props.className,
       `text-xs ${color} font-medium`,
@@ -320,7 +383,7 @@ test('habit calendar colors completed and empty history without enabling record 
 test('habit calendar does not mark missing records as empty while data is unavailable', () => {
   const { HabitMonthStatistics } = load('src/screens/habit/HabitMonthStatistics.tsx');
   const tree = HabitMonthStatistics({
-    habit: { initial_started_at: '2026-09-01T00:00:00.000Z' },
+    habit: { initial_started_at: '2026-09-01T00:00:00.000Z', icon_key: 'book', icon_color: 'blue' },
     month: '2026-09',
     today: '2026-10-07',
     dates: [],
@@ -336,7 +399,7 @@ test('habit calendar does not mark missing records as empty while data is unavai
   assert.match(CalendarDay(past.props).props.className, /opacity-100/);
 });
 
-test('sober calendar owns restart counts and permits only dates inside its record range', () => {
+test('sober calendar shows one restart icon per day and permits only dates inside its record range', () => {
   const { SoberMonthCalendar } = load('src/screens/sober/SoberMonthCalendar.tsx');
   const selected: string[] = [];
   const tree = SoberMonthCalendar({
@@ -344,19 +407,24 @@ test('sober calendar owns restart counts and permits only dates inside its recor
     today: day.today,
     selected: day.date,
     firstDate: '2026-10-01',
+    iconKey: 'smoking',
+    iconColor: 'blue',
     recordsByDate: new Map([[day.date, [{ id: 1 }, { id: 2 }]]]),
     onMonthChange: () => {},
     onSelect: (date: string) => selected.push(date),
   });
-  const recorded = cell(tree, day.date);
-  assert.equal(recorded.props.children.props.children.props.children, 2);
-  assert.equal(recorded.props.label, `${day.date}, 다시 시작 2회`);
-  assert.equal(recorded.props.showSelectedIndicator, false);
-  assert.match(recorded.props.children.props.className, /bg-theme-accent/);
   assert.equal(
-    recorded.props.children.props.children.props.className,
-    'text-xs font-medium text-theme-text-on-accent',
+    nodes(tree).find((node) => node.type === 'CalendarHeader').props.onSelect,
+    undefined,
   );
+  const recorded = cell(tree, day.date);
+  assert.equal(recorded.props.label, `${day.date}, 다시 시작한 날`);
+  assert.equal(recorded.props.showSelectedIndicator, false);
+  const icon = nodes(recorded).find((node) => node.type === 'SoberIcon');
+  assert.equal(icon.props.name, 'smoking');
+  assert.equal(icon.props.colorKey, 'blue');
+  assert.equal(nodes(recorded).filter((node) => node.type === 'SoberIcon').length, 1);
+  assert(!nodes(recorded).some((node) => node.type === 'Text'));
   for (const [date, color] of [
     ['2026-10-06', 'text-theme-text-secondary'],
     ['2026-10-03', 'text-theme-calendar-saturday'],
@@ -364,7 +432,7 @@ test('sober calendar owns restart counts and permits only dates inside its recor
   ]) {
     const noRestart = cell(tree, date);
     assert.equal(noRestart.props.children, undefined);
-    assert.match(noRestart.props.contentClassName, /bg-theme-calendar-empty/);
+    assert.equal(noRestart.props.contentClassName, undefined);
     const renderedText = nodes(CalendarDay(noRestart.props)).find((node) => node.type === 'Text');
     assert.equal(renderedText.props.children, Number(date.slice(-2)));
     assert.equal(renderedText.props.className, `text-xs ${color} font-medium`);
@@ -401,8 +469,11 @@ test('date picker owns its min/future range and default selection indicator', ()
     '2026-10-07',
   ]);
   const rendered = CalendarDay(cell(tree, '2026-10-05').props);
-  assert.equal(nodes(rendered).find((node) => node.props.className?.includes('absolute -bottom-0.5')).props.className,
-    'absolute -bottom-0.5 h-1.5 w-1.5 ios:curve-continuous rounded-full bg-theme-accent/70');
+  assert.equal(
+    nodes(rendered).find((node) => node.props.className?.includes('absolute -bottom-0.5')).props
+      .className,
+    'absolute -bottom-0.5 h-1.5 w-1.5 ios:curve-continuous rounded-full bg-theme-accent/70',
+  );
 });
 
 test('day detail falls back to today for a direct future-date route', () => {
@@ -453,6 +524,7 @@ test('habit start and future boundaries block adjacent cells and share guarded m
   };
   const tree = HabitMonthStatistics(props);
   const header = nodes(tree).find((node) => node.type === 'CalendarHeader');
+  assert.equal(header.props.onSelect, undefined);
   assert.equal(header.props.navigation.canGoPrevious, false);
   assert.equal(header.props.navigation.canGoNext, true);
   header.props.navigation.changeMonth(-1);
@@ -482,8 +554,8 @@ test('habit start and future boundaries block adjacent cells and share guarded m
       CalendarDay(item.props).props.onPress();
     }
   }
-  assert.match(cell(current, props.today).props.contentClassName, /bg-theme-calendar-empty/);
-  assert.match(cell(current, '2026-10-05').props.contentClassName, /bg-theme-calendar-empty/);
+  assert.equal(cell(current, props.today).props.contentClassName, undefined);
+  assert.equal(cell(current, '2026-10-05').props.contentClassName, undefined);
 });
 
 test('habit detail only queries completion records and exposes no write action to its statistics', () => {
@@ -532,7 +604,9 @@ test('calendar preserves date cell identity and decoration sizing across record 
       habitQueries: { list: () => 'habits', completions: () => 'habit' },
     },
     '@tanstack/react-query': {
-      useQuery: (kind: string) => ({ data: kind === 'diary' ? diaries : kind === 'habits' ? [] : completions }),
+      useQuery: (kind: string) => ({
+        data: kind === 'diary' ? diaries : kind === 'habits' ? [] : completions,
+      }),
     },
   });
   const render = () => {
@@ -553,10 +627,18 @@ test('calendar preserves date cell identity and decoration sizing across record 
   completions = [{ date: day.date }];
   const habitOnly = render();
   assert.equal(habitOnly.key, empty.key);
-  assert.equal(habitOnly.props.children[0].props.className, empty.props.children[0].props.className);
-  assert.equal(habitOnly.props.children[1].props.className, empty.props.children[1].props.className);
-  assert.equal(nodes(habitOnly).find((node) => node.type === 'Text').props.children,
-    nodes(empty).find((node) => node.type === 'Text').props.children);
+  assert.equal(
+    habitOnly.props.children[0].props.className,
+    empty.props.children[0].props.className,
+  );
+  assert.equal(
+    habitOnly.props.children[1].props.className,
+    empty.props.children[1].props.className,
+  );
+  assert.equal(
+    nodes(habitOnly).find((node) => node.type === 'Text').props.children,
+    nodes(empty).find((node) => node.type === 'Text').props.children,
+  );
   assert.equal(habitOnly.props.className, 'items-center w-full flex-1 min-h-0 gap-1 py-1');
   assert(!nodes(habitOnly).some((node) => node.type === 'EmotionImage'));
   diaries = [{ date: day.date, emotion: 0, created_at: `${day.date}T00:00:00Z` }];
@@ -616,16 +698,21 @@ test('diary calendar adjacent dates change month without opening day info', () =
   assert.deepEqual(selected, ['2026-09-15']);
 });
 
-
 test('calendar progress uses completion bands at the exact 25 and 75 percent boundaries', () => {
   const { CalendarHabitProgress } = load('src/screens/calendar/CalendarHabitProgress.tsx');
-  for (const [done, band] of [[1, 'low'], [24.9, 'low'], [25, 'medium'], [74.9, 'medium'], [75, 'high'], [100, 'high']]) {
+  for (const [done, band] of [
+    [1, 'low'],
+    [24.9, 'low'],
+    [25, 'medium'],
+    [74.9, 'medium'],
+    [75, 'high'],
+    [100, 'high'],
+  ]) {
     const tree = CalendarHabitProgress({ done, total: 100 });
     assert.equal(tree.props.children.props.className, `h-full bg-theme-progress-${band}`);
     assert.equal(tree.props.children.props.style.width, `${done}%`);
   }
 });
-
 
 test('monthly progress counts match visible days, start dates, boundaries and month navigation', () => {
   const habits = Array.from({ length: 4 }, (_, index) => ({
@@ -641,9 +728,33 @@ test('monthly progress counts match visible days, start dates, boundaries and mo
     { date: '2026-09-01' },
   ];
   // Oct 1 is full with only one started habit; Oct 2 is 25%; Oct 3 is 75%.
-  assert.deepEqual(calendarHabitProgressCounts(habits, records, '2026-10', '2026-10-03'), { low: 0, medium: 1, high: 2 });
-  assert.deepEqual(calendarHabitProgressCounts(habits, records, '2026-09', '2026-10-03'), { low: 0, medium: 0, high: 1 });
-  assert.deepEqual(calendarHabitProgressCounts(habits, records, '2026-08', '2026-10-03'), { low: 0, medium: 0, high: 0 });
-  assert.deepEqual(calendarHabitProgressCounts([], records, '2026-10', '2026-10-03'), { low: 0, medium: 0, high: 0 });
-  assert.deepEqual(calendarHabitProgressCounts(Array.from({ length: 5 }, () => habits[0]), [{ date: '2026-10-01' }], '2026-10', '2026-10-03'), { low: 1, medium: 0, high: 0 });
+  assert.deepEqual(calendarHabitProgressCounts(habits, records, '2026-10', '2026-10-03'), {
+    low: 0,
+    medium: 1,
+    high: 2,
+  });
+  assert.deepEqual(calendarHabitProgressCounts(habits, records, '2026-09', '2026-10-03'), {
+    low: 0,
+    medium: 0,
+    high: 1,
+  });
+  assert.deepEqual(calendarHabitProgressCounts(habits, records, '2026-08', '2026-10-03'), {
+    low: 0,
+    medium: 0,
+    high: 0,
+  });
+  assert.deepEqual(calendarHabitProgressCounts([], records, '2026-10', '2026-10-03'), {
+    low: 0,
+    medium: 0,
+    high: 0,
+  });
+  assert.deepEqual(
+    calendarHabitProgressCounts(
+      Array.from({ length: 5 }, () => habits[0]),
+      [{ date: '2026-10-01' }],
+      '2026-10',
+      '2026-10-03',
+    ),
+    { low: 1, medium: 0, high: 0 },
+  );
 });

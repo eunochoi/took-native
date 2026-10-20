@@ -343,7 +343,7 @@ test('centered month header keeps navigation on either side of the title', () =>
   assert.deepEqual(changes, ['2026-08', '2026-10', '2026-10']);
 });
 
-test('sober restart counts take precedence over achievements on the same day', () => {
+test('sober restart icons take precedence over achievements on the same day', () => {
   const render = load('src/screens/sober/SoberMonthCalendar.tsx', []);
   let selected = '';
   const tree = render('SoberMonthCalendar', {
@@ -365,9 +365,10 @@ test('sober restart counts take precedence over achievements on the same day', (
     (node) => node.type === 'CalendarDay' && node.props.date === '2026-10-04',
   );
   assert.doesNotMatch(cell.props.label, /3일 달성!/);
-  assert.match(cell.props.label, /다시 시작 1회/);
+  assert.match(cell.props.label, /다시 시작한 날/);
   assert(!nodes(cell).some((node) => node.props.name === 'auto-awesome'));
-  assert(nodes(cell).some((node) => node.type === 'Text' && node.props.children === 1));
+  assert(nodes(cell).some((node) => node.type === 'SoberIcon'));
+  assert(!nodes(cell).some((node) => node.type === 'Text'));
   const achievementCell = nodes(tree).find(
     (node) => node.type === 'CalendarDay' && node.props.date === '2026-10-08',
   );
