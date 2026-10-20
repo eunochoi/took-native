@@ -23,6 +23,7 @@ export function IconPicker<Key extends string>({
   return (
     <BottomSheetModal
       visible
+      scrollFade
       title={title}
       onClose={onClose}
       footer={(close) => (
