@@ -1,11 +1,11 @@
-import { Pressable, View } from 'react-native';
-import type { SoberAchievement } from '../../domain/sober';
 import { format, parseISO } from 'date-fns';
+import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
-import { SoberRestartCard } from './SoberRestartCard';
-import type { SoberRestart } from '../../db/types';
 import { Text } from '../../components/Text';
+import type { SoberRestart } from '../../db/types';
+import type { SoberAchievement } from '../../domain/sober';
 import { useAppTheme } from '../../theme/AppThemeProvider';
+import { SoberRestartCard } from './SoberRestartCard';
 
 export function SoberDayInfo({
   date,
@@ -61,13 +61,6 @@ export function SoberDayInfo({
         <View className={`items-center gap-3 ${canAdd ? 'pt-8' : ''}`}>
           <AppIcon name="description" size={iconSizes.lg} color={colors.accent} />
           <Text className="text-center text-base">이날은 다시 시작한 기록이 없어요.</Text>
-          <Text className="text-center text-sm text-theme-text-tertiary">
-            {canAdd
-              ? date === format(new Date(), 'yyyy-MM-dd')
-                ? '오늘도 잠시 거리를 두고 있어요.'
-                : '거리를 두고 지낸 날이에요.'
-              : '거리두기를 시작하기 전이에요.'}
-          </Text>
         </View>
       )}
     </View>

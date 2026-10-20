@@ -91,9 +91,11 @@ export function HabitFlowSheet({
                   </View>
                   <View className="items-center gap-1">
                     <Text
-                      className={`text-sm ${day.date === today ? 'text-theme-accent font-semibold' : 'text-theme-text-secondary'}`}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      className={`mx-1 text-sm ${day.date === today ? 'text-theme-accent font-semibold' : 'text-theme-text-secondary'}`}
                     >
-                      {format(parseISO(day.date), 'M/d')}
+                      {format(parseISO(day.date), 'M.d')}
                     </Text>
                     <Text
                       className={`text-sm ${day.date === today ? 'text-theme-accent font-semibold' : 'text-theme-text-secondary'}`}
@@ -129,9 +131,8 @@ export function HabitFlowSheet({
             </View>
             <View className="gap-2">
               <InfoNotice>
-                별 1개 이상 항목의 날짜별 완료율 평균이며, 시작 전 날짜는 제외해요.
+                시작 전 날짜는 제외되며, 정기 기록 항목만 계산됩니다.
               </InfoNotice>
-              <InfoNotice>오늘의 체크에 따라 완료율이 달라져요.</InfoNotice>
             </View>
           </>
         )}

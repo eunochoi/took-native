@@ -46,8 +46,8 @@ export default function HabitDetail() {
                   <HabitIcon name={habit.icon_key} colorKey={habit.icon_color} size={appRem * 3} />
                 </View>
                 <HabitStars priority={habit.priority} size={appRem * 1.3} />
-                <Text className="text-sm text-theme-text-secondary">
-                  {habit.priority === 0 ? '비정기 기록' : `별 ${habit.priority}개`}
+                <Text className="-mt-2 text-sm text-theme-text-secondary">
+                  {habit.priority === 0 ? '비정기 기록' : `매일 기록`}
                 </Text>
                 <Text className="text-sm text-theme-text-secondary">
                   {format(parseISO(habit.initial_started_at), 'yyyy년 M월 d일 HH:mm')} 시작
