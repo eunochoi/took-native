@@ -264,6 +264,51 @@ test('emotion counts keep period filtering and tied badges without added summari
   );
 });
 
+test('emotion proportions group every emotion and follow all three periods', () => {
+  const stats = emptyStats();
+  stats.halves = [
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    [2, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+  ];
+  stats.emotions = stats.halves[0].map((count, index) => count + stats.halves[1][index]);
+  for (const [period, expected] of [
+    [12, 16, 30],
+    [10, 15, 30],
+    [2, 1, 0],
+  ].entries()) {
+    const tree = render('EmotionStats', { stats, year: 2024 }, period);
+    const bar = nodes(tree).find((node) => node.props.accessibilityLabel?.startsWith('감정 비율'))!;
+    const total = expected.reduce((sum, count) => sum + count, 0);
+    for (const [index, label] of ['긍정', '중립', '부정'].entries()) {
+      assert(
+        bar.props.accessibilityLabel.includes(
+          `${label} ${expected[index]}회 ${Math.round((expected[index] / total) * 100)}%`,
+        ),
+      );
+    }
+    const segments = nodes(bar.props.children).filter((node) => node.type === 'View');
+    assert.deepEqual(
+      Array.from(segments, (node) => node.props.style.flexGrow),
+      expected.filter((count) => count > 0),
+    );
+  }
+});
+
+test('emotion proportions show an empty track or a single full segment without invalid ratios', () => {
+  for (const count of [0, 3]) {
+    const stats = emptyStats();
+    stats.emotions[6] = count;
+    const tree = render('EmotionStats', { stats, year: 2024 });
+    const bar = nodes(tree).find((node) => node.props.accessibilityLabel?.startsWith('감정 비율'))!;
+    assert(!bar.props.accessibilityLabel.includes('NaN'));
+    assert(bar.props.accessibilityLabel.includes(`부정 ${count}회 ${count ? 100 : 0}%`));
+    const segments = nodes(bar.props.children).filter((node) => node.type === 'View');
+    assert.equal(segments.length, count ? 1 : 0);
+    if (count) assert.equal(segments[0].props.className, 'bg-theme-emotion-negative');
+    else assert(bar.props.className.includes('bg-theme-accent/30'));
+  }
+});
+
 test('habit retains Top 3 selection without annual summaries or the full list', () => {
   const all = [
     { id: 1, name: '걷기', count: 3, priority: 0, icon_key: 'walking' },
