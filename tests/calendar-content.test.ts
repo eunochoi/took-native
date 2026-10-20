@@ -455,7 +455,7 @@ test('sober calendar shows one restart icon per day and permits only dates insid
   assert(selected.every((date) => date >= '2026-10-01' && date <= day.today));
 });
 
-test('date picker owns its min/future range without default indicators', () => {
+test('date picker owns its min/future range and highlights selection without shared dots', () => {
   const { DatePickerCalendar } = load('src/screens/calendar/DatePickerCalendar.tsx');
   const selected: string[] = [];
   const tree = DatePickerCalendar({
@@ -468,8 +468,11 @@ test('date picker owns its min/future range without default indicators', () => {
   });
   const header = nodes(tree).find((node) => node.type === 'CalendarHeader');
   assert.equal(header.props.centerTitle, true);
-  for (const item of nodes(tree).filter((node) => node.type === 'CalendarDay'))
+  for (const item of nodes(tree).filter((node) => node.type === 'CalendarDay')) {
+    assert.equal(item.props.showTodayIndicator, false);
+    assert.equal(item.props.showSelectedIndicator, false);
     CalendarDay(item.props).props.onPress();
+  }
   assert.deepEqual(selected, [
     '2026-10-03',
     '2026-10-04',
@@ -479,7 +482,44 @@ test('date picker owns its min/future range without default indicators', () => {
   ]);
   const rendered = CalendarDay(cell(tree, '2026-10-05').props);
   assert.equal(rendered.props.accessibilityState.selected, true);
+  assert(
+    nodes(rendered).some((node) => node.props.className?.includes('rounded-full bg-theme-accent')),
+  );
+  assert.equal(
+    nodes(rendered).find((node) => node.type === 'Text').props.className,
+    'text-xs text-theme-surface',
+  );
   assert(!nodes(rendered).some((node) => node.props.className?.includes('absolute -bottom-0.5')));
+  const today = CalendarDay(cell(tree, day.today).props);
+  assert(!nodes(today).some((node) => node.props.className?.includes('bg-theme-accent')));
+});
+
+test('date picker highlights today and weekend selections in regular and compact layouts', () => {
+  const { DatePickerCalendar } = load('src/screens/calendar/DatePickerCalendar.tsx');
+  for (const compact of [false, true]) {
+    for (const selected of ['2026-10-14', '2026-10-10', '']) {
+      const tree = DatePickerCalendar({
+        month: day.month,
+        today: '2026-10-14',
+        selected,
+        compact,
+        onMonthChange: () => {},
+        onSelect: () => {},
+      });
+      const dates = nodes(tree).filter((node) => node.type === 'CalendarDay');
+      const highlighted = dates.filter((node) =>
+        node.props.contentClassName?.includes('bg-theme-accent'),
+      );
+      assert.equal(highlighted.length, selected ? 1 : 0);
+      if (selected) {
+        const rendered = CalendarDay(highlighted[0].props);
+        assert.equal(
+          nodes(rendered).find((node) => node.type === 'Text').props.className,
+          'text-xs text-theme-surface',
+        );
+      }
+    }
+  }
 });
 
 test('day detail falls back to today for a direct future-date route', () => {

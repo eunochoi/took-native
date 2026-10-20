@@ -33,6 +33,7 @@ export function DatePickerCalendar({
       <CalendarGrid {...swipe.panHandlers} accessibilityLabel={`${month} 날짜 선택 달력`}>
         {days.map((date) => {
           const unavailable = !navigation.isDateAvailable(date);
+          const isSelected = date === selected && date.slice(0, 7) === month && !unavailable;
           return (
             <CalendarDay
               key={date}
@@ -40,10 +41,14 @@ export function DatePickerCalendar({
               month={month}
               today={today}
               selected={selected}
+              showTodayIndicator={false}
+              showSelectedIndicator={false}
               disabled={unavailable}
               dimmed={unavailable}
               onSelect={onSelect}
               className={compact ? 'aspect-auto h-10' : undefined}
+              contentClassName={isSelected ? 'rounded-full bg-theme-accent' : undefined}
+              textClassName={isSelected ? 'text-theme-surface' : undefined}
             />
           );
         })}
