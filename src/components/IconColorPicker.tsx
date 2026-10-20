@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { HABIT_ICON_COLORS, type HabitIconColorKey } from '../domain/constants';
 import { BottomSheetModal } from './BottomSheetModal';
+import { Button } from './Button';
 import { PickerAction } from './PickerAction';
 import { PickerOption } from './PickerOption';
 import { Text } from './Text';
-import { Button } from './Button';
 
 export function IconColorPicker({
   value,
@@ -49,20 +49,15 @@ export function IconColorPicker({
                   <View key={key} className="flex-1 min-w-0">
                     <PickerOption
                       compact
-
+                      className="aspect-square min-h-0 p-0"
                       selected={draft === key}
                       accessibilityLabel={label}
                       onPress={() => setDraft(key)}
                     >
                       <View
-                        className="h-8 w-8 ios:curve-continuous rounded-full"
+                        className="h-9 w-9 ios:curve-continuous rounded-full"
                         style={{ backgroundColor }}
                       />
-                      <Text
-                        className={`text-xs text-center ${draft === key ? 'text-theme-accent' : 'text-theme-text-secondary'}`}
-                      >
-                        {label}
-                      </Text>
                     </PickerOption>
                   </View>
                 );
