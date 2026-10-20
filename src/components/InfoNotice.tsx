@@ -12,7 +12,13 @@ export function InfoNotice({ children, className }: { children: ReactNode; class
       <View className="h-5 w-4 shrink-0 items-center justify-center">
         <AppIcon name="info-outline" size={appRem} color={colors.accent} accessible={false} />
       </View>
-      <Text className="flex-1 text-sm leading-5 text-theme-accent">{children}</Text>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        className="flex-1 text-sm leading-5 text-theme-accent tracking-tighter"
+      >
+        {children}
+      </Text>
     </View>
   );
 }

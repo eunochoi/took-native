@@ -172,10 +172,7 @@ export function DiaryFilterPicker({
           })}
         </View>
       </View>
-      <InfoNotice>
-        여러 개 선택할 수 있어요. 다시 누르면 해제돼요. 계절이나 감정을 선택하지 않으면 전체로
-        검색해요.
-      </InfoNotice>
+      <InfoNotice>여러 개 선택할 수 있어요. 다시 누르면 해제돼요.</InfoNotice>
       {yearOpen && (
         <BottomSheetModal visible title="연도 선택" onClose={() => setYearOpen(false)}>
           {(close) => (
