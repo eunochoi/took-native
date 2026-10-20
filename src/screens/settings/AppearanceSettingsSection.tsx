@@ -64,7 +64,7 @@ export function AppearanceSettingsSection({
               disabled={disabled}
               hitSlop={8}
               onPress={() => setSelected('themeMode')}
-              className={`ml-auto h-8 justify-center px-2 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
+              className={`ml-auto h-8 justify-center pl-2 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
             >
               <Text className="text-base text-theme-accent">{modeLabels[settings.themeMode]}</Text>
             </Pressable>
@@ -84,7 +84,7 @@ export function AppearanceSettingsSection({
             disabled={disabled}
             hitSlop={8}
             onPress={() => setSelected('fontSize')}
-            className={`ml-auto h-8 justify-center px-2 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
+            className={`ml-auto h-8 justify-center pl-2 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
           >
             <Text className="text-base text-theme-accent">{sizeLabels[settings.fontSize]}</Text>
           </Pressable>

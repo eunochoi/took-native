@@ -34,7 +34,7 @@ export function NotificationSettingsSection({ disabled }: { disabled: boolean })
                 disabled={disabled}
                 hitSlop={8}
                 onPress={() => setSelected(item.key)}
-                className={`ml-auto h-8 justify-center px-2 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
+                className={`ml-auto h-8 justify-center pl-2 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
               >
                 <Text className="text-base text-theme-accent">{label}</Text>
               </Pressable>
