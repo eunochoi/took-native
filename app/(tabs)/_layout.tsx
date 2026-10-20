@@ -1,7 +1,4 @@
-import { BlurTargetView } from 'expo-blur';
 import { Tabs } from 'expo-router';
-import type { RefObject } from 'react';
-import { createRef, useRef, useState } from 'react';
 import { Easing, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomNav } from '../../src/components/BottomNav';
@@ -11,16 +8,6 @@ import tokens from '../../src/theme/tokens.json';
 export default function TabLayout() {
   const { colors, reducedMotion } = useAppTheme();
   const insets = useSafeAreaInsets();
-  const [readyTargets, setReadyTargets] = useState<Set<string>>(() => new Set());
-  const targets = useRef(new Map<string, RefObject<View | null>>()).current;
-  const targetFor = (key: string) => {
-    let target = targets.get(key);
-    if (!target) {
-      target = createRef<View>();
-      targets.set(key, target);
-    }
-    return target;
-  };
   return (
     <Tabs
       safeAreaInsets={{ bottom: 0 }}
@@ -29,26 +16,10 @@ export default function TabLayout() {
           className={`flex-1 ${route.name === 'index' ? 'bg-theme-accent-light' : 'bg-theme-surface'}`}
           style={{ paddingTop: insets.top }}
         >
-          <BlurTargetView
-            ref={targetFor(route.key)}
-            style={{ flex: 1 }}
-            onLayout={() => {
-              setReadyTargets((current) =>
-                current.has(route.key) ? current : new Set([...current, route.key]),
-              );
-            }}
-          >
-            {children}
-          </BlurTargetView>
+          {children}
         </View>
       )}
-      tabBar={(props) => (
-        <BottomNav
-          {...props}
-          blurTarget={targetFor(props.state.routes[props.state.index].key)}
-          blurTargetReady={readyTargets.has(props.state.routes[props.state.index].key)}
-        />
-      )}
+      tabBar={(props) => <BottomNav {...props} />}
       screenOptions={{
         headerShown: false,
         animation: reducedMotion ? 'none' : 'shift',

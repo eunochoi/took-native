@@ -1,12 +1,13 @@
-import { BlurView } from 'expo-blur';
 import type { Tabs } from 'expo-router';
-import type { ComponentProps, RefObject } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import type { ComponentProps } from 'react';
+import { Platform, Pressable, View } from 'react-native';
 import { useAppTheme } from '../theme/AppThemeProvider';
 import tokens from '../theme/tokens.json';
 import { AppIcon } from './AppIcon';
 
 const navigationMetrics = tokens.metrics.navigation;
+const surfaceClassName =
+  'ios:curve-continuous rounded-full bg-theme-surface border border-theme-accent/25';
 
 type BottomNavProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 const items = [
@@ -17,16 +18,19 @@ const items = [
   { name: 'sober', label: '거리두기', icon: 'sober' },
 ] as const;
 
-export function BottomNav({
-  state,
-  navigation,
-  blurTarget,
-  blurTargetReady,
-}: BottomNavProps & { blurTarget: RefObject<View | null>; blurTargetReady: boolean }) {
-  const { navigationHeight, navigationBottom } = useAppTheme();
+export function BottomNav({ state, navigation }: BottomNavProps) {
+  const { colors, rem, navigationHeight, navigationBottom } = useAppTheme();
   const navigationScale = navigationHeight / navigationMetrics.height;
-  const backgroundClassName =
-    state.routes[state.index].name === 'index' ? 'bg-theme-surface/60' : 'bg-theme-accent-light/20';
+  const iconSize = Math.min(24, Math.max(22, rem * 1.5));
+  const shadowStyle = Platform.select({
+    ios: {
+      shadowColor: colors.accentText,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+    },
+    android: { shadowColor: colors.accentText, elevation: 3 },
+  });
   const settingRoute = state.routes.find((route) => route.name === 'setting');
   const settingSelected = state.routes[state.index].key === settingRoute?.key;
   return (
@@ -42,28 +46,15 @@ export function BottomNav({
         className="self-center flex-row items-center"
         style={{ gap: navigationMetrics.groupGap * navigationScale }}
       >
-        <View
-          className={`ios:curve-continuous rounded-full ${backgroundClassName} shadow-lg ios:shadow-theme-overlay/20`}
-        >
+        <View className={surfaceClassName} style={shadowStyle}>
           <View
-            className="flex-row items-center overflow-hidden ios:curve-continuous rounded-full border border-theme-accent/15"
+            className="flex-row items-center"
             style={{
               height: navigationHeight,
               gap: Platform.OS === 'android' ? 0 : navigationMetrics.itemGap * navigationScale,
               paddingHorizontal: navigationMetrics.horizontalPadding * navigationScale,
             }}
           >
-            {blurTargetReady && (
-              <BlurView
-                key={state.routes[state.index].key}
-                pointerEvents="none"
-                blurTarget={blurTarget}
-                blurMethod="dimezisBlurViewSdk31Plus"
-                intensity={50}
-                style={StyleSheet.absoluteFill}
-              />
-            )}
-            <View pointerEvents="none" className={`absolute inset-0 ${backgroundClassName}`} />
             {items.map((item) => {
               const route = state.routes.find((entry) => entry.name === item.name);
               if (!route) return null;
@@ -102,8 +93,8 @@ export function BottomNav({
                   >
                     <AppIcon
                       name={item.icon}
-                      size={navigationMetrics.iconSize * navigationScale}
-                      className={selected ? 'text-theme-text-on-accent' : 'text-theme-accent/80'}
+                      size={iconSize}
+                      color={selected ? colors.textOnAccent : `${colors.accent}CC`}
                     />
                   </View>
                 </Pressable>
@@ -113,21 +104,10 @@ export function BottomNav({
         </View>
         {settingRoute && (
           <View
-            className={`ios:curve-continuous rounded-full ${backgroundClassName} shadow-lg ios:shadow-theme-overlay/20`}
-            style={{ width: navigationHeight, height: navigationHeight }}
+            className={surfaceClassName}
+            style={[shadowStyle, { width: navigationHeight, height: navigationHeight }]}
           >
-            <View className="h-full w-full overflow-hidden ios:curve-continuous rounded-full border border-theme-accent/15">
-              {blurTargetReady && (
-                <BlurView
-                  key={state.routes[state.index].key}
-                  pointerEvents="none"
-                  blurTarget={blurTarget}
-                  blurMethod="dimezisBlurViewSdk31Plus"
-                  intensity={50}
-                  style={StyleSheet.absoluteFill}
-                />
-              )}
-              <View pointerEvents="none" className={`absolute inset-0 ${backgroundClassName}`} />
+            <View className="h-full w-full">
               <Pressable
                 accessibilityRole="tab"
                 accessibilityLabel="설정"
@@ -152,8 +132,8 @@ export function BottomNav({
               >
                 <AppIcon
                   name="settings"
-                  size={navigationMetrics.iconSize * navigationScale}
-                  className={settingSelected ? 'text-theme-text-on-accent' : 'text-theme-accent/80'}
+                  size={iconSize}
+                  color={settingSelected ? colors.textOnAccent : `${colors.accent}CC`}
                 />
               </Pressable>
             </View>

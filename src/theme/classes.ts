@@ -1,4 +1,4 @@
-export const RECORD_SURFACE_CLASS_NAME = 'border border-theme-border/50 bg-theme-surface/70';
+export const RECORD_SURFACE_CLASS_NAME = 'border border-theme-accent/25 bg-theme-surface';
 
 export const BADGE_CLASS_NAME =
   'items-center justify-center ios:curve-continuous rounded-full bg-theme-accent-light/20 border-[1px] border-theme-accent/10';
