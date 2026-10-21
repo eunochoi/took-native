@@ -183,7 +183,7 @@ export function HabitForm({ id }: { id?: number }) {
         </Text>
         <FormPickerRow
           label={
-            priority === 0 ? '없음 · 비정기 기록' : `${HABIT_PRIORITY_LABELS[priority]} · 매일 기록`
+            priority === 0 ? '없음 · 자유 기록' : `${HABIT_PRIORITY_LABELS[priority]} · 매일 기록`
           }
           accessibilityLabel="우선순위 선택"
           disabled={mutation.isPending}

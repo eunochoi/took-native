@@ -19,9 +19,7 @@ export function HabitStars({
   return (
     <View
       className={`flex-row gap-0.5 ${className ?? ''}`}
-      accessibilityLabel={
-        accessibilityLabel ?? (priority === 0 ? '비정기 기록' : `별 ${priority}개`)
-      }
+      accessibilityLabel={accessibilityLabel ?? (priority === 0 ? '자유 기록' : `별 ${priority}개`)}
     >
       {[0, 1, 2].map((index) => (
         <StarIcon

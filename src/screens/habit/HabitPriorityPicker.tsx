@@ -7,7 +7,7 @@ import { PickerOption } from '../../components/PickerOption';
 import { Text } from '../../components/Text';
 import { HabitStars } from './HabitStars';
 
-export const HABIT_PRIORITY_LABELS = ['비정기 기록', '낮음', '보통', '높음'] as const;
+export const HABIT_PRIORITY_LABELS = ['자유 기록', '낮음', '보통', '높음'] as const;
 
 export function HabitPriorityPicker({
   value,
@@ -41,7 +41,7 @@ export function HabitPriorityPicker({
             {row.map((priority) => {
               const label =
                 priority === 0
-                  ? '없음 · 비정기 기록'
+                  ? '없음 · 자유 기록'
                   : `${HABIT_PRIORITY_LABELS[priority]} · 매일 기록`;
               return (
                 <View key={priority} className="flex-1">
@@ -62,7 +62,7 @@ export function HabitPriorityPicker({
             })}
           </View>
         ))}
-        <InfoNotice>비정기 기록 항목은 완료율과 달성 개수 계산에 포함되지 않아요.</InfoNotice>
+        <InfoNotice>자유 기록 항목은 완료율과 달성 개수 계산에 포함되지 않아요.</InfoNotice>
       </View>
     </BottomSheetModal>
   );

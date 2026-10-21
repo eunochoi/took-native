@@ -93,9 +93,7 @@ export default function HabitList() {
     [
       filter.completedOnly ? '완료' : null,
       selectionSummary(
-        filter.priorities.map((priority) =>
-          priority === 0 ? '비정기 기록' : '★'.repeat(priority),
-        ),
+        filter.priorities.map((priority) => (priority === 0 ? '자유 기록' : '★'.repeat(priority))),
         4,
         '',
       ) || null,
@@ -169,7 +167,7 @@ export default function HabitList() {
             label={filterLabel}
             accessibilityLabel={`습관 필터, ${filter.completedOnly ? '오늘 완료' : '완료 상태 전체'}, 중요도 ${selectionSummary(
               filter.priorities.map((priority) =>
-                priority === 0 ? '비정기 기록' : '★'.repeat(priority),
+                priority === 0 ? '자유 기록' : '★'.repeat(priority),
               ),
               4,
             )}`}

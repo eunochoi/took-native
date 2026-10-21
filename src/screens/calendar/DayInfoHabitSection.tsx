@@ -39,7 +39,7 @@ export function DayInfoHabitSection({
       >
         <Pressable
           accessibilityRole="checkbox"
-          accessibilityLabel={`${habit.name}${habit.priority === 0 ? ', 비정기 기록' : ''}`}
+          accessibilityLabel={`${habit.name}${habit.priority === 0 ? ', 자유 기록' : ''}`}
           accessibilityState={{ checked: habit.completed, disabled }}
           disabled={disabled}
           onPress={() => onToggle(habit.id, !habit.completed)}
@@ -60,7 +60,7 @@ export function DayInfoHabitSection({
             {habit.name}
           </Text>
           {habit.priority === 0 && (
-            <Text className="text-xs text-theme-text-secondary">비정기 기록</Text>
+            <Text className="text-xs text-theme-text-secondary">자유 기록</Text>
           )}
         </Pressable>
         <Pressable
@@ -93,9 +93,7 @@ export function DayInfoHabitSection({
               </Text>
             )}
             {excluded.length > 0 && (
-              <Text className="text-xs text-theme-text-secondary">
-                비정기 기록 {excludedDone}건
-              </Text>
+              <Text className="text-xs text-theme-text-secondary">자유 기록 {excludedDone}건</Text>
             )}
           </View>
         )}

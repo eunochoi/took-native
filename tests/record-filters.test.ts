@@ -704,7 +704,7 @@ test('exclusion-only filter hides the achievement card and keeps recorded items 
   assert(!nodes(ui.render()).some((node) => node.type === 'HabitTodayProgress'));
   assert.equal(
     nodes(ui.render()).find((node) => node.type === 'ToolbarFilterButton').props.label,
-    '비정기 기록',
+    '자유 기록',
   );
   applyPageFilter(ui, 'Habit', { completedOnly: true, priorities: [0] });
   assert.deepEqual(habitIds(ui), [1]);

@@ -39,7 +39,7 @@ export function HabitBox({
         <View className="relative mb-2">
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`${habit.name}${excluded ? ', 비정기 기록' : ''} 습관 정보`}
+            accessibilityLabel={`${habit.name}${excluded ? ', 자유 기록' : ''} 습관 정보`}
             onPress={() => openModal(`/habit/${habit.id}`)}
             className="items-center gap-2"
           >
@@ -60,7 +60,7 @@ export function HabitBox({
         <View className="h-5 items-center justify-center">
           {excluded ? (
             <Text className="h-5 text-sm leading-5 text-center text-theme-text-secondary">
-              비정기 기록
+              자유 기록
             </Text>
           ) : (
             <HabitStars priority={habit.priority} color={habitColor} size={appRem} />

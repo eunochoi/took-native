@@ -28,7 +28,7 @@ function picker(path: string, name: string, initial: Record<string, unknown>) {
       exports,
       require: (dependency: string) => {
         if (dependency.endsWith('/HabitPriorityPicker'))
-          return { HABIT_PRIORITY_LABELS: ['비정기 기록', '낮음', '보통', '높음'] };
+          return { HABIT_PRIORITY_LABELS: ['자유 기록', '낮음', '보통', '높음'] };
         if (dependency.endsWith('/FilterSheet')) {
           const sheetExports: Record<string, Function> = {};
           runInNewContext(
@@ -521,7 +521,7 @@ test('habit filter combines completed-only with multiple priorities and resets a
   const choices = ui.render().content.filter((node) => node.type === 'PickerOption');
   assert.deepEqual(
     choices.map((node) => node.props.accessibilityLabel),
-    ['비정기 기록', '별표 1개', '별표 2개', '별표 3개'],
+    ['자유 기록', '별표 1개', '별표 2개', '별표 3개'],
   );
   assert(choices.every((node) => node.props.checkbox));
   ui.press('완료한 항목만 보기');
@@ -693,7 +693,7 @@ test('all checked habit priorities summarize as all and can be deselected indivi
   const ui = picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
     filter: { completedOnly: false, priorities: [] },
   });
-  for (const label of ['비정기 기록', '별표 1개', '별표 2개', '별표 3개']) ui.press(label);
+  for (const label of ['자유 기록', '별표 1개', '별표 2개', '별표 3개']) ui.press(label);
   assert(
     ui.render().content.some((node) => node.type === 'Text' && node.props.children === '전체'),
   );
@@ -780,20 +780,20 @@ test('habit priority picker has four choices in two rows and explains exclusion'
   const options = view.content.filter((node) => node.type === 'PickerOption');
   assert.deepEqual(
     options.map((node) => node.props.accessibilityLabel),
-    ['없음 · 비정기 기록', '낮음 · 매일 기록', '보통 · 매일 기록', '높음 · 매일 기록'],
+    ['없음 · 자유 기록', '낮음 · 매일 기록', '보통 · 매일 기록', '높음 · 매일 기록'],
   );
   const gridRows = view.content.filter(
     (node) => node.type === 'View' && node.props.className === 'flex-row gap-3',
   );
   assert.equal(gridRows.length, 2);
   assert(gridRows.every((row) => row.props.children.length === 2));
-  ui.press('없음 · 비정기 기록');
+  ui.press('없음 · 자유 기록');
   assert(
     ui
       .render()
       .content.some(
         (node) =>
-          node.props.children === '비정기 기록 항목은 완료율과 달성 개수 계산에 포함되지 않아요.',
+          node.props.children === '자유 기록 항목은 완료율과 달성 개수 계산에 포함되지 않아요.',
       ),
   );
   ui.press('선택 완료');
@@ -810,7 +810,7 @@ test('habit filter places exclusion and stars in a two-by-two grid', () => {
     .content.filter((node) => node.type === 'View' && node.props.className === 'flex-row gap-3');
   assert.equal(gridRows.length, 2);
   assert(gridRows.every((row) => row.props.children.length === 2));
-  ui.press('비정기 기록');
+  ui.press('자유 기록');
   ui.press('별표 3개');
   ui.press('적용하기');
   ui.finish();

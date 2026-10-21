@@ -51,7 +51,7 @@ export function HabitFilterPicker({
           <Text className="shrink text-sm text-theme-text-secondary">
             {selectionSummary(
               draft.priorities.map((priority) =>
-                priority === 0 ? '비정기 기록' : '★'.repeat(priority),
+                priority === 0 ? '자유 기록' : '★'.repeat(priority),
               ),
               4,
             )}
@@ -71,7 +71,7 @@ export function HabitFilterPicker({
                       compact
                       checkbox
                       selected={selected}
-                      accessibilityLabel={priority === 0 ? '비정기 기록' : `별표 ${priority}개`}
+                      accessibilityLabel={priority === 0 ? '자유 기록' : `별표 ${priority}개`}
                       onPress={() =>
                         setDraft({
                           ...draft,

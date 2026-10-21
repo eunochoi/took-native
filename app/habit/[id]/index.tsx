@@ -47,7 +47,7 @@ export default function HabitDetail() {
                 </View>
                 <HabitStars priority={habit.priority} size={appRem * 1.3} />
                 <Text className="-mt-2 text-sm text-theme-text-secondary">
-                  {habit.priority === 0 ? '비정기 기록' : `매일 기록`}
+                  {habit.priority === 0 ? '자유 기록' : `매일 기록`}
                 </Text>
                 <Text className="text-sm text-theme-text-secondary">
                   {format(parseISO(habit.initial_started_at), 'yyyy년 M월 d일 HH:mm')} 시작
