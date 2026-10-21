@@ -126,7 +126,7 @@ export function DiaryFilterPicker({
             (season) =>
               `${DIARY_SEASONS[season].label} ${DIARY_SEASONS[season].monthsLabel.replace('다음 해 ', '다음 ')}`,
           )
-          .join(' · ')}
+          .join(', ')}
       </InfoNotice>
       <View className="gap-4">
         <View className="flex-row items-baseline justify-between gap-3">

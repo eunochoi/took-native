@@ -318,7 +318,7 @@ test('diary emotion descriptions live inside buttons and the full season legend 
   }
   ui.press('여름');
   assert(text().includes('여름'));
-  const seasonLegend = '봄 3~5월 · 여름 6~8월 · 가을 9~11월 · 겨울 12~다음 2월';
+  const seasonLegend = '봄 3~5월, 여름 6~8월, 가을 9~11월, 겨울 12~다음 2월';
   assert(text().includes(seasonLegend));
   chooseDiaryYear(ui, 2026);
   ui.press('겨울');
