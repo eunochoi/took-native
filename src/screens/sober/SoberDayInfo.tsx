@@ -8,7 +8,6 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 import { SoberRestartCard } from './SoberRestartCard';
 
 export function SoberDayInfo({
-  date,
   records,
   achievements = [],
   canAdd,
