@@ -568,8 +568,8 @@ test('sheet delegates keyboard avoidance to its native container without measure
   assert.equal(surface.props.style.paddingBottom, undefined);
   assert.equal(surface.props.style.maxHeight, 800 * 0.95);
   assert.ok(scroll.props.ref);
-  assert.equal(scroll.props.contentContainerStyle.paddingBottom, 75);
-  assert.equal(scroll.props.contentContainerClassName, 'gap-6 pt-6 pb-12');
+  assert.equal(scroll.props.contentContainerStyle.paddingBottom, 56.25);
+  assert.equal(scroll.props.contentContainerClassName, 'gap-7 pt-6 pb-7');
   assert.equal(scroll.props.keyboardShouldPersistTaps, 'handled');
   assert.equal(scroll.props.keyboardDismissMode, 'none');
 });
@@ -654,7 +654,7 @@ test('custom list viewport shares native scrolling, safe-area padding and sheet 
   h.completeOpen();
   assert.equal(h.scroll().type, 'MemoList');
   assert.equal(h.native.props, undefined);
-  assert.equal(h.scroll().props.contentContainerStyle.paddingBottom, 75);
+  assert.equal(h.scroll().props.contentContainerStyle.paddingBottom, 56.25);
   assert.equal(h.scroll().props.nestedScrollEnabled, true);
   assert.equal(h.native.config.requireExternalGestureToFail, h.pan);
   h.offset(120);
@@ -882,7 +882,7 @@ test('form drag lock disables the sheet pan and the footer stays outside the scr
   assert.equal(footer.props.style.paddingBottom, 45);
   assert.equal(footer.props.className, 'pb-4');
   assert.equal(h.scroll().props.contentContainerStyle, undefined);
-  assert.equal(h.scroll().props.contentContainerClassName, 'gap-6 pt-6 pb-12');
+  assert.equal(h.scroll().props.contentContainerClassName, 'gap-7 pt-6 pb-7');
 });
 
 test('footer actions use the shared close lifecycle and dispatch once after dismissal', () => {

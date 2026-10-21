@@ -30,7 +30,6 @@ export function HabitFilterPicker({
     <FilterSheet
       title="습관 필터"
       resetInHeader
-      contentBottomPadding={rem * 1.5}
       onClose={onClose}
       onReset={() => setDraft(DEFAULT_HABIT_FILTER)}
       onApply={() => onApply(draft)}

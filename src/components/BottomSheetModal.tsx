@@ -152,7 +152,7 @@ export function BottomSheetModal({
             contentKey={contentKey}
             bottomPadding={
               contentBottomPadding ??
-              (!footer && insets.bottom > 0 ? appRem * 3 + insets.bottom : undefined)
+              (!footer && insets.bottom > 0 ? appRem * 1.75 + insets.bottom : undefined)
             }
           >
             {typeof children === 'function' ? children(closeSheet) : children}

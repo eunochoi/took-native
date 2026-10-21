@@ -13,17 +13,15 @@ export function FilterSheet({
   onReset,
   onApply,
   resetInHeader = false,
-  contentBottomPadding,
 }: {
   resetInHeader?: boolean;
-  contentBottomPadding?: number;
   title: string;
   children: ReactNode;
   onClose: () => void;
   onReset: () => void;
   onApply: () => void;
 }) {
-  const { iconSizes, rem } = useAppTheme();
+  const { iconSizes } = useAppTheme();
   const resetButton = (
     <Pressable
       accessibilityRole="button"
@@ -52,7 +50,6 @@ export function FilterSheet({
       visible
       title={resetInHeader ? undefined : title}
       scrollFade
-      contentBottomPadding={contentBottomPadding ?? rem}
       onClose={onClose}
       footer={(close) => (
         <View className="gap-4">
@@ -66,7 +63,7 @@ export function FilterSheet({
         </View>
       )}
     >
-      <View className="gap-6">
+      <View className="gap-7">
         {resetInHeader && (
           <View className="relative min-h-12 items-center justify-center">
             <Text accessibilityRole="header" className="text-lg font-semibold">

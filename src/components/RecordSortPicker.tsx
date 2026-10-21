@@ -74,7 +74,7 @@ export function RecordSortPicker({
         />
       )}
     >
-      <View className="gap-6">
+      <View className="gap-7">
         {prioritySection}
         {recordSort && (
           <View className="gap-3">
@@ -123,15 +123,13 @@ export function RecordSortPicker({
             ))}
           </View>
         </View>
-        <View className="h-10 justify-center">
-          <InfoNotice>
-            {draftSort === 'CUSTOM'
-              ? '직접 정한 순서로 보여드려요.'
-              : recordSort
-                ? '중요도, 현재 기록, 생성일 순으로 정렬해요.'
-                : '중요한 항목부터, 생성일 순으로 정렬해요.'}
-          </InfoNotice>
-        </View>
+        <InfoNotice>
+          {draftSort === 'CUSTOM'
+            ? '직접 정한 순서로 보여드려요.'
+            : recordSort
+              ? '중요도, 현재 기록, 생성일 순으로 정렬해요.'
+              : '중요한 항목부터, 생성일 순으로 정렬해요.'}
+        </InfoNotice>
       </View>
     </BottomSheetModal>
   );

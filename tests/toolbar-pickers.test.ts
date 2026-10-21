@@ -284,16 +284,16 @@ test('header reset clears all diary drafts without applying until confirmation',
   assert.deepEqual(ui.applied, [[null, [], []]]);
 });
 
-test('sort hint reserves the same space for date and custom order', () => {
+test('sort hints share the content gap without reserving an extra fixed-height row', () => {
   const ui = sortPicker({ priorityFirst: false, allowCustom: true });
-  const initial = ui
-    .render()
-    .content.find((node) => node.props.className === 'h-10 justify-center');
-  assert.equal(initial.props.children.type, 'InfoNotice');
+  const initial = ui.render().shell.props.children;
+  assert.equal(initial.props.className, 'gap-7');
+  assert.equal(initial.props.children.at(-1).type, 'InfoNotice');
   ui.press('커스텀');
-  const custom = ui.render().content.find((node) => node.props.className === 'h-10 justify-center');
+  const custom = ui.render().shell.props.children;
   assert.equal(custom.props.className, initial.props.className);
-  assert.equal(custom.props.children.props.children, '직접 정한 순서로 보여드려요.');
+  assert.equal(custom.props.children.at(-1).type, 'InfoNotice');
+  assert.equal(custom.props.children.at(-1).props.children, '직접 정한 순서로 보여드려요.');
 });
 
 test('diary emotion descriptions live inside buttons and the full season legend stays fixed', () => {

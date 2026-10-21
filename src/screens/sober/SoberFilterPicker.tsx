@@ -31,14 +31,13 @@ export function SoberFilterPicker({
   onClose: () => void;
   onApply: (filter: SoberFilter) => void;
 }) {
-  const { colors, rem } = useAppTheme();
+  const { colors } = useAppTheme();
   const [draft, setDraft] = useState(filter);
   const [periodOpen, setPeriodOpen] = useState(false);
   return (
     <FilterSheet
       title="거리두기 필터"
       resetInHeader
-      contentBottomPadding={rem * 1.5}
       onClose={onClose}
       onReset={() => setDraft(DEFAULT_SOBER_FILTER)}
       onApply={() => onApply(draft)}

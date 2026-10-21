@@ -66,7 +66,7 @@ export function NotificationTimePicker({
       )}
     >
       {(close) => (
-        <View className="gap-5">
+        <View className="gap-7">
           <View className="flex-row items-center justify-center gap-3">
             <TextInput
               accessibilityLabel="시 (0~23)"

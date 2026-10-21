@@ -15,7 +15,6 @@ import {
   type DiarySeason,
 } from '../../domain/diaryFilters';
 import { selectionSummary } from '../../domain/selection';
-import { useAppTheme } from '../../theme/AppThemeProvider';
 
 export function DiaryFilterPicker({
   year,
@@ -38,7 +37,6 @@ export function DiaryFilterPicker({
     emotionGroups: DiaryEmotionGroup[],
   ) => void;
 }) {
-  const { rem } = useAppTheme();
   const initialYear = year !== null && year >= 1900 && year <= currentYear ? year : null;
   const [draftYear, setYear] = useState(initialYear);
   const [yearOpen, setYearOpen] = useState(false);
@@ -55,7 +53,6 @@ export function DiaryFilterPicker({
     <FilterSheet
       title="일기 필터"
       resetInHeader
-      contentBottomPadding={rem * 1.5}
       onClose={onClose}
       onReset={() => {
         setYear(null);

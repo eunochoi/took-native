@@ -99,7 +99,7 @@ export default function SoberMemos() {
                   ref={ref as unknown as AnimatedRef<FlatList>}
                   data={rows}
                   keyExtractor={(item) => String(item.record.id)}
-                  contentContainerClassName="pt-6 pb-12"
+                  contentContainerClassName="pt-6 pb-7"
                   removeClippedSubviews={false}
                   initialNumToRender={8}
                   maxToRenderPerBatch={8}
