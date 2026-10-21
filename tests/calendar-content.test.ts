@@ -29,6 +29,7 @@ function evaluate(
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react')
           return {
+            Children: { toArray: (children: unknown) => [children].flat() },
             useMemo: (factory: Function) => factory(),
             useRef: (current: unknown) => ({ current }),
             createRef: () => ({ current: null }),
@@ -70,6 +71,31 @@ const cell = (tree: any, date: string) =>
   nodes(tree).find((node) => node.type === 'CalendarDay' && node.props.date === date);
 
 const day = { date: '2026-10-07', month: '2026-10', today: '2026-10-07', onSelect: () => {} };
+
+test('month-grid week minimums remain in normal flow while other calendar sizes retain their layout', () => {
+  const { CalendarGrid } = load('src/screens/calendar/CalendarGrid.tsx');
+  for (const rem of [14, 15, 16]) {
+    const grid = CalendarGrid({
+      children: Array.from({ length: 35 }, (_, i) => i),
+      fillHeight: true,
+      minimumRows: 6,
+      minimumRowHeight: rem * 3.5,
+    });
+    assert.equal(grid.props.className, 'grow');
+    const rows = grid.props.children[1];
+    assert.equal(rows.props.className, 'grow gap-1');
+    assert.equal(rows.props.children.length, 6);
+    for (const row of rows.props.children) {
+      assert.equal(row.props.style.minHeight, rem * 3.5);
+      assert.equal(row.props.className, 'grow flex-row gap-1');
+    }
+  }
+  const fixed = CalendarGrid({ children: [1, 2, 3], fillHeight: true });
+  assert.equal(fixed.props.className, 'flex-1 min-h-0');
+  assert.equal(fixed.props.children[1].props.children[0].props.style, undefined);
+  const natural = CalendarGrid({ children: [1, 2, 3] });
+  assert.equal(natural.props.children[1].props.className, 'gap-1');
+});
 
 test('calendar habit bar shows exact percentages including one percent and hides only zero', () => {
   const { CalendarHabitProgress } = load('src/screens/calendar/CalendarHabitProgress.tsx');

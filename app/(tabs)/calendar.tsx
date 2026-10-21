@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ScrollView, View } from 'react-native';
 import { ColorView } from '../../src/components/ColorTransition';
 import { PageTopSection } from '../../src/components/PageTopSection';
 import { Toolbar } from '../../src/components/Toolbar';
@@ -20,6 +20,13 @@ export default function CalendarScreen() {
   const { openModal } = useModalNavigation();
   const [selected, setSelected] = useState(today);
   const [month, setMonth] = useState(today.slice(0, 7));
+  const scrollRef = useRef<ScrollView>(null);
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
+  const overflowing = contentHeight > viewportHeight + 1;
+  useEffect(() => {
+    if (viewportHeight > 0 && !overflowing) scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, [viewportHeight, overflowing]);
   const diaries = useQuery(diaryQueries.month(db, month));
   const completions = useQuery(habitQueries.completions(db, `${month}-01`, `${month}-31`));
   const habits = useQuery(habitQueries.list(db));
@@ -32,34 +39,48 @@ export default function CalendarScreen() {
   );
   return (
     <ColorView className={PAGE_CLASS_NAME}>
-      <PageTopSection title="월간 기록" hashtags="#기록 #발자국" />
-      <Toolbar>
-        <CalendarRecordCounts
-          diaryCount={diaries.data?.length ?? 0}
-          counts={progressCounts}
-          unavailable={habits.isError || completions.isError}
-        />
-      </Toolbar>
-      <View
+      <ScrollView
+        ref={scrollRef}
         className="flex-1 min-h-0"
-        style={{
-          paddingHorizontal: '5%',
-          paddingBottom: navigationBottom + navigationHeight + rem,
-        }}
+        contentContainerClassName="grow"
+        contentContainerStyle={{ minHeight: viewportHeight }}
+        onLayout={({ nativeEvent }) => setViewportHeight(nativeEvent.layout.height)}
+        onContentSizeChange={(_width, content) => setContentHeight(content)}
+        scrollEnabled={overflowing}
+        bounces={false}
+        overScrollMode="never"
+        showsVerticalScrollIndicator={false}
       >
-        <DiaryHabitMonthCalendar
-          fillHeight
-          month={month}
-          onMonthChange={setMonth}
-          selected={selected}
-          today={today}
-          onSelect={(date) => {
-            setSelected(date);
-            setMonth(date.slice(0, 7));
-            openModal({ pathname: '/calendar/[date]', params: { date } });
+        <PageTopSection title="월간 기록" hashtags="#기록 #발자국" />
+        <Toolbar>
+          <CalendarRecordCounts
+            diaryCount={diaries.data?.length ?? 0}
+            counts={progressCounts}
+            unavailable={habits.isError || completions.isError}
+          />
+        </Toolbar>
+        <View
+          className="grow"
+          style={{
+            paddingHorizontal: '5%',
+            paddingBottom: navigationBottom + navigationHeight + rem,
           }}
-        />
-      </View>
+        >
+          <DiaryHabitMonthCalendar
+            fillHeight
+            minimumRowHeight={rem * 3.5}
+            month={month}
+            onMonthChange={setMonth}
+            selected={selected}
+            today={today}
+            onSelect={(date) => {
+              setSelected(date);
+              setMonth(date.slice(0, 7));
+              openModal({ pathname: '/calendar/[date]', params: { date } });
+            }}
+          />
+        </View>
+      </ScrollView>
     </ColorView>
   );
 }

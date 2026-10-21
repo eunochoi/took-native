@@ -24,6 +24,7 @@ export function DiaryHabitMonthCalendar(props: {
   onMonthChange: (month: string) => void;
   onSelect: (date: string) => void;
   fillHeight?: boolean;
+  minimumRowHeight?: number;
 }) {
   const days = useMemo(() => calendarDays(props.month), [props.month]);
   const navigation = useCalendarNavigation(
@@ -44,7 +45,11 @@ export function DiaryHabitMonthCalendar(props: {
     [diaries.data],
   );
   return (
-    <View className={props.fillHeight ? 'flex-1 min-h-0' : ''}>
+    <View
+      className={
+        props.fillHeight ? (props.minimumRowHeight === undefined ? 'flex-1 min-h-0' : 'grow') : ''
+      }
+    >
       {(diaries.isError || completions.isError || habits.isError) && (
         <QueryError
           className="flex-row gap-2"
@@ -61,6 +66,7 @@ export function DiaryHabitMonthCalendar(props: {
       </View>
       <CalendarGrid
         minimumRows={6}
+        minimumRowHeight={props.minimumRowHeight}
         fillHeight={props.fillHeight}
         {...swipe.panHandlers}
         accessibilityLabel={`${props.month} 월간 달력`}

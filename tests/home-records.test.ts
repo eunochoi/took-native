@@ -21,6 +21,14 @@ function harness(path: string, name: string) {
   const pushes: unknown[] = [];
   const changes: unknown[] = [];
   const results: Record<string, any> = {};
+  const effects: (() => void)[] = [];
+  const theme = {
+    colors: {},
+    iconSizes: {},
+    rem: 15,
+    navigationBottom: 35,
+    navigationHeight: 54.5,
+  };
   runInNewContext(
     ts.transpileModule(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'), {
       compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
@@ -29,10 +37,23 @@ function harness(path: string, name: string) {
       exports,
       require: (dependency: string) => {
         if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
+        if (dependency.endsWith('domain/calendar')) return require('../src/domain/calendar');
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (dependency === 'react')
           return {
             useCallback: (fn: Function) => fn,
+            useMemo: (fn: Function) => fn(),
+            useRef: (current: unknown) => {
+              const index = cursor++;
+              return (slots[index] ??= { current });
+            },
+            useEffect: (fn: () => void, deps: unknown[]) => {
+              const index = cursor++;
+              if (!slots[index] || deps.some((value, i) => !Object.is(slots[index][i], value))) {
+                slots[index] = deps;
+                effects.push(fn);
+              }
+            },
             useState: (initial: unknown) => {
               const index = cursor++;
               if (!(index in slots)) slots[index] = initial;
@@ -67,6 +88,7 @@ function harness(path: string, name: string) {
         if (dependency === 'react-native')
           return {
             View: 'View',
+            ScrollView: 'ScrollView',
             Image: { resolveAssetSource: () => ({ width: 100, height: 100 }) },
             Pressable: 'Pressable',
             useWindowDimensions: () => ({ height: 900 }),
@@ -77,13 +99,7 @@ function harness(path: string, name: string) {
         if (dependency === 'expo-sqlite') return { useSQLiteContext: () => ({}) };
         if (dependency.endsWith('AppThemeProvider'))
           return {
-            useAppTheme: () => ({
-              colors: {},
-              iconSizes: {},
-              rem: 15,
-              navigationBottom: 35,
-              navigationHeight: 54.5,
-            }),
+            useAppTheme: () => theme,
           };
         if (dependency === '@tanstack/react-query')
           return {
@@ -97,6 +113,8 @@ function harness(path: string, name: string) {
           return {
             useToday: () => '2026-10-05',
             statsQueries: { years: query('years'), diary: query('diary'), habit: query('habit') },
+            diaryQueries: { month: query('diary') },
+            habitQueries: { list: query('habits'), completions: query('completions') },
             soberQueries: { list: query('sobers'), restarts: query('restarts') },
           };
         }
@@ -110,6 +128,7 @@ function harness(path: string, name: string) {
     results,
     pushes,
     changes,
+    theme,
     render: (next?: number | string) => {
       cursor = 0;
       queries = [];
@@ -122,6 +141,7 @@ function harness(path: string, name: string) {
           changes.push(year);
         },
       });
+      effects.splice(0).forEach((fn) => fn());
       return { tree, nodes: nodes(tree), queries };
     },
   };
@@ -131,7 +151,7 @@ const records = () => harness('src/screens/home/HomeStatsScreen.tsx', 'HomeStats
 const sheet = (view: ReturnType<ReturnType<typeof records>['render']>) =>
   view.nodes.find((node) => node.type === 'BottomSheetPage');
 
-test('home integrates its greeting and records without a scroll or local stats modal', () => {
+test('home retains its greeting and records in one scroll viewport without a local stats modal', () => {
   const view = harness('app/(tabs)/index.tsx', 'default').render();
   assert.equal(view.tree.type, 'ColorView');
   assert(view.tree.props.className.includes('bg-theme-accent-light'));
@@ -140,11 +160,72 @@ test('home integrates its greeting and records without a scroll or local stats m
     view.nodes.find((node) => node.type === 'TodayRecordSection').props.today,
     '2026-10-05',
   );
-  assert(
-    !view.nodes.some((node) =>
-      ['ScrollView', 'HomeStatsScreen', 'HomeRecordsModal'].includes(node.type),
-    ),
+  assert.equal(view.nodes.filter((node) => node.type === 'ScrollView').length, 1);
+  assert(!view.nodes.some((node) => ['HomeStatsScreen', 'HomeRecordsModal'].includes(node.type)));
+});
+
+test('home fills a normal window, scrolls short windows and resets when all records fit again', () => {
+  const ui = harness('app/(tabs)/index.tsx', 'default');
+  const viewport = () => ui.render().nodes.find((node) => node.type === 'ScrollView');
+  const scroll = viewport();
+  const resets: unknown[] = [];
+  scroll.props.ref.current = { scrollTo: (value: unknown) => resets.push(value) };
+  scroll.props.onLayout({ nativeEvent: { layout: { height: 800 } } });
+  const content = ui.render().nodes.find((node) => node.type === 'View' && node.props.onLayout);
+  content.props.onLayout({ nativeEvent: { layout: { height: 500 } } });
+  assert.equal(viewport().props.children.props.style.height, 800);
+  assert.equal(viewport().props.scrollEnabled, false);
+  assert.equal(viewport().props.bounces, false);
+  assert.equal(viewport().props.overScrollMode, 'never');
+  assert.equal(
+    ui.render().nodes.find((node) => node.props.accessibilityLabel === 'hiding-cat').props.style
+      .height,
+    'auto',
   );
+  const beforeShrink = resets.length;
+  scroll.props.onLayout({ nativeEvent: { layout: { height: 400 } } });
+  assert.equal(viewport().props.scrollEnabled, true);
+  assert.equal(viewport().props.children.props.style.height, 604.5);
+  assert.equal(resets.length, beforeShrink);
+  // A wrapped loading/error message can make the required content taller without resizing the window.
+  content.props.onLayout({ nativeEvent: { layout: { height: 560 } } });
+  assert.equal(viewport().props.children.props.style.height, 664.5);
+  scroll.props.onLayout({ nativeEvent: { layout: { height: 900 } } });
+  assert.equal(viewport().props.children.props.style.height, 900);
+  assert.equal(viewport().props.scrollEnabled, false);
+  assert.equal(viewport().props.ref, scroll.props.ref);
+  assert.equal(JSON.stringify(resets.at(-1)), JSON.stringify({ y: 0, animated: false }));
+  assert(resets.length > beforeShrink);
+});
+
+test('calendar resizing preserves the selected month and uses the current font size for week minimums', () => {
+  const ui = harness('app/(tabs)/calendar.tsx', 'default');
+  const viewport = () => ui.render().nodes.find((node) => node.type === 'ScrollView');
+  const calendar = () => ui.render().nodes.find((node) => node.type === 'DiaryHabitMonthCalendar');
+  const scroll = viewport();
+  const resets: unknown[] = [];
+  scroll.props.ref.current = { scrollTo: (value: unknown) => resets.push(value) };
+  scroll.props.onLayout({ nativeEvent: { layout: { height: 800 } } });
+  scroll.props.onContentSizeChange(400, 800);
+  assert.equal(viewport().props.scrollEnabled, false);
+  calendar().props.onMonthChange('2026-09');
+  const originalSelected = calendar().props.selected;
+  for (const size of [14, 15, 16]) {
+    ui.theme.rem = size;
+    assert.equal(calendar().props.minimumRowHeight, size * 3.5);
+  }
+  scroll.props.onLayout({ nativeEvent: { layout: { height: 360 } } });
+  scroll.props.onContentSizeChange(600, 680);
+  assert.equal(viewport().props.scrollEnabled, true);
+  assert.equal(viewport().props.contentContainerStyle.minHeight, 360);
+  assert.equal(calendar().props.month, '2026-09');
+  assert.equal(calendar().props.selected, originalSelected);
+  scroll.props.onLayout({ nativeEvent: { layout: { height: 900 } } });
+  scroll.props.onContentSizeChange(400, 900);
+  assert.equal(viewport().props.scrollEnabled, false);
+  assert.equal(calendar().props.month, '2026-09');
+  assert.equal(JSON.stringify(resets.at(-1)), JSON.stringify({ y: 0, animated: false }));
+  assert.equal(viewport().props.ref, scroll.props.ref);
 });
 
 test('stats use the common route sheet and keep all four analysis sections', () => {

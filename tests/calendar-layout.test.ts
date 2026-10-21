@@ -33,6 +33,7 @@ function load(path: string, states: unknown[], date = '2026-09-30') {
           return {
             Children: { toArray: (children: unknown) => [children].flat() },
             useMemo: (fn: Function) => fn(),
+            useEffect: () => {},
             useCallback: (fn: Function) => fn,
             useRef: (value: unknown) => {
               const index = cursor++;
@@ -64,6 +65,7 @@ function load(path: string, states: unknown[], date = '2026-09-30') {
         if (name === 'react-native')
           return {
             View: 'View',
+            ScrollView: 'ScrollView',
             useWindowDimensions: () => ({ height: 900 }),
           };
         if (name === 'react-native-safe-area-context')
@@ -115,12 +117,13 @@ function load(path: string, states: unknown[], date = '2026-09-30') {
 test('calendar pushes the selected date sheet while preserving the selected month and cell', () => {
   const render = load('app/(tabs)/calendar.tsx', []);
   const tree = render('default');
-  assert(!nodes(tree).some((node) => String(node.type).includes('ScrollView')));
-  assert.equal(tree.props.children[2].props.style.paddingBottom, 89.5);
-  tree.props.children[2].props.children.props.onSelect('2026-09-30');
+  assert.equal(nodes(tree).filter((node) => node.type === 'ScrollView').length, 1);
+  const body = nodes(tree).find((node) => node.props.style?.paddingBottom !== undefined);
+  assert.equal(body.props.style.paddingBottom, 89.5);
+  body.props.children.props.onSelect('2026-09-30');
   assert.equal(render.navigations[0].pathname, '/calendar/[date]');
   assert.equal(render.navigations[0].params.date, '2026-09-30');
-  const calendar = render('default').props.children[2].props.children;
+  const calendar = nodes(render('default')).find((node) => node.type === 'DiaryHabitMonthCalendar');
   assert.equal(calendar.props.selected, '2026-09-30');
   assert.equal(calendar.props.month, '2026-09');
 });

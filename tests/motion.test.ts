@@ -26,7 +26,11 @@ function load(
       require: (name: string) => {
         if (name.endsWith('theme/classes')) return require('../src/theme/classes');
         if (name === 'react')
-          return { useState: (value: unknown) => [layoutState[stateIndex++] ?? value, () => {}] };
+          return {
+            useState: (value: unknown) => [layoutState[stateIndex++] ?? value, () => {}],
+            useRef: (current: unknown) => ({ current }),
+            useEffect: () => {},
+          };
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react-native-gesture-handler')
           return { Pressable: (props: any) => jsx('GesturePressable', props) };
@@ -42,6 +46,8 @@ function load(
               rem: geometry.rem,
               iconSizes: { md: 24, lg: 30 },
               tabContentBottom: 100,
+              navigationBottom: 24,
+              navigationHeight: 64,
               colors: { surface: '#FFFFFF', accentLight: '#F0F7FF' },
             }),
           };
@@ -146,7 +152,7 @@ test('home focus remounts the greeting and reduced motion retains the resting ro
   assert.equal(reduced.key, 'idle');
 });
 
-test('home keeps its decoration in a fixed layout without main scrolling', () => {
+test('home retains its decoration within the page scroll viewport', () => {
   function nodes(node: any): any[] {
     if (!node || typeof node !== 'object') return [];
     return [node, ...[node.props?.children].flat().flatMap(nodes)];
@@ -154,17 +160,16 @@ test('home keeps its decoration in a fixed layout without main scrolling', () =>
   const tree = load('../app/(tabs)/index.tsx', false, true).default();
   const rendered = nodes(tree);
   assert(rendered.some((node) => node.props.accessibilityLabel === 'hiding-cat'));
-  assert.equal(
-    rendered.some((node) => node.type === 'ScrollView'),
-    false,
-  );
+  assert.equal(rendered.filter((node) => node.type === 'ScrollView').length, 1);
   assert.equal(rendered.filter((node) => node.type === 'TodayRecordSection').length, 1);
   assert(!tree.props.className.includes('border-b'));
   assert.equal(tree.props.style, undefined);
   const cat = rendered.find((node) => node.props.accessibilityLabel === 'hiding-cat');
   assert(cat.props.className.includes('max-h-full'));
   assert(
-    rendered.some((node) => node.props.className === 'flex-1 min-h-0 justify-end overflow-hidden'),
+    rendered.some(
+      (node) => node.props.className === 'flex-1 min-h-0 justify-end overflow-hidden px-[5%]',
+    ),
   );
 });
 
