@@ -82,6 +82,7 @@ function section(path: string, name: string, initialProps: Record<string, unknow
         }
         if (dependency.endsWith('/HabitRecentRecord'))
           return { HabitRecentRecord: 'HabitRecentRecord' };
+        if (dependency.endsWith('/HabitStars')) return { HabitStars: 'HabitStars' };
         if (dependency.endsWith('/HabitYearStatistics'))
           return { HabitYearStatistics: 'HabitYearStatistics' };
         if (dependency.endsWith('/HabitMonthStatistics'))

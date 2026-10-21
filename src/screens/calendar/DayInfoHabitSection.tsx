@@ -7,6 +7,7 @@ import { resolveIconColor } from '../../domain/constants';
 import { canCheckHabit, localDate, shiftDate } from '../../domain/date';
 import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
+import { HabitStars } from '../habit/HabitStars';
 
 export function DayInfoHabitSection({
   habits,
@@ -59,8 +60,10 @@ export function DayInfoHabitSection({
           <Text numberOfLines={1} className="flex-1 text-sm">
             {habit.name}
           </Text>
-          {habit.priority === 0 && (
+          {habit.priority === 0 ? (
             <Text className="text-xs text-theme-text-secondary">자유 기록</Text>
+          ) : (
+            <HabitStars priority={habit.priority} color={habitColor} className="shrink-0" />
           )}
         </Pressable>
         <Pressable
