@@ -26,9 +26,9 @@ export function CalendarRecordCounts({
         },
         ...(
           [
-            { band: 'low', label: '25% 미만', className: 'text-theme-progress-low' },
-            { band: 'medium', label: '25% 이상 75% 미만', className: 'text-theme-progress-medium' },
             { band: 'high', label: '75% 이상', className: 'text-theme-progress-high' },
+            { band: 'medium', label: '25% 이상 75% 미만', className: 'text-theme-progress-medium' },
+            { band: 'low', label: '25% 미만', className: 'text-theme-progress-low' },
           ] as const
         ).map(({ band, label, className }) => ({
           key: band,
