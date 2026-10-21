@@ -70,6 +70,7 @@ export function BottomSheetScrollViewport({
             edge="bottom"
             visible={fade.bottomVisible}
             includeBottomInset={false}
+            includeToolbar={false}
           />
         </>
       )}

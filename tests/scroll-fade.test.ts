@@ -1,6 +1,55 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { runInNewContext } from 'node:vm';
 import { getScrollFadeState } from '../src/hooks/scrollFade';
+
+test('sheet fades leave the last content unobstructed while page fades retain toolbar coverage', () => {
+  const require = createRequire(import.meta.url);
+  const ts = require('typescript');
+  const exports: any = {};
+  const jsx = (type: any, props: any) => ({ type, props });
+  runInNewContext(
+    ts.transpileModule(
+      readFileSync(new URL('../src/components/ScrollEdgeFade.tsx', import.meta.url), 'utf8'),
+      { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } },
+    ).outputText,
+    {
+      exports,
+      require: (name: string) => {
+        if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
+        if (name === 'react-native') return { View: 'View', StyleSheet: { absoluteFill: {} } };
+        if (name === 'react-native-reanimated')
+          return { __esModule: true, default: { View: 'AnimatedView' } };
+        if (name === 'expo-linear-gradient') return { LinearGradient: 'LinearGradient' };
+        if (name === 'react-native-safe-area-context')
+          return { useSafeAreaInsets: () => ({ bottom: 30 }) };
+        if (name.endsWith('AppThemeProvider'))
+          return {
+            useAppTheme: () => ({ colors: { surface: '#FFFFFF' }, rem: 15, reducedMotion: false }),
+          };
+        if (name.endsWith('tokens.json'))
+          return { __esModule: true, default: { motion: { scrollFade: 150 } } };
+        throw new Error(`Unexpected import: ${name}`);
+      },
+    },
+  );
+  for (const visible of [false, true]) {
+    const sheet = exports.ScrollEdgeFade({
+      edge: 'bottom',
+      visible,
+      includeBottomInset: false,
+      includeToolbar: false,
+    });
+    assert.equal(sheet.props.style.height, 30);
+    assert.equal(sheet.props.children[0].props.style.opacity, visible ? 1 : 0);
+    assert.equal(sheet.props.children[1], false);
+  }
+  const page = exports.ScrollEdgeFade({ edge: 'bottom', visible: false });
+  assert.equal(page.props.style.height, 108);
+  assert.equal(page.props.children[1].props.style.height, 78);
+});
 
 test('short content and unmeasured viewport never display edge fades', () => {
   for (const [offset, viewport, content] of [

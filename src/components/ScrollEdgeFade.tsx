@@ -9,11 +9,13 @@ export function ScrollEdgeFade({
   edge,
   visible,
   includeBottomInset = true,
+  includeToolbar = true,
   outside = false,
 }: {
   edge: 'top' | 'bottom';
   visible: boolean;
   includeBottomInset?: boolean;
+  includeToolbar?: boolean;
   outside?: boolean;
 }) {
   const { colors, rem, reducedMotion } = useAppTheme();
@@ -21,7 +23,7 @@ export function ScrollEdgeFade({
 
   const isBottom = edge === 'bottom';
   const fadeHeight = rem * 2;
-  const toolbarHeight = isBottom ? 48 : 0;
+  const toolbarHeight = isBottom && includeToolbar ? 48 : 0;
   const bottomInset = isBottom && includeBottomInset ? insets.bottom : 0;
   const solidHeight = toolbarHeight + bottomInset;
 
