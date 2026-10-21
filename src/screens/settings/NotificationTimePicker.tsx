@@ -5,8 +5,10 @@ import { Button } from '../../components/Button';
 import { Text } from '../../components/Text';
 import type { CloseBottomSheet } from '../../hooks/useBottomSheetLifecycle';
 
+const TIME_INPUT_CONTAINER_CLASS_NAME =
+  'h-12 w-16 justify-center ios:curve-continuous rounded-2xl border border-theme-border';
 const TIME_INPUT_CLASS_NAME =
-  'h-12 w-16 ios:curve-continuous rounded-2xl bg-transparent border border-theme-border text-center text-lg text-theme-text-primary font-normal';
+  'w-full py-0 bg-transparent text-center text-lg leading-tight text-theme-text-primary font-normal';
 
 export function NotificationTimePicker({
   title,
@@ -68,31 +70,37 @@ export function NotificationTimePicker({
       {(close) => (
         <View className="gap-7">
           <View className="flex-row items-center justify-center gap-3">
-            <TextInput
-              accessibilityLabel="시 (0~23)"
-              keyboardType="number-pad"
-              maxLength={2}
-              editable={!busy}
-              value={hour}
-              className={TIME_INPUT_CLASS_NAME}
-              onChangeText={(text) => {
-                setHour(text);
-                setError('');
-              }}
-            />
+            <View className={TIME_INPUT_CONTAINER_CLASS_NAME}>
+              <TextInput
+                accessibilityLabel="시 (0~23)"
+                keyboardType="number-pad"
+                maxLength={2}
+                editable={!busy}
+                value={hour}
+                className={TIME_INPUT_CLASS_NAME}
+                style={{ includeFontPadding: false, textAlignVertical: 'center' }}
+                onChangeText={(text) => {
+                  setHour(text);
+                  setError('');
+                }}
+              />
+            </View>
             <Text>:</Text>
-            <TextInput
-              accessibilityLabel="분 (0~59)"
-              keyboardType="number-pad"
-              maxLength={2}
-              editable={!busy}
-              value={minute}
-              className={TIME_INPUT_CLASS_NAME}
-              onChangeText={(text) => {
-                setMinute(text);
-                setError('');
-              }}
-            />
+            <View className={TIME_INPUT_CONTAINER_CLASS_NAME}>
+              <TextInput
+                accessibilityLabel="분 (0~59)"
+                keyboardType="number-pad"
+                maxLength={2}
+                editable={!busy}
+                value={minute}
+                className={TIME_INPUT_CLASS_NAME}
+                style={{ includeFontPadding: false, textAlignVertical: 'center' }}
+                onChangeText={(text) => {
+                  setMinute(text);
+                  setError('');
+                }}
+              />
+            </View>
           </View>
           {value !== null && (
             <Button

@@ -9,8 +9,10 @@ import { AppIcon } from './AppIcon';
 import { FormPickerRow } from './FormPickerRow';
 import { Text } from './Text';
 
+const TIME_INPUT_CONTAINER_CLASS_NAME =
+  'h-12 w-16 justify-center ios:curve-continuous rounded-2xl border border-theme-border';
 const TIME_INPUT_CLASS_NAME =
-  'h-12 w-16 py-0 ios:curve-continuous rounded-2xl bg-transparent border border-theme-border text-center text-lg leading-none text-theme-text-primary font-normal';
+  'w-full py-0 bg-transparent text-center text-lg leading-tight text-theme-text-primary font-normal';
 
 export function DateTimeFields({
   draft,
@@ -64,31 +66,35 @@ export function DateTimeFields({
             }}
           />
           <View className="flex-row items-center justify-center gap-3">
-            <TextInput
-              accessibilityLabel="시 (0~23)"
-              keyboardType="number-pad"
-              maxLength={2}
-              editable={!disabled}
-              value={draft.hour}
-              onChangeText={(hour) => {
-                if (!disabled) onChange({ ...draft, hour });
-              }}
-              className={TIME_INPUT_CLASS_NAME}
-              style={{ includeFontPadding: false, textAlignVertical: 'center' }}
-            />
+            <View className={TIME_INPUT_CONTAINER_CLASS_NAME}>
+              <TextInput
+                accessibilityLabel="시 (0~23)"
+                keyboardType="number-pad"
+                maxLength={2}
+                editable={!disabled}
+                value={draft.hour}
+                onChangeText={(hour) => {
+                  if (!disabled) onChange({ ...draft, hour });
+                }}
+                className={TIME_INPUT_CLASS_NAME}
+                style={{ includeFontPadding: false, textAlignVertical: 'center' }}
+              />
+            </View>
             <Text>:</Text>
-            <TextInput
-              accessibilityLabel="분 (0~59)"
-              keyboardType="number-pad"
-              maxLength={2}
-              editable={!disabled}
-              value={draft.minute}
-              onChangeText={(minute) => {
-                if (!disabled) onChange({ ...draft, minute });
-              }}
-              className={TIME_INPUT_CLASS_NAME}
-              style={{ includeFontPadding: false, textAlignVertical: 'center' }}
-            />
+            <View className={TIME_INPUT_CONTAINER_CLASS_NAME}>
+              <TextInput
+                accessibilityLabel="분 (0~59)"
+                keyboardType="number-pad"
+                maxLength={2}
+                editable={!disabled}
+                value={draft.minute}
+                onChangeText={(minute) => {
+                  if (!disabled) onChange({ ...draft, minute });
+                }}
+                className={TIME_INPUT_CLASS_NAME}
+                style={{ includeFontPadding: false, textAlignVertical: 'center' }}
+              />
+            </View>
           </View>
         </View>
       )}
