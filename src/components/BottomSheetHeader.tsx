@@ -8,6 +8,7 @@ export function BottomSheetHeader({
   title,
   titleIcon,
   titleAction,
+  headerAction,
   menuAction,
   onClose,
 }: {
@@ -18,6 +19,7 @@ export function BottomSheetHeader({
     accessibilityLabel: string;
     disabled?: boolean;
   };
+  headerAction?: ReactNode;
   menuAction?: ReactNode;
   onClose?: () => void;
 }) {
@@ -35,8 +37,10 @@ export function BottomSheetHeader({
           <View className="h-1 w-8 ios:curve-continuous rounded-full bg-theme-accent" />
         </Pressable>
       )}
-      {(title || titleIcon || menuAction) && (
-        <View className="self-stretch flex-row items-center gap-2 py-1">
+      {(title || titleIcon || menuAction || headerAction) && (
+        <View
+          className={`relative self-stretch flex-row items-center gap-2 py-1 ${headerAction ? 'px-20' : ''}`}
+        >
           {menuAction && <View className="-ml-2 w-11 shrink-0" />}
           <View className="flex-1 min-w-0 flex-row items-center justify-center gap-2">
             {titleIcon}
@@ -80,6 +84,7 @@ export function BottomSheetHeader({
             )}
           </View>
           {menuAction && <View className="-mr-2 w-11 shrink-0 items-center">{menuAction}</View>}
+          {headerAction && <View className="absolute right-0 items-center">{headerAction}</View>}
         </View>
       )}
     </View>

@@ -27,9 +27,10 @@ export function FilterSheet({
       accessibilityRole="button"
       accessibilityLabel="선택 초기화"
       onPress={onReset}
+      hitSlop={resetInHeader ? 6 : undefined}
       className={
         resetInHeader
-          ? 'absolute right-0 min-h-12 flex-row items-center justify-center gap-1 px-1 active:opacity-70'
+          ? 'min-h-9 flex-row items-center justify-center gap-1 px-1 active:opacity-70'
           : 'min-h-12 self-center flex-row items-center justify-center gap-1.5 px-4 active:opacity-70'
       }
     >
@@ -48,7 +49,8 @@ export function FilterSheet({
   return (
     <BottomSheetModal
       visible
-      title={resetInHeader ? undefined : title}
+      title={title}
+      headerAction={resetInHeader ? resetButton : undefined}
       scrollFade
       onClose={onClose}
       footer={(close) => (
@@ -63,17 +65,7 @@ export function FilterSheet({
         </View>
       )}
     >
-      <View className="gap-7">
-        {resetInHeader && (
-          <View className="relative min-h-12 items-center justify-center">
-            <Text accessibilityRole="header" className="text-lg font-semibold">
-              {title}
-            </Text>
-            {resetButton}
-          </View>
-        )}
-        {children}
-      </View>
+      <View className="gap-7">{children}</View>
     </BottomSheetModal>
   );
 }

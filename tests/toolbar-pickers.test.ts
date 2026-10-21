@@ -112,6 +112,7 @@ function picker(path: string, name: string, initial: Record<string, unknown>) {
       shell,
       content: nodes([
         ...nestedContent,
+        shell.props.headerAction,
         typeof shell.props.children === 'function' ? shell.props.children(close) : shell,
         typeof shell.props.footer === 'function' ? shell.props.footer(close) : shell.props.footer,
       ]),
@@ -263,8 +264,14 @@ test('header reset clears all diary drafts without applying until confirmation',
   const ui = filterPicker({ year: 2025, seasons: ['winter'], emotionGroups: ['negative'] });
   const view = ui.render();
   assert(
-    nodes(view.shell.props.children).some(
+    nodes(view.shell.props.headerAction).some(
       (node) => node.props.accessibilityLabel === '선택 초기화',
+    ),
+  );
+  assert.equal(view.shell.props.title, '일기 필터');
+  assert(
+    !nodes(view.shell.props.children).some(
+      (node) => node.props.accessibilityRole === 'header' && node.props.children === '일기 필터',
     ),
   );
   assert(
@@ -352,7 +359,7 @@ test('all filters keep reset in the header and apply in the footer', () => {
   ]) {
     const view = ui.render();
     assert(
-      nodes(view.shell.props.children).some(
+      nodes(view.shell.props.headerAction).some(
         (node) => node.props.accessibilityLabel === '선택 초기화',
       ),
     );

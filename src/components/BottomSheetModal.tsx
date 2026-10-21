@@ -25,6 +25,7 @@ export function BottomSheetModal({
   title,
   titleIcon,
   titleAction,
+  headerAction,
   onClose,
   children,
   renderScrollView,
@@ -51,6 +52,7 @@ export function BottomSheetModal({
   title?: string;
   titleIcon?: ReactNode;
   titleAction?: ComponentProps<typeof BottomSheetHeader>['titleAction'];
+  headerAction?: ReactNode;
   onClose: () => void;
   children?: ReactNode | ((closeSheet: CloseBottomSheet) => ReactNode);
   maxHeight?: number;
@@ -107,6 +109,7 @@ export function BottomSheetModal({
       title={title}
       titleIcon={titleIcon}
       titleAction={titleAction}
+      headerAction={headerAction}
       menuAction={menuAction}
       onClose={dismissible ? () => closeSheet() : undefined}
     />
