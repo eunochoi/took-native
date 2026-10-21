@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import test from 'node:test';
 import { runInNewContext } from 'node:vm';
-import { DEFAULT_SETTINGS } from '../src/settings/model';
 import { sortHabits } from '../src/db/habit';
 import { sortSobers } from '../src/db/sober';
-import { getCurrentSoberStart, SOBER_DAY_MS } from '../src/domain/sober';
-import { MAX_HABIT_COUNT, MAX_SOBER_COUNT } from '../src/domain/limits';
 import { shiftDate } from '../src/domain/date';
+import { MAX_HABIT_COUNT, MAX_SOBER_COUNT } from '../src/domain/limits';
+import { getCurrentSoberStart, SOBER_DAY_MS } from '../src/domain/sober';
+import { DEFAULT_SETTINGS } from '../src/settings/model';
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
 const now = Date.parse('2026-10-14T12:00:00.000Z');

@@ -1,11 +1,11 @@
-import { InfoNotice } from '../../components/InfoNotice';
-import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
+import { InfoNotice } from '../../components/InfoNotice';
 import { Text } from '../../components/Text';
 import type { Habit } from '../../db/types';
 import { resolveIconColor } from '../../domain/constants';
-import { canCheckHabit, shiftDate, localDate } from '../../domain/date';
+import { canCheckHabit, localDate, shiftDate } from '../../domain/date';
+import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 
 export function DayInfoHabitSection({

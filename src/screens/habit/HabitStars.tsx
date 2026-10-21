@@ -1,6 +1,6 @@
-import { useAppTheme } from '../../theme/AppThemeProvider';
 import { View } from 'react-native';
 import { StarIcon } from '../../components/StarIcon';
+import { useAppTheme } from '../../theme/AppThemeProvider';
 
 export function HabitStars({
   priority,

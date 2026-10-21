@@ -1,7 +1,7 @@
-import { InfoNotice } from '../../components/InfoNotice';
 import { useState } from 'react';
 import { Switch, View } from 'react-native';
 import { FilterSheet } from '../../components/FilterSheet';
+import { InfoNotice } from '../../components/InfoNotice';
 import { PickerOption } from '../../components/PickerOption';
 import { Text } from '../../components/Text';
 import { selectionSummary } from '../../domain/selection';

@@ -1,8 +1,8 @@
-import { InfoNotice } from '../../components/InfoNotice';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from '../../components/Button';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
+import { Button } from '../../components/Button';
+import { InfoNotice } from '../../components/InfoNotice';
 import { PickerOption } from '../../components/PickerOption';
 import { Text } from '../../components/Text';
 import { HabitStars } from './HabitStars';
