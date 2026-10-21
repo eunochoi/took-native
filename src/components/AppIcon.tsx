@@ -112,7 +112,9 @@ export function AppIcon({
     'today',
     'habit-flow',
   ].includes(name);
-  return <Icon {...props} weight={bold ? 'bold' : 'fill'} />;
+  return (
+    <Icon {...props} weight={name === 'drag-indicator' ? 'regular' : bold ? 'bold' : 'fill'} />
+  );
 }
 
 cssInterop(AppIcon, {
