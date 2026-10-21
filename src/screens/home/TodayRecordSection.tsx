@@ -6,6 +6,7 @@ import { AppIcon } from '../../components/AppIcon';
 import { SoberIcon } from '../../components/SoberIcon';
 import { Text } from '../../components/Text';
 import { sortSobers } from '../../db/sober';
+import { habitProgressBand } from '../../domain/calendar';
 import { EMOTIONS } from '../../domain/constants';
 import { getHabitDaySummary } from '../../domain/habitStats';
 import { getSoberSummary, SOBER_DAY_MS } from '../../domain/sober';
@@ -45,6 +46,8 @@ export function TodayRecordSection({ today }: { today: string }) {
   const habitSummary = getHabitDaySummary(today, habits.data ?? [], completions.data ?? []);
   const habitPending = habits.isPending || completions.isPending;
   const habitError = habits.isError || completions.isError;
+  const habitBand =
+    !habitPending && !habitError ? habitProgressBand(habitSummary.percent ?? 0) : null;
   const soberPending = sobers.isPending || (!!sober && restarts.isPending);
   const soberError = sobers.isError || (!!sober && restarts.isError);
   const soberDays =
@@ -112,7 +115,19 @@ export function TodayRecordSection({ today }: { today: string }) {
           className="min-h-10 min-w-0 flex-1 flex-row items-center gap-3 active:opacity-70"
         >
           <View className={recordIconContainerClass}>
-            <AppIcon name="habit" size={appRem * 2} className={recordIconClass} />
+            <AppIcon
+              name="habit"
+              size={appRem * 2}
+              className={
+                habitBand === 'high'
+                  ? 'text-theme-progress-high'
+                  : habitBand === 'medium'
+                    ? 'text-theme-progress-medium'
+                    : habitBand === 'low'
+                      ? 'text-theme-progress-low'
+                      : recordIconClass
+              }
+            />
           </View>
           <View className={recordContentClass}>
             <Text numberOfLines={1} className={recordTitleClass} style={recordTextStyle}>
@@ -182,7 +197,7 @@ export function TodayRecordSection({ today }: { today: string }) {
         className={recordCardClass}
       >
         <View className={recordIconContainerClass}>
-          <AppIcon name="description" size={appRem * 2} className={recordIconClass} />
+          <AppIcon name="description" size={appRem * 2} className="text-theme-gray" />
         </View>
         <View className={recordContentClass}>
           <Text numberOfLines={1} className={recordTitleClass} style={recordTextStyle}>
