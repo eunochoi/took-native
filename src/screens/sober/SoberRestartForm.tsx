@@ -89,12 +89,12 @@ export function SoberRestartForm({
   };
   const onClosed = saved
     ? () =>
-      showNotice({
-        tone: 'success',
-        title: editing ? '다시 시작 기록을 수정했어요' : '다시 시작 기록을 추가했어요',
-      })
+        showNotice({
+          tone: 'success',
+          title: editing ? '다시 시작 기록을 수정했어요' : '다시 시작 기록을 추가했어요',
+        })
     : undefined;
-  const title = editing ? '다시 시작 기록 수정' : '다시 거리를 둘까요?';
+  const title = editing ? '다시 시작 기록 수정' : '다시 시작 기록 추가';
   const backRoute =
     !validId || (!sober.isPending && !sober.data)
       ? '/sober'
@@ -197,7 +197,7 @@ export function SoberRestartForm({
             scrollEnabled
             maxLength={SOBER_MEMO_MAX_LENGTH}
             textAlignVertical="top"
-            placeholder="다시 거리를 두고 싶은 이유나 지금의 마음을 남겨보세요."
+            placeholder="다시 시작하는 이유나 지금의 생각을 남겨보세요."
             placeholderTextColor={colors.textTertiary}
             className="h-28 ios:curve-continuous rounded-2xl bg-transparent border border-theme-border p-4 text-base text-theme-text-primary font-normal"
           />

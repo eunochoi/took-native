@@ -5,9 +5,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { View } from 'react-native';
 import { AppIcon } from '../../../src/components/AppIcon';
-import { HabitIcon } from '../../../src/components/HabitIcon';
 import { BottomSheetPage } from '../../../src/components/BottomSheetPage';
 import { EmotionImage } from '../../../src/components/EmotionImage';
+import { HabitIcon } from '../../../src/components/HabitIcon';
 import { QueryState } from '../../../src/components/QueryState';
 import { Text } from '../../../src/components/Text';
 import { EMOTIONS } from '../../../src/domain/constants';
@@ -47,7 +47,7 @@ export default function DiaryDetail() {
               <View className="flex-row items-center gap-5">
                 <EmotionImage emotion={diary.emotion} size={appRem * 3.5} />
                 <View>
-                  <Text className="text-sm font-bold text-theme-accent">오늘의 마음</Text>
+                  <Text className="text-sm font-bold text-theme-accent">오늘의 감정</Text>
                   <Text className="mt-1 font-bold text-xl font-medium text-theme-text-primary">
                     {EMOTIONS[diary.emotion]?.name ?? EMOTIONS[9].name}
                   </Text>
