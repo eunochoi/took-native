@@ -1,25 +1,24 @@
-import { InfoNotice } from '../../src/components/InfoNotice';
-import { AppIcon } from '../../src/components/AppIcon';
-import { FormSubmitButton } from '../../src/components/FormSubmitButton';
-import type { ScrollView } from 'react-native';
-import { useNotice } from '../../src/components/NoticeProvider';
-import { useAppTheme } from '../../src/theme/AppThemeProvider';
-import { usePreventRemove } from 'expo-router/react-navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
+import { usePreventRemove } from 'expo-router/react-navigation';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useEffect, useState } from 'react';
-import { View, Pressable } from 'react-native';
-import { QueryState } from '../../src/components/QueryState';
-import { Text } from '../../src/components/Text';
+import type { ScrollView } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useAnimatedRef } from 'react-native-reanimated';
 import Sortable from 'react-native-sortables';
+import { AppIcon } from '../../src/components/AppIcon';
+import { BottomSheetPage } from '../../src/components/BottomSheetPage';
+import { FormSubmitButton } from '../../src/components/FormSubmitButton';
+import { useNotice } from '../../src/components/NoticeProvider';
+import { QueryState } from '../../src/components/QueryState';
 import { moveItem } from '../../src/components/sortable/order';
+import { Text } from '../../src/components/Text';
 import { sortHabits } from '../../src/db/habit';
 import { habitQueries } from '../../src/queries';
-import { BottomSheetPage } from '../../src/components/BottomSheetPage';
 import { HabitOrderItem } from '../../src/screens/habit/HabitOrderItem';
 import { useSettings } from '../../src/settings/SettingsProvider';
+import { useAppTheme } from '../../src/theme/AppThemeProvider';
 
 export default function HabitOrder() {
   const { showNotice } = useNotice();
@@ -117,8 +116,36 @@ export default function HabitOrder() {
       >
         <View>
           <View className="gap-4 mb-4">
-            <InfoNotice>드래그하거나 방향키로 습관 순서를 변경하세요.</InfoNotice>
-
+            <View className="flex-row gap-3">
+              <Pressable
+                accessibilityRole="button"
+                disabled={!changes || saving || dragging}
+                onPress={() => {
+                  setOrder(initial);
+                  setResetDefault(false);
+                }}
+                className={`flex-1 min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-xl border border-theme-accent/30 px-2 py-2 active:opacity-65 ${!changes || saving || dragging ? 'opacity-40' : 'opacity-100'}`}
+              >
+                <AppIcon name="undo" size={appRem * 1.125} color={colors.accentText} />
+                <Text className="shrink text-sm text-theme-accent-text">변경사항 취소</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                disabled={
+                  !order || saving || dragging || (isDefault && settings.habitOrder.length === 0)
+                }
+                onPress={() => {
+                  setOrder(defaults);
+                  setResetDefault(true);
+                }}
+                className={`flex-1 min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-xl border border-transparent bg-theme-accent-light px-2 py-2 active:opacity-65 ${!order || saving || dragging || (isDefault && settings.habitOrder.length === 0) ? 'opacity-40' : 'opacity-100'}`}
+              >
+                <AppIcon name="restart-alt" size={appRem * 1.125} color={colors.accentText} />
+                <Text className="shrink text-center text-sm text-theme-accent-text">
+                  기본 순서로 초기화
+                </Text>
+              </Pressable>
+            </View>
             <QueryState query={query} />
           </View>
           <Sortable.Grid
@@ -143,36 +170,6 @@ export default function HabitOrder() {
               />
             )}
           />
-          <View className="flex-row gap-3 mt-4">
-            <Pressable
-              accessibilityRole="button"
-              disabled={!changes || saving || dragging}
-              onPress={() => {
-                setOrder(initial);
-                setResetDefault(false);
-              }}
-              className={`flex-1 min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-xl border border-theme-accent/30 px-2 py-2 active:opacity-65 ${!changes || saving || dragging ? 'opacity-40' : 'opacity-100'}`}
-            >
-              <AppIcon name="undo" size={appRem * 1.125} color={colors.accentText} />
-              <Text className="shrink text-sm text-theme-accent-text">변경사항 취소</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              disabled={
-                !order || saving || dragging || (isDefault && settings.habitOrder.length === 0)
-              }
-              onPress={() => {
-                setOrder(defaults);
-                setResetDefault(true);
-              }}
-              className={`flex-1 min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-xl border border-transparent bg-theme-accent-light px-2 py-2 active:opacity-65 ${!order || saving || dragging || (isDefault && settings.habitOrder.length === 0) ? 'opacity-40' : 'opacity-100'}`}
-            >
-              <AppIcon name="restart-alt" size={appRem * 1.125} color={colors.accentText} />
-              <Text className="shrink text-center text-sm text-theme-accent-text">
-                기본 순서로 초기화
-              </Text>
-            </Pressable>
-          </View>
         </View>
       </BottomSheetPage>
     </>
