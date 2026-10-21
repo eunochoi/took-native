@@ -294,7 +294,8 @@ test('day habits show all rows in order and retain totals and completion actions
   assert.equal(expandButton(all.nodes), undefined);
   assert(
     all.nodes.some(
-      (node) => JSON.stringify(node.props.children) === JSON.stringify(['집계 대상 ', 4, '/', 6]),
+      (node) =>
+        JSON.stringify(node.props.children) === JSON.stringify(['매일 기록 ', 4, '/', 6, ' 완료']),
     ),
   );
   assert.deepEqual(
@@ -373,7 +374,8 @@ test('day habits retain the recent-four-day lock and empty state for dates witho
   );
   assert(
     unchecked.nodes.some(
-      (node) => JSON.stringify(node.props.children) === JSON.stringify(['집계 대상 ', 0, '/', 6]),
+      (node) =>
+        JSON.stringify(node.props.children) === JSON.stringify(['매일 기록 ', 0, '/', 6, ' 완료']),
     ),
   );
   assert(

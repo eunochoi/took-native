@@ -86,17 +86,22 @@ export function DayInfoHabitSection({
           습관 목록
         </Text>
         {habits.length > 0 && (
-          <View className="items-end gap-1">
+          <View className="flex-row justify-center items-center gap-2">
             {!editable && (
               <AppIcon name="lock-outline" size={iconSizes.sm} color={colors.tertiary} />
             )}
             {counted.length > 0 && (
-              <Text className="text-sm text-theme-accent">
-                집계 대상 {done}/{counted.length}
+              <Text className="tracking-tighter text-sm text-theme-accent">
+                매일 기록 {done}/{counted.length} 완료
               </Text>
             )}
-            {excluded.length > 0 && (
-              <Text className="text-xs text-theme-text-secondary">자유 기록 {excludedDone}건</Text>
+            {excludedDone > 0 && (
+              <>
+                <Text className="tracking-tighter text-sm text-theme-text-secondary">·</Text>
+                <Text className="tracking-tighter text-sm text-theme-text-secondary">
+                  자유 기록 {excludedDone}건
+                </Text>
+              </>
             )}
           </View>
         )}
