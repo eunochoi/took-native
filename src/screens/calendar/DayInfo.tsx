@@ -7,7 +7,6 @@ import { QueryError } from '../../components/QueryError';
 import { setHabitCompletion, sortHabits } from '../../db/habit';
 import { dayHabits } from '../../domain/calendar';
 import { diaryQueries, habitQueries, useRecordMutation } from '../../queries';
-import { useSettings } from '../../settings/SettingsProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { CalendarHabitProgress } from './CalendarHabitProgress';
 import { DayInfoDiarySection } from './DayInfoDiarySection';
@@ -16,7 +15,6 @@ import { DayInfoHabitSection } from './DayInfoHabitSection';
 export function DayInfo({ date, today }: { date: string; today: string }) {
   const { showNotice } = useNotice();
   const { colors } = useAppTheme();
-  const { settings } = useSettings();
   const db = useSQLiteContext();
   const diary = useQuery(diaryQueries.detailByDate(db, date));
   const habits = useQuery(habitQueries.list(db));
@@ -30,10 +28,11 @@ export function DayInfo({ date, today }: { date: string; today: string }) {
   );
   const pending = diary.isPending || habits.isPending || completions.isPending;
   const error = diary.isError || habits.isError || completions.isError;
-  const rows = sortHabits(
-    dayHabits(habits.data ?? [], completions.data ?? [], date, today),
-    settings,
-  );
+  const rows = sortHabits(dayHabits(habits.data ?? [], completions.data ?? [], date, today), {
+    habitSort: 'DESC',
+    habitPriorityFirst: true,
+    habitOrder: [],
+  });
   return (
     <View className="gap-3">
       {error ? (
