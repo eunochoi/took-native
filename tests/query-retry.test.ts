@@ -168,10 +168,20 @@ test('diary toolbar always opens an undated editable-date form independently of 
       routes,
     );
     const list = nodes(DiaryList()).find((node) => node.type === 'FlatList');
-    assert.deepEqual(Array.from(list.props.stickyHeaderIndices), [1]);
-    assert.equal(list.props.ListHeaderComponent.type, 'PageTopSection');
-    assert.equal(list.props.ListHeaderComponent.props.children, undefined);
-    const header = nodes(list.props.renderItem({ item: list.props.data[0], index: 0 }));
+    assert.deepEqual(Array.from(list.props.stickyHeaderIndices), [0, 2]);
+    assert.equal(list.props.ListHeaderComponent, undefined);
+    const fade = list.props.renderItem({ item: list.props.data[0], index: 0 });
+    assert.equal(fade.props.className, 'h-0 overflow-visible');
+    assert.equal(fade.props.pointerEvents, 'none');
+    assert.equal(fade.props.children.props.edge, 'top');
+    const title = list.props.renderItem({ item: list.props.data[1], index: 1 });
+    assert.equal(title.type, 'PageTopSection');
+    const header = nodes(list.props.renderItem({ item: list.props.data[2], index: 2 }));
+    const card = nodes(list.props.renderItem({ item: list.props.data[3], index: 3 })).find(
+      (node) => node.type === 'DiaryCard',
+    );
+    assert.equal(card.props.first, true);
+    assert.equal(card.props.last, true);
     assert.deepEqual(
       header
         .filter((node) => node.type.startsWith('Toolbar') && node.type !== 'Toolbar')
@@ -193,7 +203,7 @@ test('diary toolbar always opens an undated editable-date form independently of 
     });
     const list = nodes(DiaryList()).find((node) => node.type === 'FlatList');
     assert.equal(
-      nodes(list.props.renderItem({ item: list.props.data[0], index: 0 })).find(
+      nodes(list.props.renderItem({ item: list.props.data[2], index: 2 })).find(
         (node) => node.type === 'ToolbarAddButton',
       ).props.disabled,
       undefined,

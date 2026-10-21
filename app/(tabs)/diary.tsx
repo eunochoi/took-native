@@ -36,7 +36,11 @@ import { useAppTheme } from '../../src/theme/AppThemeProvider';
 import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 
 type Row =
-  { kind: 'toolbar' } | { kind: 'state' } | { kind: 'diary'; diary: DiaryDetail; first: boolean };
+  | { kind: 'fade' }
+  | { kind: 'title' }
+  | { kind: 'toolbar' }
+  | { kind: 'state' }
+  | { kind: 'diary'; diary: DiaryDetail; first: boolean };
 
 export default function DiaryList() {
   const { showNotice } = useNotice();
@@ -64,6 +68,8 @@ export default function DiaryList() {
   const failedWithoutData = list.isError && !list.data;
   const diaries = list.data?.pages.flat() ?? [];
   const rows: Row[] = [
+    { kind: 'fade' },
+    { kind: 'title' },
     { kind: 'toolbar' },
     ...(diaries.length
       ? diaries.map((diary, index): Row => ({ kind: 'diary', diary, first: index === 0 }))
@@ -100,22 +106,23 @@ export default function DiaryList() {
         onLayout={fade.onLayout}
         onContentSizeChange={fade.onContentSizeChange}
         scrollEventThrottle={16}
+        stickyHeaderIndices={[0, 2]}
         data={rows}
         keyExtractor={(row) => (row.kind === 'diary' ? String(row.diary.id) : row.kind)}
         removeClippedSubviews={false}
         contentContainerClassName="grow"
-        stickyHeaderIndices={[1]}
-        ListHeaderComponent={
-          <PageTopSection
-            title="일기 목록"
-            hashtags="#감정 #끄적끄적"
-            onLayout={fade.onHeaderLayout}
-          />
-        }
         renderItem={({ item, index }) => {
+          if (item.kind === 'fade')
+            return (
+              <View collapsable={false} pointerEvents="none" className="h-0 overflow-visible">
+                <ScrollEdgeFade edge="top" visible={fade.topVisible} />
+              </View>
+            );
+          if (item.kind === 'title')
+            return <PageTopSection title="일기 목록" hashtags="#감정 #끄적끄적" />;
           if (item.kind === 'toolbar')
             return (
-              <Toolbar fadeVisible={fade.topVisible}>
+              <Toolbar>
                 <ToolbarSortButton
                   sort={settings.diarySort}
                   sortLabel="날짜"
@@ -159,9 +166,9 @@ export default function DiaryList() {
                 />
               </Toolbar>
             );
-          if (item.kind === 'state') return <View className="pt-8">{emptyContent}</View>;
+          if (item.kind === 'state') return <View>{emptyContent}</View>;
           return (
-            <View className={item.first ? 'pt-8' : undefined} style={{ paddingHorizontal: '5%' }}>
+            <View style={{ paddingHorizontal: '5%' }}>
               <View className={`border-theme-border/50 ${item.first ? 'border-t-0' : 'border-t'}`}>
                 <DiaryCard
                   diary={item.diary}

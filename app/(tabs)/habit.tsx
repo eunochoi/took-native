@@ -149,13 +149,16 @@ export default function HabitList() {
         onLayout={fade.onLayout}
         onContentSizeChange={fade.onContentSizeChange}
         scrollEventThrottle={16}
+        stickyHeaderIndices={[0, 2]}
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
         contentContainerClassName="grow"
-        stickyHeaderIndices={[1]}
       >
-        <PageTopSection title="습관 관리" hashtags="#실천 #성장" onLayout={fade.onHeaderLayout} />
-        <Toolbar fadeVisible={fade.topVisible}>
+        <View collapsable={false} pointerEvents="none" className="h-0 overflow-visible">
+          <ScrollEdgeFade edge="top" visible={fade.topVisible} />
+        </View>
+        <PageTopSection title="습관 관리" hashtags="#실천 #성장" />
+        <Toolbar>
           <ToolbarSortButton
             sort={settings.habitSort}
             priorityFirst={settings.habitPriorityFirst}
@@ -186,7 +189,7 @@ export default function HabitList() {
             }}
           />
         </Toolbar>
-        <View className="pt-8" style={{ paddingHorizontal: '5%' }}>
+        <View style={{ paddingHorizontal: '5%' }}>
           {gridItems.length === 0 ? (
             emptyContent
           ) : (

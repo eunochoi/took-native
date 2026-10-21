@@ -20,7 +20,6 @@ function harness() {
   const notices: any[] = [];
   const exports: any = {};
   const onScroll = () => {};
-  const onHeaderLayout = () => {};
   const routes: unknown[] = [];
   const openedUrls: string[] = [];
   const names = [
@@ -125,7 +124,7 @@ function harness() {
             }),
           };
         if (name.includes('useScrollFade'))
-          return { useScrollFade: () => ({ onScroll, onHeaderLayout, topVisible: true }) };
+          return { useScrollFade: () => ({ onScroll, topVisible: true }) };
         if (name === 'react-native')
           return {
             ScrollView: 'ScrollView',
@@ -163,7 +162,6 @@ function harness() {
     discarded,
     scroll: () => find(tree, 'ScrollView'),
     onScroll,
-    onHeaderLayout,
     routes,
     openedUrls,
     toolbar: () => find(tree, 'Toolbar'),
@@ -194,7 +192,7 @@ function harness() {
   };
 }
 
-test('settings passes a callable scroll handler to its ordinary ScrollView', () => {
+test('settings passes a callable scroll handler to its native scrolling viewport', () => {
   const ui = harness();
   assert.equal(ui.scroll().props.onScroll, ui.onScroll);
   assert.equal(typeof ui.scroll().props.onScroll, 'function');
@@ -386,12 +384,17 @@ test('an in-flight restore keeps its files through unmount and refreshes shared 
 test('settings restores the three actions to a sticky toolbar below the shared title', async () => {
   const ui = harness();
   const scroll = ui.scroll();
-  assert.deepEqual(Array.from(scroll.props.stickyHeaderIndices), [1]);
-  const [title, toolbar, body] = scroll.props.children;
+  assert.deepEqual(Array.from(scroll.props.stickyHeaderIndices), [0, 2]);
+  const [fade, title, toolbar, body] = scroll.props.children;
+  assert.equal(fade.props.className, 'h-0 overflow-visible');
+  assert.equal(fade.props.collapsable, false);
+  assert.equal(fade.props.pointerEvents, 'none');
+  assert.equal(fade.props.children.type, 'ScrollEdgeFade');
+  assert.equal(fade.props.children.props.edge, 'top');
   assert.equal(title.type, 'PageTopSection');
-  assert.equal(title.props.onLayout, ui.onHeaderLayout);
+  assert.equal(title.props.onLayout, undefined);
   assert.equal(toolbar.type, 'Toolbar');
-  assert.equal(toolbar.props.fadeVisible, true);
+  assert.equal(toolbar.props.fadeVisible, undefined);
   assert.equal(body.props.children[0].type, 'NotificationSettingsSection');
   const [guide, privacy, web] = toolbar.props.children;
   assert.equal(guide.props.children[0].props.name, 'info');

@@ -36,7 +36,12 @@ import { SoberBox } from '../../src/screens/sober/SoberBox';
 import { useSettings } from '../../src/settings/SettingsProvider';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
 
-type Row = { kind: 'toolbar' } | { kind: 'state' } | { kind: 'sober'; sober: Sober };
+type Row =
+  | { kind: 'fade' }
+  | { kind: 'title' }
+  | { kind: 'toolbar' }
+  | { kind: 'state' }
+  | { kind: 'sober'; sober: Sober; first: boolean };
 export default function SoberList() {
   const db = useSQLiteContext();
   const { colors, rem: appRem } = useAppTheme();
@@ -78,9 +83,11 @@ export default function SoberList() {
   const disabledAdd = !ready || failed;
   const showAdd = ready && sorted.length > 0 && sorted.length < MAX_SOBER_COUNT;
   const rows: Row[] = [
+    { kind: 'fade' },
+    { kind: 'title' },
     { kind: 'toolbar' },
     ...(ready && filtered.length
-      ? filtered.map((sober): Row => ({ kind: 'sober', sober }))
+      ? filtered.map((sober, index): Row => ({ kind: 'sober', sober, first: index === 0 }))
       : [{ kind: 'state' } as const]),
   ];
   const change = (patch: Parameters<typeof updateSettings>[0]) =>
@@ -102,19 +109,20 @@ export default function SoberList() {
         onLayout={fade.onLayout}
         onContentSizeChange={fade.onContentSizeChange}
         scrollEventThrottle={16}
+        stickyHeaderIndices={[0, 2]}
         contentContainerClassName="grow"
-        stickyHeaderIndices={[1]}
-        ListHeaderComponent={
-          <PageTopSection
-            title="거리두기"
-            hashtags="#절제 #디톡스"
-            onLayout={fade.onHeaderLayout}
-          />
-        }
         renderItem={({ item, index }) => {
+          if (item.kind === 'fade')
+            return (
+              <View collapsable={false} pointerEvents="none" className="h-0 overflow-visible">
+                <ScrollEdgeFade edge="top" visible={fade.topVisible} />
+              </View>
+            );
+          if (item.kind === 'title')
+            return <PageTopSection title="거리두기" hashtags="#절제 #디톡스" />;
           if (item.kind === 'toolbar')
             return (
-              <Toolbar fadeVisible={fade.topVisible}>
+              <Toolbar>
                 <ToolbarSortButton
                   sort={settings.soberSort}
                   recordSort={settings.soberRecordSort}
@@ -145,25 +153,22 @@ export default function SoberList() {
             );
           if (item.kind === 'sober')
             return (
-              <View
-                className={index === 1 ? 'pt-8' : undefined}
-                style={{ paddingHorizontal: '5%' }}
-              >
+              <View style={{ paddingHorizontal: '5%' }}>
                 <View
-                  className={`border-theme-border/50 ${index === 1 ? 'border-t-0' : 'border-t'}`}
+                  className={`border-theme-border/50 ${item.first ? 'border-t-0' : 'border-t'}`}
                 >
                   <SoberBox
                     sober={item.sober}
                     restarts={grouped.get(item.sober.id) ?? []}
                     now={now}
-                    isFirst={index === 1}
+                    isFirst={item.first}
                     isLast={index === rows.length - 1 && !failed && !showAdd}
                   />
                 </View>
               </View>
             );
           return (
-            <View className="pt-8">
+            <View>
               {failed ? (
                 <QueryError
                   className="min-h-64"

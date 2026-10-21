@@ -87,17 +87,21 @@ function load(
   return exports;
 }
 
-test('fade visibility preserves hit testing, insets and surface gradient without low-level animation hooks', () => {
+test('fade visibility animates the gradient while retaining the bottom surface and safe area', () => {
   const { ScrollEdgeFade } = load('../src/components/ScrollEdgeFade.tsx', false);
   for (const visible of [false, true]) {
     const tree = ScrollEdgeFade({ edge: 'bottom', visible });
+    const [fade, surface] = tree.props.children;
     assert.equal(tree.props.pointerEvents, 'none');
-    assert.equal(tree.props.style.opacity, visible ? 1 : 0);
-    assert.equal(tree.props.style.height, 69);
-    assert.equal(tree.props.style.transitionProperty, 'opacity');
-    assert.equal(tree.props.style.transitionDuration, `${tokens.motion.scrollFade}ms`);
-    assert.equal(tree.props.children.type, 'LinearGradient');
-    assert.equal(tree.props.children.props.colors[0], '#FFFFFFFF');
+    assert.equal(tree.props.style.height, 102);
+    assert.equal(fade.props.style.height, 30);
+    assert.equal(fade.props.style.opacity, visible ? 1 : 0);
+    assert.equal(fade.props.style.transitionProperty, 'opacity');
+    assert.equal(fade.props.style.transitionDuration, `${tokens.motion.scrollFade}ms`);
+    assert.equal(fade.props.children.type, 'LinearGradient');
+    assert.equal(fade.props.children.props.colors[0], '#FFFFFF');
+    assert.equal(surface.props.style.height, 72);
+    assert.match(surface.props.className, /bg-theme-surface/);
   }
 });
 
@@ -105,7 +109,7 @@ test('top and bottom fades share a viewport overlay without a native scroll wrap
   const { ScrollEdgeFade } = load('../src/components/ScrollEdgeFade.tsx', false);
   for (const edge of ['top', 'bottom']) {
     const tree = ScrollEdgeFade({ edge, visible: true });
-    assert.equal(tree.props.children.type, 'LinearGradient');
+    assert.equal(tree.props.children[0].props.children.type, 'LinearGradient');
     assert.equal(tree.props.pointerEvents, 'none');
   }
 });
@@ -113,7 +117,7 @@ test('top and bottom fades share a viewport overlay without a native scroll wrap
 test('reduced motion disables fade and the page background transition', () => {
   const { ScrollEdgeFade } = load('../src/components/ScrollEdgeFade.tsx', true);
   assert.equal(
-    ScrollEdgeFade({ edge: 'top', visible: true }).props.style.transitionDuration,
+    ScrollEdgeFade({ edge: 'top', visible: true }).props.children[0].props.style.transitionDuration,
     '0ms',
   );
   const { ColorView } = load('../src/components/ColorTransition.tsx', true);
@@ -227,15 +231,31 @@ test('static icon color values do not trigger the Worklets inline shared-value w
   assert.equal(code.includes('getUseOfValueInStyleWarning'), false);
 });
 
-test('toolbar fade starts below its surface and keeps the normal top fade position elsewhere', () => {
+test('edge gradients match their surface at the opaque end and reach full transparency', () => {
   const { ScrollEdgeFade } = load('../src/components/ScrollEdgeFade.tsx', false);
-  const toolbarFade = ScrollEdgeFade({ edge: 'top', visible: true, outside: true });
-  const pageFade = ScrollEdgeFade({ edge: 'top', visible: true });
-  assert.match(toolbarFade.props.className, /top-full/);
-  assert.match(pageFade.props.className, /top-0/);
-  assert.equal(toolbarFade.props.pointerEvents, 'none');
-  assert.equal(toolbarFade.props.children.props.colors[0], '#FFFFFFFF');
-  assert.equal(toolbarFade.props.children.props.colors.at(-1), '#FFFFFF00');
+  for (const edge of ['top', 'bottom']) {
+    const tree = ScrollEdgeFade({ edge, visible: true });
+    assert.match(tree.props.className, new RegExp(`${edge}-0`));
+    const gradient = tree.props.children[0].props.children;
+    const colors = gradient.props.colors;
+    const locations = gradient.props.locations;
+    assert.equal(colors[0], '#FFFFFF');
+    assert.equal(colors.at(-1), '#FFFFFF00');
+    assert.equal(colors.length, locations.length);
+    assert.equal(locations[0], 0);
+    assert.equal(locations.at(-1), 1);
+    const alphas = colors.map((color: string) =>
+      color.length === 7 ? 255 : parseInt(color.slice(-2), 16),
+    );
+    assert(Math.abs(alphas[locations.indexOf(0.5)] / 255 - 0.5) < 1 / 255);
+    for (let index = 1; index < colors.length; index++) {
+      assert(locations[index] > locations[index - 1]);
+      assert(alphas[index] <= alphas[index - 1]);
+    }
+    assert.equal(gradient.props.start.y, edge === 'top' ? 0 : 1);
+    assert.equal(gradient.props.end.y, edge === 'top' ? 1 : 0);
+    assert.equal(tree.props.children[1] !== false, edge === 'bottom');
+  }
 });
 
 test('page titles retain the shared compact height at every app font size', () => {
@@ -256,5 +276,39 @@ test('page titles retain the shared compact height at every app font size', () =
     const plain = PageTopSection({ title: '앱 설정', hashtags: '#맞춤' });
     assert.equal(plain.props.style, undefined);
     assert.match(plain.props.className, /h-\[100px\]/);
+  }
+});
+
+test('sticky toolbar includes an always-visible h-8 gradient in normal layout', () => {
+  for (const reducedMotion of [false, true]) {
+    const { Toolbar } = load('../src/components/Toolbar.tsx', reducedMotion);
+    const toolbar = Toolbar({ children: 'buttons' });
+    const [surface, gradient] = toolbar.props.children;
+    assert.match(surface.props.className, /bg-theme-surface/);
+    assert.equal(surface.props.children.props.children, 'buttons');
+    assert.equal(gradient.type, 'LinearGradient');
+    assert.match(gradient.props.className, /h-8/);
+    assert.equal(gradient.props.colors[0], '#FFFFFF');
+    assert.equal(gradient.props.colors.at(-1), '#FFFFFF00');
+    assert.equal(gradient.props.colors.length, gradient.props.locations.length);
+    assert.equal(gradient.props.start.y, 0);
+    assert.equal(gradient.props.end.y, 1);
+    assert.equal(gradient.props.pointerEvents, 'none');
+    for (const node of [toolbar, surface, gradient]) {
+      assert(!node.props.className.includes('absolute'));
+      assert.equal(node.props.style, undefined);
+      assert.equal(node.props.visible, undefined);
+    }
+  }
+});
+
+test('viewport fades stay inside their edges', () => {
+  const { ScrollEdgeFade } = load('../src/components/ScrollEdgeFade.tsx', false);
+  const top = ScrollEdgeFade({ edge: 'top', visible: true });
+  const bottom = ScrollEdgeFade({ edge: 'bottom', visible: true });
+  assert.match(top.props.className, /top-0/);
+  assert.match(bottom.props.className, /bottom-0/);
+  for (const fade of [top, bottom]) {
+    assert.equal(fade.props.pointerEvents, 'none');
   }
 });

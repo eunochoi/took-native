@@ -41,7 +41,7 @@ export default function CalendarScreen() {
         />
       </Toolbar>
       <View
-        className="flex-1 min-h-0 pt-6"
+        className="flex-1 min-h-0"
         style={{
           paddingHorizontal: '5%',
           paddingBottom: navigationBottom + navigationHeight + rem,

@@ -23,7 +23,9 @@ function nodes(tree: any): any[] {
     ...nodes(tree.props?.ListFooterComponent),
     ...(tree.type === 'FlatList'
       ? tree.props.data.flatMap((item: any, index: number) =>
-          item.kind === 'toolbar' ? nodes(tree.props.renderItem({ item, index })) : [],
+          ['fade', 'title', 'toolbar'].includes(item.kind)
+            ? nodes(tree.props.renderItem({ item, index }))
+            : [],
         )
       : []),
   ];
@@ -405,7 +407,7 @@ test('sober footer adds only between one item and capacity, regardless of filter
   assert(!add());
   const emptyList = soberRows(ui);
   assert.equal(
-    nodes(emptyList.props.renderItem({ item: emptyList.props.data[1], index: 1 })).find(
+    nodes(emptyList.props.renderItem({ item: emptyList.props.data[3], index: 3 })).find(
       (node) => node.type === 'EmptyState',
     ).props.title,
     '아직 시작한 거리두기가 없어요.',
@@ -421,7 +423,7 @@ test('sober footer adds only between one item and capacity, regardless of filter
   add().props.onPress();
   assert.equal(ui.routes[0], '/sober/new');
   const list = soberRows(ui);
-  const last = nodes(list.props.renderItem({ item: list.props.data[1], index: 1 })).find(
+  const last = nodes(list.props.renderItem({ item: list.props.data[3], index: 3 })).find(
     (node) => node.type === 'SoberBox',
   );
   assert.equal(last.props.isFirst, true);
@@ -497,7 +499,7 @@ test('sober period thresholds are inclusive exact durations and honor restarts a
   );
   applyPageFilter(ui, 'Sober', { priorityOnly: true, minimumDays: 30 });
   const list = soberRows(ui);
-  const empty = nodes(list.props.renderItem({ item: list.props.data[1], index: 1 })).find(
+  const empty = nodes(list.props.renderItem({ item: list.props.data[3], index: 3 })).find(
     (node) => node.type === 'EmptyState',
   );
   assert.equal(empty.props.title, '선택한 조건의 거리두기가 없어요.');
@@ -632,34 +634,58 @@ test('habit flow sheet keeps loading and errors distinct from zero completion', 
   );
 });
 
-test('habit and sober keep only the toolbar sticky for empty, loading and populated lists', () => {
+test('habit and sober use native sticky toolbars for empty, loading and populated lists', () => {
   for (const ready of [false, true]) {
     const habitPage = harness('app/(tabs)/habit.tsx', {
       habits: { data: ready ? [habit(1, 0)] : undefined },
       completions: { data: ready ? [] : undefined },
     });
     const scroll = nodes(habitPage.render()).find((node) => node.type === 'ScrollView');
-    assert.deepEqual(Array.from(scroll.props.stickyHeaderIndices), [1]);
-    assert.equal(scroll.props.children[0].type, 'PageTopSection');
-    assert.equal(scroll.props.children[1].type, 'Toolbar');
+    assert.deepEqual(Array.from(scroll.props.stickyHeaderIndices), [0, 2]);
+    const [topFade, title, toolbar] = scroll.props.children;
+    assert.equal(topFade.props.className, 'h-0 overflow-visible');
+    assert.equal(topFade.props.collapsable, false);
+    assert.equal(topFade.props.pointerEvents, 'none');
+    assert.equal(topFade.props.children.type, 'ScrollEdgeFade');
+    assert.equal(topFade.props.children.props.edge, 'top');
+    assert.equal(title.type, 'PageTopSection');
+    assert.equal(toolbar.type, 'Toolbar');
     const soberPage = harness('app/(tabs)/sober.tsx', {
       sobers: { data: ready ? [sober(1, 1)] : undefined },
       restarts: { data: ready ? [] : undefined },
     });
     const list = soberRows(soberPage);
-    assert.deepEqual(Array.from(list.props.stickyHeaderIndices), [1]);
-    assert.equal(list.props.ListHeaderComponent.type, 'PageTopSection');
-    assert.equal(list.props.renderItem({ item: list.props.data[0], index: 0 }).type, 'Toolbar');
-    assert.equal(list.props.data[1].kind, ready ? 'sober' : 'state');
+    assert.deepEqual(Array.from(list.props.stickyHeaderIndices), [0, 2]);
+    assert.equal(list.props.ListHeaderComponent, undefined);
+    const listFade = list.props.renderItem({ item: list.props.data[0], index: 0 });
+    assert.equal(listFade.props.className, 'h-0 overflow-visible');
+    assert.equal(listFade.props.collapsable, false);
+    assert.equal(listFade.props.children.props.edge, 'top');
+    assert.equal(
+      list.props.renderItem({ item: list.props.data[1], index: 1 }).type,
+      'PageTopSection',
+    );
+    assert.equal(list.props.renderItem({ item: list.props.data[2], index: 2 }).type, 'Toolbar');
+    assert.equal(list.props.data[3].kind, ready ? 'sober' : 'state');
     assert.equal(
       new Set(list.props.data.map(list.props.keyExtractor)).size,
       list.props.data.length,
     );
-    assert(
-      !nodes(soberPage.render()).some(
-        (node) => node.type === 'ScrollEdgeFade' && node.props.edge === 'top',
-      ),
-    );
+    for (const ui of [habitPage, soberPage]) {
+      const edges = nodes(ui.render()).filter((node) => node.type === 'ScrollEdgeFade');
+      assert.deepEqual(
+        edges.map((node) => node.props.edge),
+        ['top', 'bottom'],
+      );
+      assert(edges.every((node) => node.props.outside === undefined));
+      const viewportEdges = ui
+        .render()
+        .props.children.filter((node: any) => node?.type === 'ScrollEdgeFade');
+      assert.deepEqual(
+        Array.from(viewportEdges, (node: any) => node.props.edge),
+        ['bottom'],
+      );
+    }
   }
 });
 

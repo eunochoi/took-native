@@ -156,13 +156,7 @@ test('fade event sequences handle initial size, scrolling, reset and content shr
   fade.onScrollOffset(0);
   fade.onScrollOffset(3);
   assert.equal(view.changes, changes);
-  fade.onScroll({
-    nativeEvent: {
-      contentOffset: { y: 100 },
-      contentSize: { height: 1600 },
-      layoutMeasurement: { height: 800 },
-    },
-  });
+  fade.onScroll({ nativeEvent: { contentOffset: { y: 100 } } });
   assert.deepEqual(state(), [true, true]);
   fade.onScrollOffset(800);
   assert.deepEqual(state(), [true, false]);

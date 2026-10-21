@@ -190,11 +190,14 @@ export default function SettingsScreen() {
         onLayout={fade.onLayout}
         onContentSizeChange={fade.onContentSizeChange}
         scrollEventThrottle={16}
+        stickyHeaderIndices={[0, 2]}
         className="flex-1 bg-transparent"
-        stickyHeaderIndices={[1]}
       >
-        <PageTopSection title="앱 설정" hashtags="#맞춤 #취향" onLayout={fade.onHeaderLayout} />
-        <Toolbar fadeVisible={fade.topVisible}>
+        <View collapsable={false} pointerEvents="none" className="h-0 overflow-visible">
+          <ScrollEdgeFade edge="top" visible={fade.topVisible} />
+        </View>
+        <PageTopSection title="앱 설정" hashtags="#맞춤 #취향" />
+        <Toolbar>
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ disabled }}
@@ -235,7 +238,7 @@ export default function SettingsScreen() {
             <AppIcon name="open-in-new" size={appRem * 1.2} className="text-theme-accent" />
           </Pressable>
         </Toolbar>
-        <View className="pt-6 gap-12" style={{ paddingHorizontal: '5%' }}>
+        <View className="gap-12" style={{ paddingHorizontal: '5%' }}>
           <NotificationSettingsSection disabled={disabled} />
           <View className="gap-3">
             <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
@@ -286,6 +289,7 @@ export default function SettingsScreen() {
         <TabBottomSpacer />
       </ScrollView>
       <ScrollEdgeFade edge="bottom" visible={fade.bottomVisible} />
+
       {onboardingOpen && <OnboardingSheet onClose={() => setOnboardingOpen(false)} />}
       {backupPicker && (
         <BackupDestinationPicker
