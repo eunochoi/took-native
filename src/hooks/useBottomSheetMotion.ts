@@ -4,7 +4,6 @@ import { Gesture } from 'react-native-gesture-handler';
 import {
   cancelAnimation,
   ReduceMotion,
-  SlideInDown,
   scrollTo,
   useAnimatedRef,
   useAnimatedScrollHandler,
@@ -24,7 +23,6 @@ export function useBottomSheetMotion({
   reducedMotion,
   scrollFade,
   contentKey,
-  openingSession,
   onScrollOffset,
   onDismiss,
   onClosed,
@@ -38,7 +36,6 @@ export function useBottomSheetMotion({
   reducedMotion: boolean;
   scrollFade: boolean;
   contentKey?: string | number;
-  openingSession: number;
   onScrollOffset: (offset: number) => void;
   onDismiss: (session: number) => void;
   onClosed: (session: number, finished: boolean) => void;
@@ -75,11 +72,11 @@ export function useBottomSheetMotion({
       measuredHeight.value = 0;
       viewportHeight.value = windowHeight;
       scrollY.value = 0;
-      // Native entering animation owns opening. Never hide the sheet waiting for a layout event.
-      sheetY.value = 0;
+      // Keep layout bottom-aligned even when content grows during the opening animation.
+      sheetY.value = windowHeight + rem * 2;
       backdrop.value = 0;
     },
-    [sheetY, backdrop, session, phase, measuredHeight, viewportHeight, scrollY],
+    [sheetY, backdrop, session, phase, measuredHeight, viewportHeight, scrollY, rem],
   );
 
   const onSheetLayout = useCallback(
@@ -89,38 +86,34 @@ export function useBottomSheetMotion({
     [measuredHeight],
   );
 
-  const animateBackdropOpen = useCallback(() => {
+  const animateOpen = useCallback(() => {
     if (phase.value !== 'opening') return;
     backdrop.value = withTiming(1, {
       duration: tokens.motion.fade,
       reduceMotion: motionPolicy,
     });
-  }, [phase, backdrop, motionPolicy]);
-
-  const entering = useMemo(
-    () => ({
-      sheetEnter: SlideInDown.duration(tokens.motion.pickerOpen)
-        .reduceMotion(motionPolicy)
-        .withCallback(() => {
-          'worklet';
-          if (session.value === openingSession && phase.value === 'opening') {
-            // A cancelled entry is terminal too; never leave navigation locked indefinitely.
-            phase.value = 'idle';
-            scheduleOnRN(onOpened, openingSession);
-          }
-        }),
-    }),
-    [motionPolicy, session, openingSession, phase, onOpened],
-  );
+    const openingSession = session.value;
+    sheetY.value = withTiming(
+      0,
+      { duration: tokens.motion.pickerOpen, reduceMotion: motionPolicy },
+      (finished) => {
+        if (finished && session.value === openingSession && phase.value === 'opening') {
+          phase.value = 'idle';
+          scheduleOnRN(onOpened, openingSession);
+        }
+      },
+    );
+  }, [phase, backdrop, sheetY, session, motionPolicy, onOpened]);
 
   const completeOpening = useCallback(
     (currentSession: number) => {
       if (session.value !== currentSession || phase.value !== 'opening') return;
       phase.value = 'idle';
+      sheetY.value = 0;
       backdrop.value = 1;
       onOpened(currentSession);
     },
-    [session, phase, backdrop, onOpened],
+    [session, phase, sheetY, backdrop, onOpened],
   );
 
   const animateClose = useCallback(
@@ -279,10 +272,9 @@ export function useBottomSheetMotion({
   }));
 
   return {
-    ...entering,
     prepareOpen,
     completeOpening,
-    animateBackdropOpen,
+    animateOpen,
     animateClose,
     restoreAfterBlockedClose,
     onSheetLayout,

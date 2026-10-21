@@ -114,7 +114,6 @@ export function BottomSheetModal({
   const sheet = (
     <Animated.View
       key={`sheet-${session}`}
-      entering={motion.sheetEnter}
       style={motion.sheetStyle}
       pointerEvents={closingBody ? 'none' : 'auto'}
       collapsable={false}

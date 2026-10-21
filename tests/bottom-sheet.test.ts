@@ -98,18 +98,6 @@ function harness(
     }
     animation.callback?.(finished);
   };
-  const preset = (name: string) => ({
-    name,
-    duration(milliseconds: number) {
-      return { ...this, milliseconds };
-    },
-    reduceMotion(reduced: string) {
-      return { ...this, reduced };
-    },
-    withCallback(callback: Function) {
-      return { ...this, callback };
-    },
-  });
   const gesture = (kind: string) => {
     const instance: any = { kind, handlers: {}, config: {} };
     for (const name of [
@@ -237,8 +225,6 @@ function harness(
           __esModule: true,
           default: { View: 'AnimatedView' },
           ReduceMotion: { Always: 'always', System: 'system' },
-          FadeIn: preset('FadeIn'),
-          SlideInDown: preset('SlideInDown'),
           useSharedValue: shared,
           useAnimatedRef: () => memo(() => ({}), []),
           useAnimatedStyle: (fn: Function) => ({ current: fn }),
@@ -356,11 +342,22 @@ function harness(
     },
     completeOpen() {
       this.layout();
-      this.completeAnimation();
+      this.completeBackdrop();
       this.completeEnter();
     },
+    entryAnimation() {
+      return animations.findLast(
+        (animation) =>
+          animation.target === 0 && animation.config.duration === tokens.motion.pickerOpen,
+      );
+    },
     completeEnter() {
-      this.sheet().props.entering.callback(true);
+      complete(this.entryAnimation());
+      render();
+    },
+    completeBackdrop() {
+      complete(animations.findLast((animation) => animation.target === 1));
+      render();
     },
     latestAnimation() {
       return animations.at(-1);
@@ -437,7 +434,8 @@ test('sheet waits for onShow, retains its body through close, and dispatches acc
   assert.equal(h.tree.props.animationType, 'none');
   h.show();
   h.layout();
-  assert.equal(h.sheet().props.entering.milliseconds, tokens.motion.pickerOpen);
+  assert.equal(h.sheet().props.entering, undefined);
+  assert.equal(h.entryAnimation().config.duration, tokens.motion.pickerOpen);
   h.completeEnter();
   let actions = 0;
   assert.equal(
@@ -499,7 +497,7 @@ test('reduced motion applies to open and close; interrupted close never dispatch
   const h = harness(true, true);
   h.show();
   h.layout();
-  assert.equal(h.sheet().props.entering.reduced, 'always');
+  assert.equal(h.entryAnimation().config.reduceMotion, 'always');
   h.completeEnter();
   let actions = 0;
   h.close(() => actions++);
@@ -766,24 +764,48 @@ test('Android back while a touch is undecided cannot interrupt the accepted clos
   assert.equal(h.tree.props.visible, false);
 });
 
-test('opening never waits for a sheet layout event and closing has a safe unmeasured distance', () => {
+test('opening uses translation without waiting for layout and closing has a safe unmeasured distance', () => {
   const h = harness();
   h.show();
   assert.ok(h.sheet());
-  assert.equal(h.sheet().props.entering.name, 'SlideInDown');
-  assert.equal(h.y, 0);
+  assert.equal(h.sheet().props.entering, undefined);
+  assert.equal(h.y, 830);
+  assert.equal(h.entryAnimation().target, 0);
   // The backdrop fades through one shared opacity without waiting for sheet measurement.
   const viewport = h.tree.props.children.props.children;
   assert.equal(viewport.props.children[0].props.entering, undefined);
   assert.equal(viewport.props.children[0].props.style.current().opacity, 0);
-  assert.equal(h.latestAnimation().target, 1);
-  h.completeAnimation();
-  assert.equal(viewport.props.children[0].props.style.current().opacity, 1);
+  h.completeBackdrop();
+  assert.equal(viewport.props.children[0].props.style.current().opacity, 0);
   h.completeEnter();
+  assert.equal(viewport.props.children[0].props.style.current().opacity, 1);
   assert.equal(h.close(), true);
   assert(h.latestAnimation().target >= 800);
   h.completeAnimation();
   assert.equal(h.closes, 1);
+});
+
+test('content growth during first opening keeps the translation target at zero and updates dismissal height', () => {
+  const h = harness();
+  for (let opening = 0; opening < 2; opening++) {
+    if (opening) h.setVisible(true);
+    h.show();
+    const entry = h.entryAnimation();
+    h.layout(300); // Loading content.
+    h.layout(640); // Loaded habit flow before the opening finishes.
+    assert.equal(h.entryAnimation(), entry);
+    assert.equal(entry.target, 0);
+    assert.equal(h.sheet().props.style.current().originY, undefined);
+    h.completeEnter();
+    assert.equal(h.y, 0);
+    h.layout(700); // A later content change also stays bottom-aligned.
+    assert.equal(h.y, 0);
+    h.close();
+    assert.equal(h.latestAnimation().target, 730);
+    h.completeAnimation();
+    h.setVisible(false);
+  }
+  assert.equal(h.closes, 2);
 });
 
 test('route sheets mount without a Modal onShow and keep one touch owned by the scroll viewport', () => {
@@ -950,26 +972,28 @@ test('route opening callbacks follow the sheet entry rather than backdrop comple
     onOpened: () => events.push('opened'),
   });
   assert.deepEqual(events, ['opening']);
-  h.completeAnimation();
+  h.completeBackdrop();
   assert.deepEqual(events, ['opening']);
   h.completeEnter();
   h.completeEnter();
   assert.deepEqual(events, ['opening', 'opened']);
 });
 
-test('cancelled entry releases its transition and stale entry cannot release a new session', () => {
+test('fallback recovers a cancelled translation and stale entry cannot release a new session', () => {
   let opened = 0;
   const h = harness(true, false, 720, {
     presentation: 'screen',
     onOpened: () => opened++,
   });
-  const oldEntry = h.sheet().props.entering.callback;
-  oldEntry(false);
+  const oldEntry = h.entryAnimation();
+  h.complete(oldEntry, false);
+  assert.equal(opened, 0);
+  h.openingFallback();
   assert.equal(opened, 1);
   h.setVisible(false);
   h.completeAnimation();
   h.setVisible(true);
-  oldEntry(true);
+  h.complete(oldEntry);
   assert.equal(opened, 1);
   h.completeEnter();
   assert.equal(opened, 2);

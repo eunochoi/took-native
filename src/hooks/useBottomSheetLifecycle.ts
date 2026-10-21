@@ -106,7 +106,6 @@ export function useBottomSheetLifecycle({
     reducedMotion,
     scrollFade,
     contentKey,
-    openingSession: session,
     onScrollOffset,
     onDismiss: dismiss,
     onClosed: finishClose,
@@ -166,8 +165,8 @@ export function useBottomSheetLifecycle({
     return () => subscription.remove();
   }, [presentation, visible, dismissOnBack, dismissible, closeSheet]);
   useLayoutEffect(() => {
-    // Start after the backdrop mounts at opacity zero. Its opacity has a single animated owner.
-    if (bodyVisible && !closing.current) motionRef.current.animateBackdropOpen();
+    // Animate translation after mounting; content layout can change independently of motion.
+    if (bodyVisible && !closing.current) motionRef.current.animateOpen();
   }, [bodyVisible, session]);
 
   useEffect(() => {
