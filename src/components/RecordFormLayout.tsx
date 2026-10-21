@@ -41,7 +41,7 @@ export function RecordFormLayout({
         scrollEnabled={scrollEnabled}
         fillContent={fillContent}
       >
-        <View className={fillContent ? 'flex-1 min-h-0 gap-3' : 'gap-6'}>{children}</View>
+        <View className={fillContent ? 'shrink min-h-0 gap-3' : 'gap-6'}>{children}</View>
       </BottomSheetPage>
       {overlays}
     </>

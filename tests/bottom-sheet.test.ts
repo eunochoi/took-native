@@ -574,7 +574,7 @@ test('sheet delegates keyboard avoidance to its native container without measure
   assert.equal(scroll.props.keyboardDismissMode, 'none');
 });
 
-test('fixed-height route and modal sheets share the 95-percent maximum', () => {
+test('explicit fixed-height sheets share the 95-percent maximum in either presentation', () => {
   for (const presentation of ['screen', 'modal'] as const) {
     const h = harness(true, false, undefined, { fixedHeight: true, presentation });
     if (presentation === 'modal') h.show();
@@ -598,6 +598,7 @@ test('day info uses automatic height with a bounded viewport and scopes surface 
   assert(body.props.className.includes('overflow-hidden'));
   const scroll = h.scroll();
   assert(scroll.props.className.includes('shrink'));
+  assert(scroll.props.className.includes('grow-0'));
   scroll.props.onLayout({ nativeEvent: { layout: { height: 350 } } });
   scroll.props.onContentSizeChange(300, 128);
   scroll.props.onContentSizeChange(300, 900);
@@ -1094,12 +1095,15 @@ test('custom carousel body bypasses the vertical viewport and shares the sheet c
 });
 
 test('filled diary content scrolls independently while only its header drags to close', () => {
-  const h = harness(true, false, 720, { fixedHeight: true, fillContent: true, footer: 'save' });
+  const h = harness(true, false, 720, { fillContent: true, footer: 'save' });
   h.show();
   h.completeOpen();
   assert.equal(h.scroll(), undefined);
   assert.equal(h.pan.config.enabled, true);
   const children = h.sheet().props.children.props.children;
+  assert.equal(h.sheet().props.children.props.style.height, undefined);
+  assert.equal(h.sheet().props.children.props.style.maxHeight, 720);
+  assert(children[1].props.className.includes('shrink'));
   assert.equal(children[0].props.gesture, h.pan);
   assert.equal(children[1].props.gesture, undefined);
   assert.equal(children.at(-1).props.children, 'save');

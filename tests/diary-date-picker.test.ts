@@ -142,6 +142,22 @@ function harness(path: string, status: { dates?: Record<string, any>; busy?: boo
   };
 }
 
+test('diary editor grows with content and returns to its writing area minimum without losing the draft', () => {
+  const ui = harness('src/screens/DiaryForm.tsx');
+  const input = () =>
+    nodes(ui.render()).find((node) => node.props.accessibilityLabel === '일기 내용');
+  assert.equal(input().props.style.height, 180);
+  input().props.onChangeText('오래 기억하고 싶은 하루\n'.repeat(40));
+  input().props.onContentSizeChange({ nativeEvent: { contentSize: { height: 640.2 } } });
+  assert.equal(input().props.style.height, 641);
+  assert.equal(input().props.value, '오래 기억하고 싶은 하루\n'.repeat(40));
+  assert.equal(input().props.scrollEnabled, true);
+  input().props.onChangeText('짧은 하루');
+  input().props.onContentSizeChange({ nativeEvent: { contentSize: { height: 48 } } });
+  assert.equal(input().props.style.height, 180);
+  assert.equal(input().props.value, '짧은 하루');
+});
+
 test('diary date applies only after closing; future dates and cancellation preserve the draft', () => {
   const ui = harness('src/screens/diary/DiaryDatePicker.tsx');
   const calendar = () => nodes(ui.render()).find((node) => node.type === 'DatePickerCalendar');

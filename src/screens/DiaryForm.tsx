@@ -49,6 +49,7 @@ export function DiaryForm({
     isDate(initialDate) && initialDate <= today ? initialDate : allowDateChange ? null : today,
   );
   const [text, setText] = useState('');
+  const [textHeight, setTextHeight] = useState(0);
   const [keyboardVisible, setKeyboardVisible] = useState(() => Keyboard.isVisible());
   const [emotion, setEmotion] = useState<number | null>(null);
   const [images, setImages] = useState<DraftImage[]>([]);
@@ -136,7 +137,7 @@ export function DiaryForm({
         closeRequested={saved && !mutation.isPending}
         onClosed={onClosed}
       >
-        <View className="flex-1 justify-center">
+        <View className="items-center justify-center">
           <QueryState query={query} />
           {!query.isPending && !query.error && <Text>일기를 찾을 수 없습니다.</Text>}
         </View>
@@ -278,23 +279,27 @@ export function DiaryForm({
           </Pressable>
         </View>
       )}
-      <View className="flex-1 min-h-0 gap-3 pt-2">
+      <View className="shrink min-h-0 gap-3 pt-2">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
           오늘의 이야기
         </Text>
-        <View className="flex-1 min-h-0 gap-3 p-2">
+        <View className="shrink min-h-0 gap-3 p-2">
           <TextInput
             accessibilityLabel="일기 내용"
             multiline
             scrollEnabled
             value={text}
             onChangeText={setText}
+            onContentSizeChange={({ nativeEvent }) =>
+              setTextHeight(Math.ceil(nativeEvent.contentSize.height))
+            }
             editable={!busy && picker === null}
             maxLength={DIARY_TEXT_MAX_LENGTH}
             placeholder="기억하고 싶은 순간을 남겨보세요."
             placeholderTextColor={colors.tertiary}
             textAlignVertical="top"
-            className={`flex-1 min-h-0 pb-6 ${FORM_TEXT_INPUT_CLASS_NAME}`}
+            className={`shrink min-h-0 pb-6 ${FORM_TEXT_INPUT_CLASS_NAME}`}
+            style={{ height: Math.max(appRem * 12, textHeight) }}
           />
           <CharacterCount length={text.length} maxLength={DIARY_TEXT_MAX_LENGTH} />
         </View>
