@@ -122,6 +122,32 @@ test('year-specific stats do not constrain lifetime streaks and zero completions
   raw.close();
 });
 
+test('diary list and detail order completed habits by priority, then id', async () => {
+  const { db, raw } = await database();
+  const ids: number[] = [];
+  for (const priority of [0, 1, 3, 2, 3]) {
+    const id = await saveHabit(db, { name: `습관${ids.length}`, priority, icon_key: 'walking' });
+    ids.push(id);
+    await setHabitCompletion(db, id, today, true);
+  }
+  const diary = await saveDiary(db, { date: today, emotion: 1, text: '오늘', files: [] });
+  const expected = [ids[2], ids[4], ids[3], ids[1], ids[0]];
+  const page = await getDiaryList(
+    db,
+    { year: null, seasons: [], emotionGroups: [], sort: 'DESC' },
+    0,
+  );
+  assert.deepEqual(
+    page[0].completedHabits.map((habit) => habit.id),
+    expected,
+  );
+  assert.deepEqual(
+    (await getDiaryById(db, diary.id))?.completedHabits.map((habit) => habit.id),
+    expected,
+  );
+  raw.close();
+});
+
 test('diary pages batch ordered photos and only the independent completions on each date', async () => {
   const { db, raw } = await database();
   const habit = await saveHabit(db, { name: '산책', priority: 2, icon_key: 'walking' });
