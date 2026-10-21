@@ -15,7 +15,7 @@ export function InfoNotice({ children, className }: { children: ReactNode; class
       <Text
         numberOfLines={1}
         adjustsFontSizeToFit
-        className="flex-1 text-sm leading-5 text-theme-accent tracking-tighter"
+        className="flex-1 text-xs leading-5 text-theme-accent-deep tracking-tighter"
       >
         {children}
       </Text>
