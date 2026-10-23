@@ -14,7 +14,10 @@ function nodes(tree: any): any[] {
   if (!tree || typeof tree !== 'object') return [];
   return [tree, ...nodes(tree.props?.children), ...nodes(tree.props?.overlays)];
 }
-function harness(path: string, status: { dates?: Record<string, any>; busy?: boolean } = {}) {
+function harness(
+  path: string,
+  status: { dates?: Record<string, any>; months?: Record<string, any>; busy?: boolean } = {},
+) {
   const state: any[] = [];
   const refs: any[] = [];
   let cursor = 0;
@@ -73,7 +76,9 @@ function harness(path: string, status: { dates?: Record<string, any>; busy?: boo
           return {
             useQuery: (options: any) => {
               queries.push(options);
-              const { date, id } = options;
+              const { date, id, month } = options;
+              if (month !== undefined)
+                return { data: [], isError: false, ...status.months?.[month] };
               return id !== undefined
                 ? { data: { id, date: today, text: '', emotion: 0, images: [] }, isPending: false }
                 : { data: null, isPending: false, isError: false, ...status.dates?.[date] };
@@ -83,6 +88,7 @@ function harness(path: string, status: { dates?: Record<string, any>; busy?: boo
           return {
             diaryQueries: {
               byDate: (_db: any, date: string) => ({ date }),
+              month: (_db: any, month: string) => ({ month }),
               byId: (_db: any, id: number) => ({ id }),
             },
             useToday: () => today,
@@ -256,15 +262,14 @@ test('an undated form requires a date even when its emotion and text are ready',
   assert.equal(ui.saved[0].input.date, '2026-10-08');
 });
 
-test('date-specific creation and all edit forms keep the title noninteractive', () => {
+test('date-specific creation keeps a fixed title while edit forms allow date changes', () => {
   const fixed = harness('src/screens/DiaryForm.tsx').render({ initialDate: '2026-10-08' });
   assert(fixed.props.title.includes('2026. 10. 8.'));
   assert.equal(fixed.props.titleAction, undefined);
-  assert.equal(
-    harness('src/screens/DiaryForm.tsx').render({ id: 42, allowDateChange: true }).props
-      .titleAction,
-    undefined,
-  );
+  const edit = harness('src/screens/DiaryForm.tsx');
+  edit.render({ id: 42 }).props.titleAction.onPress();
+  const picker = nodes(edit.render({ id: 42 })).find((node) => node.type === 'DiaryDatePicker');
+  assert.equal(picker.props.diaryId, 42);
 });
 
 test('changing new diary date preserves text, emotion and photos in the same form', async () => {
@@ -302,13 +307,76 @@ test('changing new diary date preserves text, emotion and photos in the same for
   assert.equal(ui.saved[0].input.date, '2026-10-10');
   assert.equal(ui.saved[0].input.emotion, 2);
   assert.equal(ui.saved[0].images[0].file, 'draft.jpg');
-  assert.equal(
-    harness('src/screens/DiaryForm.tsx').render({ id: 42 }).props.titleAction,
-    undefined,
-  );
+  assert(harness('src/screens/DiaryForm.tsx').render({ id: 42 }).props.titleAction);
   assert.equal(
     harness('src/screens/DiaryForm.tsx', { busy: true }).render({ allowDateChange: true }).props
       .titleAction.disabled,
     true,
   );
+});
+
+test('editing permits the current diary date but blocks a different diary', () => {
+  for (const [existingId, blocked] of [
+    [42, false],
+    [43, true],
+  ] as const) {
+    const ui = harness('src/screens/diary/DiaryDatePicker.tsx', {
+      dates: { [today]: { data: { id: existingId } } },
+    });
+    const tree = ui.render({ diaryId: 42 });
+    assert.equal(tree.props.footer.props.disabled, blocked);
+    assert.equal(JSON.stringify(tree).includes('이미 일기가 있는 날짜'), blocked);
+    tree.props.footer.props.onPress();
+    ui.finish();
+    assert.deepEqual(ui.applied, blocked ? [] : [today]);
+  }
+});
+
+test('editing changes the date without resetting unsaved text, emotion or photos', async () => {
+  const ui = harness('src/screens/DiaryForm.tsx');
+  const render = () => ui.render({ id: 42, initialDate: today });
+  nodes(render())
+    .find((node) => node.type === 'TextInput')
+    .props.onChangeText('수정 중인 내용');
+  nodes(render())
+    .find((node) => node.props.accessibilityLabel === '오늘의 감정 선택')
+    .props.onPress();
+  nodes(render())
+    .find((node) => node.type === 'DiaryEmotionPicker')
+    .props.onApply(3);
+  nodes(render())
+    .find((node) => node.props.accessibilityLabel === '사진 관리, 0장')
+    .props.onPress();
+  nodes(render())
+    .find((node) => node.type === 'DiaryImagesPicker')
+    .props.onPick();
+  await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  nodes(render())
+    .find((node) => node.type === 'DiaryImagesPicker')
+    .props.onClose();
+  render().props.titleAction.onPress();
+  const datePicker = nodes(render()).find((node) => node.type === 'DiaryDatePicker');
+  assert.equal(datePicker.props.diaryId, 42);
+  datePicker.props.onApply('2026-10-10');
+  const form = render();
+  assert(form.props.title.includes('2026. 10. 10.'));
+  assert.equal(nodes(form).find((node) => node.type === 'TextInput').props.value, '수정 중인 내용');
+  assert.equal(nodes(form).find((node) => node.type === 'EmotionImage').props.emotion, 3);
+  await form.props.footer.props.onPress();
+  assert.equal(ui.saved[0].input.id, 42);
+  assert.equal(ui.saved[0].input.date, '2026-10-10');
+  assert.equal(ui.saved[0].images[0].file, 'draft.jpg');
+});
+
+test('diary picker loads recorded dates for the visible month and updates markers on month change', () => {
+  const ui = harness('src/screens/diary/DiaryDatePicker.tsx', {
+    months: {
+      '2026-10': { data: [{ id: 42, date: '2026-10-08' }] },
+      '2026-09': { data: [{ id: 43, date: '2026-09-15' }] },
+    },
+  });
+  const calendar = () => nodes(ui.render()).find((node) => node.type === 'DatePickerCalendar');
+  assert.deepEqual(calendar().props.diaryDates, ['2026-10-08']);
+  calendar().props.onMonthChange('2026-09');
+  assert.deepEqual(calendar().props.diaryDates, ['2026-09-15']);
 });

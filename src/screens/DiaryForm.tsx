@@ -151,7 +151,7 @@ export function DiaryForm({
       onClosed={onClosed}
       title={title}
       titleAction={
-        id === undefined && allowDateChange
+        id !== undefined || allowDateChange
           ? {
               accessibilityLabel: `${title}, 일기 날짜 선택`,
               disabled: busy || dragging || picker !== null,
@@ -183,9 +183,10 @@ export function DiaryForm({
       }
       overlays={
         <>
-          {id === undefined && allowDateChange && picker === 'date' && (
+          {(id !== undefined || allowDateChange) && picker === 'date' && (
             <DiaryDatePicker
               value={date}
+              diaryId={id}
               onClose={() => setPicker(null)}
               onApply={(next) => {
                 setDate(next);

@@ -918,3 +918,39 @@ test('irregular monthly summary shows record count and rounded interval without 
   );
   assert(!nodes(daily).some((node) => node.type === 'InfoNotice'));
 });
+
+test('diary date picker replaces recorded date numbers with diary icons while preserving range and selection', () => {
+  const { DatePickerCalendar } = load('src/screens/calendar/DatePickerCalendar.tsx', {
+    '../../theme/AppThemeProvider': {
+      useAppTheme: () => ({
+        colors: { accent: '#123456', surface: '#FFFFFF' },
+        iconSizes: { lg: 24 },
+      }),
+    },
+  });
+  const tree = DatePickerCalendar({
+    month: '2026-10',
+    today: '2026-10-14',
+    selected: '2026-10-08',
+    diaryDates: ['2026-10-07', '2026-10-08', '2026-10-20', '2026-09-30'],
+    onMonthChange() {},
+    onSelect() {},
+  });
+  for (const [date, color] of [
+    ['2026-10-07', '#123456'],
+    ['2026-10-08', '#FFFFFF'],
+  ]) {
+    const rendered = CalendarDay(cell(tree, date).props);
+    assert(rendered.props.accessibilityLabel.includes('일기 있음'));
+    assert.equal(nodes(rendered).filter((node) => node.type === 'Text').length, 0);
+    const icon = nodes(rendered).find((node) => node.type === 'AppIcon');
+    assert.equal(icon.props.name, 'diary');
+    assert.equal(icon.props.size, 24);
+    assert.equal(icon.props.color, color);
+  }
+  for (const date of ['2026-10-09', '2026-10-20', '2026-09-30']) {
+    const rendered = CalendarDay(cell(tree, date).props);
+    assert(!nodes(rendered).some((node) => node.type === 'AppIcon'));
+    assert(nodes(rendered).some((node) => node.type === 'Text'));
+  }
+});

@@ -152,7 +152,6 @@ export function saveDiary(db: SQLiteDatabase, input: DiaryInput) {
         );
         if (!current) throw new Error('일기를 찾을 수 없습니다.');
         if (current.date > todayString()) throw new Error('미래 날짜의 일기는 수정할 수 없습니다.');
-        if (current.date !== input.date) throw new Error('일기의 날짜는 변경할 수 없습니다.');
         const images = await tx.getAllAsync<DiaryImage>(
           'SELECT * FROM diary_images WHERE diary_id = ?',
           id,
@@ -161,7 +160,8 @@ export function saveDiary(db: SQLiteDatabase, input: DiaryInput) {
           .filter((image) => !input.files.includes(image.file_name))
           .map((image) => image.file_name);
         await tx.runAsync(
-          'UPDATE diaries SET emotion = ?, text = ?, updated_at = ? WHERE id = ?',
+          'UPDATE diaries SET date = ?, emotion = ?, text = ?, updated_at = ? WHERE id = ?',
+          input.date,
           input.emotion,
           input.text,
           new Date().toISOString(),

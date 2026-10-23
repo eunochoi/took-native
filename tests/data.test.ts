@@ -498,3 +498,93 @@ test('diary year choices contain only distinct diary years and drop a year after
   assert.deepEqual(await getDiaryYears(db), []);
   raw.close();
 });
+
+test('moving a diary preserves its identity, images and habit completion dates', async () => {
+  const { db, raw } = await database();
+  try {
+    const habit = await saveHabit(db, { name: '걷기', priority: 1, icon_key: 'walking' });
+    await setHabitCompletion(db, habit, today, true);
+    const original = await saveDiary(db, {
+      date: today,
+      emotion: 2,
+      text: '이동할 일기',
+      files: ['move.jpg'],
+    });
+    const before = await getDiaryById(db, original.id);
+    const newDate = shiftDate(today, -1);
+    const moved = await saveDiary(db, {
+      id: original.id,
+      date: newDate,
+      emotion: 2,
+      text: '이동할 일기',
+      files: ['move.jpg'],
+    });
+    const after = await getDiaryById(db, original.id);
+    assert.equal(moved.id, original.id);
+    assert.equal(after?.date, newDate);
+    assert.equal(after?.created_at, before?.created_at);
+    assert.equal(after?.text, before?.text);
+    assert.equal(after?.emotion, before?.emotion);
+    assert.deepEqual(
+      after?.images.map((image) => image.file_name),
+      ['move.jpg'],
+    );
+    assert.equal(after?.completedHabits.length, 0);
+    assert.deepEqual(rows(raw, 'SELECT date FROM habit_completions').flat(), [today]);
+    assert.equal(await db.getFirstAsync('SELECT id FROM diaries WHERE date = ?', today), null);
+    await saveDiary(db, {
+      id: original.id,
+      date: newDate,
+      emotion: 3,
+      text: '같은 날짜 수정',
+      files: ['move.jpg'],
+    });
+    assert.equal((await getDiaryById(db, original.id))?.emotion, 3);
+  } finally {
+    raw.close();
+  }
+});
+
+test('moving a diary rejects occupied and future dates and rolls back a failed image update', async () => {
+  const { db, raw } = await database();
+  try {
+    const original = await saveDiary(db, {
+      date: today,
+      emotion: 1,
+      text: '원본',
+      files: ['original.jpg'],
+    });
+    const occupiedDate = shiftDate(today, -1);
+    await saveDiary(db, {
+      date: occupiedDate,
+      emotion: 2,
+      text: '다른 일기',
+      files: ['owned.jpg'],
+    });
+    for (const date of [occupiedDate, shiftDate(today, 1)]) {
+      await assert.rejects(
+        saveDiary(db, { id: original.id, date, emotion: 3, text: '실패', files: [] }),
+      );
+    }
+    await assert.rejects(
+      saveDiary(db, {
+        id: original.id,
+        date: shiftDate(today, -2),
+        emotion: 3,
+        text: '실패',
+        files: ['owned.jpg'],
+      }),
+    );
+    const unchanged = await getDiaryById(db, original.id);
+    assert.equal(unchanged?.date, today);
+    assert.equal(unchanged?.text, '원본');
+    assert.equal(unchanged?.emotion, 1);
+    assert.deepEqual(
+      unchanged?.images.map((image) => image.file_name),
+      ['original.jpg'],
+    );
+    assert.equal(rows(raw, 'SELECT id FROM diaries').length, 2);
+  } finally {
+    raw.close();
+  }
+});
