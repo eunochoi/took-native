@@ -1,6 +1,10 @@
 import tokens from '../theme/tokens.json';
 export {
-  DIARY_IMAGE_MAX_COUNT, DIARY_TEXT_MAX_LENGTH, HABIT_NAME_MAX_LENGTH, MAX_HABIT_COUNT, PAGE_SIZE
+  DIARY_IMAGE_MAX_COUNT,
+  DIARY_TEXT_MAX_LENGTH,
+  HABIT_NAME_MAX_LENGTH,
+  MAX_HABIT_COUNT,
+  PAGE_SIZE
 } from './limits';
 export const HABIT_ICONS = {
   goal: { family: 'ionicons', name: 'flag' },

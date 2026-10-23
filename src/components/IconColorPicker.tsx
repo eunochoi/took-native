@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { View, type ScrollView } from 'react-native';
 import { HABIT_ICON_COLORS, type HabitIconColorKey } from '../domain/constants';
+import { useAppTheme } from '../theme/AppThemeProvider';
+import { AnimatedFlatList } from './AnimatedFlatList';
 import { BottomSheetModal } from './BottomSheetModal';
 import { Button } from './Button';
-import { PickerAction } from './PickerAction';
 import { PickerOption } from './PickerOption';
 import { Text } from './Text';
 
@@ -17,7 +18,11 @@ export function IconColorPicker({
   onClose: () => void;
 }) {
   const [draft, setDraft] = useState(value);
-  const keys = Object.keys(HABIT_ICON_COLORS) as (keyof typeof HABIT_ICON_COLORS)[];
+  const { colors } = useAppTheme();
+  const keys: HabitIconColorKey[] = [
+    'theme',
+    ...(Object.keys(HABIT_ICON_COLORS) as (keyof typeof HABIT_ICON_COLORS)[]),
+  ];
   return (
     <BottomSheetModal
       visible
@@ -30,42 +35,47 @@ export function IconColorPicker({
           onPress={() => close(() => onApply(draft))}
         />
       )}
-    >
-      <View className="gap-5">
-        <PickerAction
-          icon="palette"
-          title="기본 테마색"
-          description="앱의 강조 색상을 따라가요."
-          selected={draft === 'theme'}
-          onPress={() => setDraft('theme')}
+      renderScrollView={({ ref, ...scrollProps }) => (
+        <AnimatedFlatList
+          {...scrollProps}
+          ref={(list) => {
+            const nativeScroll = list?.getNativeScrollRef();
+            ref(nativeScroll && 'scrollTo' in nativeScroll ? (nativeScroll as ScrollView) : null);
+          }}
+          data={keys}
+          numColumns={4}
+          keyExtractor={(key) => key}
+          contentContainerClassName="gap-1 pt-6 pb-7"
+          columnWrapperClassName="gap-1"
+          renderItem={({ item: key }) => {
+            const { value: backgroundColor, label } =
+              key === 'theme' ? { value: colors.accent, label: '기본' } : HABIT_ICON_COLORS[key];
+            return (
+              <View className="flex-1 min-w-0">
+                <PickerOption
+                  compact
+                  className={`aspect-[0.85] w-full min-h-0 justify-center gap-2 rounded-2xl p-2 ${draft === key ? '' : 'border-transparent'}`}
+                  selected={draft === key}
+                  accessibilityLabel={label}
+                  onPress={() => setDraft(key)}
+                >
+                  <View
+                    className="h-9 w-9 shrink-0 ios:curve-continuous rounded-full"
+                    style={{ backgroundColor }}
+                  />
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    className={`w-full text-sm leading-5 tracking-tight text-center ${draft === key ? 'font-semibold text-theme-accent' : 'text-theme-text-secondary'}`}
+                  >
+                    {label}
+                  </Text>
+                </PickerOption>
+              </View>
+            );
+          }}
         />
-        <View className="gap-2 border-t border-theme-border pt-4">
-          <Text className="mb-1 text-sm text-theme-text-secondary">직접 선택</Text>
-          {[0, 5].map((offset) => (
-            <View key={offset} className="flex-row gap-2">
-              {keys.slice(offset, offset + 5).map((key) => {
-                const { value: backgroundColor, label } = HABIT_ICON_COLORS[key];
-                return (
-                  <View key={key} className="flex-1 min-w-0">
-                    <PickerOption
-                      compact
-                      className="aspect-square min-h-0 p-0"
-                      selected={draft === key}
-                      accessibilityLabel={label}
-                      onPress={() => setDraft(key)}
-                    >
-                      <View
-                        className="h-9 w-9 ios:curve-continuous rounded-full"
-                        style={{ backgroundColor }}
-                      />
-                    </PickerOption>
-                  </View>
-                );
-              })}
-            </View>
-          ))}
-        </View>
-      </View>
-    </BottomSheetModal>
+      )}
+    />
   );
 }

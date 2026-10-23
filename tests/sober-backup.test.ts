@@ -51,7 +51,7 @@ test('all five basic habit and sober icons survive saving, ZIP backup and record
         name: `습관 ${index + 1}`,
         priority: 1,
         icon_key,
-        icon_color: 'pink',
+        icon_color: index === 0 ? 'mocha' : 'pink',
         initial_started_at: '2024-01-01T00:00:00.000Z',
       });
     }
@@ -60,7 +60,7 @@ test('all five basic habit and sober icons survive saving, ZIP backup and record
         name: `거리 ${index + 1}`,
         description: null,
         icon_key,
-        icon_color: 'blue',
+        icon_color: index === 0 ? 'mocha' : 'blue',
         is_priority: 0,
         initial_started_at: '2024-01-01T00:00:00.000Z',
         goal_mode: 'AUTO',
@@ -77,6 +77,12 @@ test('all five basic habit and sober icons survive saving, ZIP backup and record
     ]);
     assert.deepEqual(rows(target.raw, 'SELECT icon_key FROM sobers ORDER BY id').flat(), [
       ...soberKeys,
+    ]);
+    assert.deepEqual(rows(target.raw, 'SELECT icon_color FROM habits ORDER BY id LIMIT 1').flat(), [
+      'mocha',
+    ]);
+    assert.deepEqual(rows(target.raw, 'SELECT icon_color FROM sobers ORDER BY id LIMIT 1').flat(), [
+      'mocha',
     ]);
     assert.equal(rows(target.raw, 'PRAGMA foreign_key_check').length, 0);
   } finally {
