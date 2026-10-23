@@ -9,7 +9,7 @@ import {
 } from './limits';
 
 export const SOBER_ICONS = {
-  favorite: { family: 'ionicons', name: 'heart', label: '기본' },
+  favorite: { family: 'ionicons', name: 'heart', label: '기본 1' },
   moon: { family: 'ionicons', name: 'moon', label: '야식' },
   food: { family: 'ionicons', name: 'fast-food', label: '간식' },
   coffee: { family: 'ionicons', name: 'cafe', label: '커피' },
@@ -63,6 +63,10 @@ export const SOBER_ICONS = {
   gossip: { family: 'material-community', name: 'account-voice', label: '험담' },
   complaining: { family: 'material-community', name: 'emoticon-sad', label: '불평' },
   comparison: { family: 'material-community', name: 'account-switch', label: '타인 비교' },
+  shield: { family: 'ionicons', name: 'shield-checkmark', label: '기본 2' },
+  pause: { family: 'ionicons', name: 'pause-circle', label: '기본 3' },
+  leaf: { family: 'ionicons', name: 'leaf', label: '기본 4' },
+  anchor: { family: 'material-community', name: 'anchor', label: '기본 5' },
 } as const;
 export type SoberIconKey = keyof typeof SOBER_ICONS;
 export const SOBER_GOALS = [3, 7, 14, 30, 90, 180, 365, 730, 1095] as const;

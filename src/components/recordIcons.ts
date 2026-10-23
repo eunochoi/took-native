@@ -1,4 +1,5 @@
 import { AlarmIcon } from 'phosphor-react-native/src/icons/Alarm';
+import { AnchorIcon } from 'phosphor-react-native/src/icons/Anchor';
 import { ArrowsLeftRightIcon } from 'phosphor-react-native/src/icons/ArrowsLeftRight';
 import { BarbellIcon } from 'phosphor-react-native/src/icons/Barbell';
 import { BedIcon } from 'phosphor-react-native/src/icons/Bed';
@@ -21,6 +22,7 @@ import { ChatCircleIcon } from 'phosphor-react-native/src/icons/ChatCircle';
 import { ChatCircleDotsIcon } from 'phosphor-react-native/src/icons/ChatCircleDots';
 import { ChatSlashIcon } from 'phosphor-react-native/src/icons/ChatSlash';
 import { ChatsCircleIcon } from 'phosphor-react-native/src/icons/ChatsCircle';
+import { CheckCircleIcon } from 'phosphor-react-native/src/icons/CheckCircle';
 import { CigaretteIcon } from 'phosphor-react-native/src/icons/Cigarette';
 import { CodeIcon } from 'phosphor-react-native/src/icons/Code';
 import { CoffeeIcon } from 'phosphor-react-native/src/icons/Coffee';
@@ -59,6 +61,7 @@ import { NotePencilIcon } from 'phosphor-react-native/src/icons/NotePencil';
 import { NotebookIcon } from 'phosphor-react-native/src/icons/Notebook';
 import { PackageIcon } from 'phosphor-react-native/src/icons/Package';
 import { PaletteIcon } from 'phosphor-react-native/src/icons/Palette';
+import { PauseCircleIcon } from 'phosphor-react-native/src/icons/PauseCircle';
 import { PencilLineIcon } from 'phosphor-react-native/src/icons/PencilLine';
 import { PepperIcon } from 'phosphor-react-native/src/icons/Pepper';
 import { PersonArmsSpreadIcon } from 'phosphor-react-native/src/icons/PersonArmsSpread';
@@ -73,14 +76,18 @@ import { PlantIcon } from 'phosphor-react-native/src/icons/Plant';
 import { PlayCircleIcon } from 'phosphor-react-native/src/icons/PlayCircle';
 import { PopcornIcon } from 'phosphor-react-native/src/icons/Popcorn';
 import { RecycleIcon } from 'phosphor-react-native/src/icons/Recycle';
+import { RocketIcon } from 'phosphor-react-native/src/icons/Rocket';
 import { ShoppingBagIcon } from 'phosphor-react-native/src/icons/ShoppingBag';
 import { ShoppingCartIcon } from 'phosphor-react-native/src/icons/ShoppingCart';
+import { ShieldCheckIcon } from 'phosphor-react-native/src/icons/ShieldCheck';
 import { ShowerIcon } from 'phosphor-react-native/src/icons/Shower';
 import { SmileyIcon } from 'phosphor-react-native/src/icons/Smiley';
 import { SmileyAngryIcon } from 'phosphor-react-native/src/icons/SmileyAngry';
 import { SmileySadIcon } from 'phosphor-react-native/src/icons/SmileySad';
 import { SparkleIcon } from 'phosphor-react-native/src/icons/Sparkle';
+import { StarIcon } from 'phosphor-react-native/src/icons/Star';
 import { StepsIcon } from 'phosphor-react-native/src/icons/Steps';
+import { TargetIcon } from 'phosphor-react-native/src/icons/Target';
 import { TelevisionIcon } from 'phosphor-react-native/src/icons/Television';
 import { TimerIcon } from 'phosphor-react-native/src/icons/Timer';
 import { ToothIcon } from 'phosphor-react-native/src/icons/Tooth';
@@ -145,6 +152,10 @@ export const HABIT_RECORD_ICONS = {
   planning: CalendarCheckIcon,
   budgeting: CalculatorIcon,
   volunteering: HandHeartIcon,
+  target: TargetIcon,
+  star: StarIcon,
+  checkCircle: CheckCircleIcon,
+  rocket: RocketIcon,
 } as const satisfies Record<Exclude<HabitIconKey, 'meditation'>, Icon>;
 
 export const SOBER_RECORD_ICONS = {
@@ -197,4 +208,8 @@ export const SOBER_RECORD_ICONS = {
   gossip: MegaphoneIcon,
   complaining: SmileySadIcon,
   comparison: ArrowsLeftRightIcon,
+  shield: ShieldCheckIcon,
+  pause: PauseCircleIcon,
+  leaf: LeafIcon,
+  anchor: AnchorIcon,
 } as const satisfies Record<Exclude<SoberIconKey, 'age19'>, Icon>;

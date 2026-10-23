@@ -15,7 +15,7 @@ test('habit options use distinct supported icons and meaningful labels', () => {
     ionicons: require('@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Ionicons.json'),
     'material-community': require('@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/MaterialCommunityIcons.json'),
   };
-  assert.equal(constants.HABIT_ICON_OPTIONS.length, 50);
+  assert.equal(constants.HABIT_ICON_OPTIONS.length, 54);
   assert.deepEqual(
     constants.HABIT_ICON_OPTIONS.map(({ key }) => key),
     Object.keys(constants.HABIT_ICONS),
@@ -76,13 +76,13 @@ test('habit and sober Phosphor mappings exclude the dedicated meditation and 19 
     Object.keys(HABIT_RECORD_ICONS),
     constants.HABIT_ICON_OPTIONS.map(({ key }) => key).filter((key) => key !== 'meditation'),
   );
-  assert.equal(new Set(Object.values(HABIT_RECORD_ICONS)).size, 49);
+  assert.equal(new Set(Object.values(HABIT_RECORD_ICONS)).size, 53);
   assert.deepEqual(
     Object.keys(SOBER_RECORD_ICONS),
     Object.keys(SOBER_ICONS).filter((key) => key !== 'age19'),
   );
-  assert.equal(Object.keys(SOBER_RECORD_ICONS).length, 49);
-  assert.equal(new Set(Object.values(SOBER_RECORD_ICONS)).size, 49);
+  assert.equal(Object.keys(SOBER_RECORD_ICONS).length, 53);
+  assert.equal(new Set(Object.values(SOBER_RECORD_ICONS)).size, 53);
   assert(!('age19' in SOBER_RECORD_ICONS));
 });
 
@@ -102,6 +102,20 @@ test('record icons preserve theme color, fixed colors and rem-based sizes with P
   assert.equal(SoberIcon({ name: 'skinPicking' }).type, 'HandGrabbingIcon');
   assert.equal(SoberIcon({ name: 'skinPicking' }).props.weight, 'bold');
   assert.equal(SoberIcon({ name: 'coffee' }).type, 'CoffeeIcon');
+  for (const [name, icon] of [
+    ['target', 'TargetIcon'],
+    ['star', 'StarIcon'],
+    ['checkCircle', 'CheckCircleIcon'],
+    ['rocket', 'RocketIcon'],
+  ])
+    assert.equal(HabitIcon({ name }).type, icon);
+  for (const [name, icon] of [
+    ['shield', 'ShieldCheckIcon'],
+    ['pause', 'PauseCircleIcon'],
+    ['leaf', 'LeafIcon'],
+    ['anchor', 'AnchorIcon'],
+  ])
+    assert.equal(SoberIcon({ name }).type, icon);
   for (const [render, name] of [
     [HabitIcon, 'walking'],
     [SoberIcon, 'coffee'],

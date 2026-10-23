@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { database, rows } from './database';
 import { readBackupDatabase, replaceRecords, validateBackupRecords } from '../src/backup/database';
 import { saveSober, saveSoberRestart } from '../src/db/sober';
+import { saveHabit } from '../src/db/habit';
 import { createArchive, readArchive } from './backup-format';
 import { DEFAULT_SETTINGS } from '../src/settings/model';
 import { SOBER_MEMO_MAX_LENGTH } from '../src/domain/limits';
@@ -37,6 +38,54 @@ async function fixture() {
   const files = { 'took.db': source.raw.export() };
   return { ...source, files };
 }
+
+test('all five basic habit and sober icons survive saving, ZIP backup and record replacement without a schema change', async () => {
+  const source = await database();
+  const target = await database();
+  let snapshot: Awaited<ReturnType<typeof database>> | undefined;
+  try {
+    const habitKeys = ['goal', 'target', 'star', 'checkCircle', 'rocket'] as const;
+    const soberKeys = ['favorite', 'shield', 'pause', 'leaf', 'anchor'] as const;
+    for (const [index, icon_key] of habitKeys.entries()) {
+      await saveHabit(source.db, {
+        name: `습관 ${index + 1}`,
+        priority: 1,
+        icon_key,
+        icon_color: 'pink',
+        initial_started_at: '2024-01-01T00:00:00.000Z',
+      });
+    }
+    for (const [index, icon_key] of soberKeys.entries()) {
+      await saveSober(source.db, {
+        name: `거리 ${index + 1}`,
+        description: null,
+        icon_key,
+        icon_color: 'blue',
+        is_priority: 0,
+        initial_started_at: '2024-01-01T00:00:00.000Z',
+        goal_mode: 'AUTO',
+        goal_days: null,
+      });
+    }
+    const decoded = readArchive(createArchive({ 'took.db': source.raw.export() }));
+    assert.equal(decoded.manifest.schemaVersion, 6);
+    snapshot = await database(decoded.files['took.db']);
+    const records = await readBackupDatabase(snapshot.db, decoded.files);
+    await replaceRecords(target.db, records, new Map());
+    assert.deepEqual(rows(target.raw, 'SELECT icon_key FROM habits ORDER BY id').flat(), [
+      ...habitKeys,
+    ]);
+    assert.deepEqual(rows(target.raw, 'SELECT icon_key FROM sobers ORDER BY id').flat(), [
+      ...soberKeys,
+    ]);
+    assert.equal(rows(target.raw, 'PRAGMA foreign_key_check').length, 0);
+  } finally {
+    source.raw.close();
+    snapshot?.raw.close();
+    target.raw.close();
+  }
+});
+
 test('Sober and restart with memo survive ZIP backup and atomic record replacement', async () => {
   const source = await fixture();
   const decoded = readArchive(createArchive(source.files));

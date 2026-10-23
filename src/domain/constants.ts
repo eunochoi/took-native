@@ -53,9 +53,13 @@ export const HABIT_ICONS = {
   planning: { family: 'material-community', name: 'calendar-check' },
   budgeting: { family: 'material-community', name: 'calculator' },
   volunteering: { family: 'material-community', name: 'hand-heart' },
+  target: { family: 'material-community', name: 'bullseye' },
+  star: { family: 'ionicons', name: 'star' },
+  checkCircle: { family: 'ionicons', name: 'checkmark-circle' },
+  rocket: { family: 'ionicons', name: 'rocket' },
 } as const;
 export const HABIT_ICON_OPTIONS = [
-  { key: 'goal', label: '기본' },
+  { key: 'goal', label: '기본 1' },
   { key: 'walking', label: '걷기' },
   { key: 'running', label: '유산소' },
   { key: 'strength', label: '근력 운동' },
@@ -105,6 +109,10 @@ export const HABIT_ICON_OPTIONS = [
   { key: 'planning', label: '일정 정리' },
   { key: 'budgeting', label: '가계부' },
   { key: 'volunteering', label: '봉사' },
+  { key: 'target', label: '기본 2' },
+  { key: 'star', label: '기본 3' },
+  { key: 'checkCircle', label: '기본 4' },
+  { key: 'rocket', label: '기본 5' },
 ] as const satisfies readonly { key: keyof typeof HABIT_ICONS; label: string }[];
 export type HabitIconKey = keyof typeof HABIT_ICONS;
 export const isHabitIcon = (value: unknown): value is HabitIconKey =>
