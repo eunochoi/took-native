@@ -66,7 +66,8 @@ export function SoberRestartActions({
             <PickerAction
               icon="edit"
               title="기록 수정하기"
-              description="날짜와 시간, 메모를 바꿔요."
+              description="일시와 메모를 바꿔요."
+              singleLineDescription
               onPress={() => {
                 const record = menu;
                 close(() => {
@@ -81,7 +82,8 @@ export function SoberRestartActions({
             <PickerAction
               icon="delete-outline"
               title="기록 삭제하기"
-              description="이 시점의 다시 시작 기록을 삭제해요."
+              description="이 재시작 기록을 삭제해요."
+              singleLineDescription
               danger
               onPress={() => {
                 const record = menu;

@@ -46,13 +46,15 @@ export function SoberMenu({
             <PickerAction
               icon="edit"
               title="수정하기"
-              description="목표, 시작 시간, 이름, 아이콘 등을 수정해요."
+              description="이름·목표·아이콘을 바꿔요."
+              singleLineDescription
               onPress={() => close(() => openModal(`/sober/${sober.id}/edit`))}
             />
             <PickerAction
               icon="delete-outline"
               title="삭제하기"
-              description="거리두기 항목과 모든 다시 시작 기록을 삭제해요."
+              description="항목과 재시작 기록을 삭제해요."
+              singleLineDescription
               danger
               onPress={() => close(() => setConfirm(true))}
             />

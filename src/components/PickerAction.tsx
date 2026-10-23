@@ -9,6 +9,7 @@ export function PickerAction({
   icon,
   title,
   description,
+  singleLineDescription = false,
   note,
   danger = false,
   disabled = false,
@@ -18,6 +19,7 @@ export function PickerAction({
   icon: ComponentProps<typeof AppIcon>['name'];
   title: string;
   description: string;
+  singleLineDescription?: boolean;
   note?: string;
   danger?: boolean;
   disabled?: boolean;
@@ -35,13 +37,19 @@ export function PickerAction({
       className={`min-h-16 flex-row items-center gap-4 ios:curve-continuous rounded-2xl p-4 active:opacity-70 ${disabled ? 'opacity-40' : 'opacity-100'} bg-transparent border ${selected ? 'border-theme-accent' : 'border-theme-border'}`}
     >
       <AppIcon name={icon} size={iconSizes.lg} color={danger ? colors.danger : colors.accent} />
-      <View className="flex-1 gap-1">
+      <View className="min-w-0 flex-1 gap-1">
         <Text
           className={`text-base font-semibold ${danger ? 'text-theme-danger' : selected ? 'text-theme-accent-deep' : 'text-theme-text-primary'}`}
         >
           {title}
         </Text>
-        <Text className={MUTED_DESCRIPTION_CLASS_NAME}>{description}</Text>
+        <Text
+          className={MUTED_DESCRIPTION_CLASS_NAME}
+          numberOfLines={singleLineDescription ? 1 : undefined}
+          adjustsFontSizeToFit={singleLineDescription}
+        >
+          {description}
+        </Text>
         {!!note && (
           <Text className="mt-1 text-xs leading-relaxed text-theme-text-tertiary">{note}</Text>
         )}

@@ -53,7 +53,8 @@ export function DiaryMenu({
             <PickerAction
               icon="edit"
               title="일기 수정하기"
-              description="그날의 이야기와 사진을 다듬어요."
+              description="내용과 사진을 수정해요."
+              singleLineDescription
               disabled={diary.date > today}
               onPress={() =>
                 closePicker(() => {
@@ -64,7 +65,8 @@ export function DiaryMenu({
             <PickerAction
               icon="delete-outline"
               title="일기 삭제하기"
-              description="일기와 첨부 사진을 삭제해요."
+              description="일기와 사진을 삭제해요."
+              singleLineDescription
               danger
               onPress={() => closePicker(() => setConfirmOpen(true))}
             />

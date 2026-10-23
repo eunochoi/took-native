@@ -38,13 +38,15 @@ export function HabitMenu({ habit, onDeleted }: { habit: Habit; onDeleted?: () =
             <PickerAction
               icon="edit"
               title="습관 수정하기"
-              description="이름과 우선순위, 아이콘을 바꿔요."
+              description="이름·우선순위 등을 바꿔요."
+              singleLineDescription
               onPress={() => closePicker(() => openModal(`/habit/${habit.id}/edit`))}
             />
             <PickerAction
               icon="delete-outline"
               title="습관 삭제하기"
-              description="습관과 완료 기록을 삭제해요."
+              description="습관과 모든 기록을 삭제해요."
+              singleLineDescription
               danger
               onPress={() => closePicker(() => setConfirmOpen(true))}
             />
