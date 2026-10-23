@@ -81,7 +81,7 @@ export function IconPicker<Key extends string>({
     ) {
       scrollRef.current.scrollTo({
         y: Math.max(0, gridY.current + initialRowY.current - appRem),
-        animated: false,
+        animated: true,
       });
       initialScrollPending.current = false;
     }

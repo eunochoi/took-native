@@ -315,7 +315,7 @@ test('editing reveals a measured selected row after opening once and preserves t
   h.row('photography').props.onLayout({ nativeEvent: { layout: { y: 617 } } });
   assert.deepEqual(h.scrolls, []);
   h.shell.props.onOpened();
-  assert.deepEqual(h.scrolls, [{ y: 602, animated: false }]);
+  assert.deepEqual(h.scrolls, [{ y: 602, animated: true }]);
   h.scroll.props.onContentSizeChange(300, 1100);
   assert.deepEqual(h.sizes, [[300, 1100]]);
   assert.equal(h.scrolls.length, 1);
@@ -338,7 +338,7 @@ test('the saved 19 icon opens in 19+ with smoking and alcohol and keeps its sele
   h.shell.props.onOpened();
   assert.deepEqual(h.scrolls, []);
   h.row('age19').props.onLayout({ nativeEvent: { layout: { y: 24 } } });
-  assert.deepEqual(h.scrolls, [{ y: 9, animated: false }]);
+  assert.deepEqual(h.scrolls, [{ y: 9, animated: true }]);
   assert.equal(h.option('19').props.accessibilityState.selected, true);
 });
 
@@ -383,5 +383,5 @@ test('grid reduces columns for larger text and accounts for its offset when reve
   h.render();
   h.row('photography').props.onLayout({ nativeEvent: { layout: { y: 320 } } });
   h.shell.props.onOpened();
-  assert.deepEqual(h.scrolls.at(-1), { y: 485, animated: false });
+  assert.deepEqual(h.scrolls.at(-1), { y: 485, animated: true });
 });
