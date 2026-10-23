@@ -2,6 +2,7 @@ import { IconPicker } from '../../components/IconPicker';
 import { SoberIcon } from '../../components/SoberIcon';
 import { SOBER_ICONS, type SoberIconKey } from '../../domain/sober';
 import type { HabitIconColorKey } from '../../domain/constants';
+import { SOBER_ICON_CATEGORIES } from './soberIconCategories';
 
 const options = (Object.keys(SOBER_ICONS) as SoberIconKey[]).map((key) => ({
   key,
@@ -20,9 +21,10 @@ export function SoberIconPicker({
 }) {
   return (
     <IconPicker
-      title="아이콘"
+      title="거리두기 아이콘"
       value={value}
       options={options}
+      categories={SOBER_ICON_CATEGORIES}
       renderIcon={(key) => <SoberIcon name={key} colorKey={colorKey} />}
       onApply={onApply}
       onClose={onClose}

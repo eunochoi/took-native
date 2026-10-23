@@ -7,8 +7,41 @@ import { runInNewContext } from 'node:vm';
 import { transpileModule, JsxEmit, ModuleKind } from 'typescript';
 import * as constants from '../src/domain/constants';
 import { SOBER_ICONS } from '../src/domain/sober';
+import { HABIT_ICON_CATEGORIES } from '../src/screens/habit/habitIconCategories';
+import { SOBER_ICON_CATEGORIES } from '../src/screens/sober/soberIconCategories';
 
 const require = createRequire(import.meta.url);
+
+for (const [name, icons, categories, counts] of [
+  ['habit', constants.HABIT_ICON_OPTIONS, HABIT_ICON_CATEGORIES, [5, 10, 12, 10, 8, 9]],
+  [
+    'sober',
+    Object.entries(SOBER_ICONS).map(([key, icon]) => ({ key, label: icon.label })),
+    SOBER_ICON_CATEGORIES,
+    [5, 10, 16, 7, 8, 5, 3],
+  ],
+] as const) {
+  test(`${name} categories cover all 54 saved keys exactly once with five basic icons and category descriptions`, () => {
+    const keys = categories.flatMap((category) => [...category.keys]);
+    assert.equal(icons.length, 54);
+    assert.equal(keys.length, 54);
+    assert.equal(new Set(keys).size, 54);
+    assert.deepEqual([...keys].sort(), icons.map(({ key }) => key).sort());
+    assert.deepEqual(
+      categories.map(({ keys }) => keys.length),
+      counts,
+    );
+    assert.equal(new Set(categories.map(({ id }) => id)).size, categories.length);
+    assert.equal(categories[0].id, 'basic');
+    assert.equal(categories[0].label, '기본');
+    for (const category of categories) {
+      assert(category.id.trim());
+      assert(category.label.trim());
+      assert(category.description.trim());
+    }
+    for (const { label } of icons) assert(label.trim());
+  });
+}
 
 test('habit options use distinct supported icons and meaningful labels', () => {
   const glyphs = {
