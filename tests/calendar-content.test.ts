@@ -954,3 +954,54 @@ test('diary date picker replaces recorded date numbers with diary icons while pr
     assert(nodes(rendered).some((node) => node.type === 'Text'));
   }
 });
+
+test('diary emotion tilt varies by date and survives restored timestamps, IDs and edited emotions', () => {
+  let diaries = Array.from({ length: 31 }, (_, index) => ({
+    id: index + 1,
+    date: `2026-10-${String(index + 1).padStart(2, '0')}`,
+    emotion: 0,
+    created_at: '2026-10-01T00:00:00.000Z',
+  }));
+  const { DiaryHabitMonthCalendar } = load('src/screens/calendar/DiaryHabitMonthCalendar.tsx', {
+    'expo-sqlite': { useSQLiteContext: () => ({}) },
+    '../../queries': {
+      diaryQueries: { month: () => 'diary' },
+      habitQueries: { list: () => 'habits', completions: () => 'completions' },
+    },
+    '@tanstack/react-query': {
+      useQuery: (kind: string) => ({ data: kind === 'diary' ? diaries : [], isError: false }),
+    },
+  });
+  const render = () =>
+    DiaryHabitMonthCalendar({
+      month: '2026-10',
+      today: '2026-10-31',
+      selected: '',
+      onMonthChange() {},
+      onSelect() {},
+    });
+  const rotations = (tree: any) =>
+    diaries.map(
+      ({ date }) =>
+        cell(tree, date).props.children.props.children[0].props.style.transform[0].rotate,
+    );
+  const first = render();
+  const initial = rotations(first);
+  const angles = initial.map((rotation: string) => Number.parseFloat(rotation));
+  assert(angles.every((angle: number) => Number.isInteger(angle) && angle >= -10 && angle <= 10));
+  assert(new Set(angles).size > 10);
+  assert(angles.some((angle: number) => angle < 0));
+  assert(angles.some((angle: number) => angle > 0));
+  assert.deepEqual(rotations(render()), initial);
+  diaries = diaries.map((diary) => ({
+    ...diary,
+    id: diary.id + 100,
+    emotion: 4,
+    created_at: '2026-10-23T12:00:00.000Z',
+  }));
+  assert.deepEqual(rotations(render()), initial);
+  assert.equal(
+    cell(first, '2026-09-30').props.children.props.children[0].props.style.transform[0].rotate,
+    '0deg',
+  );
+});

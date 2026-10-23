@@ -84,7 +84,14 @@ export function DiaryHabitMonthCalendar(props: {
             !completions.isError;
           const count = progressReady ? summary.completed : 0;
           const total = summary.total;
-          const rotation = diary ? -10 + ((new Date(diary.created_at).getTime() % 10) * 20) / 9 : 0;
+          let rotation = 0;
+          if (diary) {
+            // Hash the date so restored timestamps and IDs cannot change the tilt.
+            let hash = 2166136261;
+            for (const character of date)
+              hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);
+            rotation = ((hash >>> 0) % 21) - 10;
+          }
           const weekday = getDay(parseISO(date));
           return (
             <CalendarDay
