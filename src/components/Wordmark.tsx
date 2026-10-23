@@ -15,7 +15,7 @@ export function Wordmark({
   return (
     <View
       accessible
-      accessibilityLabel="to:ok"
+      accessibilityLabel="TOOK"
       className="shrink-0 flex-row items-baseline gap-0.5"
     >
       <NativeText

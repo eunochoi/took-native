@@ -39,7 +39,7 @@ export function AppLoadingScreen({
   return (
     <View
       className="absolute inset-0 items-center justify-center bg-white"
-      accessibilityLabel="took 시작 화면"
+      accessibilityLabel="TOOK 시작 화면"
       onLayout={() => setLaidOut(true)}
     >
       <StatusBar style="dark" />

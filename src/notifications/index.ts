@@ -42,7 +42,7 @@ export async function requestReminderPermission() {
     permission = await Notifications.requestPermissionsAsync();
   }
   if (!permission.granted) {
-    throw new Error('기기 설정에서 took의 알림을 허용해주세요.');
+    throw new Error('기기 설정에서 TOOK의 알림을 허용해주세요.');
   }
 }
 
