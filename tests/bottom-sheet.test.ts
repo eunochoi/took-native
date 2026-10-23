@@ -26,6 +26,7 @@ function harness(
     onOpened?: () => void;
     scrollEnabled?: boolean;
     footer?: unknown;
+    fixedContent?: unknown;
     renderScrollView?: (props: any) => unknown;
     renderBody?: (close: any) => unknown;
   } = {},
@@ -668,6 +669,40 @@ test('custom list viewport shares native scrolling, safe-area padding and sheet 
   h.move(0, 160);
   assert.equal(h.gestureState, 'active');
   assert.deepEqual(h.scrollCommands, [0]);
+  h.end();
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
+});
+
+test('fixed picker content stays outside the scroll viewport and its fades without changing drag ownership', () => {
+  const fixedContent = { type: 'IconCategories', props: {} };
+  const footer = { type: 'ApplyButton', props: {} };
+  const h = harness(true, false, undefined, {
+    fixedHeight: true,
+    scrollFade: true,
+    fixedContent,
+    footer,
+  });
+  h.show();
+  h.completeOpen();
+  const surface = h.sheet().props.children;
+  const body = surface.props.children[1];
+  assert.equal(body.props.children[0], fixedContent);
+  const viewport = body.props.children[1];
+  assert(viewport.props.className.includes('overflow-hidden'));
+  assert.equal(viewport.props.children[0].props.children, h.scroll());
+  assert.equal(viewport.props.children[1].props.children[0].type, 'ScrollEdgeFade');
+  assert.equal(surface.props.children[2].props.children, footer);
+  h.offset(120);
+  h.begin();
+  assert.equal(h.gestureState, 'failed');
+  h.offset(0);
+  h.begin();
+  h.move(40, 5);
+  assert.equal(h.gestureState, 'failed');
+  h.begin();
+  h.move(0, 90);
+  assert.equal(h.gestureState, 'active');
   h.end();
   h.completeAnimation();
   assert.equal(h.closes, 1);
