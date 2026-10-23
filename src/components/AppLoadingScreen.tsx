@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Image, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { loadAsync } from 'expo-font';
-import { wordmarkFont } from '../theme/fonts';
 import { Wordmark } from './Wordmark';
 
 const cat = require('../../assets/cats/hiding-cat-home.png');
@@ -19,20 +17,6 @@ export function AppLoadingScreen({
   const [wordmarkReady, setWordmarkReady] = useState(false);
   const [catReady, setCatReady] = useState(false);
   useEffect(() => {
-    let active = true;
-    loadAsync(wordmarkFont).then(
-      () => {
-        if (active) setWordmarkReady(true);
-      },
-      (error: Error) => {
-        if (active) onError(error);
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, [onError]);
-  useEffect(() => {
     if (laidOut && wordmarkReady && catReady) onReady();
   }, [laidOut, wordmarkReady, catReady, onReady]);
 
@@ -43,7 +27,10 @@ export function AppLoadingScreen({
       onLayout={() => setLaidOut(true)}
     >
       <StatusBar style="dark" />
-      {wordmarkReady && <Wordmark />}
+      <Wordmark
+        onLoad={() => setWordmarkReady(true)}
+        onError={({ nativeEvent }) => onError(new Error(nativeEvent.error))}
+      />
       <Image
         source={cat}
         className="absolute bottom-0 right-0 w-1/3"

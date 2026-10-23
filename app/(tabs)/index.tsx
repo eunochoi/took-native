@@ -30,7 +30,14 @@ const catSize = Image.resolveAssetSource(cat);
 
 export default function Home() {
   const today = useToday();
-  const { colors, rem: appRem, reducedMotion, navigationBottom, navigationHeight } = useAppTheme();
+  const {
+    colors,
+    mode,
+    rem: appRem,
+    reducedMotion,
+    navigationBottom,
+    navigationHeight,
+  } = useAppTheme();
   const focused = useIsFocused();
   const scrollRef = useRef<ScrollView>(null);
   const [viewportHeight, setViewportHeight] = useState(0);
@@ -62,7 +69,7 @@ export default function Home() {
             onLayout={({ nativeEvent }) => setContentHeight(nativeEvent.layout.height)}
           >
             <View className="mb-10 shrink-0 flex-row items-center gap-2">
-              <Wordmark size={appRem * 3} color={colors.text} accentColor={colors.accent} />
+              <Wordmark size={appRem * 2.5} accentColor={colors.accent} mode={mode} />
             </View>
             <View className="mb-10 shrink-0 gap-3">
               <View className="gap-1">
