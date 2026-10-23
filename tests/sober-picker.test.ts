@@ -68,6 +68,7 @@ test('start picker offers one full-width action, keeps changes local, and applie
     onClose: () => {},
     onApply: (iso: string) => applied.push(iso),
   });
+  assert.equal(render().props.fixedHeight, true);
   const fields = nodes(render()).find((node) => node.type === 'DateTimeFields');
   const draft = { date: '2024-02-03', hour: '10', minute: '20' };
   fields.props.onChange(draft);

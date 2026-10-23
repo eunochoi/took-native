@@ -30,6 +30,7 @@ export function DateTimePicker({
   return (
     <BottomSheetModal
       visible
+      fixedHeight
       title={title}
       onClose={onClose}
       footer={(close) => (

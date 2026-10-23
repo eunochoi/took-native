@@ -65,6 +65,7 @@ export function BottomSheetPage({
         dimBackdrop={!hasParentSheet}
         dismissOnBack={focused}
         scrollFade={scrollFade}
+        fixedHeight
         onOpening={() => {
           token.current = beginOpening(key);
         }}

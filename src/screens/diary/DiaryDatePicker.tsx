@@ -41,6 +41,7 @@ export function DiaryDatePicker({
   return (
     <BottomSheetModal
       visible
+      fixedHeight
       title="일기 날짜 선택"
       onClose={onClose}
       footer={(close) => (

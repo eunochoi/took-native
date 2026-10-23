@@ -108,7 +108,7 @@ test('route sheet closing uses history or the fallback and only focused routes i
     .children;
   assert.equal(page.props.presentation, 'screen');
   assert.equal(page.props.dismissOnBack, true);
-  assert.equal(page.props.fixedHeight, undefined);
+  assert.equal(page.props.fixedHeight, true);
   assert.equal(page.props.children, 'body');
   assert.deepEqual(calls, []);
   page.props.onClose();

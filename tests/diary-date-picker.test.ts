@@ -168,6 +168,7 @@ test('diary date applies only after closing; future dates and cancellation prese
   const ui = harness('src/screens/diary/DiaryDatePicker.tsx');
   const calendar = () => nodes(ui.render()).find((node) => node.type === 'DatePickerCalendar');
   assert.equal(calendar().props.today, today);
+  assert.equal(ui.render().props.fixedHeight, true);
   calendar().props.onSelect('2026-10-15');
   assert.equal(calendar().props.selected, today);
   calendar().props.onSelect('2026-10-10');
