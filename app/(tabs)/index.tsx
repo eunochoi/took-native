@@ -69,7 +69,7 @@ export default function Home() {
             onLayout={({ nativeEvent }) => setContentHeight(nativeEvent.layout.height)}
           >
             <View className="mb-10 shrink-0 flex-row items-center gap-2">
-              <Wordmark size={appRem * 2.5} accentColor={colors.accent} mode={mode} />
+              <Wordmark size={appRem * 3.25} accentColor={colors.accent} mode={mode} />
             </View>
             <View className="mb-10 shrink-0 gap-3">
               <View className="gap-1">
