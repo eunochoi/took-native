@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Image, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Wordmark } from './Wordmark';
 
-const cat = require('../../assets/cats/hiding-cat-home.png');
-const catSize = Image.resolveAssetSource(cat);
+const wordmark = require('../../assets/ui/wordmark.png');
 
 export function AppLoadingScreen({
   onReady,
@@ -15,10 +13,9 @@ export function AppLoadingScreen({
 }) {
   const [laidOut, setLaidOut] = useState(false);
   const [wordmarkReady, setWordmarkReady] = useState(false);
-  const [catReady, setCatReady] = useState(false);
   useEffect(() => {
-    if (laidOut && wordmarkReady && catReady) onReady();
-  }, [laidOut, wordmarkReady, catReady, onReady]);
+    if (laidOut && wordmarkReady) onReady();
+  }, [laidOut, wordmarkReady, onReady]);
 
   return (
     <View
@@ -27,17 +24,13 @@ export function AppLoadingScreen({
       onLayout={() => setLaidOut(true)}
     >
       <StatusBar style="dark" />
-      <Wordmark
+      <Image
+        source={wordmark}
+        className="h-[200px] w-[200px]"
+        resizeMode="contain"
+        accessibilityLabel="TOOK"
         onLoad={() => setWordmarkReady(true)}
         onError={({ nativeEvent }) => onError(new Error(nativeEvent.error))}
-      />
-      <Image
-        source={cat}
-        className="absolute bottom-0 right-0 w-1/3"
-        style={{ height: 'auto', aspectRatio: catSize.width / catSize.height }}
-        resizeMode="contain"
-        onLoadEnd={() => setCatReady(true)}
-        accessible={false}
       />
     </View>
   );

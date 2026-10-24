@@ -177,12 +177,8 @@ function loadingHarness() {
   const errors: Error[] = [];
   let ready = 0;
   const h = harness('../src/components/AppLoadingScreen.tsx', {
-    'react-native': {
-      View: 'View',
-      Image: Object.assign('Image', { resolveAssetSource: () => ({ width: 100, height: 36 }) }),
-    },
+    'react-native': { View: 'View', Image: 'Image' },
     'expo-status-bar': { StatusBar: 'StatusBar' },
-    './Wordmark': { Wordmark: 'Wordmark' },
   });
   const props = { onReady: () => ready++, onError: (error: Error) => errors.push(error) };
   return {
@@ -193,25 +189,39 @@ function loadingHarness() {
   };
 }
 
-test('startup waits for logo, layout and cat request, including a failed cat image', () => {
+test('startup uses the native splash logo and waits for its load and layout', () => {
   const h = loadingHarness();
   let tree = h.render();
-  assert.equal(tree.props.children[1].type, 'Wordmark');
+  assert.equal(tree.props.children.length, 2);
+  const logo = tree.props.children[1];
+  assert.equal(logo.type, 'Image');
+  const config = JSON.parse(readFileSync(new URL('../app.json', import.meta.url), 'utf8'));
+  const splash = config.expo.plugins.find((plugin: any) => plugin[0] === 'expo-splash-screen')[1];
+  assert.equal(logo.props.source, splash.image.replace('./', '../../'));
+  assert(logo.props.className.split(' ').includes(`w-[${splash.imageWidth}px]`));
+  assert(logo.props.className.split(' ').includes(`h-[${splash.imageWidth}px]`));
+  assert.equal(logo.props.resizeMode, 'contain');
+  assert(tree.props.className.includes('items-center justify-center bg-white'));
   tree.props.onLayout();
-  // A failed decorative cat image must not block startup.
-  tree.props.children[2].props.onLoadEnd();
   h.render();
   assert.equal(h.ready(), 0);
   tree.props.children[1].props.onLoad();
   tree = h.render();
   assert.equal(h.ready(), 1);
+  const loadedFirst = loadingHarness();
+  const loading = loadedFirst.render();
+  loading.props.children[1].props.onLoad();
+  loadedFirst.render();
+  assert.equal(loadedFirst.ready(), 0);
+  loading.props.onLayout();
+  loadedFirst.render();
+  assert.equal(loadedFirst.ready(), 1);
 });
 
 test('loading logo failure reaches retry UI without reporting readiness', () => {
   const h = loadingHarness();
   const tree = h.render();
   tree.props.onLayout();
-  tree.props.children[2].props.onLoadEnd();
   tree.props.children[1].props.onError({ nativeEvent: { error: 'wordmark image failed' } });
   h.render();
   assert.equal(h.errors[0].message, 'wordmark image failed');
