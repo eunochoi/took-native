@@ -23,7 +23,9 @@ function render(
     routes?: unknown[];
     layoutWidth?: number;
     rem?: number;
+    fontScale?: number;
   } = {},
+  sourceName = name,
 ) {
   const exports: Record<string, Function> = {};
   let stateIndex = 0;
@@ -31,7 +33,7 @@ function render(
     typeof type === 'function' ? type(props) : { type, props, key };
   runInNewContext(
     ts.transpileModule(
-      readFileSync(new URL(`../src/screens/home/${name}.tsx`, import.meta.url), 'utf8'),
+      readFileSync(new URL(`../src/screens/home/${sourceName}.tsx`, import.meta.url), 'utf8'),
       {
         compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
       },
@@ -39,6 +41,25 @@ function render(
     {
       exports,
       require: (dependency: string) => {
+        if (dependency.endsWith('/HomeCardCarousel'))
+          return {
+            HomeCardCarousel: (props: any) =>
+              render('HomeCardCarousel', props, scenario.layoutWidth, scenario),
+          };
+        if (dependency.endsWith('/HomeSummaryCards'))
+          return Object.fromEntries(
+            [
+              'DiarySummaryCard',
+              'HabitSummaryCard',
+              'DistanceSummaryCard',
+              'ArchiveSummaryCard',
+            ].map((name) => [
+              name,
+              (props: any) => render(name, props, undefined, scenario, 'HomeSummaryCards'),
+            ]),
+          );
+        if (dependency === 'react-native-svg')
+          return { __esModule: true, default: 'Svg', Circle: 'Circle' };
         if (dependency.endsWith('/DiaryStatisticsSummary'))
           return {
             DiaryStatisticsSummary: (summaryProps: any) =>
@@ -54,9 +75,20 @@ function render(
             ],
           };
         if (dependency === 'react-native')
-          return { View: 'View', Pressable: 'Pressable', ScrollView: 'ScrollView' };
+          return {
+            View: 'View',
+            Pressable: 'Pressable',
+            ScrollView: 'ScrollView',
+            useWindowDimensions: () => ({ fontScale: scenario.fontScale ?? 1 }),
+          };
         if (dependency.endsWith('AppThemeProvider'))
-          return { useAppTheme: () => ({ rem: scenario.rem ?? 15, iconSizes: {}, colors: {} }) };
+          return {
+            useAppTheme: () => ({
+              rem: scenario.rem ?? 15,
+              iconSizes: {},
+              colors: require('../src/theme/colors').themeColors('blue', 'light'),
+            }),
+          };
         if (dependency.endsWith('domain/habitStats')) return require('../src/domain/habitStats');
         if (dependency.endsWith('domain/constants')) return { EMOTIONS };
         if (dependency.endsWith('domain/diaryFilters'))
@@ -132,13 +164,13 @@ const emptyStats = () => ({
   halves: [Array(EMOTIONS.length).fill(0), Array(EMOTIONS.length).fill(0)],
 });
 
-test('today diary and habit share one card with separate navigation and loading states', () => {
+test('home summary cards retain separate navigation and loading states', () => {
   const routes: unknown[] = [];
-  const tree = render('TodayRecordSection', { today: '2026-10-05' }, undefined, { routes });
-  assert.equal(tree.props.children.length, 3);
+  const tree = render('HomeSummarySection', { today: '2026-10-05' }, undefined, { routes });
+  assert.equal(tree.props.children.length, 2);
   const buttons = nodes(tree).filter((node) => node.type === 'Pressable');
   assert.equal(buttons.length, 4);
-  assert(text(buttons[0]).includes('오늘의 일기'));
+  assert(text(buttons[0]).includes('일기'));
   assert(text(buttons[0]).includes('기록 없음'));
   assert(text(buttons[1]).includes('0/0'));
   buttons.forEach((button) => button.props.onPress());
@@ -149,7 +181,7 @@ test('today diary and habit share one card with separate navigation and loading 
     { pathname: '/home/[year]/stats', params: { year: '2026' } },
   ]);
   for (const result of [{ isPending: true }, { isError: true }]) {
-    const pending = render('TodayRecordSection', { today: '2026-10-05' }, undefined, {
+    const pending = render('HomeSummarySection', { today: '2026-10-05' }, undefined, {
       results: { diary: result, habits: result },
     });
     const actions = nodes(pending).filter((node) => node.type === 'Pressable');
@@ -160,32 +192,36 @@ test('today diary and habit share one card with separate navigation and loading 
       assert(nodes(pending).some((node) => node.props.accessibilityLabel === '습관 확인 중'));
     } else {
       assert(text(actions[0]).includes('불러오기 실패'));
+      assert(actions[1].props.accessibilityLabel.includes('불러오기 실패'));
       assert(text(actions[1]).includes('불러오기 실패'));
     }
   }
 });
 
-test('recorded diary names its emotion in quotes and opens the diary', () => {
+test('recorded diary shows its actual emotion artwork and opens the diary', () => {
   const routes: unknown[] = [];
-  const tree = render('TodayRecordSection', { today: '2026-10-05' }, undefined, {
+  const tree = render('HomeSummarySection', { today: '2026-10-05' }, undefined, {
     routes,
     results: { diary: { data: { id: 42, emotion: 1 } } },
   });
-  assert(text(tree.props.children[0]).includes("'기쁨' 기록"));
-  assert(!text(tree.props.children[0]).includes('확인하기'));
-  const description = nodes(tree.props.children[0]).find(
-    (node) => node.type === 'Text' && text(node) === "'기쁨' 기록",
+  assert(text(tree).includes('기쁨'));
+  const artwork = nodes(tree).find((node) => node.type === 'EmotionImage');
+  assert.equal(artwork.props.emotion, 1);
+  assert.equal(artwork.props.iconStyle, 'basic');
+  assert(!text(tree).includes('확인하기'));
+  const description = nodes(tree).find(
+    (node) => node.type === 'Text' && text(node) === "'기쁨' 기록 남김",
   );
   assert.equal(description.props.numberOfLines, 1);
   assert.equal(description.props.adjustsFontSizeToFit, true);
   nodes(tree)
-    .find((node) => node.props.accessibilityLabel === '오늘의 감정 일기 이동')
+    .find((node) => node.props.accessibilityLabel?.startsWith('오늘의 감정 일기 이동'))
     .props.onPress();
   assert.deepEqual(routes, ['/diary/42']);
 });
 
 test('today habits show completed count before total count', () => {
-  const tree = render('TodayRecordSection', { today: '2026-10-05' }, undefined, {
+  const tree = render('HomeSummarySection', { today: '2026-10-05' }, undefined, {
     results: {
       habits: {
         data: Array.from({ length: 8 }, (_, id) => ({
@@ -199,8 +235,8 @@ test('today habits show completed count before total count', () => {
       },
     },
   });
-  const habitButton = nodes(tree).find(
-    (node) => node.props.accessibilityLabel === '오늘의 습관 이동',
+  const habitButton = nodes(tree).find((node) =>
+    node.props.accessibilityLabel?.startsWith('오늘의 습관 이동'),
   );
   assert(nodes(habitButton).some((node) => node.type === 'Text' && text(node) === '3/8'));
 });
@@ -220,29 +256,37 @@ test('today sober card uses the latest restart and opens the selected record', (
     sobers: { data: [sober] },
     restarts: { data: [{ id: 1, sober_id: 7, restarted_at: '2026-10-04T00:00:00.000Z' }] },
   };
-  const tree = render('TodayRecordSection', { today: '2026-10-05' }, undefined, {
+  const tree = render('HomeSummarySection', { today: '2026-10-05' }, undefined, {
     results,
     routes,
   });
-  const card = tree.props.children[1];
+  const card = nodes(tree).find(
+    (node) =>
+      node.type === 'Pressable' && node.props.accessibilityLabel?.startsWith('거리두기 이동'),
+  );
   const soberName = nodes(card).find((node) => text(node) === '카페인');
   assert(soberName);
   assert.equal(soberName.props.numberOfLines, 1);
   assert.equal(soberName.props.ellipsizeMode, 'tail');
-  assert(text(card).includes('거리를 두고 지낸 지 2일째예요.'));
+  const dayLabel = nodes(card).find((node) => node.type === 'Text' && text(node) === '2일차');
+  assert(dayLabel);
+  assert.equal(dayLabel.props.numberOfLines, 1);
+  assert.equal(dayLabel.props.adjustsFontSizeToFit, true);
+  assert(dayLabel.props.className.includes('w-full'));
+  assert(card.props.accessibilityLabel.includes('2일차'));
   card.props.onPress();
   assert.deepEqual(routes, ['/sober/7']);
-  const reset = render('TodayRecordSection', { today: '2026-10-05' }, undefined, {
+  const reset = render('HomeSummarySection', { today: '2026-10-05' }, undefined, {
     results: {
       ...results,
       restarts: { data: [{ id: 2, sober_id: 7, restarted_at: '2026-10-05T11:00:00.000Z' }] },
     },
   });
-  assert(text(reset).includes('거리를 두고 지낸 지 1일째예요.'));
-  const failed = render('TodayRecordSection', { today: '2026-10-05' }, undefined, {
+  assert(text(reset).includes('1일'));
+  const failed = render('HomeSummarySection', { today: '2026-10-05' }, undefined, {
     results: { ...results, restarts: { isError: true } },
   });
-  assert(text(failed.props.children[1]).includes('기록을 불러오지 못했어요.'));
+  assert(text(failed).includes('불러오기 실패'));
   assert(!text(failed).includes('일째'));
 });
 
@@ -535,15 +579,238 @@ test('home sober card selects by current record using all restarts', () => {
     goal_mode: 'AUTO',
     goal_days: null,
   }));
-  const tree = render('TodayRecordSection', { today: '2026-10-05' }, undefined, {
+  const tree = render('HomeSummarySection', { today: '2026-10-05' }, undefined, {
     routes,
     results: {
       sobers: { data: items },
       restarts: { data: [{ id: 1, sober_id: 7, restarted_at: '2026-10-05T00:00:00.000Z' }] },
     },
   });
-  assert(text(tree.props.children[1]).includes('항목 8'));
-  assert(text(tree.props.children[1]).includes('거리를 두고 지낸 지 5일째예요.'));
-  tree.props.children[1].props.onPress();
+  const card = nodes(tree).find(
+    (node) =>
+      node.type === 'Pressable' && node.props.accessibilityLabel?.startsWith('거리두기 이동'),
+  );
+  assert(text(card).includes('항목 8'));
+  assert(text(card).includes('5일'));
+  card.props.onPress();
   assert.deepEqual(routes, ['/sober/8']);
+});
+
+test('home carousel shows two whole squares and 20% of the next with bounded snap offsets', () => {
+  for (const layoutWidth of [320, 360, 390, 430, 768, 1024]) {
+    for (const rem of [14, 15, 16]) {
+      const tree = render('HomeSummarySection', { today: '2026-10-05' }, undefined, {
+        layoutWidth,
+        rem,
+      });
+      const strip = nodes(tree).find((node) => node.type === 'ScrollView');
+      const cards = nodes(strip).filter((node) => node.type === 'Pressable');
+      assert.equal(cards.length, 4);
+      const width = cards[0].props.style.width;
+      assert(
+        cards.every(
+          (card) =>
+            card.props.style.width === width && card.props.className.includes('aspect-square'),
+        ),
+      );
+      const inset = strip.props.contentContainerStyle.paddingHorizontal;
+      const gap = rem * 0.75;
+      assert.equal(inset, layoutWidth * 0.05);
+      assert(Math.abs((layoutWidth - inset - 2 * width - 2 * gap) / width - 0.2) < 0.000001);
+      const end = inset * 2 + 4 * width + 3 * gap - layoutWidth;
+      assert.equal(strip.props.snapToOffsets[0], 0);
+      assert.equal(strip.props.snapToOffsets.at(-1), end);
+      assert(strip.props.snapToOffsets.every((offset: number) => offset >= 0 && offset <= end));
+      assert.equal(strip.props.showsHorizontalScrollIndicator, false);
+      assert.equal(strip.props.directionalLockEnabled, true);
+      assert.equal(strip.props.className, '-mx-[5.555556%]');
+      assert(Math.abs(layoutWidth * 0.9 * 0.05555556 - inset) < 0.00001);
+      const artwork = nodes(
+        render('HomeSummarySection', { today: '2026-10-05' }, undefined, {
+          layoutWidth,
+          rem,
+          results: { diary: { data: { id: 1, emotion: 2 } } },
+        }),
+      ).find((node) => node.type === 'EmotionImage');
+      assert(artwork.props.size > 0 && artwork.props.size + rem * 4.5 <= width + 0.000001);
+    }
+  }
+});
+
+test('home cards expand for accessibility text and very narrow viewports', () => {
+  for (const [layoutWidth, fontScale] of [
+    [240, 1],
+    [320, 2],
+  ]) {
+    const tree = render('HomeSummarySection', { today: '2026-10-05' }, undefined, {
+      layoutWidth,
+      fontScale,
+    });
+    const strip = nodes(tree).find((node) => node.type === 'ScrollView');
+    const cards = nodes(strip).filter((node) => node.type === 'Pressable');
+    assert(cards.every((card) => card.props.style.width >= 15 * 7.5 * fontScale));
+    assert(strip.props.snapToOffsets.at(-1) > 0);
+  }
+});
+
+test('home card order uses stable IDs and preserves the destination of each card', () => {
+  const routes: unknown[] = [];
+  const tree = render(
+    'HomeSummarySection',
+    { today: '2026-10-05', cardOrder: ['distance', 'habit', 'diary', 'archive'] },
+    undefined,
+    { routes, layoutWidth: 390 },
+  );
+  const strip = nodes(tree).find((node) => node.type === 'ScrollView');
+  assert.deepEqual(
+    Array.from(strip.props.children, (node: any) => node.key),
+    ['distance', 'habit', 'diary', 'archive'],
+  );
+  const buttons = nodes(strip).filter((node) => node.type === 'Pressable');
+  assert.deepEqual(
+    buttons.map((button) => text(button.props.children[0])),
+    ['거리두기', '습관', '일기', '기록 분석'],
+  );
+  buttons.forEach((button) => button.props.onPress());
+  assert.deepEqual(JSON.parse(JSON.stringify(routes)), [
+    '/sober',
+    '/habit',
+    { pathname: '/diary/new', params: { date: '2026-10-05' } },
+    { pathname: '/home/[year]/stats', params: { year: '2026' } },
+  ]);
+});
+
+test('home archive is the fourth square card with the existing year destination', () => {
+  const routes: unknown[] = [];
+  const tree = render('HomeSummarySection', { today: '2025-12-31' }, undefined, {
+    routes,
+    layoutWidth: 390,
+  });
+  const strip = nodes(tree).find((node) => node.type === 'ScrollView');
+  const cards = nodes(strip).filter((node) => node.type === 'Pressable');
+  const archive = cards[3];
+  assert.equal(archive.props.accessibilityLabel, '기록 분석 보기, 쌓인 기록의 흐름 확인');
+  assert(archive.props.className.includes('aspect-square'));
+  assert.equal(archive.props.style.width, cards[0].props.style.width);
+  assert.equal(text(archive), '기록 분석쌓인 기록의 흐름분석 보기 →');
+  assert(archive.props.children[1].props.className.includes('items-center justify-center gap-1'));
+  assert(archive.props.children[1].props.children[1].props.className.includes('text-center'));
+  assert(nodes(archive).some((node) => node.props.name === 'description'));
+  archive.props.onPress();
+  assert.deepEqual(JSON.parse(JSON.stringify(routes)), [
+    { pathname: '/home/[year]/stats', params: { year: '2025' } },
+  ]);
+  assert.equal(nodes(tree).filter((node) => node.props.accessibilityRole === 'header').length, 1);
+  assert.equal(
+    nodes(tree).filter((node) => node.type === 'Text' && text(node) === '분석 보기 →').length,
+    1,
+  );
+});
+
+test('habit donut matches actual completion, including empty and full rings', () => {
+  for (const [completed, total] of [
+    [0, 0],
+    [0, 6],
+    [4, 6],
+    [6, 6],
+  ]) {
+    const tree = render(
+      'HabitSummaryCard',
+      {
+        size: 160,
+        pending: false,
+        error: false,
+        completed,
+        total,
+        freeRecords: null,
+        onPress() {},
+      },
+      undefined,
+      {},
+      'HomeSummaryCards',
+    );
+    const circles = nodes(tree).filter((node) => node.type === 'Circle');
+    assert.equal(circles.length, completed ? 2 : 1);
+    assert(text(tree).includes(`${completed}/${total}`));
+    if (completed) {
+      const ring = circles[1].props;
+      assert.equal(ring.strokeLinecap, 'round');
+      assert(
+        Math.abs(ring.strokeDashoffset / ring.strokeDasharray[0] - (1 - completed / total)) <
+          0.000001,
+      );
+    }
+    assert(
+      tree.props.accessibilityLabel.includes(
+        total === 0
+          ? '습관을 추가해 보세요'
+          : completed === total
+            ? '완료'
+            : completed
+              ? `${Math.round((completed / total) * 100)}%`
+              : '오늘도 하나씩',
+      ),
+    );
+    assert.equal(
+      text(tree.props.children[1].props.children[1]),
+      total === 0
+        ? '습관을 추가해 보세요'
+        : completed === total
+          ? '완료'
+          : completed > 0
+            ? `${Math.round((completed / total) * 100)}%`
+            : '오늘도 하나씩',
+    );
+    assert(!JSON.stringify(tree).includes('NaN'));
+  }
+});
+
+test('home habit donut excludes free records while retaining their empty-state count', () => {
+  const habits = [0, 1, 1].map((priority, id) => ({
+    id,
+    priority,
+    initial_started_at: '2026-10-01T00:00:00',
+  }));
+  const results = {
+    habits: { data: habits },
+    completions: { data: [0, 1].map((habit_id) => ({ habit_id, date: '2026-10-05' })) },
+  };
+  const mixed = render('HomeSummarySection', { today: '2026-10-05' }, undefined, { results });
+  const card = nodes(mixed).find(
+    (node) =>
+      node.type === 'Pressable' && node.props.accessibilityLabel?.startsWith('오늘의 습관 이동'),
+  );
+  assert(text(card).includes('1/2'));
+  const free = render('HomeSummarySection', { today: '2026-10-05' }, undefined, {
+    results: { ...results, habits: { data: [habits[0]] } },
+  });
+  const freeCard = nodes(free).find(
+    (node) =>
+      node.type === 'Pressable' && node.props.accessibilityLabel?.startsWith('오늘의 습관 이동'),
+  );
+  assert(text(freeCard).includes('0/0'));
+  assert(freeCard.props.accessibilityLabel.includes('1건 자유 기록'));
+  assert(text(freeCard).includes('1건 자유 기록'));
+  assert.equal(nodes(freeCard).filter((node) => node.type === 'Circle').length, 1);
+});
+
+test('home cards center their titles and group emotion or distance captions directly below the visual', () => {
+  const tree = render('HomeSummarySection', { today: '2026-10-05' }, undefined, {
+    results: { diary: { data: { id: 1, emotion: 2 } } },
+  });
+  const strip = nodes(tree).find((node) => node.type === 'ScrollView');
+  const [diary, habit, distance] = nodes(strip).filter((node) => node.type === 'Pressable');
+  for (const card of [diary, habit, distance]) {
+    assert(card.props.className.includes('items-center'));
+    assert(card.props.children[0].props.className.includes('text-center'));
+    assert.equal(card.props.children.length, 2);
+  }
+  const diaryGroup = diary.props.children[1];
+  assert(diaryGroup.props.className.includes('justify-center gap-1'));
+  assert.equal(diaryGroup.props.children[0].type, 'EmotionImage');
+  assert.equal(text(diaryGroup.props.children[1]), `'${EMOTIONS[2].name}' 기록 남김`);
+  const distanceGroup = distance.props.children[1];
+  assert(distanceGroup.props.className.includes('justify-center gap-1'));
+  assert.equal(text(distanceGroup.props.children[1]), '기록 없음');
+  assert.equal(text(habit), '습관0/0습관을 추가해 보세요');
 });

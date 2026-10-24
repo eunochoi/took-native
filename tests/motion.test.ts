@@ -85,7 +85,7 @@ function load(
           Text: 'Text',
           Wordmark: 'Wordmark',
           EmotionImage: 'EmotionImage',
-          TodayRecordSection: 'TodayRecordSection',
+          HomeSummarySection: 'HomeSummarySection',
           ColorView: 'ColorView',
         };
       },
@@ -162,7 +162,7 @@ test('home retains its decoration within the page scroll viewport', () => {
   const rendered = nodes(tree);
   assert(rendered.some((node) => node.props.accessibilityLabel === 'hiding-cat'));
   assert.equal(rendered.filter((node) => node.type === 'ScrollView').length, 1);
-  assert.equal(rendered.filter((node) => node.type === 'TodayRecordSection').length, 1);
+  assert.equal(rendered.filter((node) => node.type === 'HomeSummarySection').length, 1);
   assert(!tree.props.className.includes('border-b'));
   assert.equal(tree.props.style, undefined);
   const cat = rendered.find((node) => node.props.accessibilityLabel === 'hiding-cat');

@@ -362,7 +362,7 @@ test('all card and menu modal launches use the shared gate', () => {
     assert(!source.includes('router.push('), file);
   }
   const source = readFileSync(
-    new URL('../src/screens/home/TodayRecordSection.tsx', import.meta.url),
+    new URL('../src/screens/home/HomeSummarySection.tsx', import.meta.url),
     'utf8',
   );
   assert(!/router\.push\([^)]*(?:\/\$\{|\/new)/.test(source));

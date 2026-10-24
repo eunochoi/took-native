@@ -10,7 +10,7 @@ import { EmotionImage } from '../../src/components/EmotionImage';
 import { Text } from '../../src/components/Text';
 import { Wordmark } from '../../src/components/Wordmark';
 import { useToday } from '../../src/queries';
-import { TodayRecordSection } from '../../src/screens/home/TodayRecordSection';
+import { HomeSummarySection } from '../../src/screens/home/HomeSummarySection';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
 import tokens from '../../src/theme/tokens.json';
 
@@ -128,7 +128,7 @@ export default function Home() {
               </View>
             </View>
             <View className="shrink-0">
-              <TodayRecordSection today={today} />
+              <HomeSummarySection today={today} />
             </View>
           </View>
           <View pointerEvents="none" className="flex-1 min-h-0 justify-end overflow-hidden px-[5%]">

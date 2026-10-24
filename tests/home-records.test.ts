@@ -155,9 +155,9 @@ test('home retains its greeting and records in one scroll viewport without a loc
   const view = harness('app/(tabs)/index.tsx', 'default').render();
   assert.equal(view.tree.type, 'ColorView');
   assert(view.tree.props.className.includes('bg-theme-accent-light'));
-  assert.equal(view.nodes.filter((node) => node.type === 'TodayRecordSection').length, 1);
+  assert.equal(view.nodes.filter((node) => node.type === 'HomeSummarySection').length, 1);
   assert.equal(
-    view.nodes.find((node) => node.type === 'TodayRecordSection').props.today,
+    view.nodes.find((node) => node.type === 'HomeSummarySection').props.today,
     '2026-10-05',
   );
   assert.equal(view.nodes.filter((node) => node.type === 'ScrollView').length, 1);
@@ -230,7 +230,7 @@ test('calendar resizing preserves the selected month and uses the current font s
 
 test('stats use the common route sheet and keep all four analysis sections', () => {
   const view = records().render();
-  assert.equal(sheet(view).props.title, '모아보기');
+  assert.equal(sheet(view).props.title, '기록 분석');
   assert.equal(sheet(view).props.backRoute, '/');
   assert.equal(sheet(view).props.scrollFade, true);
   assert.equal(sheet(view).props.contentKey, 2026);
@@ -316,4 +316,16 @@ test('year picker closes independently and analysis queries follow the selected 
   assert.equal(view.queries.find((query) => query.kind === 'habit').year, 2024);
   assert(!view.nodes.some((node) => node.type === 'HomeYearPicker'));
   assert.equal(sheet(ui.render()).props.contentKey, 2024);
+});
+
+test('home retains its shared padding wrapper and the original greeting layout', () => {
+  const view = harness('app/(tabs)/index.tsx', 'default').render();
+  const content = view.nodes.find((node) => node.type === 'View' && node.props.onLayout);
+  assert.equal(content.props.className, 'shrink-0 px-[5%] pt-[5%]');
+  const [brand, greeting, summary] = content.props.children;
+  assert(!brand.props.className.includes('px-'));
+  assert(!greeting.props.className.includes('px-'));
+  assert(!summary.props.className.includes('px-'));
+  assert.equal(summary.props.children.type, 'HomeSummarySection');
+  assert(!content.props.className.includes('overflow-hidden'));
 });

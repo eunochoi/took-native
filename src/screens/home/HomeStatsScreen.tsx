@@ -61,7 +61,13 @@ export function HomeStatsScreen({
 
   return (
     <>
-      <BottomSheetPage backRoute="/" title="모아보기" scrollFade contentKey={year} contentFullBleed>
+      <BottomSheetPage
+        backRoute="/"
+        title="기록 분석"
+        scrollFade
+        contentKey={year}
+        contentFullBleed
+      >
         <View className="gap-6">
           <View className="gap-14">
             {sections.map((section) => (
