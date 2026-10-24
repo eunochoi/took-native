@@ -54,7 +54,7 @@ export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts:
           </UnderlineTab>
         ))}
       </View>
-      <View className="mx-1 px-4 py-4 bg-theme-surface-muted/60 ios:curve-continuous rounded-theme">
+      <View className="mx-1 p-6 bg-theme-surface-muted/60 ios:curve-continuous rounded-theme">
         {records.length ? (
           visibleRecords.map(({ sober, record }, index) => {
             const status = record.current ? '진행 중' : '종료';
@@ -68,7 +68,7 @@ export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts:
                 onPress={() => {
                   openModal(`/sober/${sober.id}`);
                 }}
-                className={`flex-row items-center gap-4 min-h-12 ${index > 0 ? 'pt-4' : ''} ${index < visibleRecords.length - 1 ? 'pb-4 border-b border-theme-border/50' : ''}`}
+                className={`flex-row items-center gap-4 min-h-12 ${index > 0 ? 'pt-6' : ''} ${index < visibleRecords.length - 1 ? 'pb-6 border-b border-theme-border/50' : ''}`}
               >
                 <View className="h-9 w-9 shrink-0 items-center justify-center">
                   <SoberIcon

@@ -46,14 +46,14 @@ export function HabitAnalysis({
           </UnderlineTab>
         ))}
       </View>
-      <View className="mx-1 px-4 py-4 bg-theme-surface-muted/60 ios:curve-continuous rounded-theme">
+      <View className="mx-1 p-6 bg-theme-surface-muted/60 ios:curve-continuous rounded-theme">
         {habits.length ? (
           habits.map((habit, index) => (
             <Pressable
               key={habit.id}
               accessibilityRole="button"
               onPress={() => openModal(`/habit/${habit.id}`)}
-              className={`flex-row items-center gap-4 min-h-12 ${index > 0 ? 'pt-4' : ''} ${index < habits.length - 1 ? 'pb-4 border-b border-theme-border/50' : ''}`}
+              className={`flex-row items-center gap-4 min-h-12 ${index > 0 ? 'pt-6' : ''} ${index < habits.length - 1 ? 'pb-6 border-b border-theme-border/50' : ''}`}
             >
               <View className="h-9 w-9 shrink-0 items-center justify-center">
                 <HabitIcon name={habit.icon_key} colorKey={habit.icon_color} size={appRem * 2.25} />
