@@ -15,6 +15,7 @@ import { ChartBarIcon } from 'phosphor-react-native/src/icons/ChartBar';
 import { ChartLineIcon } from 'phosphor-react-native/src/icons/ChartLine';
 import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
 import { CheckSquareIcon } from 'phosphor-react-native/src/icons/CheckSquare';
+import { CircleHalfIcon } from 'phosphor-react-native/src/icons/CircleHalf';
 import { DotsSixVerticalIcon } from 'phosphor-react-native/src/icons/DotsSixVertical';
 import { DotsThreeVerticalIcon } from 'phosphor-react-native/src/icons/DotsThreeVertical';
 import { DownloadSimpleIcon } from 'phosphor-react-native/src/icons/DownloadSimple';
@@ -27,6 +28,7 @@ import { ImageIcon } from 'phosphor-react-native/src/icons/Image';
 import { InfoIcon } from 'phosphor-react-native/src/icons/Info';
 import { ListNumbersIcon } from 'phosphor-react-native/src/icons/ListNumbers';
 import { LockKeyIcon } from 'phosphor-react-native/src/icons/LockKey';
+import { MoonIcon } from 'phosphor-react-native/src/icons/Moon';
 import { PaletteIcon } from 'phosphor-react-native/src/icons/Palette';
 import { PencilSimpleIcon } from 'phosphor-react-native/src/icons/PencilSimple';
 import { PlayCircleIcon } from 'phosphor-react-native/src/icons/PlayCircle';
@@ -36,6 +38,7 @@ import { ShareNetworkIcon } from 'phosphor-react-native/src/icons/ShareNetwork';
 import { ShieldCheckIcon } from 'phosphor-react-native/src/icons/ShieldCheck';
 import { SmileyIcon } from 'phosphor-react-native/src/icons/Smiley';
 import { SparkleIcon } from 'phosphor-react-native/src/icons/Sparkle';
+import { SunIcon } from 'phosphor-react-native/src/icons/Sun';
 import { TimerIcon } from 'phosphor-react-native/src/icons/Timer';
 import { TrashIcon } from 'phosphor-react-native/src/icons/Trash';
 import { TrophyIcon } from 'phosphor-react-native/src/icons/Trophy';
@@ -89,6 +92,9 @@ const APP_ICONS = {
   'auto-awesome': SparkleIcon,
   undo: ArrowUUpLeftIcon,
   sober: TimerIcon,
+  'theme-light': SunIcon,
+  'theme-dark': MoonIcon,
+  'theme-system': CircleHalfIcon,
 } as const;
 
 type AppIconName = keyof typeof APP_ICONS;

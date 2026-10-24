@@ -1,115 +1,167 @@
-import { useState } from 'react';
 import { Pressable, View } from 'react-native';
+import { AppIcon } from '../../components/AppIcon';
+import { PickerOption } from '../../components/PickerOption';
 import { Text } from '../../components/Text';
 import type { Settings } from '../../settings/model';
-import { ACCENT_KEYS as accents, ACCENT_LABELS as accentLabels } from '../../theme/accents';
+import { useAppTheme } from '../../theme/AppThemeProvider';
+import { ACCENT_LABELS as accentLabels, ACCENT_KEYS as accents } from '../../theme/accents';
 import { ACCENT_PALETTES } from '../../theme/colors';
-import { AppearanceSettingsPicker } from './AppearanceSettingsPicker';
+import { EmotionIconStyleSelector } from './EmotionIconStyleSelector';
 
 const modes = ['light', 'dark', 'system'] as const;
 const sizes = ['small', 'normal', 'large'] as const;
-const modeLabels = { light: '밝게', dark: '어둡게', system: '시스템' };
+const modeLabels = { light: '밝게', dark: '어둡게', system: '자동' };
 const sizeLabels = { small: '작게', normal: '보통', large: '크게' };
+const previewSizes = { small: 13, normal: 17, large: 23 };
+const emotionStyleLabels = { basic: '기본형', simple: '단순형', emoji: '이모지' };
 
 export function AppearanceSettingsSection({
   settings,
   disabled,
+  dimmed = disabled,
   onChange,
-  onApply,
 }: {
   settings: Settings;
   disabled: boolean;
+  dimmed?: boolean;
   onChange: (patch: Partial<Settings>) => void;
-  onApply: (patch: Partial<Settings>) => Promise<void>;
 }) {
-  const [selected, setSelected] = useState<'themeMode' | 'fontSize' | null>(null);
+  const { rem: appRem } = useAppTheme();
   return (
-    <View className="gap-12">
-      <View className="gap-3">
-        <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
-          색상
-        </Text>
-        <View className="gap-6 py-2 px-1">
+    <View className="gap-3">
+      <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
+        화면 꾸미기
+      </Text>
+      <View className="gap-6 py-2 px-1">
+        <View className="gap-3">
           <View className="w-full min-w-0 flex-row flex-wrap items-center justify-between gap-2">
             <Text className="min-w-0 text-base text-theme-text-secondary">강조 색상</Text>
-            <View className="ml-auto flex-row items-center justify-between gap-2">
-              {accents.map((accent) => {
-                const selected = settings.themeAccent === accent;
-                return (
-                  <Pressable
-                    key={accent}
-                    accessibilityRole="radio"
-                    accessibilityLabel={`${accentLabels[accent]} 강조 색상`}
-                    accessibilityState={{ selected, disabled }}
-                    disabled={disabled}
-                    hitSlop={3}
-                    onPress={() => onChange({ themeAccent: accent })}
-                    className="h-8 w-8 items-center justify-center ios:curve-continuous rounded-full active:opacity-65"
+            <Text className="ml-auto text-base text-theme-accent">
+              {accentLabels[settings.themeAccent]}
+            </Text>
+          </View>
+          <View
+            accessibilityRole="radiogroup"
+            accessibilityLabel="강조 색상"
+            className={`w-full flex-row gap-1.5 py-2 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
+          >
+            {accents.map((accent) => {
+              const checked = settings.themeAccent === accent;
+              return (
+                <Pressable
+                  key={accent}
+                  accessibilityRole="radio"
+                  accessibilityLabel={`${accentLabels[accent]} 강조 색상`}
+                  accessibilityState={{ checked, disabled }}
+                  disabled={disabled}
+                  onPress={() => onChange({ themeAccent: accent })}
+                  className="min-h-12 min-w-0 flex-1 items-center justify-center active:opacity-65"
+                >
+                  <View
+                    className={`aspect-square w-14 max-w-full rounded-full border-2 p-0.5 ${checked ? 'border-theme-accent' : 'border-transparent'}`}
                   >
                     <View
-                      className={`${selected ? 'h-8 w-8' : 'h-6 w-6'} ios:curve-continuous rounded-full`}
+                      className="flex-1 rounded-full"
                       style={{ backgroundColor: ACCENT_PALETTES[accent].accent }}
                     />
-                  </Pressable>
-                );
-              })}
-            </View>
+                  </View>
+                </Pressable>
+              );
+            })}
           </View>
+        </View>
+        <View className="gap-3">
+          <View className="w-full min-w-0 flex-row flex-wrap items-center justify-between gap-2">
+            <Text className="min-w-0 text-base text-theme-text-secondary">감정 아이콘</Text>
+            <Text className="ml-auto text-base text-theme-accent">
+              {emotionStyleLabels[settings.emotionStyle]}
+            </Text>
+          </View>
+          <EmotionIconStyleSelector
+            value={settings.emotionStyle}
+            disabled={disabled}
+            dimmed={dimmed}
+            onChange={(emotionStyle) => onChange({ emotionStyle })}
+          />
+        </View>
+        <View className="gap-3">
           <View className="w-full min-w-0 flex-row flex-wrap items-center justify-between gap-2">
             <Text className="min-w-0 text-base text-theme-text-secondary">배경 색상</Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`배경 색상, ${modeLabels[settings.themeMode]}`}
-              accessibilityState={{ disabled }}
-              disabled={disabled}
-              hitSlop={8}
-              onPress={() => setSelected('themeMode')}
-              className={`ml-auto h-8 justify-center pl-2 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
-            >
-              <Text className="text-base text-theme-accent">{modeLabels[settings.themeMode]}</Text>
-            </Pressable>
+            <Text className="ml-auto text-base text-theme-accent">
+              {modeLabels[settings.themeMode]}
+            </Text>
+          </View>
+          <View accessibilityLabel="배경 색상" className="flex-row gap-2">
+            {modes.map((themeMode) => {
+              const selected = settings.themeMode === themeMode;
+              return (
+                <PickerOption
+                  key={themeMode}
+                  selected={selected}
+                  disabled={disabled}
+                  accessibilityLabel={`배경 색상, ${modeLabels[themeMode]}${themeMode === 'system' ? ', 기기 설정 따르기' : ''}`}
+                  onPress={() => onChange({ themeMode })}
+                  className={`h-28 flex-1 min-w-0 gap-3 px-2 py-4 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
+                >
+                  <View className="h-10 items-center justify-center">
+                    <AppIcon
+                      name={`theme-${themeMode}`}
+                      size={appRem * 1.75}
+                      className={selected ? 'text-theme-accent' : 'text-theme-text-primary'}
+                    />
+                  </View>
+                  <Text
+                    className={`text-center text-sm leading-5 font-medium ${selected ? 'text-theme-accent' : 'text-theme-text-primary'}`}
+                  >
+                    {modeLabels[themeMode]}
+                  </Text>
+                </PickerOption>
+              );
+            })}
+          </View>
+        </View>
+        <View className="gap-3">
+          <View className="w-full min-w-0 flex-row flex-wrap items-center justify-between gap-2">
+            <Text className="min-w-0 text-base text-theme-text-secondary">폰트 크기</Text>
+            <Text className="ml-auto text-base text-theme-accent">
+              {sizeLabels[settings.fontSize]}
+            </Text>
+          </View>
+          <View accessibilityLabel="폰트 크기" className="flex-row gap-2">
+            {sizes.map((fontSize) => {
+              const selected = settings.fontSize === fontSize;
+              return (
+                <PickerOption
+                  key={fontSize}
+                  selected={selected}
+                  disabled={disabled}
+                  accessibilityLabel={`폰트 크기, ${sizeLabels[fontSize]}`}
+                  onPress={() => onChange({ fontSize })}
+                  className={`h-28 flex-1 min-w-0 gap-3 px-2 py-4 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
+                >
+                  <View className="h-10 w-full items-center justify-center" accessible={false}>
+                    <Text
+                      size={previewSizes[fontSize]}
+                      style={{ lineHeight: previewSizes[fontSize] * 1.25 }}
+                      allowFontScaling={false}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      className={`w-full text-center font-semibold ${selected ? 'text-theme-accent' : 'text-theme-text-primary'}`}
+                    >
+                      가나다
+                    </Text>
+                  </View>
+                  <Text
+                    className={`text-center text-sm leading-5 font-medium ${selected ? 'text-theme-accent' : 'text-theme-text-primary'}`}
+                  >
+                    {sizeLabels[fontSize]}
+                  </Text>
+                </PickerOption>
+              );
+            })}
           </View>
         </View>
       </View>
-      <View className="gap-3">
-        <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
-          폰트
-        </Text>
-        <View className="py-2 px-1 w-full min-w-0 flex-row flex-wrap items-center justify-between gap-2">
-          <Text className="min-w-0 text-base text-theme-text-secondary">폰트 크기 선택</Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`폰트 크기, ${sizeLabels[settings.fontSize]}`}
-            accessibilityState={{ disabled }}
-            disabled={disabled}
-            hitSlop={8}
-            onPress={() => setSelected('fontSize')}
-            className={`ml-auto h-8 justify-center pl-2 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
-          >
-            <Text className="text-base text-theme-accent">{sizeLabels[settings.fontSize]}</Text>
-          </Pressable>
-        </View>
-      </View>
-      {selected === 'themeMode' && (
-        <AppearanceSettingsPicker
-          title="배경 색상"
-          value={settings.themeMode}
-          values={modes}
-          labels={modeLabels}
-          onClose={() => setSelected(null)}
-          onApply={(themeMode) => onApply({ themeMode })}
-        />
-      )}
-      {selected === 'fontSize' && (
-        <AppearanceSettingsPicker
-          title="폰트 크기"
-          value={settings.fontSize}
-          values={sizes}
-          labels={sizeLabels}
-          onClose={() => setSelected(null)}
-          onApply={(fontSize) => onApply({ fontSize })}
-        />
-      )}
     </View>
   );
 }

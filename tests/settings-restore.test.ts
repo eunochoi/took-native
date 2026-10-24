@@ -34,7 +34,6 @@ function harness() {
     'BackupDestinationPicker',
     'AppearanceSettingsSection',
     'BackupSection',
-    'EmotionIconStyleSelector',
     'PageTopSection',
     'NotificationSettingsSection',
   ];
@@ -48,6 +47,7 @@ function harness() {
     ).outputText,
     {
       exports,
+      Error,
       require: (name: string) => {
         if (name.endsWith('/NoticeProvider'))
           return { useNotice: () => ({ showNotice: (notice: any) => notices.push(notice) }) };
@@ -170,7 +170,6 @@ function harness() {
     confirm: () => find(tree, 'ConfirmModal').props,
     notice: () => notices.at(-1),
     appearance: () => find(tree, 'AppearanceSettingsSection').props,
-    emotion: () => find(tree, 'EmotionIconStyleSelector').props,
     setUpdate(fn: typeof update) {
       update = fn;
     },
@@ -198,34 +197,41 @@ test('settings passes a callable scroll handler to its native scrolling viewport
   assert.equal(typeof ui.scroll().props.onScroll, 'function');
 });
 
-test('appearance save errors reach the picker while immediate changes show an error notice', async () => {
+test('immediate appearance save failures show a notice and allow retry', async () => {
   const h = harness();
   h.setUpdate(async () => {
     throw new Error('저장 실패');
   });
-  await assert.rejects(h.appearance().onApply({ themeMode: 'dark' }), /저장 실패/);
-  h.render();
-  assert.equal(h.notice(), undefined);
-  assert.equal(h.backup().activity, null);
-  h.emotion().onChange('type2');
-  await tick();
+  await h.appearance().onChange({ themeMode: 'dark' });
   h.render();
   assert.equal(h.notice().title, '설정을 저장하지 못했어요');
+  assert.equal(h.notice().message, '저장 실패');
+  assert.equal(h.backup().activity, null);
+  let saves = 0;
+  h.setUpdate(async () => {
+    saves++;
+  });
+  await h.appearance().onChange({ fontSize: 'large' });
+  h.render();
+  assert.equal(saves, 1);
+  assert.equal(h.appearance().disabled, false);
 });
 
-test('appearance save rejects competing work and releases the settings lock after completion', async () => {
+test('appearance save ignores competing work and releases the settings lock after completion', async () => {
   const h = harness();
   let finish!: () => void;
-  h.setUpdate(
-    () =>
-      new Promise<void>((resolve) => {
-        finish = resolve;
-      }),
-  );
-  const pending = h.appearance().onApply({ fontSize: 'large' });
+  let saves = 0;
+  h.setUpdate(() => {
+    saves++;
+    return new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+  });
+  const pending = h.appearance().onChange({ fontSize: 'large' });
   h.render();
   assert.equal(h.appearance().disabled, true);
-  await assert.rejects(h.appearance().onApply({ themeMode: 'dark' }), /다른 작업/);
+  await h.appearance().onChange({ themeMode: 'dark' });
+  assert.equal(saves, 1);
   finish();
   await pending;
   h.render();
@@ -422,7 +428,7 @@ test('settings toolbar stays disabled while a settings save is running', async (
         finish = resolve;
       }),
   );
-  const saving = ui.appearance().onApply({ themeMode: 'dark' });
+  const saving = ui.appearance().onChange({ themeMode: 'dark' });
   ui.render();
   for (const button of ui.toolbar().props.children) {
     assert.equal(button.props.disabled, true);

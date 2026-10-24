@@ -937,8 +937,32 @@ test('emotion icon style cards share checked and unchecked appearance and remain
   assert(options[0].props.className.includes('bg-transparent'));
   assert(options[0].props.className.split(' ').includes('border-0'));
   assert(options[1].props.className.split(' ').includes('border'));
+  assert(options.every((option) => option.props.className.split(' ').includes('h-28')));
+  assert(options.every((option) => option.props.className.split(' ').includes('py-4')));
+  assert(
+    options.every((option) => option.props.children[0].props.className.split(' ').includes('h-10')),
+  );
+  assert(
+    options.every((option) =>
+      option.props.children[1].props.className.split(' ').includes('leading-5'),
+    ),
+  );
   options[0].props.onPress();
   assert.equal(changed, 'basic');
+  const compact = picker(
+    'src/screens/settings/EmotionIconStyleSelector.tsx',
+    'EmotionIconStyleSelector',
+    { value: 'simple', compact: true, disabled: false, onChange: () => {} },
+  )
+    .render()
+    .content.filter((node) => node.props.accessibilityRole === 'radio');
+  assert(compact.every((option) => !option.props.className.split(' ').includes('h-28')));
+  assert(compact.every((option) => option.props.className.split(' ').includes('py-2')));
+  assert(
+    compact.every(
+      (option) => !option.props.children[0].props.className.split(' ').includes('h-10'),
+    ),
+  );
 });
 
 function chooseDiaryYear(ui: ReturnType<typeof picker>, year: number | null) {

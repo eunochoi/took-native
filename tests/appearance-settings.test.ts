@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { runInNewContext } from 'node:vm';
+import { DEFAULT_SETTINGS, type Settings } from '../src/settings/model';
+import { ACCENT_KEYS, ACCENT_LABELS } from '../src/theme/accents';
+import { ACCENT_PALETTES } from '../src/theme/colors';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
@@ -34,176 +37,163 @@ function load(path: string, dependencies: Record<string, unknown>) {
   return exports;
 }
 
-function harness() {
-  const slots: any[] = [];
-  let cursor = 0;
-  const react = {
-    useState: (initial: any) => {
-      const i = cursor++;
-      if (!(i in slots)) slots[i] = initial;
-      return [
-        slots[i],
-        (value: any) => {
-          slots[i] = value;
-        },
-      ];
-    },
-    useRef: (initial: any) => {
-      const i = cursor++;
-      return slots[i] ?? (slots[i] = { current: initial });
-    },
-  };
-  const component = load('../src/screens/settings/AppearanceSettingsPicker.tsx', {
-    react,
-    'react-native': { View: 'View' },
+function harness(rem = 15) {
+  const changed: Partial<Settings>[] = [];
+  const component = load('../src/screens/settings/AppearanceSettingsSection.tsx', {
+    'react-native': { View: 'View', Pressable: 'Pressable' },
     'react/jsx-runtime': { jsx, jsxs: jsx },
-    '../../components/BottomSheetModal': { BottomSheetModal: 'Modal' },
-    '../../components/Button': { Button: 'Button' },
+    '../../components/AppIcon': { AppIcon: 'Icon' },
     '../../components/PickerOption': { PickerOption: 'Option' },
     '../../components/Text': { Text: 'Text' },
-  }).AppearanceSettingsPicker;
-  let apply: (value: string) => Promise<void> = async () => {};
-  const applied: string[] = [];
-  let closes = 0;
+    '../../theme/AppThemeProvider': { useAppTheme: () => ({ rem }) },
+    '../../theme/accents': { ACCENT_KEYS, ACCENT_LABELS },
+    '../../theme/colors': { ACCENT_PALETTES },
+    './EmotionIconStyleSelector': { EmotionIconStyleSelector: 'EmotionSelector' },
+  }).AppearanceSettingsSection;
   return {
-    applied,
-    closes: () => closes,
-    setApply: (next: typeof apply) => {
-      apply = next;
-    },
-    render: (value = 'light') => {
-      cursor = 0;
-      const modal = component({
-        title: '배경 색상',
-        value,
-        values: ['light', 'dark', 'system'],
-        labels: { light: '밝게', dark: '어둡게', system: '시스템' },
-        onClose: () => {
-          closes++;
-        },
-        onApply: async (next: string) => {
-          applied.push(next);
-          await apply(next);
-        },
-      });
-      return {
-        modal,
-        options: nodes(modal.props.children, 'Option'),
-        texts: nodes(modal.props.children, 'Text'),
-        save: modal.props.footer(() => {
-          closes++;
-        }).props,
-      };
-    },
+    changed,
+    render: (settings: Partial<Settings> = {}, disabled = false, dimmed = disabled) =>
+      component({
+        settings: { ...DEFAULT_SETTINGS, ...settings },
+        disabled,
+        dimmed,
+        onChange: (patch: Partial<Settings>) => changed.push(patch),
+      }),
   };
 }
 
-test('appearance selection stays temporary, cancel discards it and reopening uses persisted settings', () => {
+test('background and font size each expose three visual choices and save immediately', () => {
   const ui = harness();
-  assert.equal(ui.render().options[0].props.selected, true);
-  ui.render().options[1].props.onPress();
-  assert.equal(ui.render().options[1].props.selected, true);
-  assert.deepEqual(ui.applied, []);
-  ui.render().modal.props.onClose();
-  assert.deepEqual(ui.applied, []);
-  const reopened = harness();
-  assert.equal(reopened.render('system').options[2].props.selected, true);
-});
-
-test('appearance save prevents duplicate submissions and dismissal until persistence completes', async () => {
-  const ui = harness();
-  let finish!: () => void;
-  ui.setApply(
-    () =>
-      new Promise<void>((resolve) => {
-        finish = resolve;
-      }),
+  const tree = ui.render();
+  const options = nodes(tree, 'Option');
+  assert.equal(options.length, 6);
+  assert.deepEqual(
+    options.map((option) => option.props.accessibilityLabel),
+    [
+      '배경 색상, 밝게',
+      '배경 색상, 어둡게',
+      '배경 색상, 자동, 기기 설정 따르기',
+      '폰트 크기, 작게',
+      '폰트 크기, 보통',
+      '폰트 크기, 크게',
+    ],
   );
-  ui.render().options[1].props.onPress();
-  const save = ui.render().save.onPress;
-  const pending = save();
-  await save();
-  assert.deepEqual(ui.applied, ['dark']);
-  assert.equal(ui.render().modal.props.onBeforeClose(), false);
-  assert.equal(ui.render().save.disabled, true);
-  assert(ui.render().options.every((option) => option.props.disabled));
-  assert.equal(ui.closes(), 0);
-  finish();
-  await pending;
-  assert.equal(ui.closes(), 1);
-  assert.equal(ui.render().modal.props.onBeforeClose(), true);
+  assert.deepEqual(
+    nodes(tree, 'Icon').map((icon) => icon.props.name),
+    ['theme-light', 'theme-dark', 'theme-system'],
+  );
+  assert(options.every((option) => option.props.className.split(' ').includes('h-28')));
+  assert(options.every((option) => option.props.className.split(' ').includes('py-4')));
+  assert(
+    options.every((option) => option.props.children[0].props.className.split(' ').includes('h-10')),
+  );
+  assert(
+    options.every((option) =>
+      option.props.children[1].props.className.split(' ').includes('leading-5'),
+    ),
+  );
+  const previews = nodes(tree, 'Text').filter((text) => text.props.children === '가나다');
+  assert.equal(previews.length, 3);
+  for (const [index, size] of [13, 17, 23].entries()) {
+    assert.equal(previews[index].props.size, size);
+    assert.equal(previews[index].props.numberOfLines, 1);
+    assert.equal(previews[index].props.adjustsFontSizeToFit, true);
+  }
+  for (const option of options) option.props.onPress();
+  assert.deepEqual(
+    ui.changed.map((patch) => ({ ...patch })),
+    [
+      { themeMode: 'light' },
+      { themeMode: 'dark' },
+      { themeMode: 'system' },
+      { fontSize: 'small' },
+      { fontSize: 'normal' },
+      { fontSize: 'large' },
+    ],
+  );
 });
 
-test('failed appearance saves keep the selection open for retry and clear errors on success', async () => {
+test('font previews keep fixed sizes and line heights at every app root size', () => {
+  for (const [rem, fontSize] of [
+    [14, 'small'],
+    [15, 'normal'],
+    [16, 'large'],
+  ] as const) {
+    const tree = harness(rem).render({ fontSize });
+    const previews = nodes(tree, 'Text').filter((text) => text.props.children === '가나다');
+    assert.deepEqual(
+      previews.map((preview) => preview.props.size),
+      [13, 17, 23],
+    );
+    assert.deepEqual(
+      previews.map((preview) => preview.props.style.lineHeight),
+      [16.25, 21.25, 28.75],
+    );
+    assert(previews.every((preview) => preview.props.allowFontScaling === false));
+  }
+});
+
+test('appearance selections and right-side labels follow persisted settings', () => {
   const ui = harness();
-  ui.setApply(async () => {
-    throw new Error('저장 실패');
+  const tree = ui.render({
+    themeMode: 'system',
+    fontSize: 'large',
+    emotionStyle: 'simple',
+    themeAccent: 'purple',
   });
-  ui.render().options[2].props.onPress();
-  await ui.render().save.onPress();
-  assert.equal(ui.closes(), 0);
-  assert.equal(ui.render().options[2].props.selected, true);
-  assert.equal(ui.render().save.disabled, false);
-  assert(ui.render().texts.some((text) => text.props.children === '저장 실패'));
-  ui.setApply(async () => {});
-  await ui.render().save.onPress();
-  assert.deepEqual(ui.applied, ['system', 'system']);
-  assert.equal(ui.closes(), 1);
-  assert(!ui.render().texts.some((text) => text.props.accessibilityRole === 'alert'));
+  const options = nodes(tree, 'Option');
+  assert.deepEqual(
+    options
+      .filter((option) => option.props.selected)
+      .map((option) => option.props.accessibilityLabel),
+    ['배경 색상, 자동, 기기 설정 따르기', '폰트 크기, 크게'],
+  );
+  const texts = nodes(tree, 'Text');
+  assert.deepEqual(
+    texts
+      .filter((text) => text.props.accessibilityRole === 'header')
+      .map((text) => text.props.children),
+    ['화면 꾸미기'],
+  );
+  for (const label of ['단순형', '보라', '자동', '크게']) {
+    assert(
+      texts.some(
+        (text) => text.props.children === label && text.props.className.includes('ml-auto'),
+      ),
+    );
+  }
+  const colors = nodes(tree, 'Pressable');
+  assert.equal(colors.length, 6);
+  assert.equal(colors.filter((color) => color.props.accessibilityState.checked).length, 1);
+  colors.find((color) => color.props.accessibilityLabel === '초록 강조 색상')!.props.onPress();
+  assert.equal(ui.changed[0].themeAccent, 'green');
+  const emotion = nodes(tree, 'EmotionSelector')[0];
+  assert.equal(emotion.props.value, 'simple');
+  emotion.props.onChange('emoji');
+  assert.equal(ui.changed[1].emotionStyle, 'emoji');
+  const updated = nodes(ui.render({ themeMode: 'dark', fontSize: 'small' }), 'Option');
+  assert.deepEqual(
+    updated
+      .filter((option) => option.props.selected)
+      .map((option) => option.props.accessibilityLabel),
+    ['배경 색상, 어둡게', '폰트 크기, 작게'],
+  );
 });
 
-test('appearance rows open the correct picker and forward only the saved setting', async () => {
-  const slots: any[] = [];
-  let cursor = 0;
-  const applied: any[] = [];
-  const changed: any[] = [];
-  const component = load('../src/screens/settings/AppearanceSettingsSection.tsx', {
-    react: {
-      useState: (initial: any) => {
-        const i = cursor++;
-        if (!(i in slots)) slots[i] = initial;
-        return [
-          slots[i],
-          (next: any) => {
-            slots[i] = next;
-          },
-        ];
-      },
-    },
-    'react-native': { View: 'View', Pressable: 'Pressable' },
-    'react/jsx-runtime': { jsx, jsxs: jsx },
-    '../../components/Text': { Text: 'Text' },
-    '../../theme/accents': { ACCENT_KEYS: [], ACCENT_LABELS: {} },
-    '../../theme/colors': { ACCENT_PALETTES: {} },
-    './AppearanceSettingsPicker': { AppearanceSettingsPicker: 'Picker' },
-  }).AppearanceSettingsSection;
-  const render = (disabled = false) => {
-    cursor = 0;
-    return component({
-      settings: { themeMode: 'dark', fontSize: 'normal' },
-      disabled,
-      onChange: (patch: any) => changed.push(patch),
-      onApply: async (patch: any) => {
-        applied.push(patch);
-      },
-    });
-  };
-  assert(nodes(render(true), 'Pressable').every((row) => row.props.disabled));
-  const rows = nodes(render(), 'Pressable');
-  assert.equal(rows[0].props.accessibilityLabel, '배경 색상, 어둡게');
-  rows[0].props.onPress();
-  let picker = nodes(render(), 'Picker')[0];
-  assert.equal(picker.props.value, 'dark');
-  assert.equal(applied.length, 0);
-  await picker.props.onApply('light');
-  assert.equal(applied[0].themeMode, 'light');
-  picker.props.onClose();
-  assert.equal(nodes(render(), 'Picker').length, 0);
-  nodes(render(), 'Pressable')[1].props.onPress();
-  picker = nodes(render(), 'Picker')[0];
-  assert.equal(picker.props.title, '폰트 크기');
-  assert.equal(picker.props.value, 'normal');
-  await picker.props.onApply('large');
-  assert.equal(applied[1].fontSize, 'large');
-  assert.deepEqual(changed, []);
+test('all appearance choices disable during saves and retain the existing dimming behavior', () => {
+  const ui = harness();
+  for (const dimmed of [true, false]) {
+    const tree = ui.render({}, true, dimmed);
+    const options = nodes(tree, 'Option');
+    assert(options.every((option) => option.props.disabled));
+    assert(
+      options.every((option) =>
+        option.props.className.includes(dimmed ? 'opacity-40' : 'opacity-100'),
+      ),
+    );
+    assert(nodes(tree, 'Pressable').every((color) => color.props.disabled));
+    const emotion = nodes(tree, 'EmotionSelector')[0];
+    assert.equal(emotion.props.disabled, true);
+    assert.equal(emotion.props.dimmed, dimmed);
+  }
 });

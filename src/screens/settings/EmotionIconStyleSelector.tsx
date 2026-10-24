@@ -42,16 +42,16 @@ export function EmotionIconStyleSelector({
             SELECTION_BOX_CLASS_NAME,
             value === style ? CHECKED_BOX_CLASS_NAME : UNCHECKED_BOX_CLASS_NAME,
             'flex-1 px-2',
-            compact ? 'gap-1 py-2' : 'gap-3 py-6',
+            compact ? 'gap-1 py-2' : 'h-28 min-w-0 gap-3 py-4',
             dimmed && 'opacity-40',
           )}
         >
-          <View className="flex-row items-center gap-1">
+          <View className={`flex-row items-center justify-center gap-1 ${compact ? '' : 'h-10'}`}>
             <EmotionImage emotion={0} iconStyle={style} size={appRem * 1.75} />
             <EmotionImage emotion={6} iconStyle={style} size={appRem * 1.75} />
           </View>
           <Text
-            className={`text-center text-sm font-medium ${value === style ? 'text-theme-accent-deep' : 'text-theme-text-primary'}`}
+            className={`text-center text-sm font-medium ${compact ? '' : 'leading-5'} ${value === style ? 'text-theme-accent-deep' : 'text-theme-text-primary'}`}
           >
             {['기본형', '단순형', '이모지'][index]}
           </Text>

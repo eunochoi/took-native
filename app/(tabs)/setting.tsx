@@ -24,7 +24,6 @@ import { OnboardingSheet } from '../../src/screens/onboarding/OnboardingSheet';
 import { AppearanceSettingsSection } from '../../src/screens/settings/AppearanceSettingsSection';
 import { BackupDestinationPicker } from '../../src/screens/settings/BackupDestinationPicker';
 import { BackupSection } from '../../src/screens/settings/BackupSection';
-import { EmotionIconStyleSelector } from '../../src/screens/settings/EmotionIconStyleSelector';
 import { NotificationSettingsSection } from '../../src/screens/settings/NotificationSettingsSection';
 import type { Settings } from '../../src/settings/model';
 import { useSettings } from '../../src/settings/SettingsProvider';
@@ -67,11 +66,8 @@ export default function SettingsScreen() {
     active.current = false;
     setActivity(null);
   };
-  const change = async (patch: Partial<Settings>, reportError = true) => {
-    if (active.current) {
-      if (!reportError) throw new Error('다른 작업이 진행 중이에요. 잠시 후 다시 저장해주세요.');
-      return;
-    }
+  const change = async (patch: Partial<Settings>) => {
+    if (active.current) return;
     if (Object.entries(patch).every(([key, value]) => settings[key as keyof Settings] === value))
       return;
     active.current = true;
@@ -79,7 +75,6 @@ export default function SettingsScreen() {
     try {
       await updateSettings(patch);
     } catch (error) {
-      if (!reportError) throw error;
       showNotice({
         tone: 'error',
         title: '설정을 저장하지 못했어요',
@@ -240,28 +235,11 @@ export default function SettingsScreen() {
         </Toolbar>
         <View className="gap-12" style={{ paddingHorizontal: '5%' }}>
           <NotificationSettingsSection disabled={disabled} />
-          <View className="gap-3">
-            <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
-              감정 아이콘
-            </Text>
-            <View className="py-2 px-1">
-              <EmotionIconStyleSelector
-                value={settings.emotionStyle}
-                disabled={disabled}
-                dimmed={disabled && activity !== 'settings'}
-                onChange={(value) => {
-                  void change({ emotionStyle: value });
-                }}
-              />
-            </View>
-          </View>
           <AppearanceSettingsSection
             settings={settings}
             disabled={disabled}
-            onChange={(patch) => {
-              void change(patch);
-            }}
-            onApply={(patch) => change(patch, false)}
+            dimmed={disabled && activity !== 'settings'}
+            onChange={change}
           />
           <View className="gap-3">
             <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
