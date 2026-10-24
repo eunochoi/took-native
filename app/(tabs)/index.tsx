@@ -1,46 +1,18 @@
-import { format, parseISO } from 'date-fns';
-import { ko } from 'date-fns/locale';
-import { useRouter } from 'expo-router';
-import { useIsFocused } from 'expo-router/react-navigation';
 import { useEffect, useRef, useState } from 'react';
-import { Image, Pressable, ScrollView, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { Image, ScrollView, View } from 'react-native';
 import { ColorView } from '../../src/components/ColorTransition';
-import { EmotionImage } from '../../src/components/EmotionImage';
-import { Text } from '../../src/components/Text';
 import { Wordmark } from '../../src/components/Wordmark';
 import { useToday } from '../../src/queries';
+import { HomeGreeting } from '../../src/screens/home/HomeGreeting';
 import { HomeSummarySection } from '../../src/screens/home/HomeSummarySection';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
-import tokens from '../../src/theme/tokens.json';
 
-const greeting = {
-  '0%': { transform: [{ rotate: '5deg' }] },
-  '10%': { transform: [{ rotate: '15deg' }] },
-  '20%': { transform: [{ rotate: '-3deg' }] },
-  '32%': { transform: [{ rotate: '13deg' }] },
-  '42%': { transform: [{ rotate: '-1deg' }] },
-  '52%': { transform: [{ rotate: '10deg' }] },
-  '64%': { transform: [{ rotate: '2deg' }] },
-  '78%': { transform: [{ rotate: '7deg' }] },
-  '94%': { transform: [{ rotate: '5deg' }] },
-  '100%': { transform: [{ rotate: '5deg' }] },
-} as const;
 const cat = require('../../assets/cats/hiding-cat-home.png');
 const catSize = Image.resolveAssetSource(cat);
 
 export default function Home() {
-  const router = useRouter();
   const today = useToday();
-  const {
-    colors,
-    mode,
-    rem: appRem,
-    reducedMotion,
-    navigationBottom,
-    navigationHeight,
-  } = useAppTheme();
-  const focused = useIsFocused();
+  const { colors, mode, rem: appRem, navigationBottom, navigationHeight } = useAppTheme();
   const scrollRef = useRef<ScrollView>(null);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
@@ -65,68 +37,21 @@ export default function Home() {
         overScrollMode="never"
         showsVerticalScrollIndicator={false}
       >
-        <View className="w-full" style={{ height: viewportHeight > 0 ? pageHeight : undefined }}>
+        <View
+          className="w-full"
+          style={{
+            height: viewportHeight > 0 ? pageHeight : undefined,
+            paddingBottom: navigationBottom,
+          }}
+        >
           <View
-            className="shrink-0 px-[5%] pt-[5%]"
+            className="shrink-0 px-[5%]"
             onLayout={({ nativeEvent }) => setContentHeight(nativeEvent.layout.height)}
           >
-            <View className="mb-12 shrink-0 flex-row items-center gap-2">
+            <View className="mt-8 shrink-0 flex-row items-center">
               <Wordmark size={appRem * 3} accentColor={colors.accent} mode={mode} />
             </View>
-            <View className="mb-12 shrink-0 gap-3">
-              <View className="gap-1">
-                <Text className="px-0.5 text-theme-accent-deep font-semibold text-lg">
-                  {format(parseISO(today), 'M월 d일 EEEE', {
-                    locale: ko,
-                  })}
-                </Text>
-                <Text className="font-bold text-3xl">오늘도 툭!!</Text>
-                <View className="flex-row items-center gap-2">
-                  <Text className="font-bold text-3xl">나답게 쌓는 하루</Text>
-                  <Animated.View
-                    key={focused && !reducedMotion ? 'moving' : 'idle'}
-                    className="h-9 w-9 shrink-0 items-center justify-center"
-                    style={{
-                      transform: [{ rotate: '5deg' }],
-                      animationName: focused && !reducedMotion ? greeting : undefined,
-                      animationDuration: `${tokens.motion.greeting}ms`,
-                      animationTimingFunction: 'ease-in-out',
-                    }}
-                  >
-                    <EmotionImage emotion={1} size={appRem * 2.25} iconStyle="basic" />
-                  </Animated.View>
-                </View>
-              </View>
-              <View className="flex-row flex-wrap items-center gap-1 px-0.5">
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="감정기록 달력으로 이동"
-                  onPress={() => router.push('/calendar')}
-                  hitSlop={{ top: appRem * 0.5, bottom: appRem * 0.5 }}
-                  className="active:opacity-70"
-                >
-                  <Text className="text-theme-accent-deep text-base font-semibold">#감정기록</Text>
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="습관관리 페이지로 이동"
-                  onPress={() => router.push('/habit')}
-                  hitSlop={{ top: appRem * 0.5, bottom: appRem * 0.5 }}
-                  className="active:opacity-70"
-                >
-                  <Text className="text-theme-accent-deep text-base font-semibold">#습관관리</Text>
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="거리두기 페이지로 이동"
-                  onPress={() => router.push('/sober')}
-                  hitSlop={{ top: appRem * 0.5, bottom: appRem * 0.5 }}
-                  className="active:opacity-70"
-                >
-                  <Text className="text-theme-accent-deep text-base font-semibold">#거리두기</Text>
-                </Pressable>
-              </View>
-            </View>
+            <HomeGreeting today={today} />
             <View className="shrink-0">
               <HomeSummarySection today={today} />
             </View>

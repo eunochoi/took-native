@@ -86,6 +86,7 @@ function load(
           Wordmark: 'Wordmark',
           EmotionImage: 'EmotionImage',
           HomeSummarySection: 'HomeSummarySection',
+          HomeGreeting: 'HomeGreeting',
           ColorView: 'ColorView',
         };
       },
@@ -140,9 +141,14 @@ test('home focus remounts the greeting and reduced motion retains the resting ro
       if (result) return result;
     }
   }
-  const on = emotion(load('../app/(tabs)/index.tsx', false, true).default());
-  const off = emotion(load('../app/(tabs)/index.tsx', false, false).default());
-  const reduced = emotion(load('../app/(tabs)/index.tsx', true, true).default());
+  const props = { today: '2026-10-05' };
+  const on = emotion(load('../src/screens/home/HomeGreeting.tsx', false, true).HomeGreeting(props));
+  const off = emotion(
+    load('../src/screens/home/HomeGreeting.tsx', false, false).HomeGreeting(props),
+  );
+  const reduced = emotion(
+    load('../src/screens/home/HomeGreeting.tsx', true, true).HomeGreeting(props),
+  );
   assert(on.props.style.animationName);
   assert.equal(on.props.style.animationDuration, `${tokens.motion.greeting}ms`);
   assert.equal(off.props.style.animationName, undefined);

@@ -134,6 +134,7 @@ function harness(path: string, name: string) {
       queries = [];
       if (next !== undefined) parameter = String(next);
       const tree = exports[name]({
+        today: '2026-10-05',
         year: Number(parameter),
         currentYear: 2026,
         onYearChange: (year: number) => {
@@ -174,6 +175,7 @@ test('home fills a normal window, scrolls short windows and resets when all reco
   const content = ui.render().nodes.find((node) => node.type === 'View' && node.props.onLayout);
   content.props.onLayout({ nativeEvent: { layout: { height: 500 } } });
   assert.equal(viewport().props.children.props.style.height, 800);
+  assert.equal(viewport().props.children.props.style.paddingBottom, ui.theme.navigationBottom);
   assert.equal(viewport().props.scrollEnabled, false);
   assert.equal(viewport().props.bounces, false);
   assert.equal(viewport().props.overScrollMode, 'never');
@@ -321,11 +323,24 @@ test('year picker closes independently and analysis queries follow the selected 
 test('home retains its shared padding wrapper and the original greeting layout', () => {
   const view = harness('app/(tabs)/index.tsx', 'default').render();
   const content = view.nodes.find((node) => node.type === 'View' && node.props.onLayout);
-  assert.equal(content.props.className, 'shrink-0 px-[5%] pt-[5%]');
+  assert.equal(content.props.className, 'shrink-0 px-[5%]');
   const [brand, greeting, summary] = content.props.children;
   assert(!brand.props.className.includes('px-'));
-  assert(!greeting.props.className.includes('px-'));
+  assert.equal(greeting.type, 'HomeGreeting');
+  assert.equal(greeting.props.today, '2026-10-05');
   assert(!summary.props.className.includes('px-'));
   assert.equal(summary.props.children.type, 'HomeSummarySection');
   assert(!content.props.className.includes('overflow-hidden'));
+});
+
+test('home greeting shows the supplied date and retains all three hashtag destinations', () => {
+  const ui = harness('src/screens/home/HomeGreeting.tsx', 'HomeGreeting');
+  const view = ui.render();
+  assert(
+    view.nodes.some((node) => node.type === 'Text' && node.props.children === '2026년 10월 5일'),
+  );
+  const links = view.nodes.filter((node) => node.type === 'Pressable');
+  assert.equal(links.length, 3);
+  links.forEach((link) => link.props.onPress());
+  assert.deepEqual(ui.pushes, ['/calendar', '/habit', '/sober']);
 });
