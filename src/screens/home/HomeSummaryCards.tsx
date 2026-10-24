@@ -3,6 +3,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { AppIcon } from '../../components/AppIcon';
 import { EmotionImage } from '../../components/EmotionImage';
 import { Text } from '../../components/Text';
+import { habitProgressBand } from '../../domain/calendar';
 import { EMOTIONS } from '../../domain/constants';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { RECORD_SURFACE_CLASS_NAME } from '../../theme/classes';
@@ -107,6 +108,15 @@ export function HabitSummaryCard({
   const radius = (visualSize - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = total > 0 ? Math.min(1, Math.max(0, completed / total)) : 0;
+  const progressBand = habitProgressBand(progress * 100);
+  const progressColor =
+    progressBand === 'high'
+      ? colors.progressHigh
+      : progressBand === 'medium'
+        ? colors.progressMedium
+        : progressBand === 'low'
+          ? colors.progressLow
+          : colors.border;
   const status = error
     ? '불러오기 실패'
     : total === 0
@@ -158,7 +168,7 @@ export function HabitSummaryCard({
                   cy={visualSize / 2}
                   r={radius}
                   fill="none"
-                  stroke={colors.accent}
+                  stroke={progressColor}
                   strokeOpacity={0.15}
                   strokeWidth={stroke}
                 />
@@ -168,7 +178,7 @@ export function HabitSummaryCard({
                     cy={visualSize / 2}
                     r={radius}
                     fill="none"
-                    stroke={colors.accent}
+                    stroke={progressColor}
                     strokeWidth={stroke}
                     strokeLinecap="round"
                     strokeDasharray={[circumference, circumference]}

@@ -89,6 +89,7 @@ function render(
               colors: require('../src/theme/colors').themeColors('blue', 'light'),
             }),
           };
+        if (dependency.endsWith('domain/calendar')) return require('../src/domain/calendar');
         if (dependency.endsWith('domain/habitStats')) return require('../src/domain/habitStats');
         if (dependency.endsWith('domain/constants')) return { EMOTIONS };
         if (dependency.endsWith('domain/diaryFilters'))
@@ -813,4 +814,36 @@ test('home cards center their titles and group emotion or distance captions dire
   assert(distanceGroup.props.className.includes('justify-center gap-1'));
   assert.equal(text(distanceGroup.props.children[1]), '기록 없음');
   assert.equal(text(habit), '습관0/0습관을 추가해 보세요');
+});
+
+test('habit donut follows the calendar progress colors at the 25 and 75 percent boundaries', () => {
+  const colors = require('../src/theme/colors').themeColors('blue', 'light');
+  for (const [completed, color] of [
+    [0, colors.border],
+    [1, colors.progressLow],
+    [24, colors.progressLow],
+    [25, colors.progressMedium],
+    [74, colors.progressMedium],
+    [75, colors.progressHigh],
+    [100, colors.progressHigh],
+  ]) {
+    const tree = render(
+      'HabitSummaryCard',
+      {
+        size: 160,
+        pending: false,
+        error: false,
+        completed,
+        total: 100,
+        freeRecords: null,
+        onPress() {},
+      },
+      undefined,
+      {},
+      'HomeSummaryCards',
+    );
+    const circles = nodes(tree).filter((node) => node.type === 'Circle');
+    assert(circles.every((circle) => circle.props.stroke === color));
+    assert.equal(circles.length, completed === 0 ? 1 : 2);
+  }
 });
