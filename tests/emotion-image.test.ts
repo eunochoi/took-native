@@ -42,7 +42,9 @@ function harness(preferredStyle: string) {
       while (typeof tree.type === 'function') tree = tree.type(tree.props);
       return tree;
     },
-    get settingsReads() { return settingsReads; },
+    get settingsReads() {
+      return settingsReads;
+    },
   };
 }
 
@@ -54,8 +56,10 @@ test('emotion images follow each preferred style and retain their calendar scali
     assert.equal(image.props.source, `../../assets/emotions/${style}/happy.png`);
     assert.equal(image.props.accessibilityLabel, EMOTIONS[0].name);
     assert.equal(image.props.className, 'w-full h-full');
-    assert.equal(image.props.style.transform[0].scale,
-      style === 'simple' ? 0.85 : style === 'emoji' ? 1.2 : 1);
+    assert.equal(
+      image.props.style.transform[0].scale,
+      style === 'simple' ? 0.85 : style === 'emoji' ? 1.2 : 1,
+    );
     assert.equal(image.props.fadeDuration, 0);
   }
 });
@@ -64,8 +68,10 @@ test('real and unknown emotions retain artwork, labels and requested sizing', ()
   const ui = harness('basic');
   for (const emotion of [0, 9, 99]) {
     const image = ui.render({ emotion, size: 30 });
-    assert.equal(image.props.source,
-      `../../assets/emotions/basic/${emotion === 0 ? 'happy' : 'unknown'}.png`);
+    assert.equal(
+      image.props.source,
+      `../../assets/emotions/basic/${emotion === 0 ? 'happy' : 'unknown'}.png`,
+    );
     assert.equal(image.props.tintColor, undefined);
     assert.equal(image.props.className, undefined);
     assert.equal(image.props.accessibilityLabel, EMOTIONS[emotion]?.name ?? EMOTIONS[9].name);
@@ -79,4 +85,24 @@ test('explicit icon style overrides the preference without subscribing to settin
   const image = ui.render({ emotion: 0, iconStyle: 'basic' });
   assert.equal(image.props.source, '../../assets/emotions/basic/happy.png');
   assert.equal(ui.settingsReads, 0);
+});
+
+test('all twelve emotions resolve their own artwork in every style with 256px transparent PNGs', () => {
+  for (const style of ['basic', 'simple', 'emoji']) {
+    const ui = harness(style);
+    for (const [id, emotion] of EMOTIONS.entries()) {
+      const image = ui.render({ emotion: id });
+      assert.equal(image.props.source, `../../assets/emotions/${style}/${emotion.key}.png`);
+      assert.equal(image.props.accessibilityLabel, emotion.name);
+      const bytes = readFileSync(
+        new URL(`../assets/emotions/${style}/${emotion.key}.png`, import.meta.url),
+      );
+      assert.equal(bytes.readUInt32BE(16), 256);
+      assert.equal(bytes.readUInt32BE(20), 256);
+      assert.equal(bytes[25], 6);
+    }
+  }
+  assert.equal(EMOTIONS[9].name, '무덤덤');
+  assert.equal(EMOTIONS[10].name, '피곤함');
+  assert.equal(EMOTIONS[11].name, '싱숭생숭');
 });

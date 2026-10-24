@@ -158,7 +158,9 @@ export async function extractBackupArchive(
     if (
       manifest.format !== 'took-backup' ||
       (manifest.version !== 1 && manifest.version !== 2) ||
-      (manifest.schemaVersion !== 5 && manifest.schemaVersion !== SCHEMA_VERSION) ||
+      (manifest.schemaVersion !== 5 &&
+        manifest.schemaVersion !== 6 &&
+        manifest.schemaVersion !== SCHEMA_VERSION) ||
       typeof manifest.createdAt !== 'string' ||
       !Number.isFinite(Date.parse(manifest.createdAt)) ||
       !manifest.files ||

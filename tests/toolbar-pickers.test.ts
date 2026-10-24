@@ -460,7 +460,7 @@ test('diary emotion descriptions live inside buttons and the full season legend 
       .map((node) => node.props.children);
   for (const [label, description] of [
     ['긍정', '행복, 기쁨\n사랑, 평온'],
-    ['중립', '놀람, 무심'],
+    ['중립', '놀람, 무덤덤\n피곤함, 싱숭생숭'],
     ['부정', '불안, 슬픔\n화남, 혼란'],
   ]) {
     const option = ui

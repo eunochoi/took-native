@@ -43,7 +43,7 @@ test('diary rejects blank, overlong, future, invalid emotion and duplicate media
     { text: 'a'.repeat(501) },
     { date: '2026-10-04' },
     { emotion: 1.5 },
-    { emotion: 10 },
+    { emotion: 12 },
     { files: ['../x.jpg'] },
     { files: ['a.jpg', 'a.jpg'] },
   ])

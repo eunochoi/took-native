@@ -116,8 +116,8 @@ const emptyStats = () => ({
   current: 0,
   longest: 0,
   monthly: Array(12).fill(0),
-  emotions: Array(10).fill(0),
-  halves: [Array(10).fill(0), Array(10).fill(0)],
+  emotions: Array(EMOTIONS.length).fill(0),
+  halves: [Array(EMOTIONS.length).fill(0), Array(EMOTIONS.length).fill(0)],
 });
 
 test('today diary and habit share one card with separate navigation and loading states', () => {
@@ -292,8 +292,8 @@ test('emotion counts keep period filtering and tied badges without added summari
 test('emotion proportions group every emotion and follow all three periods', () => {
   const stats = emptyStats();
   stats.halves = [
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    [2, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 0],
+    [2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
   ];
   stats.emotions = stats.halves[0].map((count, index) => count + stats.halves[1][index]);
   for (const [period, expected] of [

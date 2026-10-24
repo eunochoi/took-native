@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { database, rows } from './database';
-import { initializeDatabase } from '../src/db/schema';
+import { initializeDatabase, SCHEMA_VERSION } from '../src/db/schema';
 import { getHabitList, saveHabit, setHabitCompletion, deleteHabit } from '../src/db/habit';
 import { saveDiary } from '../src/db/diary';
 import { readBackupDatabase, replaceRecords } from '../src/backup/database';
@@ -17,7 +17,11 @@ async function legacyDatabase() {
     );
     await legacy.db.execAsync(
       schema
-        .map(({ sql }) => sql.replace('priority BETWEEN 0 AND 3', 'priority BETWEEN 0 AND 2'))
+        .map(({ sql }) =>
+          sql
+            .replace('priority BETWEEN 0 AND 3', 'priority BETWEEN 0 AND 2')
+            .replace('emotion BETWEEN 0 AND 11', 'emotion BETWEEN 0 AND 9'),
+        )
         .join(';') + '; PRAGMA user_version = 5; PRAGMA foreign_keys = ON;',
     );
     for (const priority of [0, 1, 2]) {
@@ -59,7 +63,7 @@ test('v5 constraint upgrade preserves values, ids, completions and unrelated dat
     assert.deepEqual(rows(raw, 'SELECT * FROM habit_completions ORDER BY habit_id'), completions);
     assert.deepEqual(rows(raw, 'SELECT * FROM diaries'), diary);
     assert.deepEqual(rows(raw, 'SELECT * FROM settings'), settings);
-    assert.equal(rows(raw, 'PRAGMA user_version')[0][0], 6);
+    assert.equal(rows(raw, 'PRAGMA user_version')[0][0], SCHEMA_VERSION);
     assert.equal(rows(raw, 'PRAGMA foreign_keys')[0][0], 1);
     assert.deepEqual(rows(raw, 'PRAGMA foreign_key_check'), []);
     await initializeDatabase(db);
@@ -79,7 +83,8 @@ test('failed v5 upgrade rolls back original tables, records and version and re-e
     const wrapped = {
       ...db,
       execAsync: async (sql: string) => {
-        if (sql.includes('PRAGMA user_version = 6')) throw new Error('injected write failure');
+        if (sql.includes(`PRAGMA user_version = ${SCHEMA_VERSION}`))
+          throw new Error('injected write failure');
         await db.execAsync(sql);
       },
     } as SQLiteDatabase;

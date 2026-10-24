@@ -1,4 +1,5 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
+import { EMOTIONS } from '../domain/constants';
 import { assertYear, getStreak, todayString } from '../domain/date';
 import type { Diary, Habit } from './types';
 
@@ -19,8 +20,8 @@ export async function getDiaryStats(db: SQLiteDatabase, year: number) {
   const today = todayString();
   const monthCount = year === Number(today.slice(0, 4)) ? Number(today.slice(5, 7)) : 12;
   const monthly = Array<number>(12).fill(0);
-  const emotions = Array<number>(10).fill(0);
-  const halves = [Array<number>(10).fill(0), Array<number>(10).fill(0)];
+  const emotions = Array<number>(EMOTIONS.length).fill(0);
+  const halves = [Array<number>(EMOTIONS.length).fill(0), Array<number>(EMOTIONS.length).fill(0)];
   for (const diary of selected) {
     const month = Number(diary.date.slice(5, 7)) - 1;
     monthly[month]++;

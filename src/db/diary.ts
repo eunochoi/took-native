@@ -1,6 +1,11 @@
 import { DIARY_SEASONS, DIARY_EMOTION_GROUPS } from '../domain/diaryFilters';
 import type { SQLiteDatabase } from 'expo-sqlite';
-import { DIARY_IMAGE_MAX_COUNT, DIARY_TEXT_MAX_LENGTH, PAGE_SIZE } from '../domain/constants';
+import {
+  DIARY_IMAGE_MAX_COUNT,
+  DIARY_TEXT_MAX_LENGTH,
+  EMOTIONS,
+  PAGE_SIZE,
+} from '../domain/constants';
 import { assertDate, assertYear, todayString } from '../domain/date';
 import { withWriteLock } from './index';
 import type { Diary, DiaryDetail, DiaryFilters, DiaryImage, Habit } from './types';
@@ -118,7 +123,7 @@ export interface DiaryInput {
 export function validateDiary(input: DiaryInput, today = todayString()) {
   assertDate(input.date);
   if (input.date > today) throw new Error('미래 날짜의 일기는 작성하거나 수정할 수 없습니다.');
-  if (!Number.isInteger(input.emotion) || input.emotion < 0 || input.emotion > 9)
+  if (!Number.isInteger(input.emotion) || input.emotion < 0 || input.emotion >= EMOTIONS.length)
     throw new Error('감정을 선택해주세요.');
   if (!input.text.trim() || input.text.length > DIARY_TEXT_MAX_LENGTH)
     throw new Error(

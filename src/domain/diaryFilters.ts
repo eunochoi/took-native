@@ -6,7 +6,11 @@ export const DIARY_SEASONS = {
 } as const;
 export const DIARY_EMOTION_GROUPS = {
   positive: { label: '긍정', emotions: [0, 1, 2, 3], description: '행복, 기쁨\n사랑, 평온' },
-  neutral: { label: '중립', emotions: [4, 9], description: '놀람, 무심' },
+  neutral: {
+    label: '중립',
+    emotions: [4, 9, 10, 11],
+    description: '놀람, 무덤덤\n피곤함, 싱숭생숭',
+  },
   negative: { label: '부정', emotions: [5, 6, 7, 8], description: '불안, 슬픔\n화남, 혼란' },
 } as const;
 export type DiarySeason = keyof typeof DIARY_SEASONS;

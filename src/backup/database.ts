@@ -26,7 +26,11 @@ export async function readBackupDatabase(
     'PRAGMA query_only = ON; PRAGMA trusted_schema = OFF; PRAGMA foreign_keys = ON;',
   );
   const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-  if (version?.user_version !== 5 && version?.user_version !== SCHEMA_VERSION)
+  if (
+    version?.user_version !== 5 &&
+    version?.user_version !== 6 &&
+    version?.user_version !== SCHEMA_VERSION
+  )
     throw new Error('지원하지 않는 DB 버전입니다.');
   const integrity = await db.getFirstAsync<{ integrity_check: string }>('PRAGMA integrity_check');
   if (integrity?.integrity_check !== 'ok') throw new Error('백업 DB가 손상되었습니다.');

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { database, rows } from './database';
+import { SCHEMA_VERSION } from '../src/db/schema';
 import { readBackupDatabase, replaceRecords, validateBackupRecords } from '../src/backup/database';
 import { saveSober, saveSoberRestart } from '../src/db/sober';
 import { saveHabit } from '../src/db/habit';
@@ -68,7 +69,7 @@ test('all five basic habit and sober icons survive saving, ZIP backup and record
       });
     }
     const decoded = readArchive(createArchive({ 'took.db': source.raw.export() }));
-    assert.equal(decoded.manifest.schemaVersion, 6);
+    assert.equal(decoded.manifest.schemaVersion, SCHEMA_VERSION);
     snapshot = await database(decoded.files['took.db']);
     const records = await readBackupDatabase(snapshot.db, decoded.files);
     await replaceRecords(target.db, records, new Map());
@@ -95,7 +96,7 @@ test('all five basic habit and sober icons survive saving, ZIP backup and record
 test('Sober and restart with memo survive ZIP backup and atomic record replacement', async () => {
   const source = await fixture();
   const decoded = readArchive(createArchive(source.files));
-  assert.equal(decoded.manifest.schemaVersion, 6);
+  assert.equal(decoded.manifest.schemaVersion, SCHEMA_VERSION);
   const snapshot = await database(decoded.files['took.db']);
   const records = await readBackupDatabase(snapshot.db, decoded.files);
   const target = await database();

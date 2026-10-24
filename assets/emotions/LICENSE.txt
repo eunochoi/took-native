@@ -1,0 +1,5 @@
+FaceTired and FaceRollingEyes glyphs: Font Awesome Free 6, Fonticons, Inc.
+https://fontawesome.com/ — CC BY 4.0 https://creativecommons.org/licenses/by/4.0/
+Source paths are retained in scripts/emotion-face-glyphs.json.
+Changes: outer circle removed, TOOK colors and shared silhouettes applied, rasterized to PNG.
+FaceRollingEyes: upper eye contours closed; pupils inset to preserve a rounded upward gaze.

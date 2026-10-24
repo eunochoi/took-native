@@ -14,6 +14,8 @@ const basic = [
   require('../../assets/emotions/basic/angry.png'),
   require('../../assets/emotions/basic/confused.png'),
   require('../../assets/emotions/basic/unknown.png'),
+  require('../../assets/emotions/basic/tired.png'),
+  require('../../assets/emotions/basic/mixed.png'),
 ];
 const simple = [
   require('../../assets/emotions/simple/happy.png'),
@@ -26,6 +28,8 @@ const simple = [
   require('../../assets/emotions/simple/angry.png'),
   require('../../assets/emotions/simple/confused.png'),
   require('../../assets/emotions/simple/unknown.png'),
+  require('../../assets/emotions/simple/tired.png'),
+  require('../../assets/emotions/simple/mixed.png'),
 ];
 const emoji = [
   require('../../assets/emotions/emoji/happy.png'),
@@ -38,6 +42,8 @@ const emoji = [
   require('../../assets/emotions/emoji/angry.png'),
   require('../../assets/emotions/emoji/confused.png'),
   require('../../assets/emotions/emoji/unknown.png'),
+  require('../../assets/emotions/emoji/tired.png'),
+  require('../../assets/emotions/emoji/mixed.png'),
 ];
 interface EmotionProps {
   emotion: number;

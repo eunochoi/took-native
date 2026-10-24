@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { database, rows } from './database';
-import { initializeDatabase } from '../src/db/schema';
+import { initializeDatabase, SCHEMA_VERSION } from '../src/db/schema';
 import { saveDiary, deleteDiary, getDiaryById, getDiaryList, getDiaryYears } from '../src/db/diary';
 import { saveHabit, deleteHabit, setHabitCompletion, getCompletionsByHabit } from '../src/db/habit';
 import { getDiaryStats, getHabitStats } from '../src/db/stats';
@@ -13,7 +13,7 @@ test('schema initialization is repeatable and refuses future versions without de
   const { db, raw } = await database();
   await saveDiary(db, { date: today, emotion: 0, text: '남길 기록', files: [] });
   await initializeDatabase(db);
-  raw.exec('PRAGMA user_version = 7;');
+  raw.exec(`PRAGMA user_version = ${SCHEMA_VERSION + 1};`);
   await assert.rejects(initializeDatabase(db));
   assert.equal(rows(raw, 'SELECT count(*) FROM diaries')[0][0], 1);
   raw.close();
