@@ -349,7 +349,7 @@ test('category chips reveal the active category even when layout arrives after c
   h.render();
   h.chipRow('learning').props.onLayout({ nativeEvent: { layout: { x: 500, width: 120 } } });
   h.render();
-  assert.deepEqual(h.chipScrolls.at(-1), { x: 410, animated: false });
+  assert.deepEqual(h.chipScrolls.at(-1), { x: 350, animated: false });
 });
 
 test('short screens and large fonts move top content into the one vertical viewport while keeping the footer fixed', () => {
@@ -384,4 +384,42 @@ test('grid reduces columns for larger text and accounts for its offset when reve
   h.row('photography').props.onLayout({ nativeEvent: { layout: { y: 320 } } });
   h.shell.props.onOpened();
   assert.deepEqual(h.scrolls.at(-1), { y: 485, animated: true });
+});
+
+for (const kind of ['habit', 'sober'] as const) {
+  test(`${kind} categories extend to the sheet edges in fixed and scrolling layouts while preserving content insets`, () => {
+    const h = picker(kind, kind === 'habit' ? 'goal' : 'favorite');
+    h.shell.props.fixedContent.props.onLayout({ nativeEvent: { layout: { height: 80 } } });
+    h.render();
+    for (const height of [900, 400]) {
+      h.dimensions.height = height;
+      h.render();
+      assert.equal(!!h.shell.props.fixedContent, height === 900);
+      assert.equal(h.shell.props.contentFullBleed, true);
+      assert(h.scroll.props.contentContainerClassName.includes('px-[5%]'));
+      assert(h.chipScroll.props.className.includes('-mx-[5.555556%]'));
+      assert.equal(h.chipScroll.props.bounces, false);
+      assert.equal(h.chipScroll.props.showsHorizontalScrollIndicator, false);
+      for (const width of [320, 393, 768]) {
+        h.chipScroll.props.onLayout({ nativeEvent: { layout: { width } } });
+        h.render();
+        assert.equal(h.chipScroll.props.contentContainerStyle.paddingHorizontal, width * 0.05);
+      }
+    }
+  });
+}
+
+test('active categories stay within the scroll range after inset and viewport changes', () => {
+  const h = picker('habit', 'photography');
+  h.chipScroll.props.onLayout({ nativeEvent: { layout: { width: 400 } } });
+  h.chipScroll.props.onContentSizeChange(700, 48);
+  h.chipRow('learning').props.onLayout({ nativeEvent: { layout: { x: 200, width: 120 } } });
+  h.render();
+  assert.deepEqual(h.chipScrolls.at(-1), { x: 60, animated: false });
+  h.chipRow('learning').props.onLayout({ nativeEvent: { layout: { x: 560, width: 120 } } });
+  h.render();
+  assert.deepEqual(h.chipScrolls.at(-1), { x: 300, animated: false });
+  h.chipScroll.props.onLayout({ nativeEvent: { layout: { width: 768 } } });
+  h.render();
+  assert.deepEqual(h.chipScrolls.at(-1), { x: 0, animated: false });
 });

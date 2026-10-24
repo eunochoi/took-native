@@ -66,7 +66,10 @@ export function IconPicker<Key extends string>({
     const layout = chipLayouts[categoryId];
     if (layout && chipViewportWidth > 0) {
       chipScrollRef.current?.scrollTo({
-        x: Math.max(0, layout.x - (chipViewportWidth - layout.width) / 2),
+        x: Math.min(
+          Math.max(0, chipContentWidth - chipViewportWidth),
+          Math.max(0, layout.x - (chipViewportWidth - layout.width) / 2),
+        ),
         animated: false,
       });
     }
@@ -95,9 +98,14 @@ export function IconPicker<Key extends string>({
       <ScrollView
         ref={chipScrollRef}
         horizontal
-        className="grow-0 shrink-0"
+        // Undo the 5% sheet inset relative to its 90%-wide content.
+        className="grow-0 shrink-0 -mx-[5.555556%]"
         showsHorizontalScrollIndicator={false}
         contentContainerClassName="gap-2"
+        contentContainerStyle={{ paddingHorizontal: chipViewportWidth * 0.05 }}
+        bounces={false}
+        overScrollMode="never"
+        directionalLockEnabled
         onLayout={(event) => setChipViewportWidth(event.nativeEvent.layout.width)}
         onContentSizeChange={(width) => setChipContentWidth(width)}
       >
@@ -155,6 +163,7 @@ export function IconPicker<Key extends string>({
     <BottomSheetModal
       visible
       fixedHeight
+      contentFullBleed
       scrollFade
       title={title}
       onClose={onClose}
@@ -169,7 +178,7 @@ export function IconPicker<Key extends string>({
         <AnimatedScrollView
           {...scrollProps}
           key={contentKey}
-          contentContainerClassName="gap-3 pt-4 pb-7"
+          contentContainerClassName="gap-3 px-[5%] pt-4 pb-7"
           onContentSizeChange={(width, contentHeight) => {
             if (typeof scrollProps.onContentSizeChange === 'function') {
               scrollProps.onContentSizeChange(width, contentHeight);
