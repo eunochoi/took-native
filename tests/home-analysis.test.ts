@@ -425,7 +425,7 @@ test('emotion statistics retain all emotions and counts in one horizontal album 
   }
 });
 
-test('emotion strip always shows two whole cards and one fifth of the next at every supported text size', () => {
+test('emotion cards use 35 percent of window width at every supported app text size', () => {
   for (const layoutWidth of [320, 360, 390, 430, 768, 1024]) {
     for (const rem of [14, 15, 16]) {
       const tree = render('EmotionStats', { stats: emptyStats(), year: 2024 }, 0, {
@@ -434,15 +434,14 @@ test('emotion strip always shows two whole cards and one fifth of the next at ev
       });
       const strip = nodes(tree).find((node) => node.type === 'ScrollView');
       const card = strip.props.children[0];
-      const width = card.props.style.width;
-      const leadingInset = strip.props.contentContainerStyle.paddingHorizontal;
-      const thirdCardStart = leadingInset + 2 * width + 2 * rem * 0.75;
-      assert(width > 0);
-      assert(thirdCardStart < layoutWidth);
-      assert(Math.abs((layoutWidth - thirdCardStart) / width - 0.2) < 0.000001);
+      assert(
+        strip.props.children.every((item: any) => item.props.style.width === layoutWidth * 0.35),
+      );
+      assert.equal(strip.props.contentContainerStyle.paddingHorizontal, layoutWidth * 0.05);
+      assert.equal(strip.props.onLayout, undefined);
       const image = nodes(card).find((node) => node.type === 'EmotionImage');
-      assert(image.props.size > 0);
-      assert(image.props.size + rem * 5.25 <= width + 0.000001);
+      assert.equal(image.props.size, rem * 4);
+      assert(image.props.size + rem * 1.5 <= card.props.style.width);
     }
   }
 });

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, useWindowDimensions, View } from 'react-native';
 import { EmotionImage } from '../../components/EmotionImage';
 import { InfoNotice } from '../../components/InfoNotice';
 import { Text } from '../../components/Text';
@@ -19,10 +19,8 @@ export function EmotionStats({
   year: number;
 }) {
   const { rem: appRem, mode } = useAppTheme();
+  const { width } = useWindowDimensions();
   const [half, setHalf] = useState(0);
-  const [contentWidth, setContentWidth] = useState(0);
-  // Reserve the leading inset and two gaps, then show two cards and 20% of the next.
-  const cardSize = contentWidth > 0 ? (contentWidth * 0.95 - appRem * 1.5) / 2.2 : appRem * 10;
   const counts = half === 0 ? stats.emotions : stats.halves[half - 1];
   const total = counts.reduce((sum, count) => sum + count, 0);
   const groups = (
@@ -88,26 +86,22 @@ export function EmotionStats({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        onLayout={(event) => setContentWidth(event.nativeEvent.layout.width)}
         contentContainerClassName="flex-row items-center gap-3"
-        contentContainerStyle={{ paddingHorizontal: contentWidth * 0.05 }}
+        contentContainerStyle={{ paddingHorizontal: width * 0.05 }}
       >
         {EMOTIONS.map((emotion, index) => (
           <View
             key={emotion.key}
             accessible
             accessibilityLabel={`${emotion.name} ${counts[index]}회`}
-            className="aspect-square shrink-0 items-center justify-center p-3 ios:curve-continuous rounded-theme"
+            className="shrink-0 items-center justify-center p-3 ios:curve-continuous rounded-theme"
             style={{
-              width: cardSize,
+              width: width * 0.35,
               backgroundColor: `${emotion.color}${mode === 'dark' ? '33' : '26'}`,
             }}
           >
             <View className="items-center gap-1">
-              <EmotionImage
-                emotion={index}
-                size={Math.min(appRem * 4.5, Math.max(0, cardSize - appRem * 5.25))}
-              />
+              <EmotionImage emotion={index} size={appRem * 4} />
               <Text className="text-sm text-theme-text-secondary">{emotion.name}</Text>
               <View className="flex-row items-baseline gap-1">
                 <Text className="text-2xl font-semibold">{counts[index]}</Text>
