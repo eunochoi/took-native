@@ -24,6 +24,7 @@ import { NoticeProvider } from '../src/components/NoticeProvider';
 import { FirstRunOnboarding } from '../src/screens/onboarding/OnboardingSheet';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+const MIN_SPLASH_DURATION_MS = 1_500;
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { staleTime: 30_000, retry: false, networkMode: 'always' },
@@ -126,11 +127,17 @@ export default function RootLayout() {
   const [attempt, setAttempt] = useState(0);
   const [navigationReady, setNavigationReady] = useState(false);
   const [imagesReady, setImagesReady] = useState(false);
+  const [minimumSplashElapsed, setMinimumSplashElapsed] = useState(false);
+  const appReady = navigationReady && imagesReady && minimumSplashElapsed;
   const onNavigationReady = useCallback(() => setNavigationReady(true), []);
   const onImagesReady = useCallback(() => setImagesReady(true), []);
   useEffect(() => {
-    if (imagesReady) void SplashScreen.hideAsync().catch(() => undefined);
-  }, [imagesReady]);
+    const timeout = setTimeout(() => setMinimumSplashElapsed(true), MIN_SPLASH_DURATION_MS);
+    return () => clearTimeout(timeout);
+  }, []);
+  useEffect(() => {
+    if (appReady) void SplashScreen.hideAsync().catch(() => undefined);
+  }, [appReady]);
   const onError = useCallback((value: Error) => setError(value), []);
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) =>
@@ -177,7 +184,7 @@ export default function RootLayout() {
               </Pressable>
             </SafeAreaView>
           ) : (
-            <AppReadyContext.Provider value={navigationReady && imagesReady}>
+            <AppReadyContext.Provider value={appReady}>
               <SQLiteProvider
                 key={attempt}
                 databaseName="took.db"
@@ -197,9 +204,7 @@ export default function RootLayout() {
               </SQLiteProvider>
             </AppReadyContext.Provider>
           )}
-          {!error && (!navigationReady || !imagesReady) && (
-            <AppLoadingScreen onReady={onImagesReady} onError={onError} />
-          )}
+          {!error && !appReady && <AppLoadingScreen onReady={onImagesReady} onError={onError} />}
         </View>
       </QueryClientProvider>
     </SafeAreaProvider>

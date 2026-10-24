@@ -13,10 +13,17 @@ function find(tree: any, predicate: (node: any) => boolean): any {
   return predicate(tree) ? tree : find(tree.props?.children, predicate);
 }
 
-test('startup readiness reaches cached SQLite children through context after both loading events', () => {
+function startupHarness() {
   const state: any[] = [];
+  const timers = new Map<number, { at: number; run: () => void }>();
+  const effects: (() => void)[] = [];
+  const cleanups = new Map<number, () => void>();
   let cursor = 0;
   let ready = false;
+  let readingNavigation = false;
+  let now = 0;
+  let nextTimer = 0;
+  let hideCalls = 0;
   const exports: any = {};
   const componentNames = [
     'AppThemeProvider',
@@ -33,6 +40,12 @@ test('startup readiness reaches cached SQLite children through context after bot
     }).outputText,
     {
       exports,
+      setTimeout(run: () => void, delay: number) {
+        const id = ++nextTimer;
+        timers.set(id, { at: now + delay, run });
+        return id;
+      },
+      clearTimeout: (id: number) => timers.delete(id),
       require(name: string) {
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react')
@@ -40,20 +53,47 @@ test('startup readiness reaches cached SQLite children through context after bot
             createContext: () => ({ Provider: 'AppReadyProvider' }),
             useContext: () => ready,
             useCallback: (fn: Function) => fn,
-            useEffect: () => {},
+            useEffect: (fn: () => void | (() => void), deps: any[]) => {
+              if (readingNavigation) return;
+              const i = cursor++;
+              if (i in state && deps.every((value, index) => value === state[i][index])) return;
+              state[i] = deps;
+              effects.push(() => {
+                cleanups.get(i)?.();
+                const cleanup = fn();
+                if (cleanup) cleanups.set(i, cleanup);
+                else cleanups.delete(i);
+              });
+            },
             useState: (initial: any) => {
               const i = cursor++;
               if (!(i in state)) state[i] = initial;
               return [
                 state[i],
                 (value: any) => {
-                  state[i] = value;
+                  state[i] = typeof value === 'function' ? value(state[i]) : value;
                 },
               ];
             },
           };
-        if (name === 'react-native') return { View: 'View', AppState: {}, Pressable: 'Pressable' };
-        if (name === 'expo-splash-screen') return { preventAutoHideAsync: async () => {} };
+        if (name === 'react-native')
+          return {
+            View: 'View',
+            AppState: { addEventListener: () => ({ remove() {} }) },
+            Pressable: 'Pressable',
+            Text: 'NativeText',
+            Platform: { OS: 'ios' },
+          };
+        if (name === 'react-native-safe-area-context')
+          return { SafeAreaProvider: 'SafeAreaProvider', SafeAreaView: 'SafeAreaView' };
+        if (name === '../src/theme/colors') return { themeColors: () => ({}) };
+        if (name === 'expo-splash-screen')
+          return {
+            preventAutoHideAsync: async () => {},
+            hideAsync: async () => {
+              hideCalls++;
+            },
+          };
         if (name === 'expo-sqlite') return { SQLiteProvider: 'SQLiteProvider' };
         if (name === '@tanstack/react-query')
           return { QueryClient: class {}, QueryClientProvider: 'QueryClientProvider' };
@@ -75,8 +115,41 @@ test('startup readiness reaches cached SQLite children through context after bot
   );
   const render = () => {
     cursor = 0;
-    return exports.default();
+    const tree = exports.default();
+    effects.splice(0).forEach((effect) => effect());
+    ready = find(tree, (node) => node.type === 'AppReadyProvider')?.props.value ?? false;
+    return tree;
   };
+  return {
+    render,
+    advance(ms: number) {
+      now += ms;
+      for (const [id, timer] of timers) {
+        if (timer.at > now) continue;
+        timers.delete(id);
+        timer.run();
+      }
+    },
+    guide(navigation: any) {
+      readingNavigation = true;
+      try {
+        return find(
+          navigation.type(navigation.props),
+          (node) => node.type === 'FirstRunOnboarding',
+        );
+      } finally {
+        readingNavigation = false;
+      }
+    },
+    hideCalls: () => hideCalls,
+    pendingTimers: () => timers.size,
+    unmount: () => cleanups.forEach((cleanup) => cleanup()),
+  };
+}
+
+test('startup reaches cached SQLite children only after readiness and the 1.5 second minimum', () => {
+  const h = startupHarness();
+  const { render } = h;
   const first = render();
   const context = (tree: any) => find(tree, (node) => node.type === 'AppReadyProvider');
   const sqlite = find(first, (node) => node.type === 'SQLiteProvider');
@@ -85,17 +158,78 @@ test('startup readiness reaches cached SQLite children through context after bot
     sqlite,
     (node) => typeof node.type === 'function' && node.type.name === 'Navigation',
   );
-  const guide = () =>
-    find(navigation.type(navigation.props), (node) => node.type === 'FirstRunOnboarding');
   assert.equal(context(first).props.value, false);
-  assert.equal(guide().props.ready, false);
+  assert.equal(h.guide(navigation).props.ready, false);
   navigation.props.onReady();
-  ready = context(render()).props.value;
-  assert.equal(ready, false);
+  assert.equal(context(render()).props.value, false);
   const loading = find(first, (node) => node.type === 'AppLoadingScreen');
   loading.props.onReady();
-  ready = context(render()).props.value;
-  assert.equal(ready, true);
-  assert.equal(guide().props.ready, true);
+  assert.equal(context(render()).props.value, false);
+  h.advance(1499);
+  const waiting = render();
+  assert.equal(context(waiting).props.value, false);
+  assert.ok(find(waiting, (node) => node.type === 'AppLoadingScreen'));
+  assert.equal(h.hideCalls(), 0);
+  assert.equal(h.guide(navigation).props.ready, false);
+  h.advance(1);
+  const finished = render();
+  assert.equal(context(finished).props.value, true);
+  assert.equal(
+    find(finished, (node) => node.type === 'AppLoadingScreen'),
+    undefined,
+  );
+  assert.equal(h.hideCalls(), 1);
+  assert.equal(h.guide(navigation).props.ready, true);
   assert.equal(navigation.props.ready, undefined);
+  render();
+  assert.equal(h.hideCalls(), 1);
+});
+
+test('slow startup waits for images and navigation without adding another splash delay', () => {
+  const h = startupHarness();
+  const first = h.render();
+  h.advance(2500);
+  h.render();
+  assert.equal(h.hideCalls(), 0);
+  find(first, (node) => node.type === 'AppLoadingScreen').props.onReady();
+  h.render();
+  assert.equal(h.hideCalls(), 0);
+  find(first, (node) => node.type?.name === 'Navigation').props.onReady();
+  const finished = h.render();
+  assert.equal(h.hideCalls(), 1);
+  assert.equal(find(finished, (node) => node.type === 'AppReadyProvider').props.value, true);
+  assert.equal(h.pendingTimers(), 0);
+});
+
+test('startup errors reveal retry UI immediately and retry does not restart the minimum', () => {
+  const h = startupHarness();
+  const first = h.render();
+  find(first, (node) => node.type === 'SQLiteProvider').props.onError(new Error('database failed'));
+  const errorScreen = h.render();
+  assert.equal(
+    find(errorScreen, (node) => node.type === 'AppLoadingScreen'),
+    undefined,
+  );
+  find(errorScreen, (node) => node.type === 'SafeAreaView').props.onLayout();
+  assert.equal(h.hideCalls(), 1);
+  h.advance(1500);
+  h.render();
+  find(errorScreen, (node) => node.type === 'Pressable').props.onPress();
+  const retry = h.render();
+  find(retry, (node) => node.type === 'AppLoadingScreen').props.onReady();
+  find(retry, (node) => node.type?.name === 'Navigation').props.onReady();
+  const finished = h.render();
+  assert.equal(find(finished, (node) => node.type === 'AppReadyProvider').props.value, true);
+  assert.equal(h.hideCalls(), 2);
+  assert.equal(h.pendingTimers(), 0);
+});
+
+test('unmount cancels the splash minimum timer', () => {
+  const h = startupHarness();
+  h.render();
+  assert.equal(h.pendingTimers(), 1);
+  h.unmount();
+  assert.equal(h.pendingTimers(), 0);
+  h.advance(1500);
+  assert.equal(h.hideCalls(), 0);
 });
