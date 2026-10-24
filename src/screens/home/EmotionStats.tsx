@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { Badge } from '../../components/Badge';
 import { EmotionImage } from '../../components/EmotionImage';
+import { InfoNotice } from '../../components/InfoNotice';
 import { Text } from '../../components/Text';
 import { UnderlineTab } from '../../components/UnderlineTab';
 import type { getDiaryStats } from '../../db/stats';
@@ -109,6 +110,13 @@ export function EmotionStats({
               );
             })}
           </View>
+        ))}
+      </View>
+      <View className="gap-2">
+        {groups.map((group) => (
+          <InfoNotice key={group.key}>
+            {`${group.label}: ${DIARY_EMOTION_GROUPS[group.key].description.replace(/\n/g, ', ')}`}
+          </InfoNotice>
         ))}
       </View>
     </View>

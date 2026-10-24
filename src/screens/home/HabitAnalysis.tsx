@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { HabitIcon } from '../../components/HabitIcon';
+import { InfoNotice } from '../../components/InfoNotice';
 import { Text } from '../../components/Text';
 import { UnderlineTab } from '../../components/UnderlineTab';
 import type { getHabitStats } from '../../db/stats';
@@ -82,6 +83,7 @@ export function HabitAnalysis({
           {year}년에 완료한 집계 대상 습관이 없어요.
         </Text>
       )}
+      <InfoNotice>자유 기록은 습관 기록 집계에 포함되지 않아요.</InfoNotice>
     </View>
   );
 }
