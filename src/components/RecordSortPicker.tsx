@@ -102,6 +102,7 @@ export function RecordSortPicker({
               {(['DESC', 'ASC'] as const).map((value) => (
                 <View key={value} className="flex-1">
                   <PickerOption
+                    keepUncheckedBorder
                     compact
                     selected={draftRecordSort === value}
                     accessibilityLabel={`현재 기록 ${value === 'DESC' ? '긴 기록순' : '짧은 기록순'}`}
@@ -124,6 +125,7 @@ export function RecordSortPicker({
             {options.map((option) => (
               <View key={option.value} className="flex-1">
                 <PickerOption
+                  keepUncheckedBorder
                   compact
                   selected={draftSort === option.value}
                   accessibilityLabel={option.label}

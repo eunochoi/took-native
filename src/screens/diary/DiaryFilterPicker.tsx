@@ -94,6 +94,7 @@ export function DiaryFilterPicker({
                 return (
                   <View key={value} className="flex-1 min-w-0">
                     <PickerOption
+                      keepUncheckedBorder
                       compact
                       checkbox
                       selected={selected}
@@ -142,6 +143,7 @@ export function DiaryFilterPicker({
             return (
               <View key={value} className="flex-1 min-w-0">
                 <PickerOption
+                  keepUncheckedBorder
                   compact
                   dense
                   checkbox
@@ -176,6 +178,7 @@ export function DiaryFilterPicker({
             <View className="gap-3">
               {[null, ...(yearsQuery.data ?? [])].map((value) => (
                 <PickerOption
+                  keepUncheckedBorder
                   key={value ?? 'all'}
                   compact
                   selected={selectedYear === value}

@@ -205,6 +205,11 @@ test('sort and priority are drafts and commit together only after the sheet clos
     .content.filter((node) => ['Switch', 'PickerOption'].includes(node.type));
   assert.equal(choices[0].type, 'Switch');
   assert.equal(choices[0].props.accessibilityLabel, '중요한 항목 먼저');
+  assert(
+    choices
+      .filter((node) => node.type === 'PickerOption')
+      .every((node) => node.props.keepUncheckedBorder),
+  );
   ui.press('과거순');
   ui.press('중요한 항목 먼저');
   assert.equal(ui.applied.length, 0);
@@ -497,6 +502,7 @@ test('all filters keep reset in the header and apply in the footer', () => {
   }
   assert(!diary.content.some((node) => node.type === 'EmotionImage'));
   assert(choices.every((node) => node.props.compact));
+  assert(choices.every((node) => node.props.keepUncheckedBorder));
   for (const ui of [
     picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
       filter: { completedOnly: false, priorities: [] },
@@ -597,6 +603,9 @@ test('filter toolbar keeps a leading star group whole and retains separators bet
 
 test('sober sorting shows priority, record, creation in order and applies drafts together', () => {
   const ui = sortPicker({ priorityFirst: false, recordSort: 'DESC', sortLabel: '생성일' });
+  const choices = ui.render().content.filter((node) => node.type === 'PickerOption');
+  assert.equal(choices.length, 4);
+  assert(choices.every((node) => node.props.keepUncheckedBorder));
   const headings = ui
     .render()
     .content.filter(
@@ -710,6 +719,7 @@ test('habit filter combines completed-only with multiple priorities and resets a
     ['자유 기록', '별표 1개', '별표 2개', '별표 3개'],
   );
   assert(choices.every((node) => node.props.checkbox));
+  assert(choices.every((node) => node.props.keepUncheckedBorder));
   ui.press('완료한 항목만 보기');
   ui.press('별표 1개');
   ui.press('별표 2개');
@@ -733,6 +743,12 @@ test('sober filters draft importance and one minimum period, with cancel and res
   assert(!ui.render().content.some((node) => node.type === 'PickerOption'));
   ui.press('중요한 항목만 보기');
   ui.press('최소 유지 기간 선택');
+  assert(
+    ui
+      .render()
+      .content.filter((node) => node.type === 'PickerOption')
+      .every((node) => node.props.keepUncheckedBorder),
+  );
   ui.press('현재 기록 1주 이상');
   ui.press('최소 유지 기간 선택');
   ui.press('현재 기록 2주 이상');
@@ -768,6 +784,7 @@ test('diary year list includes only recorded years plus all years and marks one 
     .render()
     .content.filter((node) => node.type === 'PickerOption' && !node.props.checkbox);
   assert.equal(choices.length, 4);
+  assert(choices.every((node) => node.props.keepUncheckedBorder));
   assert.equal(choices[0].props.accessibilityLabel, '전체 연도');
   assert.equal(choices[1].props.accessibilityLabel, '2026년');
   assert.equal(choices.at(-1).props.accessibilityLabel, '1900년');
@@ -842,12 +859,29 @@ test('picker checkbox accessibility announces checked state without changing ord
     }).render().shell;
     assert.equal(checkbox.props.accessibilityRole, 'checkbox');
     assert.equal(checkbox.props.accessibilityState.checked, selected);
+    assert(checkbox.props.className.split(' ').includes(selected ? 'border' : 'border-0'));
     const option = picker('src/components/PickerOption.tsx', 'PickerOption', {
       selected,
       accessibilityLabel: '일반 선택',
     }).render().shell;
     assert.equal(option.props.accessibilityRole, 'button');
     assert.equal(option.props.accessibilityState.selected, selected);
+    const classes = option.props.className.split(' ');
+    assert(classes.includes(selected ? 'border' : 'border-0'));
+    assert(classes.includes(selected ? 'bg-theme-accent-light/50' : 'bg-transparent'));
+    for (const checkbox of [false, true]) {
+      const bordered = picker('src/components/PickerOption.tsx', 'PickerOption', {
+        selected,
+        checkbox,
+        keepUncheckedBorder: true,
+        accessibilityLabel: '정렬·필터 선택',
+      }).render().shell;
+      const borderedClasses = bordered.props.className.split(' ');
+      assert(borderedClasses.includes('border'));
+      assert(!borderedClasses.includes('border-0'));
+      assert(borderedClasses.includes(selected ? 'border-theme-accent' : 'border-theme-border'));
+      assert(borderedClasses.includes(selected ? 'bg-theme-accent-light/50' : 'bg-transparent'));
+    }
   }
 });
 
@@ -901,7 +935,8 @@ test('emotion icon style cards share checked and unchecked appearance and remain
   assert.equal(options.filter((node) => node.props.accessibilityState.checked).length, 1);
   assert(options[1].props.className.includes('bg-theme-accent-light/50'));
   assert(options[0].props.className.includes('bg-transparent'));
-  assert(options[0].props.className.includes('border-theme-border'));
+  assert(options[0].props.className.split(' ').includes('border-0'));
+  assert(options[1].props.className.split(' ').includes('border'));
   options[0].props.onPress();
   assert.equal(changed, 'basic');
 });

@@ -54,7 +54,7 @@ export function IconColorPicker({
               <View className="flex-1 min-w-0">
                 <PickerOption
                   compact
-                  className={`aspect-[0.85] w-full min-h-0 justify-center gap-2 rounded-2xl p-2 ${draft === key ? '' : 'border-transparent'}`}
+                  className="aspect-[0.85] w-full min-h-0 justify-center gap-2 rounded-2xl p-2"
                   selected={draft === key}
                   accessibilityLabel={label}
                   onPress={() => setDraft(key)}

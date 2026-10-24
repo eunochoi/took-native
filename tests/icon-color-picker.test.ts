@@ -61,20 +61,15 @@ test('color picker combines theme and eleven colors in equal-height four-column 
   const grid = tree.props.children;
   assert.equal(grid.props.numColumns, 4);
   assert.equal(grid.props.data.length, 12);
-  assert.equal(grid.props.columnWrapperClassName, 'gap-3');
-  assert(grid.props.contentContainerClassName.includes('gap-3'));
+  assert.equal(grid.props.columnWrapperClassName, 'gap-1');
+  assert(grid.props.contentContainerClassName.includes('gap-1'));
   assert.equal(grid.props.onScroll, 'sheet-scroll');
   assert(grid.props.children.every((node: any) => node.props.className === 'flex-1 min-w-0'));
   assert(options().every((node) => node.props.className.includes('aspect-')));
   assert.equal(options().length, 12);
   assert.equal(options()[0].props.accessibilityLabel, '기본');
   assert.equal(options()[0].props.selected, true);
-  assert(!options()[0].props.className.includes('border-transparent'));
-  assert(
-    options()
-      .slice(1)
-      .every((node) => node.props.className.includes('border-transparent')),
-  );
+  assert(options().every((node) => node.props.className === options()[0].props.className));
   assert.equal(
     nodes(options()[0]).find((node) => node.props?.style?.backgroundColor)?.props.style
       .backgroundColor,

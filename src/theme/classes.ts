@@ -21,7 +21,7 @@ export const PROGRESS_FILL_CLASS_NAME = 'bg-theme-accent';
 export const SELECTION_BOX_CLASS_NAME =
   'items-center justify-center border ios:curve-continuous rounded-xl active:opacity-70';
 export const CHECKED_BOX_CLASS_NAME = 'border-theme-accent bg-theme-accent-light/50';
-export const UNCHECKED_BOX_CLASS_NAME = 'border-theme-border bg-transparent';
+export const UNCHECKED_BOX_CLASS_NAME = 'border-0 bg-transparent';
 
 export const PICKER_DESCRIPTION_CLASS_NAME =
   'text-center text-xs leading-4 text-theme-text-secondary';

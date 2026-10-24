@@ -69,6 +69,7 @@ export function SoberFilterPicker({
               <View className="gap-3">
                 {SOBER_RECORD_FILTERS.map((option) => (
                   <PickerOption
+                    keepUncheckedBorder
                     key={option.days}
                     compact
                     selected={draft.minimumDays === option.days}

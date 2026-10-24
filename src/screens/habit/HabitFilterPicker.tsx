@@ -67,6 +67,7 @@ export function HabitFilterPicker({
                 return (
                   <View key={priority} className="flex-1 min-w-0">
                     <PickerOption
+                      keepUncheckedBorder
                       compact
                       checkbox
                       selected={selected}
