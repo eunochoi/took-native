@@ -30,49 +30,44 @@ const out = path.resolve(__dirname, '../assets/ui');
         const context = canvas.getContext('2d');
         context.drawImage(image, 0, 0);
         const original = context.getImageData(0, 0, canvas.width, canvas.height);
-        // Source artwork columns: T, stacked circles, K. Move whole elements only.
-        const circleStart = 704;
-        const kStart = 1060;
-        let leftGap = Infinity;
-        let rightGap = Infinity;
-        for (let y = 0; y < original.height; y++) {
-          let tRight = -1;
-          let circleLeft = Infinity;
-          let circleRight = -1;
-          let kLeft = Infinity;
-          for (let x = 0; x < original.width; x++) {
+        // The canonical source already contains the approved spacing and smile.
+        const columns = [];
+        for (let x = 0; x < original.width; x++) {
+          let occupied = false;
+          for (let y = 0; y < original.height; y++) {
             if (original.data[(y * original.width + x) * 4 + 3] <= 200) continue;
-            if (x < circleStart) tRight = x;
-            else if (x < kStart) {
-              circleLeft = Math.min(circleLeft, x);
-              circleRight = x;
-            } else kLeft = Math.min(kLeft, x);
+            occupied = true;
+            break;
           }
-          if (tRight >= 0 && circleRight >= 0) {
-            leftGap = Math.min(leftGap, circleLeft - tRight - 1);
-          }
-          if (circleRight >= 0 && Number.isFinite(kLeft)) {
-            rightGap = Math.min(rightGap, kLeft - circleRight - 1);
-          }
+          if (!occupied) continue;
+          const previous = columns[columns.length - 1];
+          if (previous && previous[1] === x - 1) previous[1] = x;
+          else columns.push([x, x]);
         }
-        if (!Number.isFinite(leftGap + rightGap) || leftGap <= 0 || rightGap <= 0) {
-          throw new Error('Cannot measure the gaps between wordmark elements.');
+        if (columns.length !== 3) {
+          throw new Error('Expected separate T, stacked circles and K in the source wordmark.');
         }
-        canvas.width = original.width + leftGap + rightGap;
-        const accentPixels = [];
-        let brightness = 0;
-        let weight = 0;
-        for (let i = 0; i < original.data.length; i += 4) {
-          const [r, g, b, alpha] = original.data.subarray(i, i + 4);
-          if (alpha && b - r > 15) {
-            accentPixels.push(i);
-            brightness += ((r + g + b) / 3) * alpha;
-            weight += alpha;
-          }
+        const [circleLeft, circleRight] = columns[1];
+        const circleCenter = Math.round((circleLeft + circleRight) / 2);
+        const rows = [];
+        for (let y = 0; y < original.height; y++) {
+          if (original.data[(y * original.width + circleCenter) * 4 + 3] <= 200) continue;
+          const previous = rows[rows.length - 1];
+          if (previous && previous[1] === y - 1) previous[1] = y;
+          else rows.push([y, y]);
         }
-        if (!weight) throw new Error('No blue accent pixels found in the source wordmark.');
-        const mean = brightness / weight;
-        const accentMask = new Set(accentPixels);
+        if (rows.length !== 2)
+          throw new Error('Expected two separate circles in the source wordmark.');
+        const lowerCircleTop = rows[1][0];
+        const neutral = [1, 3, 5].map((start) =>
+          parseInt(tokens.colorValues.lightTextPrimary.slice(start, start + 2), 16),
+        );
+        const darkNeutral = [1, 3, 5].map((start) =>
+          parseInt(tokens.colorValues.wordmarkDarkForeground.slice(start, start + 2), 16),
+        );
+        const sourceBlue = [1, 3, 5].map((start) =>
+          parseInt(tokens.colorValues.blueAccent.slice(start, start + 2), 16),
+        );
         const images = {};
         for (const [name, palette] of Object.entries(tokens.colors.accents)) {
           const hex = tokens.colorValues[palette.accent];
@@ -83,19 +78,21 @@ const out = path.resolve(__dirname, '../assets/ui');
               if (!original.data[i + 3]) continue;
               const x = (i / 4) % original.width;
               const y = Math.floor(i / 4 / original.width);
-              const shift = x < circleStart ? 0 : x < kStart ? leftGap : leftGap + rightGap;
-              const destination = (y * canvas.width + x + shift) * 4;
-              const isAccent = accentMask.has(i);
-              const tone =
-                (original.data[i] + original.data[i + 1] + original.data[i + 2]) / 3 - mean;
+              // Preserve antialiased blue/gray mixtures along the eyes and mouth.
+              const accentWeight = Math.max(
+                0,
+                Math.min(
+                  1,
+                  (original.data[i + 2] - original.data[i]) / (sourceBlue[2] - sourceBlue[0]),
+                ),
+              );
+              const isFace = x >= circleLeft && x <= circleRight && y >= lowerCircleTop;
+              const foreground = mode === 'dark' && !isFace ? darkNeutral : neutral;
               for (let channel = 0; channel < 3; channel++) {
-                result.data[destination + channel] = isAccent
-                  ? color[channel] + tone
-                  : mode === 'dark'
-                    ? 255
-                    : original.data[i + channel];
+                result.data[i + channel] =
+                  color[channel] * accentWeight + foreground[channel] * (1 - accentWeight);
               }
-              result.data[destination + 3] = original.data[i + 3];
+              result.data[i + 3] = original.data[i + 3];
             }
             context.putImageData(result, 0, 0);
             const filename =
