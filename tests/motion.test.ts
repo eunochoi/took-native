@@ -76,6 +76,7 @@ function load(
             Image: { resolveAssetSource: () => ({ width: 100, height: 100 }) },
           };
         if (name === 'expo-linear-gradient') return { LinearGradient: 'LinearGradient' };
+        if (name === 'expo-router') return { useRouter: () => ({ push: () => {} }) };
         if (name === 'expo-router/react-navigation') return { useIsFocused: () => focused };
         if (name === 'date-fns')
           return { format: () => '오늘', parseISO: (value: unknown) => value };

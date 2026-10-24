@@ -1,8 +1,9 @@
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useRouter } from 'expo-router';
 import { useIsFocused } from 'expo-router/react-navigation';
 import { useEffect, useRef, useState } from 'react';
-import { Image, ScrollView, View } from 'react-native';
+import { Image, Pressable, ScrollView, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { ColorView } from '../../src/components/ColorTransition';
 import { EmotionImage } from '../../src/components/EmotionImage';
@@ -29,6 +30,7 @@ const cat = require('../../assets/cats/hiding-cat-home.png');
 const catSize = Image.resolveAssetSource(cat);
 
 export default function Home() {
+  const router = useRouter();
   const today = useToday();
   const {
     colors,
@@ -95,9 +97,35 @@ export default function Home() {
                   </Animated.View>
                 </View>
               </View>
-              <Text className="px-0.5 text-theme-accent-deep text-base font-semibold">
-                #감정기록 #습관관리 #거리두기
-              </Text>
+              <View className="flex-row flex-wrap items-center gap-1 px-0.5">
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="감정기록 달력으로 이동"
+                  onPress={() => router.push('/calendar')}
+                  hitSlop={{ top: appRem * 0.5, bottom: appRem * 0.5 }}
+                  className="active:opacity-70"
+                >
+                  <Text className="text-theme-accent-deep text-base font-semibold">#감정기록</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="습관관리 페이지로 이동"
+                  onPress={() => router.push('/habit')}
+                  hitSlop={{ top: appRem * 0.5, bottom: appRem * 0.5 }}
+                  className="active:opacity-70"
+                >
+                  <Text className="text-theme-accent-deep text-base font-semibold">#습관관리</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="거리두기 페이지로 이동"
+                  onPress={() => router.push('/sober')}
+                  hitSlop={{ top: appRem * 0.5, bottom: appRem * 0.5 }}
+                  className="active:opacity-70"
+                >
+                  <Text className="text-theme-accent-deep text-base font-semibold">#거리두기</Text>
+                </Pressable>
+              </View>
             </View>
             <View className="shrink-0">
               <TodayRecordSection today={today} />
