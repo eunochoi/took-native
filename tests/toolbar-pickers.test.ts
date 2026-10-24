@@ -191,9 +191,9 @@ test('sort and priority are drafts and commit together only after the sheet clos
     .render()
     .content.filter((node) => ['Switch', 'PickerOption'].includes(node.type));
   assert.equal(choices[0].type, 'Switch');
-  assert.equal(choices[0].props.accessibilityLabel, '중요도 우선');
+  assert.equal(choices[0].props.accessibilityLabel, '중요한 항목 먼저');
   ui.press('과거순');
-  ui.press('중요도 우선');
+  ui.press('중요한 항목 먼저');
   assert.equal(ui.applied.length, 0);
   ui.press('적용하기');
   assert.equal(ui.closed, 1);
@@ -202,17 +202,66 @@ test('sort and priority are drafts and commit together only after the sheet clos
   assert.deepEqual(ui.applied, [['ASC', true]]);
 });
 
-test('custom order disables priority and never applies a conflicting combination', () => {
+test('custom order clears priority and never applies a conflicting combination', () => {
   const ui = sortPicker({ priorityFirst: true, allowCustom: true });
   ui.press('커스텀');
   const priority = ui
     .render()
-    .content.find((node) => node.props.accessibilityLabel === '중요도 우선');
-  assert.equal(priority.props.disabled, true);
+    .content.find((node) => node.props.accessibilityLabel === '중요한 항목 먼저');
+  assert(!priority.props.disabled);
   assert.equal(priority.props.value, false);
   ui.press('적용하기');
   ui.finish();
   assert.deepEqual(ui.applied, [['CUSTOM', false]]);
+});
+
+test('enabling priority from custom selects latest order and applies only after closing', () => {
+  const ui = sortPicker({ sort: 'CUSTOM', priorityFirst: false, allowCustom: true });
+  ui.press('중요한 항목 먼저');
+  const content = ui.render().content;
+  assert.equal(
+    content.find((node) => node.props.accessibilityLabel === '최신순').props.selected,
+    true,
+  );
+  assert.equal(
+    content.find((node) => node.props.accessibilityLabel === '커스텀').props.selected,
+    false,
+  );
+  assert.equal(content.find((node) => node.type === 'Switch').props.value, true);
+  ui.press('적용하기');
+  assert.equal(ui.applied.length, 0);
+  ui.finish();
+  assert.deepEqual(ui.applied, [['DESC', true]]);
+});
+
+test('sort hints describe the actual criteria and custom restriction without persisting canceled drafts', () => {
+  const ui = sortPicker({ sort: 'CUSTOM', priorityFirst: false, allowCustom: true });
+  ui.press('중요한 항목 먼저');
+  assert(
+    ui
+      .render()
+      .content.some(
+        (node) =>
+          node.type === 'InfoNotice' &&
+          node.props.children === '중요한 항목부터, 생성일 순으로 정렬해요.',
+      ),
+  );
+  ui.render().shell.props.onClose();
+  ui.finish();
+  assert.equal(ui.applied.length, 0);
+  for (const [props, hint] of [
+    [{ sortLabel: '날짜 정렬' }, '날짜 순으로 정렬해요.'],
+    [{ sortLabel: '다시 시작 일시 정렬' }, '다시 시작 일시 순으로 정렬해요.'],
+    [{ priorityFirst: false }, '생성일 순으로 정렬해요.'],
+    [{ priorityFirst: false, recordSort: 'DESC' }, '현재 기록, 생성일 순으로 정렬해요.'],
+    [{ priorityFirst: true, recordSort: 'DESC' }, '중요도, 현재 기록, 생성일 순으로 정렬해요.'],
+  ] as const) {
+    assert(
+      sortPicker(props)
+        .render()
+        .content.some((node) => node.type === 'InfoNotice' && node.props.children === hint),
+    );
+  }
 });
 
 test('diary sorting exposes date order only and cancel does not persist drafts', () => {
@@ -220,7 +269,9 @@ test('diary sorting exposes date order only and cancel does not persist drafts',
   assert(
     !ui
       .render()
-      .content.some((node) => ['중요도 우선', '커스텀'].includes(node.props.accessibilityLabel)),
+      .content.some((node) =>
+        ['중요한 항목 먼저', '커스텀'].includes(node.props.accessibilityLabel),
+      ),
   );
   ui.press('과거순');
   ui.render().shell.props.onClose();
@@ -295,12 +346,15 @@ test('sort hints share the content gap without reserving an extra fixed-height r
   const ui = sortPicker({ priorityFirst: false, allowCustom: true });
   const initial = ui.render().shell.props.children;
   assert.equal(initial.props.className, 'gap-7');
-  assert.equal(initial.props.children.at(-1).type, 'InfoNotice');
+  assert.equal(initial.props.children.at(-1).props.className, 'gap-1');
   ui.press('커스텀');
   const custom = ui.render().shell.props.children;
   assert.equal(custom.props.className, initial.props.className);
-  assert.equal(custom.props.children.at(-1).type, 'InfoNotice');
-  assert.equal(custom.props.children.at(-1).props.children, '직접 정한 순서로 보여드려요.');
+  const hints = nodes(custom).filter((node) => node.type === 'InfoNotice');
+  assert.deepEqual(
+    hints.map((node) => node.props.children),
+    ['직접 정한 순서로 보여드려요.', '커스텀과 중요도 우선은 함께 선택할 수 없어요.'],
+  );
 });
 
 test('diary emotion descriptions live inside buttons and the full season legend stays fixed', () => {
@@ -427,7 +481,7 @@ test('sober sorting shows priority, record, creation in order and applies drafts
     )
     .map((node) => node.props.children);
   assert.deepEqual(headings, ['중요한 항목 먼저', '기록', '생성일']);
-  ui.press('중요도 우선');
+  ui.press('중요한 항목 먼저');
   ui.press('현재 기록 오름차순');
   ui.press('과거순');
   assert.equal(ui.applied.length, 0);

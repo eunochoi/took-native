@@ -47,10 +47,12 @@ export function RecordSortPicker({
     <View className="flex-row items-center justify-between gap-3">
       <Text className="text-base font-semibold">중요한 항목 먼저</Text>
       <Switch
-        accessibilityLabel="중요도 우선"
-        disabled={draftSort === 'CUSTOM'}
+        accessibilityLabel="중요한 항목 먼저"
         value={draftPriority}
-        onValueChange={setPriority}
+        onValueChange={(value) => {
+          if (value && draftSort === 'CUSTOM') setSort('DESC');
+          setPriority(value);
+        }}
         trackColor={{ false: colors.border, true: colors.accent }}
         thumbColor={colors.surface}
       />
@@ -123,13 +125,16 @@ export function RecordSortPicker({
             ))}
           </View>
         </View>
-        <InfoNotice>
-          {draftSort === 'CUSTOM'
-            ? '직접 정한 순서로 보여드려요.'
-            : recordSort
-              ? '중요도, 현재 기록, 생성일 순으로 정렬해요.'
-              : '중요한 항목부터, 생성일 순으로 정렬해요.'}
-        </InfoNotice>
+        <View className="gap-1">
+          <InfoNotice>
+            {draftSort === 'CUSTOM'
+              ? '직접 정한 순서로 보여드려요.'
+              : recordSort
+                ? `${draftPriority ? '중요도, ' : ''}현재 기록, 생성일 순으로 정렬해요.`
+                : `${draftPriority ? '중요한 항목부터, ' : ''}${sortLabel.replace(/ 정렬$/, '')} 순으로 정렬해요.`}
+          </InfoNotice>
+          {allowCustom && <InfoNotice>커스텀과 중요도 우선은 함께 선택할 수 없어요.</InfoNotice>}
+        </View>
       </View>
     </BottomSheetModal>
   );
