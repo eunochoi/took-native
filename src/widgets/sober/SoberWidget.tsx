@@ -68,8 +68,8 @@ export function SoberWidget({
         alignItems: 'center',
       }}
       accessibilityLabel={label}
-      clickAction={sober ? 'OPEN_URI' : 'OPEN_APP'}
-      clickActionData={sober ? { uri: `took-local://sober/${sober.id}` } : undefined}
+      clickAction="OPEN_URI"
+      clickActionData={{ uri: sober ? `took-local://sober/${sober.id}` : 'took-local://sober' }}
     >
       <FlexWidget style={{ alignItems: 'center', flexGap: 7 * scale }}>
         <FlexWidget

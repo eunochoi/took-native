@@ -103,6 +103,7 @@ function Navigation({ onReady }: { onReady: () => void }) {
             }}
           >
             <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
+            <Stack.Screen name="widget" options={{ animation: 'none' }} />
             {sheetRoutes.map((name) => (
               <Stack.Screen
                 key={name}
