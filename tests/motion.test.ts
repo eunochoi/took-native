@@ -264,7 +264,7 @@ test('edge gradients match their surface at the opaque end and reach full transp
   }
 });
 
-test('page titles retain the shared compact height at every app font size', () => {
+test('page titles use content height and merged padding at every app font size', () => {
   for (const rem of [14, 15, 16]) {
     const { PageTopSection } = load('../src/components/PageTopSection.tsx', false, true, [], {
       rem,
@@ -276,12 +276,20 @@ test('page titles retain the shared compact height at every app font size', () =
       hashtags: '#감정',
       onLayout,
     });
-    assert.match(header.props.className, /h-\[100px\]/);
+    assert.match(header.props.className, /pt-8 pb-1 px-\[5%\]/);
+    assert.doesNotMatch(header.props.className, /\bh-auto\b|\bh-\[/);
     assert.equal(header.props.onLayout, onLayout);
-    assert.match(header.props.children.props.className, /pb-1/);
+    const content = header.props.children;
+    assert.match(header.props.className, /gap-1 items-start/);
+    assert.equal(content.length, 2);
+    assert.equal(content[0].type, 'Text');
+    assert.equal(content[1].type, 'Text');
+    assert.equal(content[0].props.children, '#감정');
+    assert.equal(content[1].props.children, '일기 목록');
+    assert.equal(content[1].props.accessibilityRole, 'header');
     const plain = PageTopSection({ title: '앱 설정', hashtags: '#맞춤' });
     assert.equal(plain.props.style, undefined);
-    assert.match(plain.props.className, /h-\[100px\]/);
+    assert.equal(plain.props.className, header.props.className);
   }
 });
 
