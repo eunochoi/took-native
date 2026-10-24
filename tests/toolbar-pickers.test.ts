@@ -13,80 +13,92 @@ function nodes(node: any): any[] {
   if (!node || typeof node !== 'object') return [];
   return [node, ...nodes(node.props?.children)];
 }
+function textContent(node: any): string {
+  if (typeof node === 'string') return node;
+  if (Array.isArray(node)) return node.map(textContent).join('');
+  if (node?.type === 'StarIcon') return '★';
+  return node?.props ? textContent(node.props.children) : '';
+}
 function picker(path: string, name: string, initial: Record<string, unknown>) {
-  const exports: Record<string, Function> = {};
   const state: unknown[] = [];
   let cursor = 0;
   let closed = 0;
   let deferred: (() => void) | undefined;
   const applied: unknown[][] = [];
-  runInNewContext(
-    ts.transpileModule(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'), {
-      compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
-    }).outputText,
-    {
-      exports,
-      require: (dependency: string) => {
-        if (dependency.endsWith('/HabitPriorityPicker'))
-          return { HABIT_PRIORITY_LABELS: ['자유 기록', '낮음', '보통', '높음'] };
-        if (dependency.endsWith('/FilterSheet')) {
-          const sheetExports: Record<string, Function> = {};
-          runInNewContext(
-            ts.transpileModule(
-              readFileSync(new URL('../src/components/FilterSheet.tsx', import.meta.url), 'utf8'),
-              {
-                compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
-              },
-            ).outputText,
-            {
-              exports: sheetExports,
-              require: (name: string) => {
-                if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
-                if (name === 'react-native') return { View: 'View', Pressable: 'Pressable' };
-                if (name.endsWith('AppThemeProvider'))
-                  return { useAppTheme: () => ({ iconSizes: { md: 18 } }) };
-                const component = name.split('/').at(-1)!;
-                return { [component]: component };
-              },
-            },
-          );
-          return sheetExports;
-        }
-        if (dependency.endsWith('domain/diaryFilters'))
-          return require('../src/domain/diaryFilters');
-        if (dependency === 'tailwind-merge') return require(dependency);
-        if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
-        if (dependency.endsWith('domain/selection')) return require('../src/domain/selection');
-        if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
-        if (dependency === 'react')
-          return {
-            Fragment: 'Fragment',
-            useState: (value: unknown) => {
-              const index = cursor++;
-              if (!(index in state)) state[index] = value;
-              return [
-                state[index],
-                (next: unknown) => {
-                  state[index] = next;
+  const evaluate = (modulePath: string): Record<string, Function> => {
+    const exports: Record<string, Function> = {};
+    runInNewContext(
+      ts.transpileModule(readFileSync(new URL(`../${modulePath}`, import.meta.url), 'utf8'), {
+        compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+      }).outputText,
+      {
+        exports,
+        require: (dependency: string) => {
+          if (dependency.endsWith('/ToolbarButton'))
+            return evaluate('src/components/ToolbarButton.tsx');
+          if (dependency.endsWith('/HabitPriorityPicker'))
+            return { HABIT_PRIORITY_LABELS: ['자유 기록', '낮음', '보통', '높음'] };
+          if (dependency.endsWith('/FilterSheet')) {
+            const sheetExports: Record<string, Function> = {};
+            runInNewContext(
+              ts.transpileModule(
+                readFileSync(new URL('../src/components/FilterSheet.tsx', import.meta.url), 'utf8'),
+                {
+                  compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
                 },
-              ];
-            },
-          };
-        if (dependency.endsWith('AppThemeProvider'))
-          return { useAppTheme: () => ({ colors: {}, iconSizes: { md: 18 }, rem: 15 }) };
-        if (dependency.endsWith('/constants')) return { EMOTIONS };
-        if (dependency === 'react-native')
-          return {
-            View: 'View',
-            Switch: 'Switch',
-            Pressable: 'Pressable',
-            useWindowDimensions: () => ({ height: 900 }),
-          };
-        const component = dependency.split('/').at(-1)!;
-        return { [component]: component };
+              ).outputText,
+              {
+                exports: sheetExports,
+                require: (name: string) => {
+                  if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
+                  if (name === 'react-native') return { View: 'View', Pressable: 'Pressable' };
+                  if (name.endsWith('AppThemeProvider'))
+                    return { useAppTheme: () => ({ iconSizes: { md: 18 } }) };
+                  const component = name.split('/').at(-1)!;
+                  return { [component]: component };
+                },
+              },
+            );
+            return sheetExports;
+          }
+          if (dependency.endsWith('domain/diaryFilters'))
+            return require('../src/domain/diaryFilters');
+          if (dependency === 'tailwind-merge') return require(dependency);
+          if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
+          if (dependency.endsWith('domain/selection')) return require('../src/domain/selection');
+          if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
+          if (dependency === 'react')
+            return {
+              Fragment: 'Fragment',
+              useState: (value: unknown) => {
+                const index = cursor++;
+                if (!(index in state)) state[index] = value;
+                return [
+                  state[index],
+                  (next: unknown) => {
+                    state[index] = next;
+                  },
+                ];
+              },
+            };
+          if (dependency.endsWith('AppThemeProvider'))
+            return { useAppTheme: () => ({ colors: {}, iconSizes: { md: 18 }, rem: 15 }) };
+          if (dependency.endsWith('/constants')) return { EMOTIONS };
+          if (dependency === 'react-native')
+            return {
+              View: 'View',
+              Switch: 'Switch',
+              Pressable: 'Pressable',
+              useWindowDimensions: () => ({ height: 900 }),
+            };
+          const component = dependency.split('/').at(-1)!;
+          return { [component]: component };
+        },
       },
-    },
-  );
+    );
+    return exports;
+  };
+  const exports = evaluate(path);
   const render = () => {
     cursor = 0;
     let shell = exports[name]({
@@ -459,17 +471,47 @@ test('record toolbar shows saved sorting and priority while keeping add separate
   assert(custom.content.some((node) => node.type === 'Text' && node.props.children === '커스텀'));
 });
 
-test('filter toolbar displays its supplied compact and accessible labels', () => {
-  const view = picker('src/components/ToolbarFilterButton.tsx', 'ToolbarFilterButton', {
+test('filter toolbar preserves the first condition and truncates only later conditions', () => {
+  const ui = picker('src/components/ToolbarFilterButton.tsx', 'ToolbarFilterButton', {
     label: '올해 · 여름 · 긍정',
     accessibilityLabel: '일기 필터, 2026.06~2026.08 · 긍정',
-  }).render();
-  const label = view.content.find(
-    (node) => node.type === 'Text' && node.props.children === '올해 · 여름 · 긍정',
-  );
-  assert.equal(label.props.numberOfLines, 1);
-  assert.equal(label.props.ellipsizeMode, 'tail');
+  });
+  const view = ui.render();
+  const labels = view.content.filter((node) => node.type === 'Text');
+  assert.equal(labels[0].props.children, '올해');
+  assert(labels[0].props.className.includes('shrink-0'));
+  assert.equal(labels[0].props.ellipsizeMode, undefined);
+  assert.equal(textContent(labels[1]), ' · 여름 · 긍정');
+  assert.equal(labels[1].props.numberOfLines, 1);
+  assert.equal(labels[1].props.ellipsizeMode, 'tail');
+  assert(labels[1].props.className.includes('min-w-0 shrink'));
   assert.equal(view.shell.props.accessibilityLabel, '일기 필터, 2026.06~2026.08 · 긍정');
+  const leading = view.content.find((node) => node.type === 'View' && node.props.onLayout);
+  leading.props.onLayout({ nativeEvent: { layout: { width: 80 } } });
+  assert.equal(ui.render().shell.props.style.minWidth, 80);
+  leading.props.onLayout({ nativeEvent: { layout: { width: 108 } } });
+  assert.equal(ui.render().shell.props.style.minWidth, 108);
+});
+
+test('filter toolbar keeps a leading star group whole and retains separators between remaining groups', () => {
+  const starGroup = [jsx('StarIcon', {}), jsx('StarIcon', {}), jsx('StarIcon', {})];
+  for (const label of [
+    [starGroup, '자유'],
+    ['완료', starGroup, [jsx('StarIcon', {})]],
+    '짧은 기록',
+    '필터',
+  ]) {
+    const view = picker('src/components/ToolbarFilterButton.tsx', 'ToolbarFilterButton', {
+      label,
+      accessibilityLabel: '습관 필터',
+    }).render();
+    const labels = view.content.filter((node) => node.type === 'Text');
+    const expected = typeof label === 'string' ? label : label.map(textContent).join(' · ');
+    assert.equal(labels.map(textContent).join(''), expected);
+    assert.equal(labels[0].props.children, typeof label === 'string' ? label : label[0]);
+    assert(labels[0].props.className.includes('shrink-0'));
+    assert.equal(labels.length, typeof label === 'string' ? 1 : 2);
+  }
 });
 
 test('sober sorting shows priority, record, creation in order and applies drafts together', () => {
@@ -512,7 +554,7 @@ test('sober toolbar announces record direction and creation tie breaker', () => 
   );
 });
 
-test('toolbar always keeps its sort icon and shows every non-default condition with ellipsis', () => {
+test('toolbar keeps its icon and first condition whole while truncating remaining conditions', () => {
   const cases = [
     { sort: 'DESC', priorityFirst: false, label: '정렬' },
     { sort: 'ASC', priorityFirst: false, label: '과거' },
@@ -521,36 +563,11 @@ test('toolbar always keeps its sort icon and shows every non-default condition w
     { sort: 'DESC', recordSort: 'DESC', priorityFirst: false, label: '정렬' },
     { sort: 'ASC', recordSort: 'DESC', priorityFirst: false, label: '과거' },
     { sort: 'DESC', recordSort: 'DESC', priorityFirst: true, label: '중요' },
-    {
-      sort: 'ASC',
-      recordSort: 'DESC',
-      priorityFirst: true,
-      label: '중요 · 과거',
-    },
-    {
-      sort: 'DESC',
-      recordSort: 'ASC',
-      priorityFirst: false,
-      label: '짧은 기록',
-    },
-    {
-      sort: 'ASC',
-      recordSort: 'ASC',
-      priorityFirst: false,
-      label: '짧은 기록 · 과거',
-    },
-    {
-      sort: 'DESC',
-      recordSort: 'ASC',
-      priorityFirst: true,
-      label: '중요 · 짧은 기록',
-    },
-    {
-      sort: 'ASC',
-      recordSort: 'ASC',
-      priorityFirst: true,
-      label: '중요 · 짧은 기록 · 과거',
-    },
+    { sort: 'ASC', recordSort: 'DESC', priorityFirst: true, label: '중요 · 과거' },
+    { sort: 'DESC', recordSort: 'ASC', priorityFirst: false, label: '짧은 기록' },
+    { sort: 'ASC', recordSort: 'ASC', priorityFirst: false, label: '짧은 기록 · 과거' },
+    { sort: 'DESC', recordSort: 'ASC', priorityFirst: true, label: '중요 · 짧은 기록' },
+    { sort: 'ASC', recordSort: 'ASC', priorityFirst: true, label: '중요 · 짧은 기록 · 과거' },
     { sort: 'CUSTOM', priorityFirst: false, label: '커스텀' },
     { sort: 'CUSTOM', priorityFirst: true, label: '커스텀' },
   ];
@@ -562,15 +579,19 @@ test('toolbar always keeps its sort icon and shows every non-default condition w
     const indicators = ui.content.filter((node) =>
       ['Text', 'StarIcon', 'AppIcon'].includes(node.type),
     );
-    assert.deepEqual(
-      indicators.map((node) => (node.type === 'AppIcon' ? node.props.name : node.props.children)),
-      ['sort', label],
-    );
-    const text = indicators[1];
-    assert.equal(text.props.numberOfLines, 1);
-    assert.equal(text.props.ellipsizeMode, 'tail');
+    assert.equal(indicators[0].props.name, 'sort');
+    const labels = indicators.slice(1);
+    assert.equal(labels.map(textContent).join(''), label);
+    assert.equal(labels[0].props.children, label.split(' · ')[0]);
+    assert.equal(labels[0].props.numberOfLines, 1);
+    assert(labels[0].props.className.includes('shrink-0'));
+    assert.equal(labels[0].props.ellipsizeMode, undefined);
+    if (labels[1]) {
+      assert.equal(labels[1].props.numberOfLines, 1);
+      assert.equal(labels[1].props.ellipsizeMode, 'tail');
+      assert(labels[1].props.className.includes('min-w-0 shrink'));
+    }
     assert(ui.shell.props.className.includes('min-w-0 shrink'));
-    assert(text.props.className.includes('min-w-0 shrink'));
     assert(indicators[0].props.className.includes('shrink-0'));
   }
 });
