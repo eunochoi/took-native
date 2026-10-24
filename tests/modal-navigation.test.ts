@@ -352,6 +352,7 @@ test('all card and menu modal launches use the shared gate', () => {
     'src/screens/calendar/DayInfoDiarySection.tsx',
     'src/screens/home/HabitAnalysis.tsx',
     'src/screens/home/SoberAnalysis.tsx',
+    'src/screens/home/HomeTodayDiary.tsx',
     'app/(tabs)/habit.tsx',
     'app/(tabs)/sober.tsx',
     'app/(tabs)/calendar.tsx',
@@ -362,9 +363,10 @@ test('all card and menu modal launches use the shared gate', () => {
     assert(!source.includes('router.push('), file);
   }
   const source = readFileSync(
-    new URL('../src/screens/home/HomeSummarySection.tsx', import.meta.url),
+    new URL('../src/screens/home/HomeTodaySober.tsx', import.meta.url),
     'utf8',
   );
+  assert(source.includes('useModalNavigation'));
   assert(!/router\.push\([^)]*(?:\/\$\{|\/new)/.test(source));
 });
 

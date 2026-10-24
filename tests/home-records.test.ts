@@ -156,9 +156,9 @@ test('home retains its greeting and records in one scroll viewport without a loc
   const view = harness('app/(tabs)/index.tsx', 'default').render();
   assert.equal(view.tree.type, 'ColorView');
   assert(view.tree.props.className.includes('bg-theme-accent-light'));
-  assert.equal(view.nodes.filter((node) => node.type === 'HomeSummarySection').length, 1);
+  assert.equal(view.nodes.filter((node) => node.type === 'HomeTodaySection').length, 1);
   assert.equal(
-    view.nodes.find((node) => node.type === 'HomeSummarySection').props.today,
+    view.nodes.find((node) => node.type === 'HomeTodaySection').props.today,
     '2026-10-05',
   );
   assert.equal(view.nodes.filter((node) => node.type === 'ScrollView').length, 1);
@@ -329,8 +329,25 @@ test('home retains its shared padding wrapper and the original greeting layout',
   assert.equal(greeting.type, 'HomeGreeting');
   assert.equal(greeting.props.today, '2026-10-05');
   assert(!summary.props.className.includes('px-'));
-  assert.equal(summary.props.children.type, 'HomeSummarySection');
+  assert.equal(summary.props.children[0].type, 'HomeTodaySection');
+  const analysis = summary.props.children[1];
+  assert.equal(analysis.type, 'HomeAnalysisCard');
+  assert.equal(analysis.props.today, '2026-10-05');
   assert(!content.props.className.includes('overflow-hidden'));
+});
+
+test('home analysis banner opens the current year through modal navigation', () => {
+  const ui = harness('src/screens/home/HomeAnalysisCard.tsx', 'HomeAnalysisCard');
+  const view = ui.render();
+  assert(
+    view.nodes.some((node) => node.props.source && node.props.className?.includes('bottom-0')),
+  );
+  view.nodes
+    .find((node) => node.props.accessibilityLabel?.startsWith('기록 분석 보기'))
+    .props.onPress();
+  assert.deepEqual(JSON.parse(JSON.stringify(ui.pushes)), [
+    { pathname: '/home/[year]/stats', params: { year: '2026' } },
+  ]);
 });
 
 test('home greeting shows the supplied date and retains all three hashtag destinations', () => {

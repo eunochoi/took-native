@@ -77,6 +77,8 @@ function load(
           };
         if (name === 'expo-linear-gradient') return { LinearGradient: 'LinearGradient' };
         if (name === 'expo-router') return { useRouter: () => ({ push: () => {} }) };
+        if (name.endsWith('/ModalNavigationProvider'))
+          return { useModalNavigation: () => ({ openModal: () => {} }) };
         if (name === 'expo-router/react-navigation') return { useIsFocused: () => focused };
         if (name === 'date-fns')
           return { format: () => '오늘', parseISO: (value: unknown) => value };
@@ -85,8 +87,9 @@ function load(
           Text: 'Text',
           Wordmark: 'Wordmark',
           EmotionImage: 'EmotionImage',
-          HomeSummarySection: 'HomeSummarySection',
+          HomeTodaySection: 'HomeTodaySection',
           HomeGreeting: 'HomeGreeting',
+          HomeAnalysisCard: 'HomeAnalysisCard',
           ColorView: 'ColorView',
         };
       },
@@ -168,7 +171,7 @@ test('home retains its decoration within the page scroll viewport', () => {
   const rendered = nodes(tree);
   assert(rendered.some((node) => node.props.accessibilityLabel === 'hiding-cat'));
   assert.equal(rendered.filter((node) => node.type === 'ScrollView').length, 1);
-  assert.equal(rendered.filter((node) => node.type === 'HomeSummarySection').length, 1);
+  assert.equal(rendered.filter((node) => node.type === 'HomeTodaySection').length, 1);
   assert(!tree.props.className.includes('border-b'));
   assert.equal(tree.props.style, undefined);
   const cat = rendered.find((node) => node.props.accessibilityLabel === 'hiding-cat');

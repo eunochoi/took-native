@@ -3,8 +3,9 @@ import { Image, ScrollView, View } from 'react-native';
 import { ColorView } from '../../src/components/ColorTransition';
 import { Wordmark } from '../../src/components/Wordmark';
 import { useToday } from '../../src/queries';
+import { HomeAnalysisCard } from '../../src/screens/home/HomeAnalysisCard';
 import { HomeGreeting } from '../../src/screens/home/HomeGreeting';
-import { HomeSummarySection } from '../../src/screens/home/HomeSummarySection';
+import { HomeTodaySection } from '../../src/screens/home/HomeTodaySection';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
 
 const cat = require('../../assets/cats/hiding-cat-home.png');
@@ -52,8 +53,9 @@ export default function Home() {
               <Wordmark size={appRem * 3} accentColor={colors.accent} mode={mode} />
             </View>
             <HomeGreeting today={today} />
-            <View className="shrink-0">
-              <HomeSummarySection today={today} />
+            <View className="gap-3 shrink-0">
+              <HomeTodaySection today={today} />
+              <HomeAnalysisCard today={today} />
             </View>
           </View>
           <View pointerEvents="none" className="flex-1 min-h-0 justify-end overflow-hidden px-[5%]">
