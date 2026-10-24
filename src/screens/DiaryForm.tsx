@@ -7,12 +7,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Keyboard, Pressable, TextInput, View } from 'react-native';
 import { AppIcon } from '../components/AppIcon';
 import { BottomSheetPage } from '../components/BottomSheetPage';
-import { RecordFormLayout } from '../components/RecordFormLayout';
 import { CharacterCount } from '../components/CharacterCount';
 import { EmotionImage } from '../components/EmotionImage';
 import { FormSubmitButton } from '../components/FormSubmitButton';
 import { useNotice } from '../components/NoticeProvider';
 import { QueryState } from '../components/QueryState';
+import { RecordFormLayout } from '../components/RecordFormLayout';
 import { Text } from '../components/Text';
 import { EMOTIONS } from '../domain/constants';
 import { isDate } from '../domain/date';
@@ -245,7 +245,7 @@ export function DiaryForm({
       }
     >
       {!keyboardVisible && (
-        <View className="shrink-0 border-b border-theme-border-muted pb-4">
+        <View className="shrink-0 pb-4">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="오늘의 감정 선택"
@@ -256,13 +256,13 @@ export function DiaryForm({
               setDraftEmotion(emotion);
               setPicker('emotion');
             }}
-            className="min-h-12 flex-row items-center gap-3 bg-transparent px-2 py-2 active:opacity-70"
+            className="min-h-12 flex-row items-center gap-3 bg-transparent p-1 active:opacity-70"
           >
-            <View className="h-14 w-14 items-center justify-center">
+            <View className="h-14 w-14 items-start justify-center">
               {emotion !== null ? (
-                <EmotionImage emotion={emotion} size={appRem * 3} />
+                <EmotionImage emotion={emotion} size={appRem * 3.5} />
               ) : (
-                <AppIcon name="emoji-emotions" size={appRem * 2.75} color={colors.tertiary} />
+                <AppIcon name="emoji-emotions" size={appRem * 3.5} color={colors.tertiary} />
               )}
             </View>
             <View className="flex-1 min-w-0 gap-1">
