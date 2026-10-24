@@ -46,14 +46,14 @@ export function HabitAnalysis({
           </UnderlineTab>
         ))}
       </View>
-      {habits.length ? (
-        <View className="px-2 gap-4">
-          {habits.map((habit, index) => (
+      <View className="mx-1 px-4 py-4 bg-theme-surface-muted/60 ios:curve-continuous rounded-theme">
+        {habits.length ? (
+          habits.map((habit, index) => (
             <Pressable
               key={habit.id}
               accessibilityRole="button"
               onPress={() => openModal(`/habit/${habit.id}`)}
-              className={`flex-row items-center gap-6 min-h-24 py-3 ${index < habits.length - 1 ? 'border-b border-theme-border/50' : ''}`}
+              className={`flex-row items-center gap-4 min-h-12 ${index > 0 ? 'pt-4' : ''} ${index < habits.length - 1 ? 'pb-4 border-b border-theme-border/50' : ''}`}
             >
               <View className="h-9 w-9 shrink-0 items-center justify-center">
                 <HabitIcon name={habit.icon_key} colorKey={habit.icon_color} size={appRem * 2.25} />
@@ -73,16 +73,16 @@ export function HabitAnalysis({
                 <Text className="text-theme-text-primary font-semibold text-2xl">
                   {habit.count}
                 </Text>
-                <Text className="text-theme-text-secondary text-sm">회</Text>
+                <Text className="text-base text-theme-text-secondary">회</Text>
               </View>
             </Pressable>
-          ))}
-        </View>
-      ) : (
-        <Text className="px-2 py-8 text-center text-theme-text-secondary text-sm">
-          {year}년에 완료한 집계 대상 습관이 없어요.
-        </Text>
-      )}
+          ))
+        ) : (
+          <Text className="text-center text-theme-text-secondary text-sm">
+            {year}년에 완료한 집계 대상 습관이 없어요.
+          </Text>
+        )}
+      </View>
       <InfoNotice>자유 기록은 습관 기록 집계에 포함되지 않아요.</InfoNotice>
     </View>
   );

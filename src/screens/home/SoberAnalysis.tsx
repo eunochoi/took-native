@@ -1,8 +1,8 @@
 import { format, parseISO } from 'date-fns';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { SoberIcon } from '../../components/SoberIcon';
 import { InfoNotice } from '../../components/InfoNotice';
+import { SoberIcon } from '../../components/SoberIcon';
 import { Text } from '../../components/Text';
 import { UnderlineTab } from '../../components/UnderlineTab';
 import type { Sober, SoberRestart } from '../../db/types';
@@ -54,18 +54,21 @@ export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts:
           </UnderlineTab>
         ))}
       </View>
-      {records.length ? (
-        <View className="gap-4 px-2">
-          {visibleRecords.map(({ sober, record }, index) => {
+      <View className="mx-1 px-4 py-4 bg-theme-surface-muted/60 ios:curve-continuous rounded-theme">
+        {records.length ? (
+          visibleRecords.map(({ sober, record }, index) => {
+            const status = record.current ? '진행 중' : '종료';
+            const duration = formatSoberDuration(record.duration);
+            const [days, hours, minutes] = duration.split(' ');
             return (
               <Pressable
                 key={`${sober.id}:${record.start}:${record.current ? 'current' : record.end}:${index}`}
                 accessibilityRole="button"
-                accessibilityLabel={`${sober.name}, ${formatSoberDuration(record.duration)}, ${format(parseISO(record.start), 'yy년 M월 d일 HH:mm')}부터 ${record.current ? '현재까지 진행 중' : `${format(parseISO(record.end), 'yy년 M월 d일 HH:mm')}까지`}, 거리두기 정보`}
+                accessibilityLabel={`${sober.name}, ${status}, ${duration}, ${format(parseISO(record.start), 'yy년 M월 d일 HH:mm')}부터 ${record.current ? '현재까지' : `${format(parseISO(record.end), 'yy년 M월 d일 HH:mm')}까지`}, 거리두기 정보`}
                 onPress={() => {
                   openModal(`/sober/${sober.id}`);
                 }}
-                className={`flex-row items-center gap-6 min-h-24 py-3 ${index < visibleRecords.length - 1 ? 'border-b border-theme-border/50' : ''}`}
+                className={`flex-row items-center gap-4 min-h-12 ${index > 0 ? 'pt-4' : ''} ${index < visibleRecords.length - 1 ? 'pb-4 border-b border-theme-border/50' : ''}`}
               >
                 <View className="h-9 w-9 shrink-0 items-center justify-center">
                   <SoberIcon
@@ -78,32 +81,40 @@ export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts:
                   <Text numberOfLines={1} className="text-base leading-relaxed">
                     {sober.name}
                   </Text>
-                  <Text className="text-lg font-bold text-theme-text-primary">
-                    {formatSoberDuration(record.duration)}
+                  <Text
+                    className={`text-sm ${record.current ? 'text-theme-accent' : 'text-theme-text-secondary'}`}
+                  >
+                    {status}
                   </Text>
+                </View>
+                <View className="shrink items-end gap-1">
+                  <View className="flex-row items-baseline gap-1">
+                    <Text
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      className="text-theme-text-primary font-semibold text-2xl"
+                    >
+                      {days.slice(0, -1)}
+                    </Text>
+                    <Text className="text-base text-theme-text-secondary">일</Text>
+                  </View>
                   <Text
                     numberOfLines={1}
                     adjustsFontSizeToFit
-                    className="tracking-tighter text-sm text-theme-text-secondary"
+                    className="text-base text-theme-text-secondary"
                   >
-                    {format(parseISO(record.start), 'yy년 M월 d일 HH:mm')}
-                    {` ~ `}
-                    {record.current ? (
-                      <Text className="text-sm text-theme-accent">진행 중</Text>
-                    ) : (
-                      format(parseISO(record.end), 'yy년 M월 d일 HH:mm')
-                    )}
+                    {hours} {minutes}
                   </Text>
                 </View>
               </Pressable>
             );
-          })}
-        </View>
-      ) : (
-        <Text className="px-2 py-8 text-center text-theme-text-secondary text-sm">
-          아직 거리두기 기록이 없어요.
-        </Text>
-      )}
+          })
+        ) : (
+          <Text className="text-center text-theme-text-secondary text-sm">
+            아직 거리두기 기록이 없어요.
+          </Text>
+        )}
+      </View>
       <InfoNotice>선택 연도와 관계없이 전체 기간 기록이에요.</InfoNotice>
     </View>
   );

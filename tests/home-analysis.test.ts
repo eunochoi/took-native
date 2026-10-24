@@ -18,9 +18,15 @@ function render(
   name: string,
   props: any,
   selection?: unknown,
-  scenario: { results?: Record<string, any>; routes?: unknown[] } = {},
+  scenario: {
+    results?: Record<string, any>;
+    routes?: unknown[];
+    layoutWidth?: number;
+    rem?: number;
+  } = {},
 ) {
   const exports: Record<string, Function> = {};
+  let stateIndex = 0;
   const jsx = (type: unknown, props: any, key?: unknown) =>
     typeof type === 'function' ? type(props) : { type, props, key };
   runInNewContext(
@@ -41,10 +47,16 @@ function render(
         if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (dependency === 'react')
-          return { useState: (initial: unknown) => [selection ?? initial, () => {}] };
-        if (dependency === 'react-native') return { View: 'View', Pressable: 'Pressable' };
+          return {
+            useState: (initial: unknown) => [
+              stateIndex++ === 0 ? (selection ?? initial) : (scenario.layoutWidth ?? initial),
+              () => {},
+            ],
+          };
+        if (dependency === 'react-native')
+          return { View: 'View', Pressable: 'Pressable', ScrollView: 'ScrollView' };
         if (dependency.endsWith('AppThemeProvider'))
-          return { useAppTheme: () => ({ rem: 15, iconSizes: {}, colors: {} }) };
+          return { useAppTheme: () => ({ rem: scenario.rem ?? 15, iconSizes: {}, colors: {} }) };
         if (dependency.endsWith('domain/habitStats')) return require('../src/domain/habitStats');
         if (dependency.endsWith('domain/constants')) return { EMOTIONS };
         if (dependency.endsWith('domain/diaryFilters'))
@@ -269,24 +281,30 @@ test('diary monthly average rounds to one decimal and omits trailing zeroes', ()
   }
 });
 
-test('emotion counts keep period filtering and tied badges without added summaries', () => {
+test('emotion counts follow period filtering without individual percentages or ranking', () => {
   const stats = emptyStats();
   stats.emotions[0] = 2;
   stats.emotions[1] = 2;
   stats.halves[0][0] = 1;
   const tree = render('EmotionStats', { stats, year: 2024 });
-  assert.equal(nodes(tree).filter((node) => node.type === 'Badge').length, 2);
+  const cells = nodes(tree).filter((node) => node.props?.children?.[0]?.type === 'EmotionImage');
+  assert.equal(text(cells[0]), `${EMOTIONS[0].name}2회`);
+  assert.equal(text(cells[1]), `${EMOTIONS[1].name}2회`);
+  assert(cells.every((cell) => !text(cell).includes('%') && !text(cell).includes('1등')));
   const firstHalf = render('EmotionStats', { stats, year: 2024 }, 1);
   assert(text(firstHalf).includes('전반기 1개'));
-  assert.equal(nodes(firstHalf).filter((node) => node.type === 'Badge').length, 1);
+  const firstHalfCells = nodes(firstHalf).filter(
+    (node) => node.props?.children?.[0]?.type === 'EmotionImage',
+  );
+  assert.equal(text(firstHalfCells[0]), `${EMOTIONS[0].name}1회`);
+  assert.equal(text(firstHalfCells[1]), `${EMOTIONS[1].name}0회`);
   assert(!text(tree).includes('돌아보기'));
   assert(!text(tree).includes('월별'));
-  assert.equal(
-    nodes(render('EmotionStats', { stats: emptyStats(), year: 2024 })).filter(
-      (node) => node.type === 'Badge',
-    ).length,
-    0,
+  const emptyCells = nodes(render('EmotionStats', { stats: emptyStats(), year: 2024 })).filter(
+    (node) => node.props?.children?.[0]?.type === 'EmotionImage',
   );
+  assert.equal(emptyCells.length, EMOTIONS.length);
+  assert(emptyCells.every((cell, index) => text(cell) === `${EMOTIONS[index].name}0회`));
 });
 
 test('emotion proportions group every emotion and follow all three periods', () => {
@@ -316,6 +334,57 @@ test('emotion proportions group every emotion and follow all three periods', () 
       Array.from(segments, (node) => node.props.style.flexGrow),
       expected.filter((count) => count > 0),
     );
+  }
+});
+
+test('emotion statistics retain all emotions and counts in one horizontal album strip', () => {
+  const stats = emptyStats();
+  stats.emotions[10] = 1;
+  stats.emotions[11] = 1;
+  const tree = render('EmotionStats', { stats, year: 2024 });
+  const images = nodes(tree).filter((node) => node.type === 'EmotionImage');
+  assert.deepEqual(
+    Array.from(images, (node) => node.props.emotion),
+    EMOTIONS.map((_, id) => id),
+  );
+  const cells = nodes(tree).filter((node) => node.props?.children?.[0]?.type === 'EmotionImage');
+  assert.equal(text(cells[10]), '피곤함1회');
+  assert.equal(text(cells[11]), '싱숭생숭1회');
+  const bar = nodes(tree).find((node) => node.props.accessibilityLabel?.startsWith('감정 비율'))!;
+  assert(bar.props.accessibilityLabel.includes('중립 2회 100%'));
+  assert(text(tree).includes('중립: 놀람, 무덤덤, 피곤함, 싱숭생숭'));
+  const strip = nodes(tree).find((node) => node.type === 'ScrollView');
+  assert.equal(strip.props.horizontal, true);
+  assert.equal(strip.props.children.length, EMOTIONS.length);
+  for (const [index, card] of strip.props.children.entries()) {
+    assert.equal(
+      card.props.accessibilityLabel,
+      `${EMOTIONS[index].name} ${stats.emotions[index]}회`,
+    );
+    assert(!card.props.className.includes('border'));
+    assert(card.props.style.backgroundColor.startsWith(EMOTIONS[index].color));
+  }
+});
+
+test('emotion strip always shows two whole cards and one fifth of the next at every supported text size', () => {
+  for (const layoutWidth of [320, 360, 390, 430, 768, 1024]) {
+    for (const rem of [14, 15, 16]) {
+      const tree = render('EmotionStats', { stats: emptyStats(), year: 2024 }, 0, {
+        layoutWidth,
+        rem,
+      });
+      const strip = nodes(tree).find((node) => node.type === 'ScrollView');
+      const card = strip.props.children[0];
+      const width = card.props.style.width;
+      const leadingInset = strip.props.contentContainerStyle.paddingHorizontal;
+      const thirdCardStart = leadingInset + 2 * width + 2 * rem * 0.75;
+      assert(width > 0);
+      assert(thirdCardStart < layoutWidth);
+      assert(Math.abs((layoutWidth - thirdCardStart) / width - 0.2) < 0.000001);
+      const image = nodes(card).find((node) => node.type === 'EmotionImage');
+      assert(image.props.size > 0);
+      assert(image.props.size + rem * 5.25 <= width + 0.000001);
+    }
   }
 });
 
@@ -419,6 +488,38 @@ test('sober rankings compare past and current streaks in both directions across 
       '아직 거리두기 기록이 없어요.',
     ),
   );
+});
+
+test('sober analysis separates status, days and remaining time for current and ended intervals', () => {
+  const sober = {
+    id: 1,
+    name: '배달 음식',
+    icon_key: 'delivery',
+    initial_started_at: '2026-09-01T00:00:00.000Z',
+  };
+  const tree = render('SoberAnalysis', {
+    sobers: [sober],
+    restarts: [{ id: 1, sober_id: 1, restarted_at: '2026-10-04T10:00:00.000Z' }],
+  });
+  const rows = nodes(tree).filter((node) => node.type === 'Pressable');
+  for (const [index, status, days, time, duration] of [
+    [0, '종료', '33일', '10시간 0분', '33일 10시간 0분'],
+    [1, '진행 중', '1일', '2시간 0분', '1일 2시간 0분'],
+  ] as const) {
+    const row = rows[index];
+    for (const expected of [sober.name, status, days, time]) {
+      assert(nodes(row).some((node) => text(node) === expected));
+    }
+    assert(row.props.accessibilityLabel.includes(status));
+    assert(row.props.accessibilityLabel.includes(duration));
+  }
+  const zero = render('SoberAnalysis', {
+    sobers: [{ ...sober, initial_started_at: '2026-10-05T12:00:00.000Z' }],
+    restarts: [],
+  });
+  for (const expected of ['진행 중', '0일', '0시간 0분']) {
+    assert(nodes(zero).some((node) => text(node) === expected));
+  }
 });
 
 test('home sober card selects by current record using all restarts', () => {

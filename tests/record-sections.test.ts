@@ -191,8 +191,11 @@ test('sober analysis ranks individual past and current streaks across items', ()
   });
   const durations = (nodes: any[]) =>
     nodes
-      .filter((node) => node.type === 'Text' && /^\d+일 \d+시간 \d+분$/.test(node.props.children))
-      .map((node) => node.props.children);
+      .filter(
+        (node) =>
+          node.type === 'Pressable' && node.props.accessibilityLabel?.includes('거리두기 정보'),
+      )
+      .map((node) => node.props.accessibilityLabel.match(/\d+일 \d+시간 \d+분/)[0]);
   const longest = ui.render();
   assert.deepEqual(durations(longest.nodes), ['4일 0시간 0분', '3일 0시간 0분', '3일 0시간 0분']);
   assert.equal(
@@ -204,12 +207,11 @@ test('sober analysis ranks individual past and current streaks across items', ()
   const timeRows = longest.nodes
     .filter(
       (node) =>
-        node.type === 'Text' &&
-        node.props.className === 'tracking-tighter text-sm text-theme-text-secondary',
+        node.type === 'Pressable' && node.props.accessibilityLabel?.includes('거리두기 정보'),
     )
-    .map((node) => node.props.children.join(''));
+    .map((node) => node.props.accessibilityLabel);
   assert.equal(timeRows.length, 3);
-  assert(timeRows.every((text) => /^\d{2}년 \d{1,2}월 \d{1,2}일 \d{2}:\d{2} ~ /.test(text)));
+  assert(timeRows.every((text) => /\d{2}년 \d{1,2}월 \d{1,2}일 \d{2}:\d{2}부터 /.test(text)));
   assert(
     longest.nodes.some(
       (node) =>
@@ -227,13 +229,8 @@ test('sober analysis ranks individual past and current streaks across items', ()
     shortest.nodes.filter(
       (node) =>
         node.type === 'Text' &&
-        Array.isArray(node.props.children) &&
-        node.props.className === 'tracking-tighter text-sm text-theme-text-secondary' &&
-        node.props.children.some(
-          (child: any) =>
-            child?.props?.children === '진행 중' &&
-            child.props.className === 'text-sm text-theme-accent',
-        ),
+        node.props.children === '진행 중' &&
+        node.props.className === 'text-sm text-theme-accent',
     ).length,
     2,
   );

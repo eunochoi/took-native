@@ -36,6 +36,7 @@ export function BottomSheetModal({
   scrollFade = false,
   contentKey,
   contentBottomPadding,
+  contentFullBleed = false,
   presentation = 'modal',
   dimBackdrop = true,
   menuAction,
@@ -62,6 +63,7 @@ export function BottomSheetModal({
   scrollFade?: boolean;
   contentKey?: string | number;
   contentBottomPadding?: number;
+  contentFullBleed?: boolean;
   presentation?: 'modal' | 'screen';
   dimBackdrop?: boolean;
   menuAction?: ReactNode;
@@ -106,7 +108,7 @@ export function BottomSheetModal({
       headerOnlyDrag: fillContent,
       scrollRef,
     });
-  const header = (
+  const headerContent = (
     <BottomSheetHeader
       title={title}
       titleIcon={titleIcon}
@@ -115,6 +117,11 @@ export function BottomSheetModal({
       menuAction={menuAction}
       onClose={dismissible ? () => closeSheet() : undefined}
     />
+  );
+  const header = contentFullBleed ? (
+    <View className="px-[5%]">{headerContent}</View>
+  ) : (
+    headerContent
   );
   const sheet = (
     <Animated.View
@@ -127,7 +134,7 @@ export function BottomSheetModal({
       <View
         onLayout={motion.onSheetLayout}
         accessibilityViewIsModal
-        className={`w-full shrink ios:curve-continuous rounded-t-4xl border-[1px] border-theme-border bg-theme-surface ${renderBody ? '' : 'px-[5%]'} pt-2 shadow-2xl shadow-theme-overlay/60 ios:shadow-lg ios:shadow-theme-overlay/20`}
+        className={`w-full shrink ios:curve-continuous rounded-t-4xl border-[1px] border-theme-border bg-theme-surface ${renderBody || contentFullBleed ? '' : 'px-[5%]'} pt-2 shadow-2xl shadow-theme-overlay/60 ios:shadow-lg ios:shadow-theme-overlay/20`}
         style={{
           maxHeight: sheetHeight,
           height: fixedHeight ? sheetHeight : undefined,
@@ -148,7 +155,13 @@ export function BottomSheetModal({
           </View>
         ) : (
           <BottomSheetScrollViewport
-            header={fixedContent}
+            header={
+              contentFullBleed && fixedContent ? (
+                <View className="px-[5%]">{fixedContent}</View>
+              ) : (
+                fixedContent
+              )
+            }
             motion={motion}
             renderScrollView={renderScrollView}
             fade={fade}
@@ -166,7 +179,7 @@ export function BottomSheetModal({
         )}
         {footer && (
           <View
-            className="pb-4"
+            className={contentFullBleed ? 'pb-4 px-[5%]' : 'pb-4'}
             style={insets.bottom > 0 ? { paddingBottom: appRem + insets.bottom } : undefined}
           >
             {typeof footer === 'function' ? footer(closeSheet) : footer}

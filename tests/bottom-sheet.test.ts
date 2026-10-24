@@ -27,6 +27,7 @@ function harness(
     scrollEnabled?: boolean;
     footer?: unknown;
     fixedContent?: unknown;
+    contentFullBleed?: boolean;
     renderScrollView?: (props: any) => unknown;
     renderBody?: (close: any) => unknown;
   } = {},
@@ -918,6 +919,29 @@ test('form drag lock disables the sheet pan and the footer stays outside the scr
   assert.equal(footer.props.className, 'pb-4');
   assert.equal(h.scroll().props.contentContainerStyle, undefined);
   assert.equal(h.scroll().props.contentContainerClassName, 'gap-7 pt-6 pb-7');
+});
+
+test('full-bleed content retains header, fixed content and footer insets without narrowing the viewport', () => {
+  const fixedContent = { type: 'Tabs', props: {} };
+  const h = harness(true, false, 720, {
+    contentFullBleed: true,
+    fixedContent,
+    footer: 'save',
+  });
+  h.show();
+  h.completeOpen();
+  const surface = h.sheet().props.children;
+  assert(!surface.props.className.includes('px-[5%]'));
+  const [header, body, footer] = surface.props.children;
+  assert.equal(header.props.className, 'px-[5%]');
+  assert.equal(body.props.children[0].props.className, 'px-[5%]');
+  assert.equal(body.props.children[0].props.children, fixedContent);
+  assert.equal(footer.props.className, 'pb-4 px-[5%]');
+  assert.equal(footer.props.children, 'save');
+  assert.equal(h.scroll().props.contentContainerClassName, 'gap-7 pt-6 pb-7');
+  h.begin(10, 10);
+  h.move(120, 15);
+  assert.equal(h.gestureState, 'failed');
 });
 
 test('footer actions use the shared close lifecycle and dispatch once after dismissal', () => {

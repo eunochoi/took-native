@@ -51,7 +51,7 @@ export function DiaryStatisticsSummary({
             >
               {stat.value}
             </Text>
-            <Text className="text-theme-text-secondary font-bold text-sm">{stat.unit}</Text>
+            <Text className="text-base text-theme-text-secondary">{stat.unit}</Text>
           </View>
         </View>
       ))}

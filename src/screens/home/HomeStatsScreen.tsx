@@ -40,6 +40,7 @@ export function HomeStatsScreen({
     },
     {
       label: '감정',
+      fullBleed: true,
       queries: [diary],
       content: diary.data ? <EmotionStats stats={diary.data} year={year} /> : null,
     },
@@ -60,11 +61,18 @@ export function HomeStatsScreen({
 
   return (
     <>
-      <BottomSheetPage backRoute="/" title="모아보기" scrollFade contentKey={year}>
+      <BottomSheetPage backRoute="/" title="모아보기" scrollFade contentKey={year} contentFullBleed>
         <View className="gap-6">
           <View className="gap-14">
             {sections.map((section) => (
-              <View key={section.label}>
+              <View
+                key={section.label}
+                className={
+                  section.fullBleed && section.queries.every((query) => query.data)
+                    ? undefined
+                    : 'px-[5%]'
+                }
+              >
                 {section.queries.some((query) => query.isError && !query.data) ? (
                   <QueryError
                     className="min-h-32"
@@ -84,24 +92,26 @@ export function HomeStatsScreen({
               </View>
             ))}
 
-            <View className="gap-2 px-2">
-              <Text className="text-xl font-bold">다른 연도도 확인해 볼까요?</Text>
-              <Text className="text-base text-theme-text-secondary">
-                연도를 바꿔 다른 해의 기록도 살펴보세요.
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`${year}년, 연도 선택`}
-                onPress={() => setPicker(true)}
-                className="py-2 my-3 self-end flex-row items-center justify-center gap-2 active:opacity-70"
-              >
-                <Text className="text-base font-semibold text-theme-accent-deep">연도 선택</Text>
-                <AppIcon
-                  name="arrow-forward"
-                  size={iconSizes.md}
-                  className="text-theme-accent-deep"
-                />
-              </Pressable>
+            <View className="px-[5%]">
+              <View className="gap-2 px-2">
+                <Text className="text-xl font-bold">다른 연도도 확인해 볼까요?</Text>
+                <Text className="text-base text-theme-text-secondary">
+                  연도를 바꿔 다른 해의 기록도 살펴보세요.
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${year}년, 연도 선택`}
+                  onPress={() => setPicker(true)}
+                  className="py-2 my-3 self-end flex-row items-center justify-center gap-2 active:opacity-70"
+                >
+                  <Text className="text-base font-semibold text-theme-accent-deep">연도 선택</Text>
+                  <AppIcon
+                    name="arrow-forward"
+                    size={iconSizes.md}
+                    className="text-theme-accent-deep"
+                  />
+                </Pressable>
+              </View>
             </View>
           </View>
         </View>
