@@ -15,6 +15,8 @@ import {
   SOBER_ICONS,
 } from '../src/domain/sober';
 import { buildIosSoberWidgetSnapshot } from '../src/widgets/sober/ios/snapshot';
+import { ACCENT_PALETTES } from '../src/theme/colors';
+import { HABIT_ICON_COLORS } from '../src/domain/constants';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 
@@ -90,7 +92,7 @@ test(
       const assetNames: string[] = [];
       for (const icon_key of Object.keys(SOBER_ICONS) as Sober['icon_key'][]) {
         const current = buildIosSoberWidgetSnapshot([{ ...sobers[0], icon_key }], []);
-        const { iconKey, ...legacy } = current.records[0];
+        const { iconKey, iconColor: _iconColor, ...legacy } = current.records[0];
         iconSnapshots.push(
           JSON.stringify(current),
           JSON.stringify({ ...current, records: [legacy] }),
@@ -101,11 +103,21 @@ test(
         JSON.stringify({ ...snapshot, records: [{ ...snapshot.records[0], iconKey: 'unknown' }] }),
       );
       assetNames.push('sober-coffee');
+      const colorSnapshots = [
+        buildIosSoberWidgetSnapshot([{ ...sobers[0], icon_color: 'theme' }], [], 'pink'),
+        buildIosSoberWidgetSnapshot([{ ...sobers[0], icon_color: 'coral' }], [], 'pink'),
+        ...[undefined, null, 'invalid', '#123456zz', '#123'].map((iconColor) => ({
+          ...snapshot,
+          records: [{ ...snapshot.records[0], iconColor }],
+        })),
+        { ...snapshot, accents: {}, records: [{ ...snapshot.records[0], iconColor: undefined }] },
+      ].map((value) => JSON.stringify(value));
       const fixture = {
         snapshot,
         dates,
         invalid,
         iconSnapshots,
+        colorSnapshots,
         fonts: fontFiles.map((name) => realpathSync(join(root, 'targets/sober-widget', name))),
       };
       writeFileSync(join(temp, 'fixture.json'), JSON.stringify(fixture));
@@ -144,6 +156,11 @@ test(
       );
       assert.deepEqual(result.summaries, expected);
       assert.deepEqual(result.assetNames, assetNames);
+      assert.deepEqual(result.iconColors, [
+        ACCENT_PALETTES.pink.accent,
+        HABIT_ICON_COLORS.coral.value,
+        ...Array(6).fill(ACCENT_PALETTES.blue.accent),
+      ]);
       assert.deepEqual(
         result.invalidAccepted,
         invalid.map(() => false),

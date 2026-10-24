@@ -9,6 +9,14 @@ struct SoberWidgetRecord: Codable {
   let iconGlyph: String
   let iconFont: String
   let iconKey: String?
+  let iconColor: String?
+
+  func resolvedIconColor(accents: [String: String]) -> String {
+    if let iconColor, iconColor.range(of: "^#[0-9A-Fa-f]{6}$", options: .regularExpression) != nil {
+      return iconColor
+    }
+    return accents["blue"] ?? "#8CADE2"
+  }
 
   var iconAssetName: String {
     SoberWidgetIcons.assetName(key: iconKey, glyph: iconGlyph, font: iconFont)

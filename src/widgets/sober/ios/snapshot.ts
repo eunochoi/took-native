@@ -3,8 +3,14 @@ import MaterialCommunityIcons from '@expo/vector-icons/build/vendor/react-native
 import type { Sober, SoberRestart } from '../../../db/types';
 import { getCurrentSoberStart, SOBER_GOALS, SOBER_ICONS } from '../../../domain/sober';
 import { ACCENT_PALETTES } from '../../../theme/colors';
+import { isHabitIconColor, resolveIconColor } from '../../../domain/constants';
+import type { Settings } from '../../../settings/model';
 
-export function buildIosSoberWidgetSnapshot(sobers: Sober[], restarts: SoberRestart[]) {
+export function buildIosSoberWidgetSnapshot(
+  sobers: Sober[],
+  restarts: SoberRestart[],
+  themeAccent: Settings['themeAccent'] = 'blue',
+) {
   return {
     version: 1,
     goals: SOBER_GOALS,
@@ -27,6 +33,10 @@ export function buildIosSoberWidgetSnapshot(sobers: Sober[], restarts: SoberRest
         goalMode: sober.goal_mode,
         goalDays: sober.goal_days,
         iconKey: sober.icon_key,
+        iconColor: resolveIconColor(
+          isHabitIconColor(sober.icon_color) ? sober.icon_color : 'theme',
+          (ACCENT_PALETTES[themeAccent] ?? ACCENT_PALETTES.blue).accent,
+        ),
         // Older installed widget binaries still read these fields.
         iconGlyph:
           icon.family === 'badge'

@@ -3,6 +3,7 @@ import { loadAsync } from 'expo-font';
 import { useSQLiteContext } from 'expo-sqlite';
 import { withWriteLock } from '../db';
 import { DEFAULT_SETTINGS, parseSettings, type Settings } from './model';
+import { refreshSoberWidgets } from '../widgets/sober';
 
 interface Context {
   settings: Settings;
@@ -78,6 +79,7 @@ export function SettingsProvider({
         );
         persisted.current = next;
       });
+      if (patch.themeAccent !== undefined) refreshSoberWidgets();
     } catch (error) {
       // An older failure must not undo a newer pending choice.
       if (current.current === next) {

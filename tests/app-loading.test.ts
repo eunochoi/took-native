@@ -82,19 +82,58 @@ function settingsHarness() {
   const read = deferred<any>();
   const fonts = deferred<void>();
   const errors: Error[] = [];
+  let refreshes = 0;
+  let write = async () => {};
   const h = harness('../src/settings/SettingsProvider.tsx', {
     'expo-font': { loadAsync: () => fonts.promise },
     'expo-sqlite': { useSQLiteContext: () => db },
     '../db': { withWriteLock: (fn: any) => fn() },
     './model': { DEFAULT_SETTINGS, parseSettings },
+    '../widgets/sober': { refreshSoberWidgets: () => refreshes++ },
   });
-  const db = { getFirstAsync: () => read.promise, runAsync: async () => {} };
+  const db = { getFirstAsync: () => read.promise, runAsync: () => write() };
   const props = {
     children: 'app',
     onError: (error: Error) => errors.push(error),
   };
-  return { ...h, read, fonts, errors, render: () => h.render('SettingsProvider', props) };
+  return {
+    ...h,
+    read,
+    fonts,
+    errors,
+    refreshes: () => refreshes,
+    setWrite: (next: () => Promise<void>) => {
+      write = next;
+    },
+    render: () => h.render('SettingsProvider', props),
+  };
 }
+
+test('widgets refresh only after a theme preference is persisted successfully', async () => {
+  const h = settingsHarness();
+  h.render();
+  h.read.resolve(null);
+  h.fonts.resolve();
+  await tick();
+  const pending = deferred<void>();
+  h.setWrite(() => pending.promise);
+  const save = h.render().props.value.updateSettings({ themeAccent: 'purple' });
+  assert.equal(h.refreshes(), 0);
+  pending.resolve();
+  await save;
+  assert.equal(h.refreshes(), 1);
+  h.setWrite(async () => {});
+  await h.render().props.value.updateSettings({ fontSize: 'large' });
+  assert.equal(h.refreshes(), 1);
+  h.setWrite(async () => {
+    throw Error('save failed');
+  });
+  await assert.rejects(
+    h.render().props.value.updateSettings({ themeAccent: 'pink' }),
+    /save failed/,
+  );
+  assert.equal(h.refreshes(), 1);
+});
 
 test('saved settings reach app only after fonts finish loading', async () => {
   const h = settingsHarness();

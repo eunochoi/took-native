@@ -12,7 +12,8 @@ import {
   formatSoberDuration,
   formatSoberGoal,
 } from '../src/domain/sober';
-import { ACCENT_KEYS, ACCENT_LABELS } from '../src/theme/accents';
+import { ACCENT_KEYS } from '../src/theme/accents';
+import { HABIT_ICON_COLORS, resolveIconColor } from '../src/domain/constants';
 import type { Sober } from '../src/db/types';
 import initSqlJs from 'sql.js';
 import { ACCENT_PALETTES } from '../src/theme/colors';
@@ -49,6 +50,7 @@ test('iOS snapshot shares current starts and widget colors without copying priva
         id: 1,
         name: '커피',
         icon_key: 'coffee',
+        icon_color: 'theme',
         initial_started_at: '2026-10-01T00:00:00Z',
         goal_mode: 'AUTO',
         goal_days: null,
@@ -58,6 +60,7 @@ test('iOS snapshot shares current starts and widget colors without copying priva
         id: 2,
         name: '야식',
         icon_key: 'age19',
+        icon_color: 'coral',
         initial_started_at: '2026-10-02T00:00:00Z',
         goal_mode: 'MANUAL',
         goal_days: 30,
@@ -67,11 +70,14 @@ test('iOS snapshot shares current starts and widget colors without copying priva
       { sober_id: 1, restarted_at: '2026-10-03T00:00:00Z', memo: 'private' } as any,
       { sober_id: 2, restarted_at: '2026-10-04T00:00:00Z' } as any,
     ],
+    'purple',
   );
   assert.equal(snapshot.records[0].startedAt, Date.parse('2026-10-03T00:00:00Z') / 1000);
   assert.equal(snapshot.records[1].startedAt, Date.parse('2026-10-04T00:00:00Z') / 1000);
   assert.equal(snapshot.records[1].iconGlyph, '19');
   assert.equal(snapshot.records[1].iconKey, 'age19');
+  assert.equal(snapshot.records[0].iconColor, ACCENT_PALETTES.purple.accent);
+  assert.equal(snapshot.records[1].iconColor, HABIT_ICON_COLORS.coral.value);
   assert(!JSON.stringify(snapshot).includes('private'));
   for (const accent of ACCENT_KEYS)
     assert.equal(snapshot.accents[accent], ACCENT_PALETTES[accent].accent);
@@ -92,6 +98,7 @@ test('iOS snapshot shares current starts and widget colors without copying priva
     assert.equal(result.records[0].iconKey, icon_key);
     assert(result.records[0].iconGlyph);
     assert(result.records[0].iconFont);
+    assert.equal(result.records[0].iconColor, ACCENT_PALETTES.blue.accent);
   }
 });
 
@@ -115,6 +122,7 @@ test('iOS bridge skips old binaries, clears deleted records and closes database 
     },
     '../../../db': { withReadLock: (work: any) => work() },
     '../../../db/sober': { getSoberList: async () => sobers, getSoberRestarts: async () => [] },
+    '../storage': { loadWidgetThemeAccent: async () => 'pink' },
     './snapshot': { buildIosSoberWidgetSnapshot },
   });
   await syncIosSoberWidgets();
@@ -138,6 +146,7 @@ test('iOS bridge skips old binaries, clears deleted records and closes database 
   sobers = [];
   await syncIosSoberWidgets();
   assert.equal(JSON.parse(writes[0]).records.length, 1);
+  assert.equal(JSON.parse(writes[0]).records[0].iconColor, ACCENT_PALETTES.pink.accent);
   assert.deepEqual(JSON.parse(writes[1]).records, []);
   native = {
     syncAsync: async () => {
@@ -166,23 +175,21 @@ test('iOS refresh dispatches safely and never imports the Android widget runtime
   assert.equal(updates, 1);
 });
 
-test('widget choices are independent, validated, and use every existing Korean accent label', () => {
+test('widget appearance keeps backgrounds and text colors while ignoring legacy accent settings', () => {
   assert.deepEqual(defaultWidgetSettings(1), {
     soberId: 1,
-    accent: 'blue',
     background: 'white',
     textColor: 'black',
   });
-  for (const accent of ACCENT_KEYS) {
-    assert(ACCENT_LABELS[accent]);
-    assert.equal(
+  for (const accent of [...ACCENT_KEYS, 'invalid', null]) {
+    assert.deepEqual(
       parseWidgetSettings({
         ...defaultWidgetSettings(2),
         accent,
         background: 'transparent',
         textColor: 'white',
-      }).accent,
-      accent,
+      }),
+      { soberId: 2, background: 'transparent', textColor: 'white' },
     );
   }
   for (const background of ['white', 'black', 'transparent'] as const) {
@@ -194,7 +201,6 @@ test('widget choices are independent, validated, and use every existing Korean a
   for (const patch of [
     { soberId: 0 },
     { soberId: 1.5 },
-    { accent: 'red' },
     { background: 'theme' },
     { textColor: 'auto' },
   ])
@@ -286,7 +292,8 @@ test('independent widget instances persist while app records are restored', asyn
       "CREATE TABLE settings (value TEXT); INSERT INTO settings VALUES ('app'); DELETE FROM settings;",
     );
     assert.equal((await loadWidgetSettings(10)).soberId, 1);
-    assert.equal((await loadWidgetSettings(11)).accent, 'pink');
+    assert.equal((await loadWidgetSettings(11)).background, 'transparent');
+    assert.equal('accent' in (await loadWidgetSettings(11)), false);
     await removeWidgetSettings(10);
     assert.equal(await loadWidgetSettings(10), null);
     assert.equal((await loadWidgetSettings(11)).textColor, 'white');
@@ -294,6 +301,41 @@ test('independent widget instances persist while app records are restored', asyn
   } finally {
     databases.forEach((db) => db.close());
   }
+});
+
+test('widget theme loading uses blue for missing, malformed, invalid, or unreadable preferences', async () => {
+  const { loadWidgetThemeAccent, loadWidgetRecord } = load('../src/widgets/sober/storage.ts', {
+    'expo-sqlite': { openDatabaseAsync: async () => db },
+    '../../db': { withReadLock: (work: any) => work(), withWriteLock: (work: any) => work() },
+    '../../db/sober': {
+      getSoberById: async () => ({ id: 1, icon_color: 'theme' }),
+      getSoberRestarts: async () => [],
+    },
+  });
+  let row: unknown = null;
+  let failure = false;
+  let closed = 0;
+  const db = {
+    getFirstAsync: async () => {
+      if (failure) throw Error('read failed');
+      return row;
+    },
+    closeAsync: async () => closed++,
+  };
+  for (const themeAccent of ACCENT_KEYS) {
+    row = { value: JSON.stringify({ themeAccent }) };
+    assert.equal(await loadWidgetThemeAccent(db), themeAccent);
+    assert.equal((await loadWidgetRecord(1)).themeAccent, themeAccent);
+  }
+  for (const value of [null, '{broken', 'null', '{}', '{"themeAccent":"invalid"}']) {
+    row = value === null ? null : { value };
+    assert.equal(await loadWidgetThemeAccent(db), 'blue');
+  }
+  failure = true;
+  const record = await loadWidgetRecord(1);
+  assert.equal(record.sober.id, 1);
+  assert.equal(record.themeAccent, 'blue');
+  assert.equal(closed, ACCENT_KEYS.length + 1);
 });
 
 test('widget task reads current records, keeps old content on read failure, and removes only deleted instance', async () => {
@@ -447,6 +489,7 @@ test('actual library serializes selected icons, transparent background and share
     const selected = buildWidgetTree(
       SoberWidget({
         settings: { ...defaultWidgetSettings(1), accent: 'pink' },
+        themeAccent: 'purple',
         sober: { ...sober, icon_key },
         width: 180,
         height: 180,
@@ -455,13 +498,45 @@ test('actual library serializes selected icons, transparent background and share
     const icon = flatten(selected).find((node) => node.type === 'SvgWidget');
     assert.equal(
       icon.props.svgString,
-      icons[icon_key].replaceAll('currentColor', ACCENT_PALETTES.pink.accent),
+      icons[icon_key].replaceAll('currentColor', ACCENT_PALETTES.purple.accent),
     );
     const holder = selected.children[0].children[0];
     assert.equal(holder.props.backgroundColor, undefined);
     assert.equal(holder.props.borderRadius, undefined);
     assert.equal(icon.props.width, 28);
     assert.equal(icon.props.height, 28);
+  }
+  for (const icon_color of ['theme', ...Object.keys(HABIT_ICON_COLORS)] as Sober['icon_color'][]) {
+    const colored = buildWidgetTree(
+      SoberWidget({
+        settings: defaultWidgetSettings(1),
+        themeAccent: 'green',
+        sober: { ...sober, icon_color },
+        width: 180,
+        height: 180,
+      }),
+    );
+    const color = resolveIconColor(icon_color, ACCENT_PALETTES.green.accent);
+    assert.equal(
+      flatten(colored).find((node) => node.type === 'SvgWidget').props.svgString,
+      icons[sober.icon_key].replaceAll('currentColor', color),
+    );
+    assert(flatten(colored).some((node) => node.props.backgroundColor === color));
+  }
+  for (const themeAccent of [undefined, 'invalid']) {
+    const fallback = buildWidgetTree(
+      SoberWidget({
+        settings: defaultWidgetSettings(1),
+        sober,
+        themeAccent,
+        width: 180,
+        height: 180,
+      }),
+    );
+    assert.equal(
+      flatten(fallback).find((node) => node.type === 'SvgWidget').props.svgString,
+      icons[sober.icon_key].replaceAll('currentColor', ACCENT_PALETTES.blue.accent),
+    );
   }
   for (const [days, expected] of [
     [364, '364일 23시간 59분'],

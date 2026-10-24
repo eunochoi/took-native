@@ -10,6 +10,7 @@ struct SoberWidgetDataProbe {
     let invalid: [String]
     let fonts: [String]
     let iconSnapshots: [String]
+    let colorSnapshots: [String]
   }
 
   static func main() throws {
@@ -41,6 +42,10 @@ struct SoberWidgetDataProbe {
       "fontNames": fontNames,
       "assetNames": try fixture.iconSnapshots.map {
         try SoberWidgetSnapshot.decode(Data($0.utf8)).records[0].iconAssetName
+      },
+      "iconColors": try fixture.colorSnapshots.map {
+        let current = try SoberWidgetSnapshot.decode(Data($0.utf8))
+        return current.records[0].resolvedIconColor(accents: current.accents)
       },
     ]
     let resultData = try JSONSerialization.data(withJSONObject: result, options: [.sortedKeys])

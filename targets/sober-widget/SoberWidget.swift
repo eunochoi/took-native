@@ -18,7 +18,8 @@ struct SoberWidgetProvider: AppIntentTimelineProvider {
         version: 1, goals: [3, 7, 14, 30], accents: [:],
         records: [SoberWidgetRecord(
           id: 1, name: "야식 줄이기", startedAt: Date.now.addingTimeInterval(-450000).timeIntervalSince1970,
-          goalMode: "MANUAL", goalDays: 30, iconGlyph: "♥", iconFont: "TmoneyRoundWind-ExtraBold", iconKey: "food"
+          goalMode: "MANUAL", goalDays: 30, iconGlyph: "♥", iconFont: "TmoneyRoundWind-ExtraBold", iconKey: "food",
+          iconColor: nil
         )]
       )
     )
@@ -49,8 +50,9 @@ struct SoberWidgetView: View {
   let entry: SoberWidgetEntry
 
   private var accent: Color {
-    let hex = entry.snapshot.accents[entry.configuration.accent.rawValue] ?? "#7FA4E6"
-    let rgb = UInt32(hex.dropFirst(), radix: 16) ?? 0x7FA4E6
+    let hex = entry.record?.resolvedIconColor(accents: entry.snapshot.accents)
+      ?? entry.snapshot.accents["blue"] ?? "#8CADE2"
+    let rgb = UInt32(hex.dropFirst(), radix: 16) ?? 0x8CADE2
     return Color(
       .sRGB, red: Double((rgb >> 16) & 255) / 255,
       green: Double((rgb >> 8) & 255) / 255, blue: Double(rgb & 255) / 255, opacity: 1

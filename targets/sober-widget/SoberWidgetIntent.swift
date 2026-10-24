@@ -31,15 +31,6 @@ struct SoberWidgetEntityQuery: EntityQuery {
   }
 }
 
-enum SoberWidgetAccent: String, AppEnum {
-  case blue, purple, pink, green, yellow, grey
-
-  static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "강조색")
-  static var caseDisplayRepresentations: [Self: DisplayRepresentation] = [
-    .blue: "파랑", .purple: "보라", .pink: "분홍", .green: "초록", .yellow: "딥 청록", .grey: "회색",
-  ]
-}
-
 enum SoberWidgetBackground: String, AppEnum {
   case system, white, black
 
@@ -63,13 +54,11 @@ struct SoberWidgetIntent: WidgetConfigurationIntent {
   static var description = IntentDescription("표시할 거리두기와 위젯 모양을 선택해요.")
 
   @Parameter(title: "거리두기") var sober: SoberWidgetEntity?
-  @Parameter(title: "강조색", default: .blue) var accent: SoberWidgetAccent
   @Parameter(title: "배경", default: .system) var background: SoberWidgetBackground
   @Parameter(title: "글자색", default: .automatic) var textColor: SoberWidgetTextColor
 
   static var parameterSummary: some ParameterSummary {
     Summary("\(\.$sober)") {
-      \.$accent
       \.$background
       \.$textColor
     }

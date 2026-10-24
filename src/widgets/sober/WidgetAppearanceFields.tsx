@@ -1,8 +1,6 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { PickerOption } from '../../components/PickerOption';
 import { Text } from '../../components/Text';
-import { ACCENT_KEYS, ACCENT_LABELS } from '../../theme/accents';
-import { ACCENT_PALETTES } from '../../theme/colors';
 import type { SoberWidgetSettings } from './model';
 
 export function WidgetAppearanceFields({
@@ -16,27 +14,6 @@ export function WidgetAppearanceFields({
 }) {
   return (
     <>
-      <View className="gap-3">
-        <Text className="text-xl font-semibold">강조 색상</Text>
-        <View className="flex-row items-center justify-between gap-2 px-1">
-          {ACCENT_KEYS.map((accent) => (
-            <Pressable
-              key={accent}
-              accessibilityRole="radio"
-              accessibilityLabel={ACCENT_LABELS[accent]}
-              accessibilityState={{ selected: widgetSettings?.accent === accent, disabled }}
-              disabled={disabled}
-              onPress={() => onChange({ accent })}
-              className={`h-10 w-10 items-center justify-center ios:curve-continuous rounded-full active:opacity-65 ${disabled ? 'opacity-40' : ''}`}
-            >
-              <View
-                className={`${widgetSettings?.accent === accent ? 'h-10 w-10' : 'h-8 w-8'} ios:curve-continuous rounded-full`}
-                style={{ backgroundColor: ACCENT_PALETTES[accent].accent }}
-              />
-            </Pressable>
-          ))}
-        </View>
-      </View>
       <View className="gap-3">
         <Text className="text-xl font-semibold">배경</Text>
         <View className="flex-row gap-3">

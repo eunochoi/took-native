@@ -1,7 +1,9 @@
 import { FlexWidget, OverlapWidget, SvgWidget, TextWidget } from 'react-native-android-widget';
 import type { Sober, SoberRestart } from '../../db/types';
+import { isHabitIconColor, resolveIconColor } from '../../domain/constants';
 import { formatSoberDuration, formatSoberGoal, getSoberSummary } from '../../domain/sober';
 import { ACCENT_PALETTES } from '../../theme/colors';
+import type { Settings } from '../../settings/model';
 import tokens from '../../theme/tokens.json';
 import type { SoberWidgetSettings } from './model';
 import icons from './icons.json';
@@ -10,6 +12,7 @@ export function SoberWidget({
   settings,
   sober,
   restarts = [],
+  themeAccent = 'blue',
   width,
   height,
   now = Date.now(),
@@ -17,13 +20,17 @@ export function SoberWidget({
   settings: SoberWidgetSettings | null;
   sober: Sober | null;
   restarts?: SoberRestart[];
+  themeAccent?: Settings['themeAccent'];
   width: number;
   height: number;
   now?: number;
 }) {
   'use no memo';
   const scale = Math.min(width, height) / 180;
-  const accent = ACCENT_PALETTES[settings?.accent ?? 'blue'].accent as `#${string}`;
+  const accent = resolveIconColor(
+    isHabitIconColor(sober?.icon_color) ? sober.icon_color : 'theme',
+    (ACCENT_PALETTES[themeAccent] ?? ACCENT_PALETTES.blue).accent,
+  ) as `#${string}`;
   const text = (
     settings?.textColor === 'white' ? tokens.colorValues.white : tokens.colorValues.lightTextPrimary
   ) as `#${string}`;

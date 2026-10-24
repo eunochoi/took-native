@@ -1,6 +1,8 @@
 import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 import { withReadLock, withWriteLock } from '../../db';
 import { getSoberById, getSoberRestarts } from '../../db/sober';
+import { DEFAULT_SETTINGS, type Settings } from '../../settings/model';
+import { ACCENT_KEYS } from '../../theme/accents';
 import { parseWidgetSettings, type SoberWidgetSettings } from './model';
 
 async function withWidgetDatabase<T>(work: (db: SQLiteDatabase) => Promise<T>): Promise<T> {
@@ -56,10 +58,27 @@ export function loadWidgetRecord(id: number) {
     const db = await openDatabaseAsync('took.db', { useNewConnection: true });
     try {
       const sober = await getSoberById(db, id);
-      const restarts = sober ? await getSoberRestarts(db, id) : [];
-      return { sober, restarts };
+      const [restarts, themeAccent] = await Promise.all([
+        sober ? getSoberRestarts(db, id) : [],
+        loadWidgetThemeAccent(db),
+      ]);
+      return { sober, restarts, themeAccent };
     } finally {
       await db.closeAsync();
     }
   });
+}
+
+export async function loadWidgetThemeAccent(db: SQLiteDatabase): Promise<Settings['themeAccent']> {
+  try {
+    const row = await db.getFirstAsync<{ value: string }>(
+      'SELECT value FROM settings WHERE key = ?',
+      'preferences',
+    );
+    const accent = row ? JSON.parse(row.value)?.themeAccent : undefined;
+    if (ACCENT_KEYS.includes(accent)) return accent;
+  } catch {
+    // A missing or unreadable preference must not prevent the widget from rendering.
+  }
+  return DEFAULT_SETTINGS.themeAccent;
 }

@@ -4,7 +4,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
 import { WidgetPreview, type WidgetConfigurationScreenProps } from 'react-native-android-widget';
-import { SettingsProvider } from '../../settings/SettingsProvider';
+import { SettingsProvider, useSettings } from '../../settings/SettingsProvider';
 import { AppThemeProvider } from '../../theme/AppThemeProvider';
 import { initializeDatabase } from '../../db/schema';
 import { getSoberList, getSoberRestarts } from '../../db/sober';
@@ -50,6 +50,7 @@ function ConfigurationContent({
   setResult,
 }: WidgetConfigurationScreenProps) {
   const db = useSQLiteContext();
+  const { settings: appSettings } = useSettings();
   const [records, setRecords] = useState<Sober[]>([]);
   const [restarts, setRestarts] = useState<SoberRestart[]>([]);
   const [settings, setSettings] = useState<SoberWidgetSettings | null>(null);
@@ -100,11 +101,12 @@ function ConfigurationContent({
         settings={settings}
         sober={sober}
         restarts={restarts.filter((item) => item.sober_id === sober?.id)}
+        themeAccent={appSettings.themeAccent}
         width={width}
         height={height}
       />
     ),
-    [settings, sober, restarts],
+    [settings, sober, restarts, appSettings.themeAccent],
   );
   const change = (patch: Partial<SoberWidgetSettings>) =>
     setSettings((value) => (value ? { ...value, ...patch } : value));
