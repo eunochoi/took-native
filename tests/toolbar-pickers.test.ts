@@ -215,6 +215,87 @@ test('sort and priority are drafts and commit together only after the sheet clos
   assert.deepEqual(ui.applied, [['ASC', true]]);
 });
 
+test('sort header reset restores defaults without applying until the sheet closes', () => {
+  for (const props of [
+    { title: '일기 정렬', sort: 'ASC', sortLabel: '날짜 정렬' },
+    { title: '습관 정렬', sort: 'ASC', priorityFirst: true, allowCustom: true },
+    { title: '습관 정렬', sort: 'CUSTOM', priorityFirst: false, allowCustom: true },
+    { title: '거리두기 정렬', sort: 'ASC', recordSort: 'ASC', priorityFirst: true },
+    { title: '메모 기록 정렬', sort: 'ASC', sortLabel: '다시 시작 일시 정렬' },
+  ]) {
+    const ui = sortPicker(props);
+    const header = nodes(ui.render().shell.props.headerAction);
+    assert(header.some((node) => node.props.accessibilityLabel === '선택 초기화'));
+    assert(header.some((node) => node.type === 'AppIcon' && node.props.name === 'restart-alt'));
+    assert(
+      !nodes(ui.render().shell.props.footer(() => {})).some(
+        (node) => node.props.accessibilityLabel === '선택 초기화',
+      ),
+    );
+    ui.press('선택 초기화');
+    const content = ui.render().content;
+    assert.equal(
+      content.find((node) => node.props.accessibilityLabel === '최신순').props.selected,
+      true,
+    );
+    assert.equal(
+      content.find((node) => node.props.accessibilityLabel === '과거순').props.selected,
+      false,
+    );
+    if (props.priorityFirst !== undefined)
+      assert.equal(content.find((node) => node.type === 'Switch').props.value, false);
+    if (props.allowCustom)
+      assert.equal(
+        content.find((node) => node.props.accessibilityLabel === '커스텀').props.selected,
+        false,
+      );
+    if (props.recordSort)
+      assert.equal(
+        content.find((node) => node.props.accessibilityLabel === '현재 기록 긴 기록순').props
+          .selected,
+        true,
+      );
+    assert.equal(ui.closed, 0);
+    assert.equal(ui.applied.length, 0);
+    ui.press('적용하기');
+    assert.equal(ui.applied.length, 0);
+    ui.finish();
+    assert.deepEqual(ui.applied, [props.recordSort ? ['DESC', false, 'DESC'] : ['DESC', false]]);
+  }
+});
+
+test('canceling a sort reset preserves saved settings when the modal reopens', () => {
+  for (const props of [
+    { sort: 'ASC' },
+    { sort: 'CUSTOM', priorityFirst: false, allowCustom: true },
+    { sort: 'ASC', priorityFirst: true, recordSort: 'ASC' },
+  ]) {
+    const ui = sortPicker(props);
+    ui.press('선택 초기화');
+    ui.render().shell.props.onClose();
+    ui.finish();
+    assert.equal(ui.applied.length, 0);
+    const reopened = sortPicker(props).render().content;
+    assert.equal(
+      reopened.find(
+        (node) => node.props.accessibilityLabel === (props.sort === 'CUSTOM' ? '커스텀' : '과거순'),
+      ).props.selected,
+      true,
+    );
+    if (props.recordSort)
+      assert.equal(
+        reopened.find((node) => node.props.accessibilityLabel === '현재 기록 짧은 기록순').props
+          .selected,
+        true,
+      );
+    if (props.priorityFirst !== undefined)
+      assert.equal(
+        reopened.find((node) => node.type === 'Switch').props.value,
+        props.priorityFirst,
+      );
+  }
+});
+
 test('custom order clears priority and never applies a conflicting combination', () => {
   const ui = sortPicker({ priorityFirst: true, allowCustom: true });
   ui.press('커스텀');

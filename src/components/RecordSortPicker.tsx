@@ -1,7 +1,8 @@
 import { InfoNotice } from './InfoNotice';
 import { useState } from 'react';
-import { Switch, View } from 'react-native';
+import { Pressable, Switch, View } from 'react-native';
 import { useAppTheme } from '../theme/AppThemeProvider';
+import { AppIcon } from './AppIcon';
 import { BottomSheetModal } from './BottomSheetModal';
 import { Button } from './Button';
 import { PickerOption } from './PickerOption';
@@ -32,7 +33,7 @@ export function RecordSortPicker({
     recordSort?: 'ASC' | 'DESC',
   ) => void;
 }) {
-  const { colors } = useAppTheme();
+  const { colors, iconSizes } = useAppTheme();
   const [draftSort, setSort] = useState(sort);
   const [draftRecordSort, setRecordSort] = useState(recordSort);
   const [draftPriority, setPriority] = useState(
@@ -62,6 +63,22 @@ export function RecordSortPicker({
     <BottomSheetModal
       visible
       title={title}
+      headerAction={
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="선택 초기화"
+          onPress={() => {
+            setSort('DESC');
+            setPriority(false);
+            setRecordSort(recordSort ? 'DESC' : undefined);
+          }}
+          hitSlop={6}
+          className="min-h-9 flex-row items-center justify-center gap-1 px-1 active:opacity-70"
+        >
+          <AppIcon name="restart-alt" size={iconSizes.md} className="text-theme-accent" />
+          <Text className="text-sm text-theme-text-secondary">초기화</Text>
+        </Pressable>
+      }
       onClose={onClose}
       footer={(closePicker) => (
         <Button
