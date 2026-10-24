@@ -60,6 +60,7 @@ function picker(path: string, name: string, initial: Record<string, unknown>) {
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (dependency === 'react')
           return {
+            Fragment: 'Fragment',
             useState: (value: unknown) => {
               const index = cursor++;
               if (!(index in state)) state[index] = value;
@@ -436,9 +437,10 @@ test('record toolbar shows saved sorting and priority while keeping add separate
     onPress: () => opened++,
   });
   const view = ui.render();
-  assert(view.content.some((node) => node.type === 'Text' && node.props.children === '최신순'));
-  assert.equal(view.content.filter((node) => node.type === 'StarIcon').length, 1);
-  ui.press('습관 정렬, 중요도 우선 · 생성일 내림차순');
+  assert(view.content.some((node) => node.type === 'Text' && node.props.children === '중요'));
+  assert.equal(view.content.filter((node) => node.type === 'StarIcon').length, 0);
+  assert.equal(view.content.find((node) => node.type === 'AppIcon').props.name, 'sort');
+  ui.press('습관 정렬, 중요한 항목 먼저 · 생성일 최신순');
   const add = picker('src/components/ToolbarAddButton.tsx', 'ToolbarAddButton', {
     onPress: () => added++,
   });
@@ -453,7 +455,7 @@ test('record toolbar shows saved sorting and priority while keeping add separate
     disabledAdd: false,
   }).render();
   assert(!custom.content.some((node) => node.type === 'StarIcon'));
-  assert(!custom.content.some((node) => node.type === 'AppIcon'));
+  assert.equal(custom.content.find((node) => node.type === 'AppIcon').props.name, 'sort');
   assert(custom.content.some((node) => node.type === 'Text' && node.props.children === '커스텀'));
 });
 
@@ -482,7 +484,7 @@ test('sober sorting shows priority, record, creation in order and applies drafts
     .map((node) => node.props.children);
   assert.deepEqual(headings, ['중요한 항목 먼저', '기록', '생성일']);
   ui.press('중요한 항목 먼저');
-  ui.press('현재 기록 오름차순');
+  ui.press('현재 기록 짧은 기록순');
   ui.press('과거순');
   assert.equal(ui.applied.length, 0);
   ui.press('적용하기');
@@ -490,7 +492,7 @@ test('sober sorting shows priority, record, creation in order and applies drafts
   ui.finish();
   assert.deepEqual(ui.applied, [['ASC', true, 'ASC']]);
   const cancelled = sortPicker({ priorityFirst: true, recordSort: 'DESC' });
-  cancelled.press('현재 기록 오름차순');
+  cancelled.press('현재 기록 짧은 기록순');
   cancelled.render().shell.props.onClose();
   cancelled.finish();
   assert.equal(cancelled.applied.length, 0);
@@ -506,49 +508,70 @@ test('sober toolbar announces record direction and creation tie breaker', () => 
   });
   assert.equal(
     ui.render().shell.props.accessibilityLabel,
-    '거리두기 항목 정렬, 중요도 우선 · 기록 내림차순 · 생성일 오름차순',
+    '거리두기 항목 정렬, 중요한 항목 먼저 · 현재 기록 긴 기록순 · 생성일 과거순',
   );
 });
 
-test('toolbar indicators show priority and representative sorting without trailing icons', () => {
-  for (const priorityFirst of [false, true]) {
-    for (const sort of ['ASC', 'DESC']) {
-      for (const recordSort of [undefined, 'ASC', 'DESC']) {
-        const ui = picker('src/components/ToolbarSortButton.tsx', 'ToolbarSortButton', {
-          priorityFirst,
-          sort,
-          recordSort,
-          accessibilityLabel: '정렬',
-        }).render();
-        const indicators = ui.content.filter((node) =>
-          ['Text', 'StarIcon', 'AppIcon'].includes(node.type),
-        );
-        const labels = indicators.map((node) =>
-          node.type === 'StarIcon'
-            ? '★'
-            : node.type === 'AppIcon'
-              ? node.props.name
-              : node.props.children,
-        );
-        const isDefault =
-          !priorityFirst && sort === 'DESC' && (!recordSort || recordSort === 'DESC');
-        assert.deepEqual(
-          labels,
-          isDefault
-            ? ['sort', '정렬']
-            : [
-                ...(priorityFirst ? ['★'] : []),
-                recordSort
-                  ? recordSort === 'DESC'
-                    ? '긴 기록순'
-                    : '짧은 기록순'
-                  : sort === 'DESC'
-                    ? '최신순'
-                    : '오래된순',
-              ],
-        );
-      }
-    }
+test('toolbar always keeps its sort icon and shows every non-default condition with ellipsis', () => {
+  const cases = [
+    { sort: 'DESC', priorityFirst: false, label: '정렬' },
+    { sort: 'ASC', priorityFirst: false, label: '과거' },
+    { sort: 'DESC', priorityFirst: true, label: '중요' },
+    { sort: 'ASC', priorityFirst: true, label: '중요 · 과거' },
+    { sort: 'DESC', recordSort: 'DESC', priorityFirst: false, label: '정렬' },
+    { sort: 'ASC', recordSort: 'DESC', priorityFirst: false, label: '과거' },
+    { sort: 'DESC', recordSort: 'DESC', priorityFirst: true, label: '중요' },
+    {
+      sort: 'ASC',
+      recordSort: 'DESC',
+      priorityFirst: true,
+      label: '중요 · 과거',
+    },
+    {
+      sort: 'DESC',
+      recordSort: 'ASC',
+      priorityFirst: false,
+      label: '짧은 기록',
+    },
+    {
+      sort: 'ASC',
+      recordSort: 'ASC',
+      priorityFirst: false,
+      label: '짧은 기록 · 과거',
+    },
+    {
+      sort: 'DESC',
+      recordSort: 'ASC',
+      priorityFirst: true,
+      label: '중요 · 짧은 기록',
+    },
+    {
+      sort: 'ASC',
+      recordSort: 'ASC',
+      priorityFirst: true,
+      label: '중요 · 짧은 기록 · 과거',
+    },
+    { sort: 'CUSTOM', priorityFirst: false, label: '커스텀' },
+    { sort: 'CUSTOM', priorityFirst: true, label: '커스텀' },
+  ];
+  for (const { label, ...props } of cases) {
+    const ui = picker('src/components/ToolbarSortButton.tsx', 'ToolbarSortButton', {
+      ...props,
+      accessibilityLabel: '정렬',
+    }).render();
+    const indicators = ui.content.filter((node) =>
+      ['Text', 'StarIcon', 'AppIcon'].includes(node.type),
+    );
+    assert.deepEqual(
+      indicators.map((node) => (node.type === 'AppIcon' ? node.props.name : node.props.children)),
+      ['sort', label],
+    );
+    const text = indicators[1];
+    assert.equal(text.props.numberOfLines, 1);
+    assert.equal(text.props.ellipsizeMode, 'tail');
+    assert(ui.shell.props.className.includes('min-w-0 shrink'));
+    assert(text.props.className.includes('min-w-0 shrink'));
+    assert(indicators[0].props.className.includes('shrink-0'));
   }
 });
 
@@ -557,7 +580,7 @@ test('sort modal defaults are leftmost', () => {
   const choices = sort.content.filter((node) => node.type === 'PickerOption');
   assert.deepEqual(
     choices.map((node) => node.props.accessibilityLabel),
-    ['현재 기록 내림차순', '현재 기록 오름차순', '최신순', '과거순', '커스텀'],
+    ['현재 기록 긴 기록순', '현재 기록 짧은 기록순', '최신순', '과거순', '커스텀'],
   );
   assert.equal(choices[0].props.selected, true);
   assert.equal(choices[2].props.selected, true);

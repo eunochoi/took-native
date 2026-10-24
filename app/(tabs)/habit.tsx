@@ -11,6 +11,7 @@ import { PageTopSection } from '../../src/components/PageTopSection';
 import { QueryError } from '../../src/components/QueryError';
 import { RecordSortPicker } from '../../src/components/RecordSortPicker';
 import { ScrollEdgeFade } from '../../src/components/ScrollEdgeFade';
+import { StarIcon } from '../../src/components/StarIcon';
 import { TabBottomSpacer } from '../../src/components/TabBottomSpacer';
 import { Text } from '../../src/components/Text';
 import { Toolbar } from '../../src/components/Toolbar';
@@ -89,17 +90,12 @@ export default function HabitList() {
       (filter.priorities.length === 0 || filter.priorities.includes(habit.priority)) &&
       (!filter.completedOnly || todayDone.has(habit.id)),
   );
-  const filterLabel =
-    [
-      filter.completedOnly ? '완료' : null,
-      selectionSummary(
-        filter.priorities.map((priority) => (priority === 0 ? '자유 기록' : '★'.repeat(priority))),
-        4,
-        '',
-      ) || null,
-    ]
-      .filter(Boolean)
-      .join(' · ') || '필터';
+  const filterLabels = [
+    ...(filter.completedOnly ? ['완료'] : []),
+    ...(filter.priorities.length > 0 && filter.priorities.length < 4
+      ? filter.priorities.map((priority) => (priority === 0 ? '자유' : priority))
+      : []),
+  ];
   const ready = !!list.data && !!completions.data;
   const change = (values: Parameters<typeof updateSettings>[0]) => {
     void updateSettings(values)
@@ -164,7 +160,17 @@ export default function HabitList() {
             onPress={() => setSortOpen(true)}
           />
           <ToolbarFilterButton
-            label={filterLabel}
+            label={
+              filterLabels.length
+                ? filterLabels.map((label) =>
+                    typeof label === 'number'
+                      ? Array.from({ length: label }, (_, star) => (
+                          <StarIcon key={star} size={appRem * 0.875} color={colors.accent} />
+                        ))
+                      : label,
+                  )
+                : '필터'
+            }
             accessibilityLabel={`습관 필터, ${filter.completedOnly ? '오늘 완료' : '완료 상태 전체'}, 중요도 ${selectionSummary(
               filter.priorities.map((priority) =>
                 priority === 0 ? '자유 기록' : '★'.repeat(priority),

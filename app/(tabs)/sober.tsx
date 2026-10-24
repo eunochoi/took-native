@@ -127,7 +127,6 @@ export default function SoberList() {
                   sort={settings.soberSort}
                   recordSort={settings.soberRecordSort}
                   priorityFirst={settings.soberPriorityFirst}
-                  ascendingLabel="과거순"
                   accessibilityLabel="거리두기 항목 정렬"
                   onPress={() => setSortOpen(true)}
                 />

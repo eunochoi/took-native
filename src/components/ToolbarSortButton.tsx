@@ -1,7 +1,6 @@
 import { useAppTheme } from '../theme/AppThemeProvider';
 import { AppIcon } from './AppIcon';
 import { GesturePressable } from './GesturePressable';
-import { StarIcon } from './StarIcon';
 import { Text } from './Text';
 
 export function ToolbarSortButton({
@@ -15,48 +14,41 @@ export function ToolbarSortButton({
   sort: 'ASC' | 'DESC' | 'CUSTOM';
   priorityFirst?: boolean;
   recordSort?: 'ASC' | 'DESC';
-  ascendingLabel?: string;
   sortLabel?: string;
   accessibilityLabel: string;
   onPress: () => void;
 }) {
   const { rem: appRem } = useAppTheme();
-  const isDefault = sort === 'DESC' && !priorityFirst && (!recordSort || recordSort === 'DESC');
   const showPriority = sort !== 'CUSTOM' && priorityFirst;
   const displayLabel =
     sort === 'CUSTOM'
       ? '커스텀'
-      : recordSort
-        ? recordSort === 'DESC'
-          ? '긴 기록순'
-          : '짧은 기록순'
-        : sort === 'DESC'
-          ? '최신순'
-          : '오래된순';
+      : [
+          showPriority ? '중요' : null,
+          recordSort === 'ASC' ? '짧은 기록' : null,
+          sort === 'ASC' ? '과거' : null,
+        ]
+          .filter(Boolean)
+          .join(' · ') || '정렬';
   const label =
     sort === 'CUSTOM'
       ? '커스텀'
-      : `${recordSort ? `기록 ${recordSort === 'DESC' ? '내림차순' : '오름차순'} · ` : ''}${sortLabel} ${sort === 'DESC' ? '내림차순' : '오름차순'}`;
+      : `${recordSort ? `현재 기록 ${recordSort === 'DESC' ? '긴 기록순' : '짧은 기록순'} · ` : ''}${sortLabel} ${sort === 'DESC' ? '최신순' : '과거순'}`;
   return (
     <GesturePressable
       accessibilityRole="button"
-      accessibilityLabel={`${accessibilityLabel}, ${showPriority ? '중요도 우선 · ' : ''}${label}`}
+      accessibilityLabel={`${accessibilityLabel}, ${showPriority ? '중요한 항목 먼저 · ' : ''}${label}`}
       onPress={onPress}
-      className="shrink-0 flex-row items-center justify-center gap-1.5 active:opacity-65"
+      className="min-w-0 shrink flex-row items-center justify-center gap-1.5 active:opacity-65"
     >
-      {isDefault ? (
-        <>
-          <AppIcon name="sort" size={appRem * 1.2} className="text-theme-accent" />
-          <Text className="text-sm leading-snug text-theme-text-secondary">정렬</Text>
-        </>
-      ) : (
-        <>
-          {showPriority && <StarIcon size={appRem * 1.1} className="text-theme-accent" />}
-          <Text numberOfLines={1} className="text-sm leading-snug text-theme-text-secondary">
-            {displayLabel}
-          </Text>
-        </>
-      )}
+      <AppIcon name="sort" size={appRem * 1.2} className="shrink-0 text-theme-accent" />
+      <Text
+        numberOfLines={1}
+        ellipsizeMode="tail"
+        className="min-w-0 shrink text-sm leading-snug text-theme-text-secondary"
+      >
+        {displayLabel}
+      </Text>
     </GesturePressable>
   );
 }

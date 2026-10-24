@@ -87,13 +87,13 @@ export function RecordSortPicker({
                   <PickerOption
                     compact
                     selected={draftRecordSort === value}
-                    accessibilityLabel={`현재 기록 ${value === 'DESC' ? '내림차순' : '오름차순'}`}
+                    accessibilityLabel={`현재 기록 ${value === 'DESC' ? '긴 기록순' : '짧은 기록순'}`}
                     onPress={() => setRecordSort(value)}
                   >
                     <Text
                       className={`text-base ${draftRecordSort === value ? 'text-theme-accent-deep' : ''}`}
                     >
-                      {value === 'DESC' ? '내림차순' : '오름차순'}
+                      {value === 'DESC' ? '긴 기록순' : '짧은 기록순'}
                     </Text>
                   </PickerOption>
                 </View>

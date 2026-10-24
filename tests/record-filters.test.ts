@@ -58,6 +58,7 @@ function harness(file: string, results: Record<string, any> = {}) {
             };
           if (name === 'react')
             return {
+              Fragment: 'Fragment',
               useState: (initial: any) => {
                 const index = cursor++;
                 if (!(index in state))
@@ -383,10 +384,11 @@ test('habit filters combine exact stars with today completion and retain total p
   assert.deepEqual(habitIds(ui), [3, 2]);
   applyPageFilter(ui, 'Habit', { completedOnly: true, priorities: [1] });
   assert.deepEqual(habitIds(ui), [2]);
-  assert.equal(
-    nodes(ui.render()).find((node) => node.type === 'ToolbarFilterButton').props.label,
-    '완료 · ★',
-  );
+  const label = nodes(ui.render()).find((node) => node.type === 'ToolbarFilterButton').props.label;
+  assert.equal(label[0], '완료');
+  const stars = nodes(label).filter((node) => node.type === 'StarIcon');
+  assert.equal(stars.length, 1);
+  assert.equal(stars[0].props.size, 15 * 0.875);
   applyPageFilter(ui, 'Habit', { completedOnly: true, priorities: [2] });
   assert.equal(
     nodes(ui.render()).find((node) => node.type === 'EmptyState').props.title,
@@ -569,6 +571,19 @@ test('habit multi-priority filters combine with completed-only and select-all re
   assert.deepEqual(habitIds(ui), [3, 1]);
   applyPageFilter(ui, 'Habit', { completedOnly: true, priorities: [1, 2] });
   assert.deepEqual(habitIds(ui), [3]);
+  const label = nodes(ui.render()).find((node) => node.type === 'ToolbarFilterButton').props.label;
+  assert.equal(label[0], '완료');
+  assert.deepEqual(
+    Array.from(
+      label.slice(1),
+      (group: any) => nodes(group).filter((node) => node.type === 'StarIcon').length,
+    ),
+    [1, 2],
+  );
+  assert.equal(
+    nodes(ui.render()).find((node) => node.type === 'ToolbarFilterButton').props.accessibilityLabel,
+    '습관 필터, 오늘 완료, 중요도 ★ · ★★',
+  );
   applyPageFilter(ui, 'Habit', { completedOnly: false, priorities: [0, 1, 2, 3] });
   assert.deepEqual(habitIds(ui), [3, 2, 1]);
   assert.equal(
@@ -702,10 +717,9 @@ test('exclusion-only filter hides the achievement card and keeps recorded items 
   applyPageFilter(ui, 'Habit', { completedOnly: false, priorities: [0] });
   assert.deepEqual(habitIds(ui), [3, 1]);
   assert(!nodes(ui.render()).some((node) => node.type === 'HabitTodayProgress'));
-  assert.equal(
-    nodes(ui.render()).find((node) => node.type === 'ToolbarFilterButton').props.label,
-    '자유 기록',
-  );
+  const label = nodes(ui.render()).find((node) => node.type === 'ToolbarFilterButton').props.label;
+  assert.equal(label[0], '자유');
+  assert.equal(nodes(label).filter((node) => node.type === 'StarIcon').length, 0);
   applyPageFilter(ui, 'Habit', { completedOnly: true, priorities: [0] });
   assert.deepEqual(habitIds(ui), [1]);
   applyPageFilter(ui, 'Habit', { completedOnly: false, priorities: [] });
