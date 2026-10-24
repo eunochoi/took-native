@@ -265,7 +265,7 @@ test('today sober card uses the latest restart and opens the selected record', (
     (node) =>
       node.type === 'Pressable' && node.props.accessibilityLabel?.startsWith('거리두기 이동'),
   );
-  const soberName = nodes(card).find((node) => text(node) === '카페인');
+  const soberName = nodes(card).find((node) => node.type === 'Text' && text(node) === '카페인');
   assert(soberName);
   assert.equal(soberName.props.numberOfLines, 1);
   assert.equal(soberName.props.ellipsizeMode, 'tail');
@@ -693,9 +693,13 @@ test('home archive is the fourth square card with the existing year destination'
   assert.equal(archive.props.accessibilityLabel, '기록 분석 보기, 쌓인 기록의 흐름 확인');
   assert(archive.props.className.includes('aspect-square'));
   assert.equal(archive.props.style.width, cards[0].props.style.width);
-  assert.equal(text(archive), '기록 분석쌓인 기록의 흐름분석 보기 →');
+  assert.equal(text(archive), '기록 분석분석 보기 →');
   assert(archive.props.children[1].props.className.includes('items-center justify-center gap-1'));
-  assert(archive.props.children[1].props.children[1].props.className.includes('text-center'));
+  assert(
+    nodes(archive.props.children[1].props.children[1]).some(
+      (node) => node.type === 'Text' && node.props.className.includes('text-center'),
+    ),
+  );
   assert(nodes(archive).some((node) => node.props.name === 'description'));
   archive.props.onPress();
   assert.deepEqual(JSON.parse(JSON.stringify(routes)), [
@@ -808,7 +812,7 @@ test('home cards center their titles and group emotion or distance captions dire
   }
   const diaryGroup = diary.props.children[1];
   assert(diaryGroup.props.className.includes('justify-center gap-1'));
-  assert.equal(diaryGroup.props.children[0].type, 'EmotionImage');
+  assert(nodes(diaryGroup.props.children[0]).some((node) => node.type === 'EmotionImage'));
   assert.equal(text(diaryGroup.props.children[1]), `'${EMOTIONS[2].name}' 기록 남김`);
   const distanceGroup = distance.props.children[1];
   assert(distanceGroup.props.className.includes('justify-center gap-1'));
@@ -845,5 +849,48 @@ test('habit donut follows the calendar progress colors at the 25 and 75 percent 
     const circles = nodes(tree).filter((node) => node.type === 'Circle');
     assert(circles.every((circle) => circle.props.stroke === color));
     assert.equal(circles.length, completed === 0 ? 1 : 2);
+  }
+});
+
+test('all home cards reserve identical visual and caption heights at every app text size and during loading', () => {
+  for (const rem of [14, 15, 16]) {
+    for (const fontScale of [1, 1.5, 2]) {
+      for (const pending of [false, true]) {
+        const tree = render('HomeSummarySection', { today: '2026-10-05' }, undefined, {
+          layoutWidth: 390,
+          rem,
+          fontScale,
+          results: {
+            diary: { data: { id: 1, emotion: 2 }, isPending: pending },
+            habits: { isPending: pending },
+            sobers: { isPending: pending },
+          },
+        });
+        const strip = nodes(tree).find((node) => node.type === 'ScrollView');
+        const cards = nodes(strip).filter((node) => node.type === 'Pressable');
+        const [visual, caption] = cards[0].props.children[1].props.children;
+        for (const card of cards) {
+          const body = card.props.children[1];
+          assert.equal(body.props.children[0].props.style.height, visual.props.style.height);
+          assert.equal(body.props.children[1].props.style.height, caption.props.style.height);
+          assert(body.props.children[0].props.style.height > 0);
+          const label = nodes(body.props.children[1]).find((node) => node.type === 'Text');
+          if (label) {
+            assert(label.props.className.includes('text-sm leading-5'));
+            assert.equal(label.props.minimumFontScale, 0.85);
+          }
+        }
+        if (!pending) {
+          const artwork = nodes(cards[0]).find((node) => node.type === 'EmotionImage');
+          const donut = nodes(cards[1]).find((node) => node.type === 'Svg');
+          assert.equal(artwork.props.size, donut.props.width);
+          const count = nodes(cards[1]).find(
+            (node) => node.type === 'Text' && text(node) === '0/0',
+          );
+          assert.equal(count.props.adjustsFontSizeToFit, undefined);
+          assert(count.props.className.includes('text-base'));
+        }
+      }
+    }
   }
 });
