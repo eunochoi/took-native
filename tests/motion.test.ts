@@ -302,7 +302,7 @@ test('page titles use content height and merged padding at every app font size',
   }
 });
 
-test('sticky toolbar includes an always-visible h-8 gradient in normal layout', () => {
+test('sticky toolbar overlaps its always-visible h-8 gradient by one pixel', () => {
   for (const reducedMotion of [false, true]) {
     const { Toolbar } = load('../src/components/Toolbar.tsx', reducedMotion);
     const toolbar = Toolbar({ children: 'buttons' });
@@ -311,6 +311,7 @@ test('sticky toolbar includes an always-visible h-8 gradient in normal layout', 
     assert.equal(surface.props.children.props.children, 'buttons');
     assert.equal(gradient.type, 'LinearGradient');
     assert.match(gradient.props.className, /h-8/);
+    assert(gradient.props.className.split(' ').includes('-mt-px'));
     assert.equal(gradient.props.colors[0], '#FFFFFF');
     assert.equal(gradient.props.colors.at(-1), '#FFFFFF00');
     assert.equal(gradient.props.colors.length, gradient.props.locations.length);

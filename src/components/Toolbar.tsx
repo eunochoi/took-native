@@ -19,7 +19,7 @@ export function Toolbar({ children }: { children: ReactNode }) {
         accessible={false}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
-        className="h-8 w-full"
+        className="-mt-px h-8 w-full"
         colors={[
           colors.surface,
           `${colors.surface}F8`,
