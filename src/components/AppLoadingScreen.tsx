@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Image, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
-const wordmark = require('../../assets/ui/wordmark.png');
+const splash = require('../../assets/ui/splash.png');
 
 export function AppLoadingScreen({
   onReady,
@@ -12,10 +12,10 @@ export function AppLoadingScreen({
   onError: (error: Error) => void;
 }) {
   const [laidOut, setLaidOut] = useState(false);
-  const [wordmarkReady, setWordmarkReady] = useState(false);
+  const [imageReady, setImageReady] = useState(false);
   useEffect(() => {
-    if (laidOut && wordmarkReady) onReady();
-  }, [laidOut, wordmarkReady, onReady]);
+    if (laidOut && imageReady) onReady();
+  }, [laidOut, imageReady, onReady]);
 
   return (
     <View
@@ -25,11 +25,11 @@ export function AppLoadingScreen({
     >
       <StatusBar style="dark" />
       <Image
-        source={wordmark}
-        className="h-[200px] w-[200px]"
+        source={splash}
+        className="h-[240px] w-[240px]"
         resizeMode="contain"
         accessibilityLabel="TOOK"
-        onLoad={() => setWordmarkReady(true)}
+        onLoad={() => setImageReady(true)}
         onError={({ nativeEvent }) => onError(new Error(nativeEvent.error))}
       />
     </View>
