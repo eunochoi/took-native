@@ -937,8 +937,8 @@ test('emotion icon style cards share checked and unchecked appearance and remain
   assert(options[0].props.className.includes('bg-transparent'));
   assert(options[0].props.className.split(' ').includes('border-0'));
   assert(options[1].props.className.split(' ').includes('border'));
-  assert(options.every((option) => option.props.className.split(' ').includes('h-[4.666667rem]')));
-  assert(options.every((option) => option.props.className.split(' ').includes('py-1.5')));
+  assert(options.every((option) => option.props.className.split(' ').includes('h-[5.666667rem]')));
+  assert(options.every((option) => option.props.className.split(' ').includes('py-2')));
   assert(
     options.every((option) => option.props.children[0].props.className.split(' ').includes('h-9')),
   );
@@ -956,7 +956,7 @@ test('emotion icon style cards share checked and unchecked appearance and remain
   )
     .render()
     .content.filter((node) => node.props.accessibilityRole === 'radio');
-  assert(compact.every((option) => !option.props.className.split(' ').includes('h-[4.666667rem]')));
+  assert(compact.every((option) => !option.props.className.split(' ').includes('h-[5.666667rem]')));
   assert(compact.every((option) => option.props.className.split(' ').includes('py-2')));
   assert(
     compact.every((option) => !option.props.children[0].props.className.split(' ').includes('h-9')),

@@ -105,7 +105,7 @@ export function AppearanceSettingsSection({
                   disabled={disabled}
                   accessibilityLabel={`배경 색상, ${modeLabels[themeMode]}${themeMode === 'system' ? ', 기기 설정 따르기' : ''}`}
                   onPress={() => onChange({ themeMode })}
-                  className={`h-[4.666667rem] flex-1 min-w-0 gap-1 px-2 py-1.5 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
+                  className={`h-[5.666667rem] flex-1 min-w-0 gap-1 px-2 py-2 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
                 >
                   <View className="h-9 items-center justify-center">
                     <AppIcon
@@ -141,7 +141,7 @@ export function AppearanceSettingsSection({
                   disabled={disabled}
                   accessibilityLabel={`폰트 크기, ${sizeLabels[fontSize]}`}
                   onPress={() => onChange({ fontSize })}
-                  className={`h-[4.666667rem] flex-1 min-w-0 gap-1 px-2 py-1.5 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
+                  className={`h-[5.666667rem] flex-1 min-w-0 gap-1 px-2 py-2 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
                 >
                   <View className="h-9 w-full items-center justify-center" accessible={false}>
                     <Text

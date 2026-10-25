@@ -42,7 +42,7 @@ export function EmotionIconStyleSelector({
             SELECTION_BOX_CLASS_NAME,
             value === style ? CHECKED_BOX_CLASS_NAME : UNCHECKED_BOX_CLASS_NAME,
             'flex-1 px-2',
-            compact ? 'gap-1 py-2' : 'h-[4.666667rem] min-w-0 gap-1 py-1.5',
+            compact ? 'gap-1 py-2' : 'h-[5.666667rem] min-w-0 gap-1 py-2',
             dimmed && 'opacity-40',
           )}
         >

@@ -84,8 +84,8 @@ test('background and font size each expose three visual choices and save immedia
       .map((icon) => icon.props.name),
     ['theme-light', 'theme-dark', 'theme-system'],
   );
-  assert(options.every((option) => option.props.className.split(' ').includes('h-[4.666667rem]')));
-  assert(options.every((option) => option.props.className.split(' ').includes('py-1.5')));
+  assert(options.every((option) => option.props.className.split(' ').includes('h-[5.666667rem]')));
+  assert(options.every((option) => option.props.className.split(' ').includes('py-2')));
   assert(
     options.every((option) => option.props.children[0].props.className.split(' ').includes('h-9')),
   );
