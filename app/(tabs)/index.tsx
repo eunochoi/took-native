@@ -52,7 +52,7 @@ export default function Home() {
             <View className="mt-8 shrink-0 flex-row items-center">
               <Wordmark size={appRem * 3} accentColor={colors.accent} mode={mode} />
             </View>
-            <HomeGreeting today={today} />
+            <HomeGreeting />
             <View className="gap-3 shrink-0">
               <HomeTodaySection today={today} />
               <HomeAnalysisCard today={today} />

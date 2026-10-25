@@ -1,5 +1,3 @@
-import { format, parseISO } from 'date-fns';
-import { ko } from 'date-fns/locale';
 import { useRouter } from 'expo-router';
 import { useIsFocused } from 'expo-router/react-navigation';
 import { Pressable, View } from 'react-native';
@@ -22,7 +20,7 @@ const greeting = {
   '100%': { transform: [{ rotate: '5deg' }] },
 } as const;
 
-export function HomeGreeting({ today }: { today: string }) {
+export function HomeGreeting() {
   const navigationItems = [
     { label: '감정기록', href: '/calendar', a11y: '감정기록 달력' },
     { label: '습관관리', href: '/habit', a11y: '습관관리 페이지' },
@@ -33,13 +31,8 @@ export function HomeGreeting({ today }: { today: string }) {
   const focused = useIsFocused();
 
   return (
-    <View className="my-8 shrink-0 gap-2">
-      <Text className="px-0.5 text-theme-accent-deep font-semibold text-lg">
-        {format(parseISO(today), 'yyyy년 M월 d일', {
-          locale: ko,
-        })}
-      </Text>
-      <Text className="font-bold text-3xl">오늘도 툭!</Text>
+    <View className="my-10 shrink-0 gap-2">
+      <Text className="font-bold text-4xl">오늘도 툭!!</Text>
       <View className="flex-row items-center gap-2">
         <Text className="font-bold text-3xl">나답게 쌓는 하루</Text>
         <Animated.View
@@ -65,7 +58,7 @@ export function HomeGreeting({ today }: { today: string }) {
             hitSlop={{ top: appRem * 0.5, bottom: appRem * 0.5 }}
             className="active:opacity-70"
           >
-            <Text className="text-theme-accent-deep text-lg font-semibold">#{label}</Text>
+            <Text className="text-theme-accent-deep text-base font-semibold">#{label}</Text>
           </Pressable>
         ))}
       </View>

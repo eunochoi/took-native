@@ -80,9 +80,6 @@ function load(
         if (name.endsWith('/ModalNavigationProvider'))
           return { useModalNavigation: () => ({ openModal: () => {} }) };
         if (name === 'expo-router/react-navigation') return { useIsFocused: () => focused };
-        if (name === 'date-fns')
-          return { format: () => '오늘', parseISO: (value: unknown) => value };
-        if (name === 'date-fns/locale') return { ko: {} };
         return {
           Text: 'Text',
           Wordmark: 'Wordmark',
@@ -144,14 +141,9 @@ test('home focus remounts the greeting and reduced motion retains the resting ro
       if (result) return result;
     }
   }
-  const props = { today: '2026-10-05' };
-  const on = emotion(load('../src/screens/home/HomeGreeting.tsx', false, true).HomeGreeting(props));
-  const off = emotion(
-    load('../src/screens/home/HomeGreeting.tsx', false, false).HomeGreeting(props),
-  );
-  const reduced = emotion(
-    load('../src/screens/home/HomeGreeting.tsx', true, true).HomeGreeting(props),
-  );
+  const on = emotion(load('../src/screens/home/HomeGreeting.tsx', false, true).HomeGreeting());
+  const off = emotion(load('../src/screens/home/HomeGreeting.tsx', false, false).HomeGreeting());
+  const reduced = emotion(load('../src/screens/home/HomeGreeting.tsx', true, true).HomeGreeting());
   assert(on.props.style.animationName);
   assert.equal(on.props.style.animationDuration, `${tokens.motion.greeting}ms`);
   assert.equal(off.props.style.animationName, undefined);

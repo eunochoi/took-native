@@ -327,7 +327,6 @@ test('home retains its shared padding wrapper and the original greeting layout',
   const [brand, greeting, summary] = content.props.children;
   assert(!brand.props.className.includes('px-'));
   assert.equal(greeting.type, 'HomeGreeting');
-  assert.equal(greeting.props.today, '2026-10-05');
   assert(!summary.props.className.includes('px-'));
   assert.equal(summary.props.children[0].type, 'HomeTodaySection');
   const analysis = summary.props.children[1];
@@ -350,11 +349,12 @@ test('home analysis banner opens the current year through modal navigation', () 
   ]);
 });
 
-test('home greeting shows the supplied date and retains all three hashtag destinations', () => {
+test('home greeting retains its welcome copy and all three hashtag destinations', () => {
   const ui = harness('src/screens/home/HomeGreeting.tsx', 'HomeGreeting');
   const view = ui.render();
+  assert(view.nodes.some((node) => node.type === 'Text' && node.props.children === '오늘도 툭!!'));
   assert(
-    view.nodes.some((node) => node.type === 'Text' && node.props.children === '2026년 10월 5일'),
+    view.nodes.some((node) => node.type === 'Text' && node.props.children === '나답게 쌓는 하루'),
   );
   const links = view.nodes.filter((node) => node.type === 'Pressable');
   assert.equal(links.length, 3);
