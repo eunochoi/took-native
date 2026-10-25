@@ -51,7 +51,7 @@ export function DiaryCard({
           </View>
         </Pressable>
         <View className="ml-auto shrink-0">
-          <DiaryMenu diary={diary} today={today} />
+          <DiaryMenu diary={diary} today={today} showDetail />
         </View>
       </View>
       <View className="py-2 px-1 gap-3">

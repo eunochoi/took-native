@@ -161,6 +161,39 @@ test('day info diary menu waits for only its own close before pushing the edit f
   assert.equal(render.navigations[0], '/diary/42/edit');
 });
 
+for (const [kind, record, extra] of [
+  ['Diary', { id: 42, date: '2026-10-04' }, { today: '2026-10-05' }],
+  ['Habit', { id: 42, name: '운동' }, {}],
+  ['Sober', { id: 42, name: '거리두기' }, {}],
+] as const) {
+  test(`${kind} menu shows details only when enabled and navigates after closing`, () => {
+    const route = kind.toLowerCase();
+    const render = load(`src/screens/${route}/${kind}Menu.tsx`, []);
+    const props = { [route]: record, ...extra };
+    const actions = (showDetail?: boolean) => {
+      const tree = render(`${kind}Menu`, { ...props, showDetail });
+      const sheet = nodes(tree).find((node) => node.type === 'BottomSheetModal');
+      let afterClose: (() => void) | undefined;
+      const body = sheet.props.children((action: () => void) => {
+        afterClose = action;
+      });
+      return {
+        items: nodes(body).filter((node) => node.type === 'PickerAction'),
+        finish: () => afterClose?.(),
+      };
+    };
+    assert.equal(actions().items.length, 2);
+    const list = actions(true);
+    assert.equal(list.items.length, 3);
+    assert.equal(list.items[0].props.title, '상세보기');
+    list.items[0].props.onPress();
+    assert.equal(render.navigations.length, 0);
+    list.finish();
+    assert.equal(render.navigations[0], `/${route}/42`);
+    assert.equal(actions(false).items.length, 2);
+  });
+}
+
 for (const month of ['2021-02', '2026-10', '2026-03']) {
   test(`diary calendar reserves six equal rows for a ${calendarDays(month).length / 7}-row month`, () => {
     const render = load('src/screens/calendar/CalendarGrid.tsx', []);

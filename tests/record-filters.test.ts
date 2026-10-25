@@ -365,6 +365,7 @@ test('habit boxes label the first day today and retain weekday labels and comple
   assert(nodes(buttons[0]).some((node) => node.props.children === '자유 기록'));
   buttons[0].props.onPress();
   assert.deepEqual(ui.routes, ['/habit/1']);
+  assert.equal(nodes(tree).find((node) => node.type === 'HabitMenu').props.showDetail, true);
 });
 
 test('habit filters combine exact stars with today completion and retain total progress', () => {

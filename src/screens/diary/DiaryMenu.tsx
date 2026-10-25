@@ -17,10 +17,12 @@ export function DiaryMenu({
   diary,
   today,
   onDeleted,
+  showDetail = false,
 }: {
   diary: Diary;
   today: string;
   onDeleted?: () => void;
+  showDetail?: boolean;
 }) {
   const { showNotice } = useNotice();
   const db = useSQLiteContext();
@@ -50,6 +52,15 @@ export function DiaryMenu({
       <BottomSheetModal visible={open} title={title} onClose={() => setOpen(false)}>
         {(closePicker) => (
           <View className="gap-3">
+            {showDetail && (
+              <PickerAction
+                icon="info-outline"
+                title="상세보기"
+                description="일기와 사진을 자세히 확인해요."
+                singleLineDescription
+                onPress={() => closePicker(() => openModal(`/diary/${diary.id}`))}
+              />
+            )}
             <PickerAction
               icon="edit"
               title="일기 수정하기"

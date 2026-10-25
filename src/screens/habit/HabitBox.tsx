@@ -61,7 +61,7 @@ export function HabitBox({
           </View>
         </Pressable>
         <View className="absolute right-0 top-0">
-          <HabitMenu habit={habit} />
+          <HabitMenu habit={habit} showDetail />
         </View>
       </View>
       <View className="flex-row justify-around">

@@ -11,7 +11,15 @@ import { ConfirmModal } from '../../components/ConfirmModal';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { PickerAction } from '../../components/PickerAction';
 
-export function HabitMenu({ habit, onDeleted }: { habit: Habit; onDeleted?: () => void }) {
+export function HabitMenu({
+  habit,
+  onDeleted,
+  showDetail = false,
+}: {
+  habit: Habit;
+  onDeleted?: () => void;
+  showDetail?: boolean;
+}) {
   const { showNotice } = useNotice();
   const db = useSQLiteContext();
   const { openModal } = useModalNavigation();
@@ -26,7 +34,7 @@ export function HabitMenu({ habit, onDeleted }: { habit: Habit; onDeleted?: () =
   return (
     <>
       <RecordMenuButton
-        accessibilityLabel={`${habit.name} 수정·삭제 메뉴`}
+        accessibilityLabel={`${habit.name} 메뉴`}
         accessibilityState={{ expanded: open, disabled: mutation.isPending }}
         disabled={mutation.isPending}
         onPress={() => setOpen(true)}
@@ -35,6 +43,15 @@ export function HabitMenu({ habit, onDeleted }: { habit: Habit; onDeleted?: () =
       <BottomSheetModal visible={open} title={habit.name} onClose={() => setOpen(false)}>
         {(closePicker) => (
           <View className="gap-3">
+            {showDetail && (
+              <PickerAction
+                icon="info-outline"
+                title="상세보기"
+                description="습관과 기록 흐름을 확인해요."
+                singleLineDescription
+                onPress={() => closePicker(() => openModal(`/habit/${habit.id}`))}
+              />
+            )}
             <PickerAction
               icon="edit"
               title="습관 수정하기"

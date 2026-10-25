@@ -14,10 +14,12 @@ import { useNotice } from '../../components/NoticeProvider';
 export function SoberMenu({
   sober,
   onDeleted,
+  showDetail = false,
   disabled = false,
 }: {
   sober: Sober;
   onDeleted?: () => void;
+  showDetail?: boolean;
   disabled?: boolean;
 }) {
   const db = useSQLiteContext();
@@ -34,7 +36,7 @@ export function SoberMenu({
   return (
     <>
       <RecordMenuButton
-        accessibilityLabel={`${sober.name} 수정·삭제 메뉴`}
+        accessibilityLabel={`${sober.name} 메뉴`}
         accessibilityState={{ disabled: disabled || mutation.isPending }}
         disabled={disabled || mutation.isPending}
         onPress={() => setOpen(true)}
@@ -43,6 +45,15 @@ export function SoberMenu({
       <BottomSheetModal visible={open} title={sober.name} onClose={() => setOpen(false)}>
         {(close) => (
           <View className="gap-3">
+            {showDetail && (
+              <PickerAction
+                icon="info-outline"
+                title="상세보기"
+                description="거리두기 현황과 기록을 확인해요."
+                singleLineDescription
+                onPress={() => close(() => openModal(`/sober/${sober.id}`))}
+              />
+            )}
             <PickerAction
               icon="edit"
               title="수정하기"

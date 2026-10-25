@@ -56,7 +56,7 @@ export function SoberBox({
             </View>
           ) : null}
         </Pressable>
-        <SoberMenu sober={sober} />
+        <SoberMenu sober={sober} showDetail />
       </View>
       <Pressable
         accessibilityRole="button"
