@@ -1,14 +1,11 @@
 {
   "expo": {
-    "name": "오늘 툭",
+    "name": "포포툭",
     "slug": "took-native",
     "version": "2.1.9",
     "scheme": "took-local",
     "orientation": "portrait",
-    "platforms": [
-      "android",
-      "ios"
-    ],
+    "platforms": ["android", "ios"],
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
     "ios": {
@@ -16,9 +13,7 @@
       "buildNumber": "5",
       "supportsTablet": false,
       "entitlements": {
-        "com.apple.security.application-groups": [
-          "group.com.took.widgets"
-        ]
+        "com.apple.security.application-groups": ["group.com.took.widgets"]
       },
       "infoPlist": {
         "TookWidgetAppGroup": "group.com.took.widgets",
@@ -94,7 +89,7 @@
           "widgets": [
             {
               "name": "Sober",
-              "label": "오늘 툭 거리두기 타이머",
+              "label": "포포툭 거리두기 타이머",
               "description": "선택한 거리두기의 경과 시간과 목표를 확인해요.",
               "minWidth": "110dp",
               "minHeight": "110dp",
@@ -128,6 +123,10 @@
       "eas": {
         "projectId": "b859b201-9bc7-42a0-889b-9b48bae5da45"
       }
+    },
+    "locales": {
+      "ko": "./assets/locales/ko.json",
+      "en": "./assets/locales/en.json"
     }
   }
 }

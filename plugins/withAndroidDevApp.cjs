@@ -33,12 +33,26 @@ android.buildTypes.debug.applicationIdSuffix = ".dev"
   return withDangerousMod(config, [
     'android',
     async (mod) => {
-      const values = path.join(mod.modRequest.platformProjectRoot, 'app/src/debug/res/values');
-      await fs.mkdir(values, { recursive: true });
-      await fs.writeFile(
-        path.join(values, 'took_dev.xml'),
-        '<?xml version="1.0" encoding="utf-8"?>\n<resources><string name="app_name">오늘 툭 dev</string></resources>\n',
-      );
+      const labels = [['values', config.name]];
+      for (const [locale, source] of Object.entries(config.locales ?? {})) {
+        const strings =
+          typeof source === 'string'
+            ? JSON.parse(
+                await fs.readFile(path.resolve(mod.modRequest.projectRoot, source), 'utf8'),
+              )
+            : source;
+        if (strings.android?.app_name) {
+          labels.push([`values-b+${locale.replaceAll('-', '+')}`, strings.android.app_name]);
+        }
+      }
+      for (const [folder, label] of labels) {
+        const values = path.join(mod.modRequest.platformProjectRoot, 'app/src/debug/res', folder);
+        await fs.mkdir(values, { recursive: true });
+        await fs.writeFile(
+          path.join(values, 'took_dev.xml'),
+          `<?xml version="1.0" encoding="utf-8"?>\n<resources><string name="app_name">${label} dev</string></resources>\n`,
+        );
+      }
       return mod;
     },
   ]);
