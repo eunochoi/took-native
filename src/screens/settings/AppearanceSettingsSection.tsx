@@ -43,7 +43,7 @@ export function AppearanceSettingsSection({
           <View
             accessibilityRole="radiogroup"
             accessibilityLabel="강조 색상"
-            className={`w-full flex-row gap-1.5 py-2 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
+            className={`w-full flex-row items-start gap-1.5 py-2 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
           >
             {accents.map((accent) => {
               const checked = settings.themeAccent === accent;
@@ -55,16 +55,17 @@ export function AppearanceSettingsSection({
                   accessibilityState={{ checked, disabled }}
                   disabled={disabled}
                   onPress={() => onChange({ themeAccent: accent })}
-                  className="min-h-12 min-w-0 flex-1 items-center justify-center active:opacity-65"
+                  className="aspect-square min-w-0 flex-1 items-center justify-center rounded-full active:opacity-65"
+                  style={{ backgroundColor: ACCENT_PALETTES[accent].accent }}
                 >
-                  <View
-                    className={`aspect-square w-14 max-w-full rounded-full border-2 p-0.5 ${checked ? 'border-theme-accent' : 'border-transparent'}`}
-                  >
-                    <View
-                      className="flex-1 rounded-full"
-                      style={{ backgroundColor: ACCENT_PALETTES[accent].accent }}
+                  {checked && (
+                    <AppIcon
+                      name="check"
+                      size={appRem * 1.5}
+                      className="text-theme-text-on-accent"
+                      accessible={false}
                     />
-                  </View>
+                  )}
                 </Pressable>
               );
             })}

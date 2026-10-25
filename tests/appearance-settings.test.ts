@@ -79,7 +79,9 @@ test('background and font size each expose three visual choices and save immedia
     ],
   );
   assert.deepEqual(
-    nodes(tree, 'Icon').map((icon) => icon.props.name),
+    nodes(tree, 'Icon')
+      .filter((icon) => icon.props.name.startsWith('theme-'))
+      .map((icon) => icon.props.name),
     ['theme-light', 'theme-dark', 'theme-system'],
   );
   assert(options.every((option) => option.props.className.split(' ').includes('h-28')));
@@ -111,6 +113,31 @@ test('background and font size each expose three visual choices and save immedia
       { fontSize: 'large' },
     ],
   );
+});
+
+test('accent circles fill six equal square cells and show a check only on the selected color', () => {
+  const ui = harness();
+  for (const themeAccent of ACCENT_KEYS) {
+    const tree = ui.render({ themeAccent });
+    const group = nodes(tree, 'View').find((view) => view.props.accessibilityRole === 'radiogroup');
+    assert(group.props.className.split(' ').includes('w-full'));
+    assert(group.props.className.split(' ').includes('gap-1.5'));
+    assert(group.props.className.split(' ').includes('items-start'));
+    const circles = nodes(group, 'Pressable');
+    assert.equal(circles.length, 6);
+    assert.equal(new Set(circles.map((circle) => circle.props.className)).size, 1);
+    for (const [index, circle] of circles.entries()) {
+      const classes = circle.props.className.split(' ');
+      assert(classes.includes('flex-1'));
+      assert(classes.includes('aspect-square'));
+      assert(classes.includes('rounded-full'));
+      assert(!classes.some((name: string) => /^(?:w-|h-|min-h-|border)/.test(name)));
+      assert.equal(circle.props.style.backgroundColor, ACCENT_PALETTES[ACCENT_KEYS[index]].accent);
+      const checks = nodes(circle, 'Icon');
+      assert.equal(checks.length, ACCENT_KEYS[index] === themeAccent ? 1 : 0);
+      if (checks.length) assert.equal(checks[0].props.name, 'check');
+    }
+  }
 });
 
 test('font previews keep fixed sizes and line heights at every app root size', () => {
