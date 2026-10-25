@@ -339,7 +339,16 @@ test('home analysis banner opens the current year through modal navigation', () 
   const ui = harness('src/screens/home/HomeAnalysisCard.tsx', 'HomeAnalysisCard');
   const view = ui.render();
   assert(
-    view.nodes.some((node) => node.props.source && node.props.className?.includes('bottom-0')),
+    view.nodes.some(
+      (node) => node.type === 'Text' && node.props.children === '하루하루 쌓아온 나의 발자취',
+    ),
+  );
+  assert(
+    view.nodes.some(
+      (node) =>
+        node.type === 'Text' &&
+        node.props.children === '감정 일기, 습관, 거리두기 흐름을 한눈에 파악해요.',
+    ),
   );
   view.nodes
     .find((node) => node.props.accessibilityLabel?.startsWith('기록 분석 보기'))
