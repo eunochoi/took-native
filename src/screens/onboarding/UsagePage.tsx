@@ -1,3 +1,4 @@
+import { MUTED_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 import { Image, View } from 'react-native';
 import { Text } from '../../components/Text';
 const navigationPreview = require('../../../assets/onboarding/navigation.png');
@@ -17,7 +18,9 @@ export function UsagePage({ imageWidth }: { imageWidth: number }) {
           자주 쓰는 화면을 더 빠르게 오가세요.
         </Text>
       </View>
-      <View className="gap-6 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-6">
+      <View
+        className={`${MUTED_CARD_BORDER_CLASS_NAME} gap-6 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-6`}
+      >
         <View className="items-center gap-2">
           <Text className="text-center text-base font-semibold">맨 위로 이동하기</Text>
           <Image

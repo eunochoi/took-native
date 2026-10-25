@@ -8,7 +8,7 @@ import type { getDiaryStats } from '../../db/stats';
 import { EMOTIONS } from '../../domain/constants';
 import { DIARY_EMOTION_GROUPS } from '../../domain/diaryFilters';
 import { useAppTheme } from '../../theme/AppThemeProvider';
-import { UNDERLINE_TAB_LIST_CLASS_NAME } from '../../theme/classes';
+import { ACCENT_CARD_BORDER_CLASS_NAME, UNDERLINE_TAB_LIST_CLASS_NAME } from '../../theme/classes';
 import { AnalysisHeader } from './AnalysisHeader';
 const halves = ['전체', '전반기', '후반기'];
 export function EmotionStats({
@@ -51,7 +51,9 @@ export function EmotionStats({
             </UnderlineTab>
           ))}
         </View>
-        <View className="gap-4 mx-1 px-4 py-6 bg-theme-accent-light/50 ios:curve-continuous rounded-theme">
+        <View
+          className={`${ACCENT_CARD_BORDER_CLASS_NAME} gap-4 mx-1 px-4 py-6 bg-theme-accent-light/50 ios:curve-continuous rounded-theme`}
+        >
           <View className="flex-row">
             {groups.map((group) => (
               <View key={group.key} className="flex-1 gap-2 items-center">
@@ -94,10 +96,11 @@ export function EmotionStats({
             key={emotion.key}
             accessible
             accessibilityLabel={`${emotion.name} ${counts[index]}회`}
-            className="shrink-0 items-center justify-center p-3 ios:curve-continuous rounded-theme"
+            className="shrink-0 items-center justify-center p-3 border ios:curve-continuous rounded-theme"
             style={{
               width: width * 0.35,
               backgroundColor: `${emotion.color}${mode === 'dark' ? '33' : '26'}`,
+              borderColor: `${emotion.color}${mode === 'dark' ? '59' : '40'}`,
             }}
           >
             <View className="items-center gap-1">

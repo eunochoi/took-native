@@ -76,7 +76,7 @@ export function DayInfoDiarySection({
               onPress={() => {
                 openModal({ pathname: '/diary/new', params: { date } });
               }}
-              className="mt-6 flex-row min-h-9 items-center gap-1.5 ios:curve-continuous rounded-full bg-theme-accent px-4"
+              className="mt-6 flex-row min-h-9 items-center gap-1.5 ios:curve-continuous rounded-full border border-theme-accent-deep bg-theme-accent px-4"
             >
               <AppIcon name="add" size={appRem * 1.125} color={colors.textOnAccent} />
               <Text

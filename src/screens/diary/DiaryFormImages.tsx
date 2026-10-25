@@ -43,7 +43,7 @@ function PhotoTile({
         accessibilityLabel={`사진 ${index + 1} 삭제`}
         onPress={onRemove}
         hitSlop={appRem * 0.25}
-        className={`absolute right-2 top-2 h-6 w-6 items-center justify-center ios:curve-continuous rounded-full bg-black/50 ${busy ? 'opacity-40' : 'opacity-100'}`}
+        className={`absolute right-2 top-2 h-6 w-6 items-center justify-center ios:curve-continuous rounded-full border border-black/60 bg-black/50 ${busy ? 'opacity-40' : 'opacity-100'}`}
       >
         <AppIcon name="close" size={appRem} color="white" />
       </Pressable>
@@ -64,7 +64,7 @@ function PhotoTile({
               const target = index + (event.nativeEvent.actionName === 'decrement' ? -1 : 1);
               if (target >= 0 && target < count) onReorder(index, target);
             }}
-            className="h-6 w-6 items-center justify-center ios:curve-continuous rounded-full bg-black/50"
+            className="h-6 w-6 items-center justify-center ios:curve-continuous rounded-full border border-black/60 bg-black/50"
           >
             <AppIcon name="drag-indicator" size={appRem} color="white" />
           </View>

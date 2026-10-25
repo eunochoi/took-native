@@ -1,3 +1,4 @@
+import { MUTED_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 import { Image, View } from 'react-native';
 import { Text } from '../../components/Text';
 const widgetPreview = require('../../../assets/widgets/sober-preview.png');
@@ -16,7 +17,9 @@ export function WidgetPage({ imageWidth }: { imageWidth: number }) {
           앱을 열지 않아도, 기록을 가까이.
         </Text>
       </View>
-      <View className="items-center gap-6 ios:curve-continuous rounded-2xl bg-theme-surface-muted px-4 py-8">
+      <View
+        className={`${MUTED_CARD_BORDER_CLASS_NAME} items-center gap-6 ios:curve-continuous rounded-2xl bg-theme-surface-muted px-4 py-8`}
+      >
         <Image
           source={widgetPreview}
           accessibilityLabel="TOOK 거리두기 홈 화면 위젯 예시"

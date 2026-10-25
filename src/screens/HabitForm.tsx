@@ -27,6 +27,7 @@ import {
 import { HABIT_NAME_MAX_LENGTH } from '../domain/limits';
 import { habitQueries, useRecordMutation } from '../queries';
 import { useAppTheme } from '../theme/AppThemeProvider';
+import { adjustColorBrightness } from '../theme/colors';
 import { FORM_TEXT_INPUT_CLASS_NAME, SECTION_TITLE_CLASS_NAME } from '../theme/classes';
 import { HabitIconPicker } from './habit/HabitIconPicker';
 import { HABIT_PRIORITY_LABELS, HabitPriorityPicker } from './habit/HabitPriorityPicker';
@@ -78,6 +79,8 @@ export function HabitForm({ id }: { id?: number }) {
       message: '저장이 진행 중입니다. 완료될 때까지 기다려주세요.',
     }),
   );
+  const iconBackgroundColor =
+    iconColor === 'theme' ? colors.accent : HABIT_ICON_COLORS[iconColor].value;
   const title = id ? '습관 항목 수정' : '습관 항목 추가';
   const iconLabel = HABIT_ICON_OPTIONS.find((option) => option.key === icon)?.label ?? '아이콘';
   const colorLabel = iconColor === 'theme' ? '기본 테마색' : HABIT_ICON_COLORS[iconColor].label;
@@ -215,10 +218,10 @@ export function HabitForm({ id }: { id?: number }) {
           onPress={() => setPicker('color')}
           leading={
             <View
-              className="h-6 w-6 ios:curve-continuous rounded-full"
+              className="h-6 w-6 ios:curve-continuous rounded-full border"
               style={{
-                backgroundColor:
-                  iconColor === 'theme' ? colors.accent : HABIT_ICON_COLORS[iconColor].value,
+                backgroundColor: iconBackgroundColor,
+                borderColor: adjustColorBrightness(iconBackgroundColor, -0.1),
               }}
             />
           }

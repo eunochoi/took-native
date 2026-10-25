@@ -56,8 +56,11 @@ export function ThemePage({
                   onPress={() => void onChange({ themeAccent: accent })}
                 >
                   <View
-                    className="h-6 w-6 ios:curve-continuous rounded-full"
-                    style={{ backgroundColor: ACCENT_PALETTES[accent].accent }}
+                    className="h-6 w-6 ios:curve-continuous rounded-full border"
+                    style={{
+                      backgroundColor: ACCENT_PALETTES[accent].accent,
+                      borderColor: ACCENT_PALETTES[accent].accentDeep,
+                    }}
                   />
                 </PickerOption>
               </View>

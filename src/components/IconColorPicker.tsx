@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, type ScrollView } from 'react-native';
 import { HABIT_ICON_COLORS, type HabitIconColorKey } from '../domain/constants';
 import { useAppTheme } from '../theme/AppThemeProvider';
+import { adjustColorBrightness } from '../theme/colors';
 import { AnimatedFlatList } from './AnimatedFlatList';
 import { BottomSheetModal } from './BottomSheetModal';
 import { Button } from './Button';
@@ -60,8 +61,11 @@ export function IconColorPicker({
                   onPress={() => setDraft(key)}
                 >
                   <View
-                    className="h-9 w-9 shrink-0 ios:curve-continuous rounded-full"
-                    style={{ backgroundColor }}
+                    className="h-9 w-9 shrink-0 ios:curve-continuous rounded-full border"
+                    style={{
+                      backgroundColor,
+                      borderColor: adjustColorBrightness(backgroundColor, -0.1),
+                    }}
                   />
                   <Text
                     numberOfLines={1}

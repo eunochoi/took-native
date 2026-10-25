@@ -10,7 +10,7 @@ import { formatSoberDuration, getSoberStreaks } from '../../domain/sober';
 import { useCurrentMinute } from '../../hooks/useCurrentMinute';
 import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
-import { UNDERLINE_TAB_LIST_CLASS_NAME } from '../../theme/classes';
+import { MUTED_CARD_BORDER_CLASS_NAME, UNDERLINE_TAB_LIST_CLASS_NAME } from '../../theme/classes';
 import { AnalysisHeader } from './AnalysisHeader';
 
 export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts: SoberRestart[] }) {
@@ -54,7 +54,9 @@ export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts:
           </UnderlineTab>
         ))}
       </View>
-      <View className="mx-1 p-6 bg-theme-surface-muted/60 ios:curve-continuous rounded-theme">
+      <View
+        className={`${MUTED_CARD_BORDER_CLASS_NAME} mx-1 p-6 bg-theme-surface-muted/60 ios:curve-continuous rounded-theme`}
+      >
         {records.length ? (
           visibleRecords.map(({ sober, record }, index) => {
             const status = record.current ? '진행 중' : '종료';

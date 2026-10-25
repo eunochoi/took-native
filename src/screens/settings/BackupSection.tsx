@@ -1,7 +1,7 @@
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import { Text } from '../../components/Text';
 import { useAppTheme } from '../../theme/AppThemeProvider';
-import { MUTED_DESCRIPTION_CLASS_NAME } from '../../theme/classes';
+import { MUTED_CARD_BORDER_CLASS_NAME, MUTED_DESCRIPTION_CLASS_NAME } from '../../theme/classes';
 
 export function BackupSection({
   activity,
@@ -19,12 +19,12 @@ export function BackupSection({
         백업 / 복원
       </Text>
       <View className="gap-6 px-1 pt-2">
-        <View className="gap-4 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-4">
+        <View
+          className={`${MUTED_CARD_BORDER_CLASS_NAME} gap-4 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-4`}
+        >
           <View className="gap-2">
             <Text className="text-base font-semibold">기록 보관</Text>
-            <Text className={MUTED_DESCRIPTION_CLASS_NAME}>
-              기록·사진·설정을 파일로 저장해요.
-            </Text>
+            <Text className={MUTED_DESCRIPTION_CLASS_NAME}>기록·사진·설정을 파일로 저장해요.</Text>
           </View>
           <View className="gap-2 border-t border-theme-border/50 pt-4">
             <Text className="text-base font-semibold">안전한 저장</Text>
@@ -51,7 +51,7 @@ export function BackupSection({
             accessibilityState={{ disabled: activity !== null, busy: activity === 'export' }}
             disabled={activity !== null}
             onPress={onExport}
-            className={`flex-1 min-w-0 min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-full bg-theme-accent px-3 ${activity !== null ? 'opacity-40' : 'opacity-100'}`}
+            className={`flex-1 min-w-0 min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-full border border-theme-accent-deep bg-theme-accent px-3 ${activity !== null ? 'opacity-40' : 'opacity-100'}`}
           >
             {activity === 'export' && <ActivityIndicator color={colors.textOnAccent} />}
             <Text
@@ -67,7 +67,7 @@ export function BackupSection({
             accessibilityState={{ disabled: activity !== null, busy: activity === 'restore' }}
             disabled={activity !== null}
             onPress={onRestore}
-            className={`flex-1 min-w-0 min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-full bg-theme-accent/10 px-3 ${activity !== null ? 'opacity-40' : 'opacity-100'}`}
+            className={`flex-1 min-w-0 min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-full border border-theme-accent/20 bg-theme-accent/10 px-3 ${activity !== null ? 'opacity-40' : 'opacity-100'}`}
           >
             {activity === 'restore' && <ActivityIndicator color={colors.accent} />}
             <Text

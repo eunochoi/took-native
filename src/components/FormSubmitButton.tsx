@@ -15,7 +15,7 @@ export function FormSubmitButton({
       accessibilityRole="button"
       accessibilityState={{ ...accessibilityState, disabled: !!disabled, busy: loading }}
       disabled={disabled}
-      className={`min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-full bg-theme-accent px-5 ${disabled ? 'opacity-50' : 'opacity-100'} ${className ?? ''}`}
+      className={`min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-full border border-theme-accent-deep bg-theme-accent px-5 ${disabled ? 'opacity-50' : 'opacity-100'} ${className ?? ''}`}
     >
       {loading && <ActivityIndicator size="small" color="white" />}
       <Text className="text-base text-theme-text-on-accent">{label}</Text>

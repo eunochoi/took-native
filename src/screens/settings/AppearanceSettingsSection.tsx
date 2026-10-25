@@ -55,8 +55,11 @@ export function AppearanceSettingsSection({
                   accessibilityState={{ checked, disabled }}
                   disabled={disabled}
                   onPress={() => onChange({ themeAccent: accent })}
-                  className="aspect-square min-w-0 flex-1 items-center justify-center rounded-full active:opacity-65"
-                  style={{ backgroundColor: ACCENT_PALETTES[accent].accent }}
+                  className="aspect-square min-w-0 flex-1 items-center justify-center rounded-full border active:opacity-65"
+                  style={{
+                    backgroundColor: ACCENT_PALETTES[accent].accent,
+                    borderColor: ACCENT_PALETTES[accent].accentDeep,
+                  }}
                 >
                   {checked && (
                     <AppIcon

@@ -131,7 +131,9 @@ test('accent circles fill six equal square cells and show a check only on the se
       assert(classes.includes('flex-1'));
       assert(classes.includes('aspect-square'));
       assert(classes.includes('rounded-full'));
-      assert(!classes.some((name: string) => /^(?:w-|h-|min-h-|border)/.test(name)));
+      assert(classes.includes('border'));
+      assert.equal(circle.props.style.borderColor, ACCENT_PALETTES[ACCENT_KEYS[index]].accentDeep);
+      assert(!classes.some((name: string) => /^(?:w-|h-|min-h-)/.test(name)));
       assert.equal(circle.props.style.backgroundColor, ACCENT_PALETTES[ACCENT_KEYS[index]].accent);
       const checks = nodes(circle, 'Icon');
       assert.equal(checks.length, ACCENT_KEYS[index] === themeAccent ? 1 : 0);

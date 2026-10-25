@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { transpileModule, JsxEmit, ModuleKind } from 'typescript';
+import { adjustColorBrightness } from '../src/theme/colors';
 import { HABIT_ICON_COLORS, isHabitIconColor, resolveIconColor } from '../src/domain/constants';
 
 function nodes(node: any): any[] {
@@ -39,6 +40,7 @@ test('color picker combines theme and eleven colors in equal-height four-column 
             ],
           };
         if (name === 'react-native') return { View: 'View' };
+        if (name.endsWith('/theme/colors')) return { adjustColorBrightness };
         if (name.endsWith('/constants')) return { HABIT_ICON_COLORS };
         if (name.endsWith('/AppThemeProvider')) return { useAppTheme: () => theme };
         const component = name.split('/').at(-1)!;

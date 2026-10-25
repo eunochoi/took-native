@@ -1,3 +1,4 @@
+import { MUTED_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
@@ -19,7 +20,9 @@ export function WelcomePage({ onOpenWeb }: { onOpenWeb: () => void }) {
           일기와 습관, 거리두기 기록을{'\n'}한곳에서 관리해요.
         </Text>
       </View>
-      <View className="gap-6 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-6">
+      <View
+        className={`${MUTED_CARD_BORDER_CLASS_NAME} gap-6 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-6`}
+      >
         <View className="gap-2">
           <Text className="text-center text-base font-semibold">기록은 이 기기에</Text>
           <Text className="text-center text-sm text-theme-text-secondary">

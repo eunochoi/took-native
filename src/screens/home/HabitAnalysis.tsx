@@ -7,7 +7,7 @@ import { UnderlineTab } from '../../components/UnderlineTab';
 import type { getHabitStats } from '../../db/stats';
 import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
-import { UNDERLINE_TAB_LIST_CLASS_NAME } from '../../theme/classes';
+import { MUTED_CARD_BORDER_CLASS_NAME, UNDERLINE_TAB_LIST_CLASS_NAME } from '../../theme/classes';
 import { HabitStars } from '../habit/HabitStars';
 import { AnalysisHeader } from './AnalysisHeader';
 export function HabitAnalysis({
@@ -46,7 +46,9 @@ export function HabitAnalysis({
           </UnderlineTab>
         ))}
       </View>
-      <View className="mx-1 p-6 bg-theme-surface-muted/60 ios:curve-continuous rounded-theme">
+      <View
+        className={`${MUTED_CARD_BORDER_CLASS_NAME} mx-1 p-6 bg-theme-surface-muted/60 ios:curve-continuous rounded-theme`}
+      >
         {habits.length ? (
           habits.map((habit, index) => (
             <Pressable

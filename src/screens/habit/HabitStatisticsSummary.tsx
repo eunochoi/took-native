@@ -1,3 +1,4 @@
+import { ACCENT_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
@@ -18,7 +19,9 @@ export function HabitStatisticsSummary({
 }) {
   const { colors, iconSizes } = useAppTheme();
   return (
-    <View className="flex-row py-2 bg-theme-accent-light mx-1 bg-theme-accent-light/50 ios:curve-continuous rounded-theme">
+    <View
+      className={`${ACCENT_CARD_BORDER_CLASS_NAME} flex-row py-2 mx-1 bg-theme-accent-light/50 ios:curve-continuous rounded-theme`}
+    >
       {stats.map((stat, index) => (
         <View
           key={stat.label}

@@ -1,5 +1,8 @@
 export const RECORD_SURFACE_CLASS_NAME = 'border border-theme-accent/20 bg-theme-surface';
 
+export const ACCENT_CARD_BORDER_CLASS_NAME = 'border border-theme-accent/20';
+export const MUTED_CARD_BORDER_CLASS_NAME = 'border border-theme-text-secondary/10';
+
 export const BADGE_CLASS_NAME =
   'items-center justify-center ios:curve-continuous rounded-full bg-theme-accent-light/20 border-[1px] border-theme-accent/10';
 export const BADGE_TEXT_CLASS_NAME =

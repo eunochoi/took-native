@@ -138,7 +138,7 @@ export default function HabitOrder() {
                   setOrder(defaults);
                   setResetDefault(true);
                 }}
-                className={`flex-1 min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-xl border border-transparent bg-theme-accent-light px-2 py-2 active:opacity-65 ${!order || saving || dragging || (isDefault && settings.habitOrder.length === 0) ? 'opacity-40' : 'opacity-100'}`}
+                className={`flex-1 min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-xl border border-theme-accent/20 bg-theme-accent-light px-2 py-2 active:opacity-65 ${!order || saving || dragging || (isDefault && settings.habitOrder.length === 0) ? 'opacity-40' : 'opacity-100'}`}
               >
                 <AppIcon name="restart-alt" size={appRem * 1.125} color={colors.accentText} />
                 <Text className="shrink text-center text-sm text-theme-accent-text">

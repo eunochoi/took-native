@@ -1,3 +1,4 @@
+import { MUTED_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 import { AnalysisHeader } from './AnalysisHeader';
 import { DiaryStatisticsSummary } from './DiaryStatisticsSummary';
 import { View } from 'react-native';
@@ -22,7 +23,9 @@ export function DiaryAnalysis({
         longest={stats.longest}
         monthlyAverage={stats.monthlyAverage}
       />
-      <View className="mx-1 px-4 py-4 flex-row bg-theme-surface-muted/60 ios:curve-continuous rounded-theme">
+      <View
+        className={`${MUTED_CARD_BORDER_CLASS_NAME} mx-1 px-4 py-4 flex-row bg-theme-surface-muted/60 ios:curve-continuous rounded-theme`}
+      >
         {stats.monthly.map((count, index) => (
           <View key={index} className="flex-1 items-center gap-1.5">
             <View className="h-32 justify-end items-center gap-1">

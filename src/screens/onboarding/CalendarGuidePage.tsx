@@ -1,3 +1,4 @@
+import { MUTED_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 import { View } from 'react-native';
 import { Text } from '../../components/Text';
 import { CalendarHabitProgress } from '../calendar/CalendarHabitProgress';
@@ -17,7 +18,9 @@ export function CalendarGuidePage() {
           한 달의 일기와 습관을 확인해요.
         </Text>
       </View>
-      <View className="gap-6 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-6">
+      <View
+        className={`${MUTED_CARD_BORDER_CLASS_NAME} gap-6 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-6`}
+      >
         <View className="gap-4">
           <View className="gap-2">
             <Text className="text-center text-base font-semibold">습관 진행바</Text>

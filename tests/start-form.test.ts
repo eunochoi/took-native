@@ -75,10 +75,16 @@ function form(name: 'HabitForm' | 'SoberForm', id?: number) {
             useRecordMutation: () => ({ isPending: false }),
           };
         if (dependency.endsWith('AppThemeProvider'))
-          return { useAppTheme: () => ({ colors: {}, rem: 15 }) };
+          return {
+            useAppTheme: () => ({
+              colors: require('../src/theme/colors').themeColors('blue', 'light'),
+              rem: 15,
+            }),
+          };
         if (dependency.endsWith('domain/constants')) return require('../src/domain/constants');
         if (dependency.endsWith('domain/limits')) return require('../src/domain/limits');
         if (dependency.endsWith('domain/sober')) return require('../src/domain/sober');
+        if (dependency.endsWith('theme/colors')) return require('../src/theme/colors');
         if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
         if (dependency.endsWith('HabitPriorityPicker'))
           return {

@@ -22,6 +22,7 @@ import { SOBER_DESCRIPTION_MAX_LENGTH, SOBER_NAME_MAX_LENGTH } from '../domain/l
 import { formatSoberGoal, SOBER_ICONS, type SoberInput } from '../domain/sober';
 import { soberQueries, useRecordMutation } from '../queries';
 import { useAppTheme } from '../theme/AppThemeProvider';
+import { adjustColorBrightness } from '../theme/colors';
 import { DateTimePicker } from '../components/DateTimePicker';
 import { SoberGoalPicker } from './sober/SoberGoalPicker';
 import { SoberIconPicker } from './sober/SoberIconPicker';
@@ -65,6 +66,8 @@ export function SoberForm({ id }: { id?: number }) {
       message: '거리두기 항목을 저장하고 있어요.',
     }),
   );
+  const iconBackgroundColor =
+    draft.icon_color === 'theme' ? colors.accent : HABIT_ICON_COLORS[draft.icon_color].value;
   const title = id ? '거리두기 수정' : '거리두기 추가';
   const onClosed = saved
     ? () =>
@@ -214,12 +217,10 @@ export function SoberForm({ id }: { id?: number }) {
           onPress={() => setPicker('color')}
           leading={
             <View
-              className="h-6 w-6 ios:curve-continuous rounded-full"
+              className="h-6 w-6 ios:curve-continuous rounded-full border"
               style={{
-                backgroundColor:
-                  draft.icon_color === 'theme'
-                    ? colors.accent
-                    : HABIT_ICON_COLORS[draft.icon_color].value,
+                backgroundColor: iconBackgroundColor,
+                borderColor: adjustColorBrightness(iconBackgroundColor, -0.1),
               }}
             />
           }

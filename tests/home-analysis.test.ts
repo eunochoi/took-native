@@ -420,7 +420,8 @@ test('emotion statistics retain all emotions and counts in one horizontal album 
       card.props.accessibilityLabel,
       `${EMOTIONS[index].name} ${stats.emotions[index]}회`,
     );
-    assert(!card.props.className.includes('border'));
+    assert(card.props.className.split(' ').includes('border'));
+    assert.equal(card.props.style.borderColor, `${EMOTIONS[index].color}40`);
     assert(card.props.style.backgroundColor.startsWith(EMOTIONS[index].color));
   }
 });
