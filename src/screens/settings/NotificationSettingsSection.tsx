@@ -12,7 +12,7 @@ export function NotificationSettingsSection({ disabled }: { disabled: boolean })
   return (
     <View className="gap-3">
       <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
-        알림
+        기록 알림
       </Text>
       <View className="gap-6 py-2 px-1">
         {REMINDERS.map((item) => {
