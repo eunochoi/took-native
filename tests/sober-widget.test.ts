@@ -459,7 +459,7 @@ test('actual library serializes selected icons, transparent background and share
   const flatten = (node: any): any[] => [node, ...(node.children ?? []).flatMap(flatten)];
   const nodes = flatten(tree);
   assert.equal(tree.props.backgroundColor, '#00ffffff');
-  assert.equal(tree.props.clickActionData.uri, 'took-local://sober/1');
+  assert.equal(tree.props.clickActionData.uri, 'pawpaw-took://sober/1');
   const texts = nodes.filter((node) => node.type === 'TextWidget');
   assert.equal(texts.find((node) => node.props.text === '잘자기').props.color, '#FFFFFF');
   const blackTree = buildWidgetTree(

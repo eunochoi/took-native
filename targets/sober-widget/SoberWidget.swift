@@ -111,7 +111,7 @@ struct SoberWidgetView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     // WidgetKit owns the outer shape and margins, including future system corner changes.
     .containerBackground(for: .widget) { background }
-    .widgetURL(URL(string: entry.record.map { "took-local://sober/\($0.id)" } ?? "took-local://sober"))
+    .widgetURL(URL(string: entry.record.map { "pawpaw-took://sober/\($0.id)" } ?? "pawpaw-took://sober"))
   }
 
   private func heading(_ record: SoberWidgetRecord) -> some View {

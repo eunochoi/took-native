@@ -3,7 +3,7 @@
     "name": "포포툭",
     "slug": "took-native",
     "version": "2.1.9",
-    "scheme": "took-local",
+    "scheme": ["pawpaw-took", "took-local"],
     "orientation": "portrait",
     "platforms": ["android", "ios"],
     "userInterfaceStyle": "automatic",
