@@ -1,6 +1,7 @@
 import { MUTED_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 import { Image, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
+import { InfoNotice } from '../../components/InfoNotice';
 import { Text } from '../../components/Text';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 const navigationPreview = require('../../../assets/onboarding/navigation.png');
@@ -8,7 +9,7 @@ const navigationPreview = require('../../../assets/onboarding/navigation.png');
 export function UsagePage({ imageWidth }: { imageWidth: number }) {
   const { rem, iconSizes } = useAppTheme();
   return (
-    <View className="w-full gap-6">
+    <View className="w-full grow justify-between gap-6">
       <View className="gap-2">
         <Text
           accessibilityRole="header"
@@ -71,6 +72,9 @@ export function UsagePage({ imageWidth }: { imageWidth: number }) {
           </View>
         </View>
       </View>
+      <InfoNotice textClassName="text-[10.5px] leading-[17.5px]" adjustsFontSizeToFit={false}>
+        알림 시간은 설정에서 언제든 바꿀 수 있어요.
+      </InfoNotice>
     </View>
   );
 }

@@ -8,7 +8,7 @@ import { MUTED_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 export function BackupPage({ onOpenWeb }: { onOpenWeb: () => void }) {
   const { iconSizes } = useAppTheme();
   return (
-    <View className="w-full gap-6">
+    <View className="w-full grow justify-between gap-6">
       <View className="gap-2">
         <Text
           accessibilityRole="header"

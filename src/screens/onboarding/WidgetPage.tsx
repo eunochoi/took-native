@@ -1,11 +1,12 @@
 import { MUTED_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 import { Image, View } from 'react-native';
 import { Text } from '../../components/Text';
+import { InfoNotice } from '../../components/InfoNotice';
 const widgetPreview = require('../../../assets/widgets/sober-preview.png');
 
 export function WidgetPage({ imageWidth }: { imageWidth: number }) {
   return (
-    <View className="w-full gap-6">
+    <View className="w-full grow justify-between gap-6">
       <View className="gap-2">
         <Text
           accessibilityRole="header"
@@ -45,6 +46,9 @@ export function WidgetPage({ imageWidth }: { imageWidth: number }) {
           </Text>
         </View>
       </View>
+      <InfoNotice textClassName="text-[10.5px] leading-[17.5px]" adjustsFontSizeToFit={false}>
+        거리두기 기록을 먼저 만들면 위젯에 연결할 수 있어요.
+      </InfoNotice>
     </View>
   );
 }
