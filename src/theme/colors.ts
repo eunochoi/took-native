@@ -7,6 +7,8 @@ type ThemeColorName =
   | 'accent'
   | 'accentLight'
   | 'accentDeep'
+  | 'accentSoft'
+  | 'accentBorder'
   | 'accentText';
 type ThemeColors = Record<ThemeColorName, string>;
 
@@ -19,7 +21,13 @@ export const ACCENT_PALETTES = Object.fromEntries(
   Object.entries(tokens.colors.accents).map(([name, references]) => [name, palette(references)]),
 ) as Record<
   keyof typeof tokens.colors.accents,
-  { accent: string; accentLight: string; accentDeep: string }
+  {
+    accent: string;
+    accentLight: string;
+    accentDeep: string;
+    accentSoft: string;
+    accentBorder: string;
+  }
 >;
 
 export function resolveThemeMode(mode: 'light' | 'dark' | 'system', system: string | null) {
@@ -30,7 +38,9 @@ export function themeColors(accent: keyof typeof ACCENT_PALETTES, mode: 'light' 
   const colors = {
     ...palette(tokens.colors.light),
     ...ACCENT_PALETTES[accent],
-    ...(mode === 'dark' ? palette(tokens.colors.dark) : {}),
+    ...(mode === 'dark'
+      ? { ...palette(tokens.colors.dark), ...palette(tokens.colors.accentsDark[accent]) }
+      : {}),
   } as ThemeColors;
   const fraction = mode === 'dark' ? 0.7 : 0.6;
   const white = parseInt(values.white.slice(1, 3), 16);

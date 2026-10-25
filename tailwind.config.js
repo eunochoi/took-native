@@ -7,6 +7,8 @@ const colorNames = [
   'accent',
   'accentLight',
   'accentDeep',
+  'accentSoft',
+  'accentBorder',
   'accentText',
 ];
 const themeColors = Object.fromEntries(

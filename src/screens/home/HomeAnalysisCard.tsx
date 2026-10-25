@@ -15,7 +15,7 @@ export function HomeAnalysisCard({ today }: { today: string }) {
       onPress={() =>
         openModal({ pathname: '/home/[year]/stats', params: { year: today.slice(0, 4) } })
       }
-      className="overflow-hidden rounded-2xl border border-theme-accent/25 bg-theme-accent/15 active:opacity-70 ios:curve-continuous"
+      className="overflow-hidden rounded-2xl border border-theme-accent-border bg-theme-accent-soft active:opacity-70 ios:curve-continuous"
     >
       <View className="flex-row items-center gap-2 px-4 py-5">
         <AppIcon

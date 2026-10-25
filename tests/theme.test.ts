@@ -54,6 +54,41 @@ test('calendar empty color stays neutral and visible across accents and modes', 
   }
 });
 
+test('accent backgrounds and borders approach the accent in both modes for all six themes', () => {
+  const channels = (color: string) =>
+    [1, 3, 5].map((start) => parseInt(color.slice(start, start + 2), 16));
+  for (const accent of Object.keys(ACCENT_PALETTES) as (keyof typeof ACCENT_PALETTES)[]) {
+    for (const mode of ['light', 'dark'] as const) {
+      const colors = themeColors(accent, mode);
+      const base = channels(colors.accentLight);
+      const target = channels(colors.accent);
+      for (const [name, ratio] of [
+        ['accentSoft', 0.15],
+        ['accentBorder', 0.3],
+      ] as const) {
+        assert.match(colors[name], /^#[0-9A-F]{6}$/);
+        assert.deepEqual(
+          channels(colors[name]),
+          base.map((channel, index) => Math.round(channel * (1 - ratio) + target[index] * ratio)),
+        );
+      }
+      const distance = (color: string) =>
+        channels(color).reduce((sum, channel, index) => sum + Math.abs(channel - target[index]), 0);
+      assert(distance(colors.accentLight) > distance(colors.accentSoft));
+      assert(distance(colors.accentSoft) > distance(colors.accentBorder));
+      assert(distance(colors.accentBorder) > 0);
+    }
+    assert.notEqual(
+      themeColors(accent, 'light').accentSoft,
+      themeColors(accent, 'dark').accentSoft,
+    );
+    assert.notEqual(
+      themeColors(accent, 'light').accentBorder,
+      themeColors(accent, 'dark').accentBorder,
+    );
+  }
+});
+
 test('completion bands use the same softened palette in both modes', () => {
   for (const mode of ['light', 'dark'] as const) {
     const colors = themeColors('blue', mode);

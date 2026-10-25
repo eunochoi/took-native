@@ -125,7 +125,7 @@ export function WelcomePage({ imageWidth }: { imageWidth: number }) {
       <View className="gap-2 mt-8">
         <Text className="text-center text-2xl font-semibold">어떤 색의 하루라도 괜찮아.</Text>
         <Text className="text-center text-base leading-6 text-theme-text-secondary">
-          포포툭에서 오늘의 마음을 기록하고,{'\n'}좋은 습관을 더하고, 불필요한 습관은 덜어내요.
+          포포툭에서 오늘의 마음을 기록하고,{'\n'}좋은 습관을 더하고, 줄이고 싶은 습관은 덜어내요.
         </Text>
       </View>
     </View>
