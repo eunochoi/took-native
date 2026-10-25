@@ -25,7 +25,7 @@ export async function getDiaryById(db: SQLiteDatabase, id: number): Promise<Diar
     id,
   );
   const completedHabits = await db.getAllAsync<Habit>(
-    'SELECT h.* FROM habits h JOIN habit_completions c ON c.habit_id = h.id WHERE c.date = ? ORDER BY h.priority DESC, h.id',
+    'SELECT h.* FROM habits h JOIN habit_completions c ON c.habit_id = h.id WHERE c.date = ? ORDER BY h.priority DESC, h.created_at DESC, h.id DESC',
     diary.date,
   );
   return { ...diary, images, completedHabits };
@@ -91,7 +91,7 @@ export async function getDiaryList(db: SQLiteDatabase, filters: DiaryFilters, pa
     ...diaries.map((diary) => diary.id),
   );
   const habits = await db.getAllAsync<Habit & { completion_date: string }>(
-    `SELECT h.*, c.date AS completion_date FROM habits h JOIN habit_completions c ON c.habit_id = h.id WHERE c.date IN (${placeholders}) ORDER BY h.priority DESC, h.id`,
+    `SELECT h.*, c.date AS completion_date FROM habits h JOIN habit_completions c ON c.habit_id = h.id WHERE c.date IN (${placeholders}) ORDER BY h.priority DESC, h.created_at DESC, h.id DESC`,
     ...diaries.map((diary) => diary.date),
   );
   const imagesByDiary = new Map<number, DiaryImage[]>();
