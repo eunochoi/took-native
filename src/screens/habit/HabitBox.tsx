@@ -33,7 +33,7 @@ export function HabitBox({
   const startedDate = localDate(habit.initial_started_at);
   const excluded = habit.priority === 0;
   return (
-    <View className="flex-1 gap-4 bg-theme-surface px-2 py-4">
+    <View className="flex-1 gap-4 bg-theme-surface px-2 py-5">
       <View className="relative">
         <Pressable
           accessibilityRole="button"

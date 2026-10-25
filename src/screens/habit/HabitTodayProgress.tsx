@@ -32,7 +32,7 @@ export function HabitTodayProgress({
       accessibilityLabel="습관 흐름 상세보기"
       accessibilityHint="최근 7일 완료율과 이전 7일 비교를 확인해요."
       onPress={onPress}
-      className="flex-1 gap-4 bg-theme-surface px-2 py-4 active:opacity-65"
+      className="flex-1 gap-4 bg-theme-surface px-2 py-5 active:opacity-65"
     >
       <View>
         <View className="items-center gap-2 mb-2">
