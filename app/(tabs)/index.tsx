@@ -13,7 +13,7 @@ const catSize = Image.resolveAssetSource(cat);
 
 export default function Home() {
   const today = useToday();
-  const { colors, mode, rem: appRem, navigationBottom, navigationHeight } = useAppTheme();
+  const { mode, rem: appRem, navigationBottom, navigationHeight } = useAppTheme();
   const scrollRef = useRef<ScrollView>(null);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
@@ -50,7 +50,7 @@ export default function Home() {
             onLayout={({ nativeEvent }) => setContentHeight(nativeEvent.layout.height)}
           >
             <View className="mt-8 shrink-0 flex-row items-center">
-              <Wordmark size={appRem * 3} accentColor={colors.accent} mode={mode} />
+              <Wordmark size={appRem * 3.3} mode={mode} />
             </View>
             <HomeGreeting />
             <View className="gap-3 shrink-0">

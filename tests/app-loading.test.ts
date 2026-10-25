@@ -4,7 +4,6 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { runInNewContext } from 'node:vm';
 import { DEFAULT_SETTINGS, parseSettings } from '../src/settings/model';
-import { ACCENT_PALETTES } from '../src/theme/colors';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
@@ -228,45 +227,25 @@ test('loading logo failure reaches retry UI without reporting readiness', () => 
   assert.equal(h.ready(), 0);
 });
 
-test('wordmark selects all 12 accent and mode images, preserves its ratio and forwards image events', () => {
+test('wordmark selects light and dark images, preserves its ratio and forwards image events', () => {
   const h = harness('../src/components/Wordmark.tsx', {
     'react-native': {
-      Image: Object.assign('Image', { resolveAssetSource: () => ({ width: 1826, height: 896 }) }),
+      Image: Object.assign('Image', { resolveAssetSource: () => ({ width: 5024, height: 2268 }) }),
     },
-    '../theme/colors': { ACCENT_PALETTES },
   });
   const onLoad = () => {};
   const onError = () => {};
   for (const mode of ['light', 'dark']) {
-    for (const [name, palette] of Object.entries(ACCENT_PALETTES)) {
-      const tree = h.render('Wordmark', {
-        size: 45,
-        accentColor: palette.accent,
-        mode,
-        onLoad,
-        onError,
-      });
-      const filename =
-        mode === 'dark'
-          ? `wordmark-${name}-dark.png`
-          : name === 'blue'
-            ? 'wordmark.png'
-            : `wordmark-${name}.png`;
-      assert.equal(tree.props.source, `../../assets/ui/${filename}`);
-      assert.equal(tree.props.style.height, 45);
-      assert.equal(tree.props.style.width, 45 * (1826 / 896));
-      assert.equal(tree.props.onLoad, onLoad);
-      assert.equal(tree.props.onError, onError);
-      assert.equal(tree.props.accessibilityLabel, 'TOOK');
-    }
+    const tree = h.render('Wordmark', { size: 45, mode, onLoad, onError });
+    assert.equal(
+      tree.props.source,
+      `../../assets/ui/${mode === 'dark' ? 'wordmark-dark.png' : 'wordmark.png'}`,
+    );
+    assert.equal(tree.props.style.height, 45);
+    assert.equal(tree.props.style.width, 45 * (5024 / 2268));
+    assert.equal(tree.props.onLoad, onLoad);
+    assert.equal(tree.props.onError, onError);
+    assert.equal(tree.props.accessibilityLabel, 'TOOK');
   }
-  assert.equal(
-    h.render('Wordmark', { mode: 'dark', accentColor: '#unknown' }).props.source,
-    '../../assets/ui/wordmark-blue-dark.png',
-  );
   assert.equal(h.render('Wordmark', {}).props.source, '../../assets/ui/wordmark.png');
-  assert.equal(
-    h.render('Wordmark', { accentColor: '#unknown' }).props.source,
-    '../../assets/ui/wordmark.png',
-  );
 });
