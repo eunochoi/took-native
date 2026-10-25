@@ -5,7 +5,17 @@ import { useAppTheme } from '../theme/AppThemeProvider';
 import { AppIcon } from './AppIcon';
 import { Text } from './Text';
 
-export function InfoNotice({ children, className }: { children: ReactNode; className?: string }) {
+export function InfoNotice({
+  children,
+  className,
+  textClassName,
+  adjustsFontSizeToFit = true,
+}: {
+  children: ReactNode;
+  className?: string;
+  textClassName?: string;
+  adjustsFontSizeToFit?: boolean;
+}) {
   const { colors, rem: appRem } = useAppTheme();
   return (
     <View className={twMerge('w-full flex-row items-start gap-2 px-2', className)}>
@@ -14,8 +24,11 @@ export function InfoNotice({ children, className }: { children: ReactNode; class
       </View>
       <Text
         numberOfLines={1}
-        adjustsFontSizeToFit
-        className="flex-1 text-xs leading-5 text-theme-accent-deep tracking-tighter"
+        adjustsFontSizeToFit={adjustsFontSizeToFit}
+        className={twMerge(
+          'flex-1 text-xs leading-5 text-theme-accent-deep tracking-tighter',
+          textClassName,
+        )}
       >
         {children}
       </Text>

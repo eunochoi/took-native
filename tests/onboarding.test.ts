@@ -443,3 +443,107 @@ test('Blue preview fades briefly and respects reduced motion', () => {
     );
   }
 });
+
+test('onboarding typography stays at the small preset across all app font settings', () => {
+  for (const rem of [14, 15, 16]) {
+    const dependencies: Record<string, unknown> = {
+      react: { useState: (initial: unknown) => [initial, () => {}] },
+      'react/jsx-runtime': { jsx, jsxs: jsx },
+      'react-native': {
+        View: 'View',
+        Pressable: 'Pressable',
+        Image: Object.assign('Image', { resolveAssetSource: () => ({ width: 100, height: 100 }) }),
+      },
+      'react-native-reanimated': { default: { View: 'AnimatedView' }, __esModule: true },
+      'react-native-svg': { default: 'Svg', Path: 'Path', __esModule: true },
+      'tailwind-merge': require('tailwind-merge'),
+      '../../components/Text': { Text: 'Text' },
+      './Text': { Text: 'Text' },
+      '../../components/AppIcon': { AppIcon: 'AppIcon' },
+      './AppIcon': { AppIcon: 'AppIcon' },
+      '../../components/EmotionImage': { EmotionImage: 'EmotionImage' },
+      '../../components/PickerOption': { PickerOption: 'PickerOption' },
+      '../../theme/classes': { MUTED_CARD_BORDER_CLASS_NAME: 'border' },
+      '../../theme/accents': { ACCENT_KEYS: ['blue'], ACCENT_LABELS: { blue: '파랑' } },
+      '../../theme/colors': {
+        ACCENT_PALETTES: { blue: { accent: '#000000', accentDeep: '#000000' } },
+      },
+    };
+    const theme = {
+      useAppTheme: () => ({ rem, colors: {}, iconSizes: { sm: rem, md: rem * 1.5 } }),
+    };
+    dependencies['../../theme/AppThemeProvider'] = theme;
+    dependencies['../theme/AppThemeProvider'] = theme;
+    for (const [file, key, exportName] of [
+      ['../src/components/InfoNotice.tsx', '../../components/InfoNotice', 'InfoNotice'],
+      [
+        '../src/screens/settings/EmotionIconStyleSelector.tsx',
+        '../settings/EmotionIconStyleSelector',
+        'EmotionIconStyleSelector',
+      ],
+      [
+        '../src/screens/calendar/CalendarRecordCounts.tsx',
+        '../calendar/CalendarRecordCounts',
+        'CalendarRecordCounts',
+      ],
+    ]) {
+      dependencies[key] = load(file, dependencies);
+      assert.equal(typeof (dependencies[key] as any)[exportName], 'function');
+    }
+    dependencies['../calendar/CalendarHabitProgress'] = {
+      CalendarHabitProgress: 'CalendarHabitProgress',
+    };
+    for (const page of [
+      'WelcomePage',
+      'ThemePage',
+      'UsagePage',
+      'CalendarGuidePage',
+      'WidgetPage',
+      'BackupPage',
+    ]) {
+      const component = load(`../src/screens/onboarding/${page}.tsx`, dependencies)[page];
+      const tree = component({
+        imageWidth: 280,
+        settings: { fontSize: { 14: 'small', 15: 'normal', 16: 'large' }[rem] },
+        busy: false,
+        onChange: async () => {},
+        onOpenWeb: () => {},
+      });
+      const texts = nodes(tree, 'Text');
+      assert(texts.length > 0, page);
+      for (const text of texts) {
+        const className = text.props.className;
+        assert.match(className, /text-\[(10\.5|14|15\.75|21)px\]/, `${page}: ${className}`);
+        assert.match(className, /leading-\[(14|17\.5|21|24\.5|28)px\]/, `${page}: ${className}`);
+        assert.doesNotMatch(className, /\btext-(xs|sm|base|lg|xl|2xl)\b|\bleading-\d/);
+        if (text.props.adjustsFontSizeToFit !== undefined)
+          assert.equal(text.props.adjustsFontSizeToFit, false);
+      }
+    }
+    const { Button } = load('../src/components/Button.tsx', dependencies);
+    const button = Button({
+      label: '다음',
+      labelSize: 'lg',
+      labelClassName: 'text-[15.75px] leading-[24.5px]',
+    });
+    assert.match(nodes(button, 'Text')[0].props.className, /text-\[15\.75px\] leading-\[24\.5px\]/);
+    assert.match(nodes(Button({ label: '기존 버튼' }), 'Text')[0].props.className, /text-base/);
+    const { InfoNotice } = dependencies['../../components/InfoNotice'] as any;
+    const notice = nodes(InfoNotice({ children: '기존 안내' }), 'Text')[0];
+    assert.match(notice.props.className, /text-xs leading-5/);
+    assert.equal(notice.props.adjustsFontSizeToFit, true);
+  }
+});
+
+test('onboarding navigation buttons use fixed small-preset typography', () => {
+  const h = harness();
+  h.renderSheet();
+  h.renderSheet().body.props.onLayout({ nativeEvent: { layout: { width: 390 } } });
+  const first = h.renderSheet();
+  nodes(first.footer, 'Button')[0].props.onPress();
+  const buttons = nodes(h.renderSheet().footer, 'Button');
+  assert.equal(buttons.length, 2);
+  assert(
+    buttons.every((button) => button.props.labelClassName === 'text-[15.75px] leading-[24.5px]'),
+  );
+});

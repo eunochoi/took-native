@@ -1,4 +1,5 @@
 import { View } from 'react-native';
+import { twMerge } from 'tailwind-merge';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
 import type { calendarHabitProgressCounts } from '../../domain/calendar';
@@ -9,11 +10,13 @@ export function CalendarRecordCounts({
   counts,
   unavailable = false,
   textSize = 'sm',
+  textClassName,
 }: {
   diaryCount: number;
   counts: ReturnType<typeof calendarHabitProgressCounts> | null;
   unavailable?: boolean;
   textSize?: 'sm' | 'base';
+  textClassName?: string;
 }) {
   const { iconSizes } = useAppTheme();
   return (
@@ -51,7 +54,10 @@ export function CalendarRecordCounts({
           <AppIcon name={icon} size={iconSizes.md} className={className} />
           <Text
             numberOfLines={1}
-            className={`${textSize === 'base' ? 'text-base leading-6' : 'text-sm leading-5'} text-theme-text-secondary`}
+            className={twMerge(
+              `${textSize === 'base' ? 'text-base leading-6' : 'text-sm leading-5'} text-theme-text-secondary`,
+              textClassName,
+            )}
             style={{ includeFontPadding: false }}
           >
             {value}
