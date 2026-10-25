@@ -186,6 +186,51 @@ test('diary date applies only after closing; future dates and cancellation prese
   assert.equal(cancel.applied.length, 0);
 });
 
+test('today header selects today and returns to its month without applying until confirmation', () => {
+  for (const value of ['2025-07-03', null]) {
+    const ui = harness('src/screens/diary/DiaryDatePicker.tsx');
+    const render = () => ui.render({ value });
+    const calendar = () => nodes(render()).find((node) => node.type === 'DatePickerCalendar');
+    calendar().props.onMonthChange('2026-09');
+    const header = render().props.headerAction;
+    assert.equal(header.props.accessibilityLabel, '오늘 날짜 선택');
+    assert(nodes(header).some((node) => node.type === 'AppIcon' && node.props.name === 'today'));
+    assert(nodes(header).some((node) => node.type === 'Text' && node.props.children === '오늘'));
+    header.props.onPress();
+    assert.equal(calendar().props.selected, today);
+    assert.equal(calendar().props.month, today.slice(0, 7));
+    assert.equal(ui.queries.at(-1).date, today);
+    assert.equal(ui.applied.length, 0);
+    assert.equal(ui.closed, 0);
+    const selected = render();
+    assert.equal(selected.props.footer.props.disabled, false);
+    selected.props.footer.props.onPress();
+    assert.equal(ui.applied.length, 0);
+    ui.finish();
+    assert.deepEqual(ui.applied, [today]);
+  }
+});
+
+test('today shortcut keeps the existing lookup, duplicate and editing rules', () => {
+  for (const result of [
+    { isPending: true },
+    { data: { id: 43 } },
+    { isError: true, refetch: () => {} },
+    { data: { id: 42 } },
+  ]) {
+    const ui = harness('src/screens/diary/DiaryDatePicker.tsx', { dates: { [today]: result } });
+    const render = () => ui.render({ value: '2026-09-10', diaryId: 42 });
+    render().props.headerAction.props.onPress();
+    const selected = render();
+    const blocked = result.data?.id !== 42;
+    assert.equal(selected.props.footer.props.disabled, blocked);
+    selected.props.footer.props.onPress();
+    ui.finish();
+    assert.deepEqual(ui.applied, blocked ? [] : [today]);
+    assert.equal(ui.closed, blocked ? 0 : 1);
+  }
+});
+
 test('date confirmation waits for lookup and blocks duplicates and errors', () => {
   for (const result of [
     { isPending: true },

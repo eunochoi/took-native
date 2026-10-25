@@ -2,12 +2,15 @@ import { InfoNotice } from '../../components/InfoNotice';
 import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { AppIcon } from '../../components/AppIcon';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { Button } from '../../components/Button';
 import { QueryError } from '../../components/QueryError';
+import { Text } from '../../components/Text';
 import { isDate } from '../../domain/date';
 import { diaryQueries, useToday } from '../../queries';
+import { useAppTheme } from '../../theme/AppThemeProvider';
 import { DatePickerCalendar } from '../calendar/DatePickerCalendar';
 
 export function DiaryDatePicker({
@@ -23,6 +26,7 @@ export function DiaryDatePicker({
 }) {
   const db = useSQLiteContext();
   const today = useToday();
+  const { iconSizes } = useAppTheme();
   const [draft, setDraft] = useState(value);
   const [month, setMonth] = useState((value ?? today).slice(0, 7));
   const diaries = useQuery(diaryQueries.month(db, month));
@@ -43,6 +47,22 @@ export function DiaryDatePicker({
       visible
       fixedHeight
       title="일기 날짜 선택"
+      headerAction={
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="오늘 날짜 선택"
+          accessibilityHint="이번 달로 이동하고 오늘 날짜를 선택해요."
+          onPress={() => {
+            setDraft(today);
+            setMonth(today.slice(0, 7));
+          }}
+          hitSlop={6}
+          className="min-h-9 flex-row items-center justify-center gap-1 px-1 active:opacity-70"
+        >
+          <AppIcon name="today" size={iconSizes.md} className="text-theme-accent" />
+          <Text className="text-sm text-theme-text-secondary">오늘</Text>
+        </Pressable>
+      }
       onClose={onClose}
       footer={(close) => (
         <Button
