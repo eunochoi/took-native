@@ -95,6 +95,9 @@ const out = path.resolve(__dirname, '../assets/ui');
           const canvas = document.createElement('canvas');
           canvas.width = canvas.height = 1000;
           const context = canvas.getContext('2d');
+          // Match the splash background before native resizing to avoid dark alpha fringes.
+          context.fillStyle = '#FFFFFF';
+          context.fillRect(0, 0, canvas.width, canvas.height);
           const heights = images.map((image, i) => (widths[i] * image.height) / image.width);
           const gap = 120;
           let y = (canvas.height - heights[0] - gap - heights[1]) / 2;
