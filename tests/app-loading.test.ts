@@ -172,11 +172,11 @@ test('late settings read after unmount cannot reveal the app', async () => {
   assert.equal(h.errors.length, 0);
 });
 
-function loadingHarness() {
+function loadingHarness(platform = 'ios') {
   const errors: Error[] = [];
   let ready = 0;
   const h = harness('../src/components/AppLoadingScreen.tsx', {
-    'react-native': { View: 'View', Image: 'Image' },
+    'react-native': { View: 'View', Image: 'Image', Platform: { OS: platform } },
     'expo-status-bar': { StatusBar: 'StatusBar' },
   });
   const props = { onReady: () => ready++, onError: (error: Error) => errors.push(error) };
@@ -248,4 +248,17 @@ test('wordmark selects light and dark images, preserves its ratio and forwards i
     assert.equal(tree.props.accessibilityLabel, 'TOOK');
   }
   assert.equal(h.render('Wordmark', {}).props.source, '../../assets/ui/wordmark.png');
+});
+
+test('loading artwork matches each platform native splash source and display size', () => {
+  const config = JSON.parse(readFileSync(new URL('../app.json', import.meta.url), 'utf8'));
+  const splash = config.expo.plugins.find((plugin: any) => plugin[0] === 'expo-splash-screen')[1];
+  for (const platform of ['ios', 'android']) {
+    const expected = platform === 'android' ? splash.android : splash;
+    const logo = loadingHarness(platform).render().props.children[1];
+    assert.equal(logo.props.source, expected.image.replace('./', '../../'));
+    assert(logo.props.className.split(' ').includes(`w-[${expected.imageWidth}px]`));
+    assert(logo.props.className.split(' ').includes(`h-[${expected.imageWidth}px]`));
+    assert.equal(logo.props.resizeMode, 'contain');
+  }
 });

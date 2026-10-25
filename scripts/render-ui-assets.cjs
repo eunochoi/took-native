@@ -59,38 +59,50 @@ const out = path.resolve(__dirname, '../assets/ui');
     );
     fs.writeFileSync(path.join(out, 'wordmark-dark.png'), Buffer.from(data, 'base64'));
     const splash = await page.evaluate(
-      async ({ cat, wordmark }) => {
-        const images = await Promise.all(
-          [cat, wordmark].map(async (source) => {
-            const image = new Image();
-            image.src = 'data:image/png;base64,' + source;
-            await image.decode();
-            const canvas = document.createElement('canvas');
-            canvas.width = image.naturalWidth;
-            canvas.height = image.naturalHeight;
-            const context = canvas.getContext('2d');
-            context.drawImage(image, 0, 0);
-            const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
-            let left = canvas.width,
-              top = canvas.height,
-              right = 0,
-              bottom = 0;
-            for (let i = 0; i < pixels.length; i += 4) {
-              if (pixels[i + 3] < 20) continue;
-              const x = (i / 4) % canvas.width;
-              const y = Math.floor(i / 4 / canvas.width);
-              left = Math.min(left, x);
-              top = Math.min(top, y);
-              right = Math.max(right, x);
-              bottom = Math.max(bottom, y);
-            }
-            return { image, left, top, width: right - left + 1, height: bottom - top + 1 };
-          }),
-        );
+      async (source) => {
+        const image = new Image();
+        image.src = 'data:image/png;base64,' + source;
+        await image.decode();
+        const sourceCanvas = document.createElement('canvas');
+        sourceCanvas.width = image.naturalWidth;
+        sourceCanvas.height = image.naturalHeight;
+        const sourceContext = sourceCanvas.getContext('2d');
+        sourceContext.drawImage(image, 0, 0);
+        const pixels = sourceContext.getImageData(
+          0,
+          0,
+          sourceCanvas.width,
+          sourceCanvas.height,
+        ).data;
+        let left = sourceCanvas.width,
+          top = sourceCanvas.height,
+          right = 0,
+          bottom = 0;
+        for (let i = 0; i < pixels.length; i += 4) {
+          if (!pixels[i + 3]) continue;
+          const x = (i / 4) % sourceCanvas.width;
+          const y = Math.floor(i / 4 / sourceCanvas.width);
+          left = Math.min(left, x);
+          top = Math.min(top, y);
+          right = Math.max(right, x);
+          bottom = Math.max(bottom, y);
+        }
+        const width = right - left + 1;
+        const height = bottom - top + 1;
+        const centerX = (left + right) / 2;
+        const centerY = (top + bottom) / 2;
+        let radius = 0;
+        for (let i = 0; i < pixels.length; i += 4) {
+          if (!pixels[i + 3]) continue;
+          const x = (i / 4) % sourceCanvas.width;
+          const y = Math.floor(i / 4 / sourceCanvas.width);
+          radius = Math.max(radius, Math.hypot(x - centerX, y - centerY));
+        }
         const results = {};
-        for (const [filename, widths] of [
-          ['splash.png', [864, 720]],
-          ['splash-android.png', [720, 600]],
+        for (const [filename, maxSize, safeRadius] of [
+          ['splash.png', 864, Infinity],
+          // At imageWidth 228, radius 400 occupies 91.2dp of Android's 96dp safe radius.
+          ['splash-android.png', 720, 400],
         ]) {
           const canvas = document.createElement('canvas');
           canvas.width = canvas.height = 1000;
@@ -98,31 +110,25 @@ const out = path.resolve(__dirname, '../assets/ui');
           // Match the splash background before native resizing to avoid dark alpha fringes.
           context.fillStyle = '#FFFFFF';
           context.fillRect(0, 0, canvas.width, canvas.height);
-          const heights = images.map((image, i) => (widths[i] * image.height) / image.width);
-          const gap = 120;
-          let y = (canvas.height - heights[0] - gap - heights[1]) / 2;
-          images.forEach((image, i) => {
-            context.drawImage(
-              image.image,
-              image.left,
-              image.top,
-              image.width,
-              image.height,
-              (canvas.width - widths[i]) / 2,
-              y,
-              widths[i],
-              heights[i],
-            );
-            y += heights[i] + gap;
-          });
+          const scale = Math.min(maxSize / width, maxSize / height, safeRadius / radius);
+          const drawWidth = width * scale;
+          const drawHeight = height * scale;
+          context.drawImage(
+            image,
+            left,
+            top,
+            width,
+            height,
+            (canvas.width - drawWidth) / 2,
+            (canvas.height - drawHeight) / 2,
+            drawWidth,
+            drawHeight,
+          );
           results[filename] = canvas.toDataURL('image/png').split(',')[1];
         }
         return results;
       },
-      {
-        cat: fs.readFileSync(path.resolve(out, '../cats/cat-blue.png')).toString('base64'),
-        wordmark: source,
-      },
+      fs.readFileSync(path.join(out, 'splash-source.png')).toString('base64'),
     );
     for (const [filename, data] of Object.entries(splash)) {
       fs.writeFileSync(path.join(out, filename), Buffer.from(data, 'base64'));

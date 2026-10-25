@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Image, View } from 'react-native';
+import { Image, Platform, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
-const splash = require('../../assets/ui/splash.png');
+const splash =
+  Platform.OS === 'android'
+    ? require('../../assets/ui/splash-android.png')
+    : require('../../assets/ui/splash.png');
 
 export function AppLoadingScreen({
   onReady,
@@ -26,7 +29,7 @@ export function AppLoadingScreen({
       <StatusBar style="dark" />
       <Image
         source={splash}
-        className="h-[240px] w-[240px]"
+        className={Platform.OS === 'android' ? 'h-[228px] w-[228px]' : 'h-[240px] w-[240px]'}
         resizeMode="contain"
         accessibilityLabel="TOOK"
         onLoad={() => setImageReady(true)}
