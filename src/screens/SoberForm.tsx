@@ -1,19 +1,19 @@
-import { InfoNotice } from '../components/InfoNotice';
-import { SECTION_TITLE_CLASS_NAME, FORM_TEXT_INPUT_CLASS_NAME } from '../theme/classes';
-import { CharacterCount } from '../components/CharacterCount';
-import { RecordFormLayout } from '../components/RecordFormLayout';
-import { usePreventRemove } from 'expo-router/react-navigation';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
+import { usePreventRemove } from 'expo-router/react-navigation';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Switch, TextInput, View } from 'react-native';
-import { useNotice } from '../components/NoticeProvider';
+import { BottomSheetPage } from '../components/BottomSheetPage';
 import { Button } from '../components/Button';
+import { CharacterCount } from '../components/CharacterCount';
+import { DateTimePicker } from '../components/DateTimePicker';
 import { FormPickerRow } from '../components/FormPickerRow';
 import { IconColorPicker } from '../components/IconColorPicker';
+import { InfoNotice } from '../components/InfoNotice';
+import { useNotice } from '../components/NoticeProvider';
 import { QueryState } from '../components/QueryState';
-import { BottomSheetPage } from '../components/BottomSheetPage';
+import { RecordFormLayout } from '../components/RecordFormLayout';
 import { SoberIcon } from '../components/SoberIcon';
 import { Text } from '../components/Text';
 import { saveSober } from '../db/sober';
@@ -22,8 +22,8 @@ import { SOBER_DESCRIPTION_MAX_LENGTH, SOBER_NAME_MAX_LENGTH } from '../domain/l
 import { formatSoberGoal, SOBER_ICONS, type SoberInput } from '../domain/sober';
 import { soberQueries, useRecordMutation } from '../queries';
 import { useAppTheme } from '../theme/AppThemeProvider';
+import { FORM_TEXT_INPUT_CLASS_NAME, SECTION_TITLE_CLASS_NAME } from '../theme/classes';
 import { adjustColorBrightness } from '../theme/colors';
-import { DateTimePicker } from '../components/DateTimePicker';
 import { SoberGoalPicker } from './sober/SoberGoalPicker';
 import { SoberIconPicker } from './sober/SoberIconPicker';
 
@@ -71,10 +71,10 @@ export function SoberForm({ id }: { id?: number }) {
   const title = id ? '거리두기 수정' : '거리두기 추가';
   const onClosed = saved
     ? () =>
-        showNotice({
-          tone: 'success',
-          title: id ? '거리두기를 수정했어요' : '거리두기를 추가했어요',
-        })
+      showNotice({
+        tone: 'success',
+        title: id ? '거리두기를 수정했어요' : '거리두기를 추가했어요',
+      })
     : undefined;
   if (id !== undefined && (query.isPending || query.error || !query.data || !loaded))
     return (
@@ -176,14 +176,14 @@ export function SoberForm({ id }: { id?: number }) {
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
           거리를 두고 싶은 것
         </Text>
-        <View className="gap-3 px-2">
+        <View className="gap-3 px-1">
           <TextInput
             accessibilityLabel="거리두기 항목 이름"
             value={draft.name}
             onChangeText={(name) => setDraft({ ...draft, name })}
             editable={!mutation.isPending}
             maxLength={SOBER_NAME_MAX_LENGTH}
-            placeholder="예: 야식, 쇼츠, 커피"
+            placeholder="쇼츠 시청"
             placeholderTextColor={colors.textTertiary}
             className={`min-h-12 ${FORM_TEXT_INPUT_CLASS_NAME}`}
           />

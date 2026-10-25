@@ -124,10 +124,10 @@ export function DiaryForm({
     : '날짜를 선택해주세요';
   const onClosed = saved
     ? () =>
-        showNotice({
-          tone: 'success',
-          title: id ? '일기를 수정했어요' : '일기를 저장했어요',
-        })
+      showNotice({
+        tone: 'success',
+        title: id ? '일기를 수정했어요' : '일기를 저장했어요',
+      })
     : undefined;
   if (id !== undefined && (query.isPending || query.error || !query.data))
     return (
@@ -153,13 +153,13 @@ export function DiaryForm({
       titleAction={
         id !== undefined || allowDateChange
           ? {
-              accessibilityLabel: `${title}, 일기 날짜 선택`,
-              disabled: busy || dragging || picker !== null,
-              onPress: () => {
-                Keyboard.dismiss();
-                setPicker('date');
-              },
-            }
+            accessibilityLabel: `${title}, 일기 날짜 선택`,
+            disabled: busy || dragging || picker !== null,
+            onPress: () => {
+              Keyboard.dismiss();
+              setPicker('date');
+            },
+          }
           : undefined
       }
       onBeforeClose={() => {
@@ -284,7 +284,7 @@ export function DiaryForm({
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
           오늘의 이야기
         </Text>
-        <View className="shrink min-h-0 gap-3 p-2">
+        <View className="shrink min-h-0 gap-3 p-1">
           <TextInput
             accessibilityLabel="일기 내용"
             multiline

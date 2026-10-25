@@ -27,8 +27,8 @@ import {
 import { HABIT_NAME_MAX_LENGTH } from '../domain/limits';
 import { habitQueries, useRecordMutation } from '../queries';
 import { useAppTheme } from '../theme/AppThemeProvider';
-import { adjustColorBrightness } from '../theme/colors';
 import { FORM_TEXT_INPUT_CLASS_NAME, SECTION_TITLE_CLASS_NAME } from '../theme/classes';
+import { adjustColorBrightness } from '../theme/colors';
 import { HabitIconPicker } from './habit/HabitIconPicker';
 import { HABIT_PRIORITY_LABELS, HabitPriorityPicker } from './habit/HabitPriorityPicker';
 import { HabitStars } from './habit/HabitStars';
@@ -86,10 +86,10 @@ export function HabitForm({ id }: { id?: number }) {
   const colorLabel = iconColor === 'theme' ? '기본 테마색' : HABIT_ICON_COLORS[iconColor].label;
   const onClosed = saved
     ? () =>
-        showNotice({
-          tone: 'success',
-          title: id ? '습관을 수정했어요' : '습관을 추가했어요',
-        })
+      showNotice({
+        tone: 'success',
+        title: id ? '습관을 수정했어요' : '습관을 추가했어요',
+      })
     : undefined;
   if (id !== undefined && (query.isPending || query.error || !query.data || !loaded.current))
     return (
@@ -166,7 +166,7 @@ export function HabitForm({ id }: { id?: number }) {
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
           습관 이름
         </Text>
-        <View className="gap-3 px-2">
+        <View className="gap-3 px-1">
           <TextInput
             accessibilityLabel="습관 이름"
             value={name}
