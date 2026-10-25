@@ -43,7 +43,7 @@ export function AppearanceSettingsSection({
           <View
             accessibilityRole="radiogroup"
             accessibilityLabel="강조 색상"
-            className={`my-2 w-full flex-row items-start gap-1.5 py-2 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
+            className={`my-2 w-full flex-row items-start gap-3 py-2 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
           >
             {accents.map((accent) => {
               const checked = settings.themeAccent === accent;

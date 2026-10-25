@@ -121,7 +121,7 @@ test('accent circles fill six equal square cells and show a check only on the se
     const tree = ui.render({ themeAccent });
     const group = nodes(tree, 'View').find((view) => view.props.accessibilityRole === 'radiogroup');
     assert(group.props.className.split(' ').includes('w-full'));
-    assert(group.props.className.split(' ').includes('gap-1.5'));
+    assert(group.props.className.split(' ').includes('gap-3'));
     assert(group.props.className.split(' ').includes('items-start'));
     const circles = nodes(group, 'Pressable');
     assert.equal(circles.length, 6);
