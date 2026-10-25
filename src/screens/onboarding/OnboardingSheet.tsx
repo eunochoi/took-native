@@ -155,33 +155,37 @@ export function OnboardingSheet({
               </Pressable>
             ))}
           </View>
-          <View className="flex-row gap-3">
+          <View className="flex-row items-stretch gap-3">
             {step > 0 && (
-              <Button
-                label="이전"
-                labelSize="lg"
-                subtle
-                outline
-                disabled={busy || !width}
-                onPress={() => selectStep(step - 1)}
-                className="flex-1"
-              />
+              <View className="min-w-0 flex-1 basis-0">
+                <Button
+                  label="이전"
+                  labelSize="lg"
+                  subtle
+                  outline
+                  disabled={busy || !width}
+                  onPress={() => selectStep(step - 1)}
+                  className="w-full grow"
+                />
+              </View>
             )}
-            <Button
-              labelSize="lg"
-              label={
-                busy
-                  ? '저장 중…'
-                  : step === titles.length - 1
-                    ? firstRun
-                      ? '포포툭 시작하기'
-                      : '닫기'
-                    : '다음'
-              }
-              disabled={busy || !width}
-              onPress={() => (step === titles.length - 1 ? confirm(close) : selectStep(step + 1))}
-              className="flex-1"
-            />
+            <View className="min-w-0 flex-1 basis-0">
+              <Button
+                labelSize="lg"
+                label={
+                  busy
+                    ? '저장 중…'
+                    : step === titles.length - 1
+                      ? firstRun
+                        ? '포포툭 시작하기'
+                        : '닫기'
+                      : '다음'
+                }
+                disabled={busy || !width}
+                onPress={() => (step === titles.length - 1 ? confirm(close) : selectStep(step + 1))}
+                className="w-full grow"
+              />
+            </View>
           </View>
         </View>
       )}
