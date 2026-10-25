@@ -42,7 +42,7 @@ export default function Home() {
           className="w-full"
           style={{
             height: viewportHeight > 0 ? pageHeight : undefined,
-            paddingBottom: navigationBottom,
+            paddingBottom: navigationBottom + navigationHeight + appRem,
           }}
         >
           <View
@@ -67,7 +67,7 @@ export default function Home() {
                 height: 'auto',
                 aspectRatio: catSize.width / catSize.height,
               }}
-              className="mx-auto w-full max-h-full shrink"
+              className="mx-auto w-4/5 max-h-full shrink"
             />
           </View>
         </View>

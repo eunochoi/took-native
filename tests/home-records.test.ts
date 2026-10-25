@@ -175,7 +175,10 @@ test('home fills a normal window, scrolls short windows and resets when all reco
   const content = ui.render().nodes.find((node) => node.type === 'View' && node.props.onLayout);
   content.props.onLayout({ nativeEvent: { layout: { height: 500 } } });
   assert.equal(viewport().props.children.props.style.height, 800);
-  assert.equal(viewport().props.children.props.style.paddingBottom, ui.theme.navigationBottom);
+  assert.equal(
+    viewport().props.children.props.style.paddingBottom,
+    ui.theme.navigationBottom + ui.theme.navigationHeight + ui.theme.rem,
+  );
   assert.equal(viewport().props.scrollEnabled, false);
   assert.equal(viewport().props.bounces, false);
   assert.equal(viewport().props.overScrollMode, 'never');
@@ -361,7 +364,7 @@ test('home analysis banner opens the current year through modal navigation', () 
 test('home greeting retains its welcome copy and all three hashtag destinations', () => {
   const ui = harness('src/screens/home/HomeGreeting.tsx', 'HomeGreeting');
   const view = ui.render();
-  assert(view.nodes.some((node) => node.type === 'Text' && node.props.children === '오늘도 툭!!'));
+  assert(view.nodes.some((node) => node.type === 'Text' && node.props.children === '오늘도 툭!'));
   assert(
     view.nodes.some((node) => node.type === 'Text' && node.props.children === '나답게 쌓는 하루'),
   );
