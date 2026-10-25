@@ -31,7 +31,7 @@ export function HomeGreeting() {
   const focused = useIsFocused();
 
   return (
-    <View className="mt-5 mb-12 shrink-0 gap-2">
+    <View className="mt-5 shrink-0 gap-2">
       <Text className="font-bold text-4xl">오늘도 툭!</Text>
       <View className="flex-row items-center gap-2">
         <Text className="font-bold text-3xl">나답게 쌓는 하루</Text>

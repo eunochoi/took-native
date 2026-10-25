@@ -172,11 +172,29 @@ test('home retains its decoration within the page scroll viewport', () => {
   assert.equal(tree.props.style, undefined);
   const cat = rendered.find((node) => node.props.accessibilityLabel === 'hiding-cat');
   assert(cat.props.className.includes('max-h-full'));
-  assert(
-    rendered.some(
-      (node) => node.props.className === 'flex-1 min-h-0 justify-end overflow-hidden px-[5%]',
-    ),
-  );
+  const scroll = rendered.find((node) => node.type === 'ScrollView');
+  const content = nodes(scroll);
+  assert(content.includes(cat));
+  assert.equal(content.filter((node) => node.type === 'HomeTodaySection').length, 1);
+  assert.equal(content.filter((node) => node.type === 'HomeAnalysisCard').length, 1);
+});
+
+test('home includes both greeting and card heights when enabling short-window scrolling', () => {
+  for (const rem of [14, 15, 16]) {
+    for (const viewport of [280, 700]) {
+      const tree = load('../app/(tabs)/index.tsx', false, true, [viewport, 210, 300], {
+        rem,
+        bottom: 24,
+      }).default();
+      const scroll = tree.props.children;
+      const page = scroll.props.children;
+      const required = 210 + 300 + 24 + 64 + rem;
+      assert.equal(page.props.style.height, Math.max(viewport, required));
+      assert.equal(scroll.props.scrollEnabled, required > viewport + 1);
+      assert.equal(typeof page.props.children[0].props.onLayout, 'function');
+      assert.equal(typeof page.props.children[1].props.onLayout, 'function');
+    }
+  }
 });
 
 test('Tailwind cannot reintroduce the NativeWind animation engine', async () => {
