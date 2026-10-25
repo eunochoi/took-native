@@ -3,6 +3,7 @@ import { ArrowRightIcon } from 'phosphor-react-native/src/icons/ArrowRight';
 import { ArrowSquareOutIcon } from 'phosphor-react-native/src/icons/ArrowSquareOut';
 import { ArrowUUpLeftIcon } from 'phosphor-react-native/src/icons/ArrowUUpLeft';
 import { ArrowsDownUpIcon } from 'phosphor-react-native/src/icons/ArrowsDownUp';
+import { BellRingingIcon } from 'phosphor-react-native/src/icons/BellRinging';
 import { BookOpenIcon } from 'phosphor-react-native/src/icons/BookOpen';
 import { CalendarBlankIcon } from 'phosphor-react-native/src/icons/CalendarBlank';
 import { CalendarDotIcon } from 'phosphor-react-native/src/icons/CalendarDot';
@@ -65,6 +66,7 @@ const APP_ICONS = {
   today: CalendarDotIcon,
   habit: CheckSquareIcon,
   settings: GearIcon,
+  notifications: BellRingingIcon,
   edit: PencilSimpleIcon,
   check: CheckIcon,
   statistics: ChartBarIcon,

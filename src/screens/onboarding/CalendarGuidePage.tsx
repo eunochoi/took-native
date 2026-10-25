@@ -1,5 +1,6 @@
 import { MUTED_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 import { View } from 'react-native';
+import { InfoNotice } from '../../components/InfoNotice';
 import { Text } from '../../components/Text';
 import { CalendarHabitProgress } from '../calendar/CalendarHabitProgress';
 import { CalendarRecordCounts } from '../calendar/CalendarRecordCounts';
@@ -19,7 +20,7 @@ export function CalendarGuidePage() {
         </Text>
       </View>
       <View
-        className={`${MUTED_CARD_BORDER_CLASS_NAME} gap-6 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-6`}
+        className={`${MUTED_CARD_BORDER_CLASS_NAME} gap-5 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-4`}
       >
         <View className="gap-4">
           <View className="gap-2">
@@ -39,7 +40,7 @@ export function CalendarGuidePage() {
             </View>
           ))}
           <Text className="text-center text-xs text-theme-text-secondary">
-            0%는 표시하지 않아요.
+            완료율이 0%인 날에는 진행바를 표시하지 않아요.
           </Text>
         </View>
         <View className="h-px bg-theme-border/50" />
@@ -49,10 +50,12 @@ export function CalendarGuidePage() {
             <CalendarRecordCounts diaryCount={12} counts={{ low: 2, medium: 5, high: 8 }} />
           </View>
           <Text className="text-center text-sm text-theme-text-secondary">
-            일기는 개수, 습관 진행바 색상별 날짜 수예요.
+            일기 숫자는 이번 달에 쓴 일기의 개수예요.{'\n'}습관 숫자는 각 진행바 색상에 해당하는
+            날짜 수예요.
           </Text>
         </View>
       </View>
+      <InfoNotice>자유 기록 습관은 완료율 계산에 포함되지 않아요.</InfoNotice>
     </View>
   );
 }
