@@ -27,7 +27,13 @@ export function HabitTodayProgress({
     return { date, ...getHabitDaySummary(date, habits, records) };
   });
   return (
-    <View className="flex-1 gap-4 bg-theme-surface px-2 py-4">
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="습관 흐름 상세보기"
+      accessibilityHint="최근 7일 완료율과 이전 7일 비교를 확인해요."
+      onPress={onPress}
+      className="flex-1 gap-4 bg-theme-surface px-2 py-4 active:opacity-65"
+    >
       <View>
         <View className="items-center gap-2 mb-2">
           <View
@@ -80,15 +86,6 @@ export function HabitTodayProgress({
           );
         })}
       </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="습관 흐름 상세보기"
-        accessibilityHint="최근 7일 완료율과 이전 7일 비교를 확인해요."
-        onPress={onPress}
-        className="mt-auto min-h-9 ios:curve-continuous rounded-xl px-3 py-1.5 items-center justify-center bg-theme-surface-muted border border-theme-text-secondary/5 active:opacity-65"
-      >
-        <Text className="text-sm text-theme-text-secondary">상세보기</Text>
-      </Pressable>
-    </View>
+    </Pressable>
   );
 }

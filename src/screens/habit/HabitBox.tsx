@@ -31,40 +31,37 @@ export function HabitBox({
   const checked = (date: string) =>
     records.some((record) => record.habit_id === habit.id && record.date === date);
   const startedDate = localDate(habit.initial_started_at);
-  const done = checked(today);
   const excluded = habit.priority === 0;
   return (
     <View className="flex-1 gap-4 bg-theme-surface px-2 py-4">
-      <View>
-        <View className="relative mb-2">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`${habit.name}${excluded ? ', 자유 기록' : ''} 습관 정보`}
-            onPress={() => openModal(`/habit/${habit.id}`)}
-            className="items-center gap-2"
+      <View className="relative">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${habit.name}${excluded ? ', 자유 기록' : ''} 습관 정보`}
+          onPress={() => openModal(`/habit/${habit.id}`)}
+          className="items-center gap-2"
+        >
+          <View
+            className="items-center justify-center"
+            style={{ width: appRem * 1.875, height: appRem * 1.875 }}
           >
-            <View
-              className="items-center justify-center"
-              style={{ width: appRem * 1.875, height: appRem * 1.875 }}
-            >
-              <HabitIcon name={habit.icon_key} colorKey={habit.icon_color} size={appRem * 1.875} />
-            </View>
-            <Text numberOfLines={1} className="w-full text-base text-center font-semibold">
-              {habit.name}
-            </Text>
-          </Pressable>
-          <View className="absolute right-0 top-0">
-            <HabitMenu habit={habit} />
+            <HabitIcon name={habit.icon_key} colorKey={habit.icon_color} size={appRem * 1.875} />
           </View>
-        </View>
-        <View className="h-5 items-center justify-center">
-          {excluded ? (
-            <Text className="h-5 text-sm leading-5 text-center text-theme-text-secondary">
-              자유 기록
-            </Text>
-          ) : (
-            <HabitStars priority={habit.priority} color={habitColor} size={appRem} />
-          )}
+          <Text numberOfLines={1} className="w-full text-base text-center font-semibold">
+            {habit.name}
+          </Text>
+          <View className="h-5 items-center justify-center">
+            {excluded ? (
+              <Text className="h-5 text-sm leading-5 text-center text-theme-text-secondary">
+                자유 기록
+              </Text>
+            ) : (
+              <HabitStars priority={habit.priority} color={habitColor} size={appRem} />
+            )}
+          </View>
+        </Pressable>
+        <View className="absolute right-0 top-0">
+          <HabitMenu habit={habit} />
         </View>
       </View>
       <View className="flex-row justify-around">
@@ -103,17 +100,6 @@ export function HabitBox({
           );
         })}
       </View>
-      <Pressable
-        accessibilityRole="button"
-        disabled={disabled || done || !canCheckHabit(today, startedDate, today)}
-        onPress={() => onToggle(habit.id, today, true)}
-        className={`mt-auto min-h-9 ios:curve-continuous rounded-xl px-3 py-1.5 flex-row items-center justify-center gap-2 bg-theme-surface-muted border-[1px] border-theme-text-secondary/5`}
-      >
-        {done && <AppIcon name="check" size={iconSizes.sm} color={colors.textSecondary} />}
-        <Text className={`text-sm text-theme-text-secondary`}>
-          {excluded ? (done ? '기록됨' : '오늘 기록하기') : done ? '완료' : '오늘 완료하기'}
-        </Text>
-      </Pressable>
     </View>
   );
 }

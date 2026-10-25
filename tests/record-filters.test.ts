@@ -281,7 +281,7 @@ test('habit grid hides add at the total limit even when filters hide habits', ()
   assert(!addButton(loading.render()));
 });
 
-test('habit summary opens details only through its footer button', () => {
+test('habit summary opens details through the entire box without a footer button', () => {
   const ui = harness('src/screens/habit/HabitTodayProgress.tsx');
   let opened = 0;
   const tree = ui.render({ today, habits: [], records: [], onPress: () => opened++ });
@@ -293,9 +293,9 @@ test('habit summary opens details only through its footer button', () => {
   assert(!labels.some((label) => String(label).includes('생성')));
   assert(labels.includes('습관 흐름'));
   assert(labels.includes('최근 4일'));
-  assert(labels.includes('상세보기'));
-  assert.equal(tree.type, 'View');
-  assert.equal(tree.props.onPress, undefined);
+  assert(!labels.includes('상세보기'));
+  assert.equal(tree.type, 'Pressable');
+  assert.equal(tree.props.accessibilityRole, 'button');
   const buttons = nodes(tree).filter((node) => node.type === 'Pressable');
   assert.equal(buttons.length, 1);
   buttons[0].props.onPress();
@@ -360,6 +360,11 @@ test('habit boxes label the first day today and retain weekday labels and comple
   );
   days[0].props.onPress();
   assert.deepEqual(toggles, [[1, today, true]]);
+  const buttons = nodes(tree).filter((node) => node.props.accessibilityRole === 'button');
+  assert.equal(buttons.length, 1);
+  assert(nodes(buttons[0]).some((node) => node.props.children === '자유 기록'));
+  buttons[0].props.onPress();
+  assert.deepEqual(ui.routes, ['/habit/1']);
 });
 
 test('habit filters combine exact stars with today completion and retain total progress', () => {
