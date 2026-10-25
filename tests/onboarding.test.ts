@@ -38,6 +38,28 @@ function harness(values = new Map<string, string>(), platform = 'android') {
   let updateSettings: () => Promise<void> = async () => {};
   const writes: string[] = [];
   const slots: any[] = [];
+  const bodyMotion = { panGesture: { kind: 'sheetPan' }, scrollRef: {}, onScroll: () => {} };
+  const gesture = () => {
+    const result: any = { handlers: {}, config: {} };
+    for (const key of [
+      'enabled',
+      'manualActivation',
+      'maxPointers',
+      'requireExternalGestureToFail',
+    ]) {
+      result[key] = (...args: unknown[]) => {
+        result.config[key] = args;
+        return result;
+      };
+    }
+    for (const key of ['onTouchesDown', 'onTouchesMove', 'onTouchesUp', 'onEnd']) {
+      result[key] = (handler: unknown) => {
+        result.handlers[key] = handler;
+        return result;
+      };
+    }
+    return result;
+  };
   let cursor = 0;
   let effects: (() => void)[] = [];
   let closes = 0;
@@ -92,7 +114,24 @@ function harness(values = new Map<string, string>(), platform = 'android') {
       ScrollView: 'ScrollView',
       useWindowDimensions: () => ({ height: 800 }),
     },
-    'react-native-reanimated': { default: { View: 'View' }, __esModule: true },
+    'react-native-reanimated': {
+      default: { View: 'View' },
+      __esModule: true,
+      useAnimatedRef: () => {
+        const i = cursor++;
+        return slots[i] ?? (slots[i] = { current: null });
+      },
+      useSharedValue: (value: unknown) => {
+        const i = cursor++;
+        return slots[i] ?? (slots[i] = { value });
+      },
+    },
+    'react-native-gesture-handler': {
+      GestureDetector: 'GestureDetector',
+      Gesture: { Pan: gesture, Native: gesture },
+    },
+    'react-native-worklets': { scheduleOnRN: (fn: Function, ...args: unknown[]) => fn(...args) },
+    '../../components/AnimatedScrollView': { AnimatedScrollView: 'ScrollView' },
     '../../theme/tokens.json': { motion: { fade: 200 } },
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 24, bottom: 24 }) },
     '../../components/BottomSheetModal': { BottomSheetModal: 'Sheet' },
@@ -127,9 +166,17 @@ function harness(values = new Map<string, string>(), platform = 'android') {
       closes++;
       return true;
     };
-    const body = sheet.props.renderBody(close);
+    const detector = sheet.props.renderBody(close, bodyMotion);
+    const body = detector.props.children;
     const footer = sheet.props.footer(close);
-    return { sheet, body, footer, buttons: nodes(footer, 'Button') };
+    return {
+      sheet,
+      body,
+      footer,
+      buttons: nodes(footer, 'Button'),
+      pageGesture: detector.props.gesture,
+      bodyMotion,
+    };
   };
   return {
     values,
@@ -277,10 +324,10 @@ test('settings replay can close without setting or clearing completion', async (
 test('first-run onboarding keeps drag dismissal disabled before completion', () => {
   const h = harness();
   const { sheet, body } = h.renderSheet();
-  assert.equal(sheet.props.scrollEnabled, false);
+  assert.equal(sheet.props.scrollEnabled, true);
   assert.equal(sheet.props.dismissible, false);
   assert.equal(sheet.props.onBeforeClose(), false);
-  assert.equal(body.props.scrollEnabled, true);
+  assert.equal(body.props.scrollEnabled, false);
 });
 
 test('footer navigation, dots and swipes stay in sync without completing onboarding', () => {
@@ -365,7 +412,7 @@ test('a failed settings save allows retry and does not complete onboarding', asy
 test('all pages can scroll vertically and only the active page is exposed to screen readers', () => {
   const h = harness();
   const first = h.renderSheet();
-  assert.equal(first.sheet.props.fillContent, true);
+  assert.equal(first.sheet.props.fillContent, undefined);
   const pages = nodes(first.body, 'ScrollView').filter((node) => !node.props.horizontal);
   assert.equal(pages.length, 6);
   assert(pages.every((page) => page.props.nestedScrollEnabled));
@@ -546,4 +593,90 @@ test('onboarding navigation buttons use fixed small-preset typography', () => {
   assert(
     buttons.every((button) => button.props.labelClassName === 'text-[15.75px] leading-[24.5px]'),
   );
+});
+
+test('vertical page touches stay vertical, while deliberate horizontal swipes change exactly one page', () => {
+  const h = harness();
+  h.renderSheet(false).body.props.onLayout({ nativeEvent: { layout: { width: 390 } } });
+  const touch = (x: number, y: number, count = 1) => ({
+    numberOfTouches: count,
+    allTouches: [{ absoluteX: x, absoluteY: y }],
+  });
+  const attempt = (moves: number[][], endX: number, success = true) => {
+    const { pageGesture } = h.renderSheet(false);
+    let state = 'began';
+    const manager = {
+      activate: () => {
+        state = 'active';
+      },
+      fail: () => {
+        state = 'failed';
+      },
+    };
+    pageGesture.handlers.onTouchesDown(touch(0, 0), manager);
+    for (const [x, y] of moves) pageGesture.handlers.onTouchesMove(touch(x, y), manager);
+    pageGesture.handlers.onEnd({ translationX: endX }, state === 'active' && success);
+    return state;
+  };
+  assert.equal(
+    attempt(
+      [
+        [2, 20],
+        [-180, 40],
+      ],
+      -180,
+    ),
+    'failed',
+  );
+  assert.equal(h.renderSheet(false).body.props.accessibilityLabel, '앱 안내, 6단계 중 1단계');
+  assert.equal(
+    attempt(
+      [
+        [2, -20],
+        [-180, -40],
+      ],
+      -180,
+    ),
+    'failed',
+  );
+  assert.equal(attempt([[-50, 2]], -50, false), 'active');
+  assert.equal(h.renderSheet(false).body.props.accessibilityLabel, '앱 안내, 6단계 중 1단계');
+  assert.equal(attempt([[-15, 1]], -15), 'active');
+  assert.equal(h.renderSheet(false).body.props.accessibilityLabel, '앱 안내, 6단계 중 1단계');
+  assert.equal(attempt([[-60, 2]], -60), 'active');
+  assert.equal(h.renderSheet(false).body.props.accessibilityLabel, '앱 안내, 6단계 중 2단계');
+  assert.equal(attempt([[60, 2]], 60), 'active');
+  assert.equal(h.renderSheet(false).body.props.accessibilityLabel, '앱 안내, 6단계 중 1단계');
+  assert.equal(h.renderSheet(false).body.props.scrollEnabled, false);
+});
+
+test('only the active page reports vertical position to the modal and scrolling waits for both direction decisions', () => {
+  const h = harness();
+  h.renderSheet(false).body.props.onLayout({ nativeEvent: { layout: { width: 390 } } });
+  for (let step = 0; step < 3; step++) {
+    const current = h.renderSheet(false);
+    const pages = nodes(current.body, 'ScrollView').filter((node) => !node.props.horizontal);
+    assert.equal(
+      pages.filter((page) => page.props.onScroll === current.bodyMotion.onScroll).length,
+      1,
+    );
+    assert.equal(pages[step].props.ref, current.bodyMotion.scrollRef);
+    assert.equal(pages[step].props.onScroll, current.bodyMotion.onScroll);
+    assert.equal(current.sheet.props.contentKey, step);
+    const natives = nodes(current.body, 'GestureDetector');
+    assert(
+      natives.every(
+        (node) => node.props.gesture.config.requireExternalGestureToFail[0] === current.pageGesture,
+      ),
+    );
+    assert(
+      natives.every(
+        (node) =>
+          node.props.gesture.config.requireExternalGestureToFail[1] ===
+          current.bodyMotion.panGesture,
+      ),
+    );
+    assert.equal(current.sheet.props.dismissible, true);
+    current.buttons.at(-1).props.onPress();
+  }
 });

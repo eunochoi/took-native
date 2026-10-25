@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { useAnimatedRef, useSharedValue } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
+import { AnimatedScrollView } from '../../components/AnimatedScrollView';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { Button } from '../../components/Button';
 import { Text } from '../../components/Text';
@@ -62,16 +65,61 @@ export function OnboardingSheet({
   const saving = useRef(false);
   const allowClose = useRef(!firstRun);
   const carousel = useRef<ScrollView>(null);
+  const pageScroll = useAnimatedRef<ScrollView>();
+  const swipeStart = useSharedValue({ x: 0, y: 0 });
+  const swipeDecided = useSharedValue(false);
   const imageWidth = Math.max(0, Math.min(width - rem * 5, rem * 20));
   useEffect(() => {
     if (width > 0) carousel.current?.scrollTo({ x: step * width, animated: false });
   }, [width]);
+  useEffect(() => {
+    // Each page starts at the top, matching the sheet's reset scroll position.
+    pageScroll.current?.scrollTo({ y: 0, animated: false });
+  }, [step, pageScroll]);
   const selectStep = (next: number) => {
     if (saving.current || !width || next < 0 || next >= titles.length) return;
     setStep(next);
     setError('');
     carousel.current?.scrollTo({ x: next * width, animated: !reducedMotion });
   };
+  const pageGesture = Gesture.Pan()
+    .enabled(!busy && width > 0)
+    .manualActivation(true)
+    .maxPointers(1)
+    .onTouchesDown((event, manager) => {
+      swipeDecided.value = false;
+      const touch = event.allTouches[0];
+      if (!touch || event.numberOfTouches !== 1) {
+        swipeDecided.value = true;
+        manager.fail();
+        return;
+      }
+      swipeStart.value = { x: touch.absoluteX, y: touch.absoluteY };
+    })
+    .onTouchesMove((event, manager) => {
+      if (swipeDecided.value) return;
+      const touch = event.allTouches[0];
+      if (!touch || event.numberOfTouches !== 1) {
+        swipeDecided.value = true;
+        manager.fail();
+        return;
+      }
+      const dx = Math.abs(touch.absoluteX - swipeStart.value.x);
+      const dy = Math.abs(touch.absoluteY - swipeStart.value.y);
+      if (Math.max(dx, dy) < rem * 0.5) return;
+      swipeDecided.value = true;
+      // Decide once per touch; a vertical scroll cannot later become a page swipe.
+      if (dx > dy * 1.2) manager.activate();
+      else manager.fail();
+    })
+    .onTouchesUp((_event, manager) => {
+      if (!swipeDecided.value) manager.fail();
+    })
+    .onEnd((event, success) => {
+      if (success && Math.abs(event.translationX) >= rem * 3) {
+        scheduleOnRN(selectStep, step + (event.translationX < 0 ? 1 : -1));
+      }
+    });
   const change = async (patch: Partial<Settings>) => {
     if (saving.current) return;
     saving.current = true;
@@ -116,8 +164,9 @@ export function OnboardingSheet({
     <BottomSheetModal
       visible
       fixedHeight
-      fillContent
-      scrollEnabled={!firstRun && !busy}
+      scrollEnabled={!busy}
+      scrollRef={pageScroll}
+      contentKey={step}
       dismissible={!firstRun}
       onClose={onClose}
       onBeforeClose={() => allowClose.current && !saving.current}
@@ -194,70 +243,85 @@ export function OnboardingSheet({
           </View>
         </View>
       )}
-      renderBody={() => (
-        <ScrollView
-          ref={carousel}
-          horizontal
-          pagingEnabled
-          scrollEnabled={!busy}
-          showsHorizontalScrollIndicator={false}
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-          overScrollMode="never"
-          directionalLockEnabled
-          accessibilityLabel={`앱 안내, ${titles.length}단계 중 ${step + 1}단계`}
-          accessibilityActions={[
-            { name: 'increment', label: '다음 안내' },
-            { name: 'decrement', label: '이전 안내' },
-          ]}
-          onAccessibilityAction={({ nativeEvent }) =>
-            selectStep(step + (nativeEvent.actionName === 'increment' ? 1 : -1))
-          }
-          onLayout={({ nativeEvent }) => setWidth(nativeEvent.layout.width)}
-          onMomentumScrollEnd={({ nativeEvent }) => {
-            if (saving.current || !width) return;
-            const next = Math.max(
-              0,
-              Math.min(titles.length - 1, Math.round(nativeEvent.contentOffset.x / width)),
-            );
-            setStep(next);
-            setError('');
-          }}
-          className="flex-1 min-h-0 w-full"
-          contentContainerClassName="h-full flex-row"
-        >
-          {[
-            <WelcomePage
-              key="welcome"
-              imageWidth={Math.max(0, Math.min(width - rem * 3, rem * 21))}
-            />,
-            <ThemePage key="theme" settings={settings} busy={busy} onChange={change} />,
-            <UsagePage key="usage" imageWidth={imageWidth} />,
-            <CalendarGuidePage key="calendar" />,
-            ...(Platform.OS === 'android'
-              ? [<WidgetPage key="widget" imageWidth={imageWidth} />]
-              : []),
-            <BackupPage key="backup" onOpenWeb={openWeb} />,
-          ].map((content, index) => (
-            <View
-              key={content.key}
-              accessibilityElementsHidden={index !== step}
-              importantForAccessibility={index === step ? 'auto' : 'no-hide-descendants'}
-              className="h-full"
-              style={{ width }}
-            >
-              <ScrollView
-                nestedScrollEnabled
-                directionalLockEnabled
-                showsVerticalScrollIndicator={false}
-                className="flex-1 min-h-0 w-full max-w-lg self-center"
-                contentContainerClassName="grow px-6 py-6"
+      renderBody={(_close, motion) => (
+        <GestureDetector gesture={pageGesture}>
+          <ScrollView
+            ref={carousel}
+            horizontal
+            pagingEnabled
+            scrollEnabled={false}
+            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+            overScrollMode="never"
+            directionalLockEnabled
+            accessibilityLabel={`앱 안내, ${titles.length}단계 중 ${step + 1}단계`}
+            accessibilityActions={[
+              { name: 'increment', label: '다음 안내' },
+              { name: 'decrement', label: '이전 안내' },
+            ]}
+            onAccessibilityAction={({ nativeEvent }) =>
+              selectStep(step + (nativeEvent.actionName === 'increment' ? 1 : -1))
+            }
+            onLayout={({ nativeEvent }) => setWidth(nativeEvent.layout.width)}
+            onMomentumScrollEnd={({ nativeEvent }) => {
+              if (saving.current || !width) return;
+              const next = Math.max(
+                0,
+                Math.min(titles.length - 1, Math.round(nativeEvent.contentOffset.x / width)),
+              );
+              setStep(next);
+              setError('');
+            }}
+            className="flex-1 min-h-0 w-full"
+            contentContainerClassName="h-full flex-row"
+          >
+            {[
+              <WelcomePage
+                key="welcome"
+                imageWidth={Math.max(0, Math.min(width - rem * 3, rem * 21))}
+              />,
+              <ThemePage key="theme" settings={settings} busy={busy} onChange={change} />,
+              <UsagePage key="usage" imageWidth={imageWidth} />,
+              <CalendarGuidePage key="calendar" />,
+              ...(Platform.OS === 'android'
+                ? [<WidgetPage key="widget" imageWidth={imageWidth} />]
+                : []),
+              <BackupPage key="backup" onOpenWeb={openWeb} />,
+            ].map((content, index) => (
+              <View
+                key={content.key}
+                accessibilityElementsHidden={index !== step}
+                importantForAccessibility={index === step ? 'auto' : 'no-hide-descendants'}
+                className="h-full"
+                style={{ width }}
               >
-                {content}
-              </ScrollView>
-            </View>
-          ))}
-        </ScrollView>
+                <GestureDetector
+                  gesture={Gesture.Native().requireExternalGestureToFail(
+                    pageGesture,
+                    motion.panGesture,
+                  )}
+                >
+                  <AnimatedScrollView
+                    ref={index === step ? motion.scrollRef : undefined}
+                    onScroll={index === step ? motion.onScroll : undefined}
+                    scrollEventThrottle={16}
+                    scrollEnabled={!busy}
+                    nestedScrollEnabled
+                    directionalLockEnabled
+                    bounces={false}
+                    overScrollMode="never"
+                    showsVerticalScrollIndicator={false}
+                    className="flex-1 min-h-0 w-full max-w-lg self-center"
+                    contentContainerClassName="grow px-6 py-6"
+                  >
+                    {content}
+                  </AnimatedScrollView>
+                </GestureDetector>
+              </View>
+            ))}
+          </ScrollView>
+        </GestureDetector>
       )}
     />
   );

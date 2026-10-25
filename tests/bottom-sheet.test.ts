@@ -29,7 +29,7 @@ function harness(
     fixedContent?: unknown;
     contentFullBleed?: boolean;
     renderScrollView?: (props: any) => unknown;
-    renderBody?: (close: any) => unknown;
+    renderBody?: (close: any, scroll: any) => unknown;
   } = {},
 ) {
   const slots: any[] = [];
@@ -1174,4 +1174,54 @@ test('filled diary content scrolls independently while only its header drags to 
   assert.deepEqual(h.scrollCommands, []);
   h.completeAnimation();
   assert.equal(h.closes, 1);
+});
+
+test('custom body scroll position controls pull-down dismissal through the shared sheet motion', () => {
+  const h = harness(true, false, 720, {
+    fixedHeight: true,
+    renderBody: (_close, scroll) => ({
+      type: 'ScrollView',
+      props: { ref: scroll.scrollRef, onScroll: scroll.onScroll },
+    }),
+  });
+  h.show();
+  h.completeOpen();
+  h.offset(60);
+  h.begin();
+  h.offset(0);
+  h.move(0, 120);
+  h.end();
+  assert.equal(h.gestureState, 'failed');
+  assert.equal(h.closes, 0);
+  assert.equal(h.y, 0);
+  h.begin();
+  h.move(0, 100);
+  assert.equal(h.y, 100);
+  h.end();
+  assert.equal(h.closes, 0);
+  h.completeAnimation();
+  assert.equal(h.closes, 1);
+  assert.deepEqual(h.scrollCommands, [0]);
+});
+
+test('custom-body dismissal respects first-run and busy close guards', () => {
+  const renderBody = (_close: unknown, scroll: any) => ({
+    type: 'ScrollView',
+    props: { onScroll: scroll.onScroll },
+  });
+  const firstRun = harness(true, false, 720, { dismissible: false, renderBody });
+  firstRun.show();
+  firstRun.completeOpen();
+  assert.equal(firstRun.pan.config.enabled, false);
+  firstRun.tree.props.onRequestClose();
+  assert.equal(firstRun.closes, 0);
+  const busy = harness(true, false, 720, { onBeforeClose: () => false, renderBody });
+  busy.show();
+  busy.completeOpen();
+  busy.begin();
+  busy.move(0, 100);
+  busy.end();
+  busy.completeAnimation();
+  assert.equal(busy.closes, 0);
+  assert.equal(busy.y, 0);
 });

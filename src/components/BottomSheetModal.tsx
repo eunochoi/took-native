@@ -11,6 +11,7 @@ import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-ha
 import Animated, { type AnimatedRef } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomSheetLifecycle, type CloseBottomSheet } from '../hooks/useBottomSheetLifecycle';
+import type { useBottomSheetMotion } from '../hooks/useBottomSheetMotion';
 import { useScrollFade } from '../hooks/useScrollFade';
 import { useAppTheme } from '../theme/AppThemeProvider';
 import { BottomSheetHeader } from './BottomSheetHeader';
@@ -77,7 +78,10 @@ export function BottomSheetModal({
   fillContent?: boolean;
   scrollRef?: AnimatedRef<ScrollView>;
   renderScrollView?: (props: BottomSheetScrollProps) => ReactNode;
-  renderBody?: (closeSheet: CloseBottomSheet) => ReactNode;
+  renderBody?: (
+    closeSheet: CloseBottomSheet,
+    scroll: Pick<ReturnType<typeof useBottomSheetMotion>, 'panGesture' | 'scrollRef' | 'onScroll'>,
+  ) => ReactNode;
 }) {
   const { rem: appRem, reducedMotion: reduceMotion } = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -148,7 +152,11 @@ export function BottomSheetModal({
           header
         )}
         {renderBody ? (
-          renderBody(closeSheet)
+          renderBody(closeSheet, {
+            panGesture: motion.panGesture,
+            scrollRef: motion.scrollRef,
+            onScroll: motion.onScroll,
+          })
         ) : fillContent ? (
           <View className={`${fixedHeight ? 'flex-1' : 'shrink'} min-h-0 pt-6 pb-4`}>
             {typeof children === 'function' ? children(closeSheet) : children}
