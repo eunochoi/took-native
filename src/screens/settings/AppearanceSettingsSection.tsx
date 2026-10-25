@@ -43,7 +43,7 @@ export function AppearanceSettingsSection({
           <View
             accessibilityRole="radiogroup"
             accessibilityLabel="강조 색상"
-            className={`w-full flex-row items-start gap-1.5 py-2 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
+            className={`my-2 w-full flex-row items-start gap-1.5 py-2 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
           >
             {accents.map((accent) => {
               const checked = settings.themeAccent === accent;
@@ -92,7 +92,7 @@ export function AppearanceSettingsSection({
               {modeLabels[settings.themeMode]}
             </Text>
           </View>
-          <View accessibilityLabel="배경 색상" className="flex-row gap-2">
+          <View accessibilityLabel="배경 색상" className="my-2 flex-row gap-2">
             {modes.map((themeMode) => {
               const selected = settings.themeMode === themeMode;
               return (
@@ -102,9 +102,9 @@ export function AppearanceSettingsSection({
                   disabled={disabled}
                   accessibilityLabel={`배경 색상, ${modeLabels[themeMode]}${themeMode === 'system' ? ', 기기 설정 따르기' : ''}`}
                   onPress={() => onChange({ themeMode })}
-                  className={`h-28 flex-1 min-w-0 gap-3 px-2 py-4 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
+                  className={`h-[4.666667rem] flex-1 min-w-0 gap-1 px-2 py-1.5 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
                 >
-                  <View className="h-10 items-center justify-center">
+                  <View className="h-9 items-center justify-center">
                     <AppIcon
                       name={`theme-${themeMode}`}
                       size={appRem * 1.75}
@@ -128,7 +128,7 @@ export function AppearanceSettingsSection({
               {sizeLabels[settings.fontSize]}
             </Text>
           </View>
-          <View accessibilityLabel="폰트 크기" className="flex-row gap-2">
+          <View accessibilityLabel="폰트 크기" className="my-2 flex-row gap-2">
             {sizes.map((fontSize) => {
               const selected = settings.fontSize === fontSize;
               return (
@@ -138,9 +138,9 @@ export function AppearanceSettingsSection({
                   disabled={disabled}
                   accessibilityLabel={`폰트 크기, ${sizeLabels[fontSize]}`}
                   onPress={() => onChange({ fontSize })}
-                  className={`h-28 flex-1 min-w-0 gap-3 px-2 py-4 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
+                  className={`h-[4.666667rem] flex-1 min-w-0 gap-1 px-2 py-1.5 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
                 >
-                  <View className="h-10 w-full items-center justify-center" accessible={false}>
+                  <View className="h-9 w-full items-center justify-center" accessible={false}>
                     <Text
                       size={previewSizes[fontSize]}
                       style={{ lineHeight: previewSizes[fontSize] * 1.25 }}

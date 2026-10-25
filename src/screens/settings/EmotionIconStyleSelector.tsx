@@ -28,7 +28,7 @@ export function EmotionIconStyleSelector({
     <View
       accessibilityRole="radiogroup"
       accessibilityLabel="감정 아이콘 스타일"
-      className="flex-row gap-2"
+      className={`flex-row gap-2 ${compact ? '' : 'my-2'}`}
     >
       {(['basic', 'simple', 'emoji'] as const).map((style, index) => (
         <Pressable
@@ -42,11 +42,11 @@ export function EmotionIconStyleSelector({
             SELECTION_BOX_CLASS_NAME,
             value === style ? CHECKED_BOX_CLASS_NAME : UNCHECKED_BOX_CLASS_NAME,
             'flex-1 px-2',
-            compact ? 'gap-1 py-2' : 'h-28 min-w-0 gap-3 py-4',
+            compact ? 'gap-1 py-2' : 'h-[4.666667rem] min-w-0 gap-1 py-1.5',
             dimmed && 'opacity-40',
           )}
         >
-          <View className={`flex-row items-center justify-center gap-1 ${compact ? '' : 'h-10'}`}>
+          <View className={`flex-row items-center justify-center gap-1 ${compact ? '' : 'h-9'}`}>
             <EmotionImage emotion={0} iconStyle={style} size={appRem * 1.75} />
             <EmotionImage emotion={6} iconStyle={style} size={appRem * 1.75} />
           </View>
