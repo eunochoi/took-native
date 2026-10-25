@@ -37,6 +37,9 @@ function harness(path: string, name: string) {
       exports,
       require: (dependency: string) => {
         if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
+        if (dependency.endsWith('.png')) return dependency;
+        if (dependency.endsWith('domain/diaryFilters'))
+          return require('../src/domain/diaryFilters');
         if (dependency.endsWith('domain/calendar')) return require('../src/domain/calendar');
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (dependency === 'react')
@@ -113,7 +116,7 @@ function harness(path: string, name: string) {
           return {
             useToday: () => '2026-10-05',
             statsQueries: { years: query('years'), diary: query('diary'), habit: query('habit') },
-            diaryQueries: { month: query('diary') },
+            diaryQueries: { month: query('diary'), byDate: query('todayDiary') },
             habitQueries: { list: query('habits'), completions: query('completions') },
             soberQueries: { list: query('sobers'), restarts: query('restarts') },
           };
@@ -163,6 +166,31 @@ test('home retains its greeting and records in one scroll viewport without a loc
   );
   assert.equal(view.nodes.filter((node) => node.type === 'ScrollView').length, 1);
   assert(!view.nodes.some((node) => ['HomeStatsScreen', 'HomeRecordsModal'].includes(node.type)));
+});
+
+test('home cat follows today diary emotion and resets for missing, pending or failed records', () => {
+  const ui = harness('app/(tabs)/index.tsx', 'default');
+  const cat = () =>
+    ui.render().nodes.find((node) => node.props.accessibilityLabel === 'hiding-cat');
+  for (const [emotions, filename] of [
+    [[0, 1, 2, 3], 'cat-blue-p.png'],
+    [[5, 6, 7, 8], 'cat-blue-n.png'],
+    [[4, 9, 10, 11], 'cat-blue.png'],
+  ] as const) {
+    for (const emotion of emotions) {
+      ui.results.todayDiary = { data: { emotion }, isError: false };
+      assert.equal(cat().props.source, `../../assets/cats/${filename}`);
+    }
+  }
+  for (const result of [
+    { data: null },
+    { data: undefined, isPending: true },
+    { data: { emotion: 0 }, isError: true },
+  ]) {
+    ui.results.todayDiary = result;
+    assert.equal(cat().props.source, '../../assets/cats/cat-blue.png');
+  }
+  assert.equal(ui.render().queries.find((query) => query.kind === 'todayDiary').year, '2026-10-05');
 });
 
 test('home fills a normal window, scrolls short windows and resets when all records fit again', () => {

@@ -1,18 +1,33 @@
+import { useQuery } from '@tanstack/react-query';
+import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
 import { Image, ScrollView, View } from 'react-native';
 import { ColorView } from '../../src/components/ColorTransition';
 import { Wordmark } from '../../src/components/Wordmark';
-import { useToday } from '../../src/queries';
+import { DIARY_EMOTION_GROUPS } from '../../src/domain/diaryFilters';
+import { diaryQueries, useToday } from '../../src/queries';
 import { HomeAnalysisCard } from '../../src/screens/home/HomeAnalysisCard';
 import { HomeGreeting } from '../../src/screens/home/HomeGreeting';
 import { HomeTodaySection } from '../../src/screens/home/HomeTodaySection';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
 
-const cat = require('../../assets/cats/hiding-cat-home.png');
-const catSize = Image.resolveAssetSource(cat);
+const cats = {
+  neutral: require('../../assets/cats/cat-blue.png'),
+  positive: require('../../assets/cats/cat-blue-p.png'),
+  negative: require('../../assets/cats/cat-blue-n.png'),
+};
 
 export default function Home() {
   const today = useToday();
+  const db = useSQLiteContext();
+  const diary = useQuery(diaryQueries.byDate(db, today));
+  const emotion = diary.isError ? -1 : (diary.data?.emotion ?? -1);
+  const cat = (DIARY_EMOTION_GROUPS.positive.emotions as readonly number[]).includes(emotion)
+    ? cats.positive
+    : (DIARY_EMOTION_GROUPS.negative.emotions as readonly number[]).includes(emotion)
+      ? cats.negative
+      : cats.neutral;
+  const catSize = Image.resolveAssetSource(cat);
   const { mode, rem: appRem, navigationBottom, navigationHeight } = useAppTheme();
   const scrollRef = useRef<ScrollView>(null);
   const [viewportHeight, setViewportHeight] = useState(0);

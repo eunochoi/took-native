@@ -37,7 +37,11 @@ function load(
         if (name === './ColorTransition')
           return load('../src/components/ColorTransition.tsx', reducedMotion);
         if (name === 'nativewind') return { cssInterop: (component: unknown) => component };
-        if (name.endsWith('/queries')) return { useToday: () => '2026-10-05' };
+        if (name === 'expo-sqlite') return { useSQLiteContext: () => ({}) };
+        if (name === '@tanstack/react-query') return { useQuery: () => ({ data: null }) };
+        if (name.endsWith('domain/diaryFilters')) return require('../src/domain/diaryFilters');
+        if (name.endsWith('/queries'))
+          return { useToday: () => '2026-10-05', diaryQueries: { byDate: () => ({}) } };
         if (name.includes('tokens.json')) return { __esModule: true, default: tokens };
         if (name.includes('AppThemeProvider'))
           return {
