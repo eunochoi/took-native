@@ -42,7 +42,7 @@ export function WelcomePage({ imageWidth }: { imageWidth: number }) {
         >
           안녕, 나는 블루야!
         </Text>
-        <Text className="text-center text-sm leading-5 text-theme-text-secondary">
+        <Text className="text-center text-base leading-6 text-theme-text-secondary">
           나는 마음에 따라 털색이 달라지는{'\n'}조금 특별한 고양이야.
         </Text>
       </View>
@@ -63,7 +63,7 @@ export function WelcomePage({ imageWidth }: { imageWidth: number }) {
           </Svg>
         </View>
         <View className="h-16 items-center justify-center px-6">
-          <Text accessibilityLiveRegion="polite" className="text-center text-sm leading-5">
+          <Text accessibilityLiveRegion="polite" className="text-center text-base leading-6">
             {moods[mood].description}
           </Text>
         </View>
@@ -113,7 +113,7 @@ export function WelcomePage({ imageWidth }: { imageWidth: number }) {
               >
                 <View className={`h-2.5 w-2.5 rounded-full ${option.color}`} />
                 <Text
-                  className={`text-sm ${mood === value ? 'font-semibold text-theme-accent' : 'text-theme-text-primary'}`}
+                  className={`text-base ${mood === value ? 'font-semibold text-theme-accent' : 'text-theme-text-primary'}`}
                 >
                   {option.label}
                 </Text>
@@ -123,8 +123,8 @@ export function WelcomePage({ imageWidth }: { imageWidth: number }) {
         </View>
       </View>
       <View className="gap-2 mt-8">
-        <Text className="text-center text-lg font-semibold">어떤 색의 하루라도 괜찮아.</Text>
-        <Text className="text-center text-sm leading-5 text-theme-text-secondary">
+        <Text className="text-center text-2xl font-semibold">어떤 색의 하루라도 괜찮아.</Text>
+        <Text className="text-center text-base leading-6 text-theme-text-secondary">
           포포툭에서 오늘의 마음을 기록하고,{'\n'}좋은 습관을 더하고, 불필요한 습관은 덜어내요.
         </Text>
       </View>

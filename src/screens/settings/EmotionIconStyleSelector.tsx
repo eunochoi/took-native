@@ -15,12 +15,14 @@ export function EmotionIconStyleSelector({
   compact = false,
   disabled,
   dimmed = disabled,
+  labelSize = 'sm',
   onChange,
 }: {
   value: Settings['emotionStyle'];
   compact?: boolean;
   disabled: boolean;
   dimmed?: boolean;
+  labelSize?: 'sm' | 'base';
   onChange: (value: Settings['emotionStyle']) => void;
 }) {
   const { rem: appRem } = useAppTheme();
@@ -51,7 +53,7 @@ export function EmotionIconStyleSelector({
             <EmotionImage emotion={6} iconStyle={style} size={appRem * 1.75} />
           </View>
           <Text
-            className={`text-center text-sm font-medium ${compact ? '' : 'leading-5'} ${value === style ? 'text-theme-accent-deep' : 'text-theme-text-primary'}`}
+            className={`text-center ${labelSize === 'base' ? 'text-base' : 'text-sm'} font-medium ${compact ? '' : labelSize === 'base' ? 'leading-6' : 'leading-5'} ${value === style ? 'text-theme-accent-deep' : 'text-theme-text-primary'}`}
           >
             {['기본형', '단순형', '이모지'][index]}
           </Text>

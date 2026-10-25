@@ -8,14 +8,18 @@ export function CalendarRecordCounts({
   diaryCount,
   counts,
   unavailable = false,
+  textSize = 'sm',
 }: {
   diaryCount: number;
   counts: ReturnType<typeof calendarHabitProgressCounts> | null;
   unavailable?: boolean;
+  textSize?: 'sm' | 'base';
 }) {
   const { iconSizes } = useAppTheme();
   return (
-    <View className="min-w-0 shrink flex-row items-center gap-2.5 ml-1">
+    <View
+      className={`min-w-0 shrink flex-row items-center gap-2.5 ml-1 ${textSize === 'base' ? 'max-w-full flex-wrap justify-center' : ''}`}
+    >
       {[
         {
           key: 'diary',
@@ -47,7 +51,7 @@ export function CalendarRecordCounts({
           <AppIcon name={icon} size={iconSizes.md} className={className} />
           <Text
             numberOfLines={1}
-            className="text-sm leading-5 text-theme-text-secondary"
+            className={`${textSize === 'base' ? 'text-base leading-6' : 'text-sm leading-5'} text-theme-text-secondary`}
             style={{ includeFontPadding: false }}
           >
             {value}

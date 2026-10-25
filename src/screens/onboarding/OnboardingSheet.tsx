@@ -124,7 +124,7 @@ export function OnboardingSheet({
       footer={(close) => (
         <View className="w-full max-w-lg self-center gap-2 px-6 pt-1">
           {!!error && (
-            <Text accessibilityRole="alert" className="text-sm text-theme-danger">
+            <Text accessibilityRole="alert" className="text-base text-theme-danger">
               {error}
             </Text>
           )}
@@ -159,6 +159,7 @@ export function OnboardingSheet({
             {step > 0 && (
               <Button
                 label="이전"
+                labelSize="lg"
                 subtle
                 outline
                 disabled={busy || !width}
@@ -167,6 +168,7 @@ export function OnboardingSheet({
               />
             )}
             <Button
+              labelSize="lg"
               label={
                 busy
                   ? '저장 중…'

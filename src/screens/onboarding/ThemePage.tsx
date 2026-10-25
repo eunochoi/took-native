@@ -31,13 +31,13 @@ export function ThemePage({
         >
           나에게 맞게 설정해요
         </Text>
-        <Text className="text-center text-sm text-theme-text-secondary">
+        <Text className="text-center text-base text-theme-text-secondary">
           지금 고른 모습이 앱에 바로 적용돼요.
         </Text>
       </View>
       <View className="gap-5">
         <View className="gap-3">
-          <Text className="text-center text-base font-semibold">강조 색상</Text>
+          <Text className="text-center text-lg font-semibold">강조 색상</Text>
           <View
             accessibilityRole="radiogroup"
             accessibilityLabel="강조 색상"
@@ -70,16 +70,17 @@ export function ThemePage({
           </View>
         </View>
         <View className="gap-3">
-          <Text className="text-center text-base font-semibold">감정 아이콘</Text>
+          <Text className="text-center text-lg font-semibold">감정 아이콘</Text>
           <EmotionIconStyleSelector
             compact
+            labelSize="base"
             value={settings.emotionStyle}
             disabled={busy}
             onChange={(emotionStyle) => void onChange({ emotionStyle })}
           />
         </View>
         <View className="gap-3">
-          <Text className="text-center text-base font-semibold">배경 색상</Text>
+          <Text className="text-center text-lg font-semibold">배경 색상</Text>
           <View className="flex-row gap-2">
             {Object.entries(modes).map(([value, label]) => (
               <View key={value} className="flex-1">
@@ -92,7 +93,7 @@ export function ThemePage({
                   onPress={() => void onChange({ themeMode: value as Settings['themeMode'] })}
                 >
                   <Text
-                    className={`text-center text-sm ${settings.themeMode === value ? 'font-semibold text-theme-accent' : 'text-theme-text-primary'}`}
+                    className={`text-center text-base ${settings.themeMode === value ? 'font-semibold text-theme-accent' : 'text-theme-text-primary'}`}
                   >
                     {label}
                   </Text>
@@ -102,7 +103,7 @@ export function ThemePage({
           </View>
         </View>
         <View className="gap-3">
-          <Text className="text-center text-base font-semibold">폰트 크기</Text>
+          <Text className="text-center text-lg font-semibold">폰트 크기</Text>
           <View className="flex-row gap-2">
             {Object.entries(sizes).map(([value, label]) => (
               <View key={value} className="flex-1">
@@ -115,7 +116,7 @@ export function ThemePage({
                   onPress={() => void onChange({ fontSize: value as Settings['fontSize'] })}
                 >
                   <Text
-                    className={`text-center text-sm ${settings.fontSize === value ? 'font-semibold text-theme-accent' : 'text-theme-text-primary'}`}
+                    className={`text-center text-base ${settings.fontSize === value ? 'font-semibold text-theme-accent' : 'text-theme-text-primary'}`}
                   >
                     {label}
                   </Text>
