@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Linking, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
+import { Button } from '../../components/Button';
 import { Text } from '../../components/Text';
 import type { CloseBottomSheet } from '../../hooks/useBottomSheetLifecycle';
 import { completeOnboarding, hasCompletedOnboarding } from '../../onboarding/storage';
@@ -17,12 +18,12 @@ import { WelcomePage } from './WelcomePage';
 import { WidgetPage } from './WidgetPage';
 
 const titles = [
-  '하루를 기록하는 TOOK',
+  '안녕, 나는 블루야!',
   '나에게 맞게 설정해요',
   '편리하게 사용해요',
   '달력 기록을 읽어요',
   ...(Platform.OS === 'android' ? ['위젯으로 바로 확인해요'] : []),
-  '기록을 안전하게 보관해요',
+  '소중한 기록을 보관해요',
 ] as const;
 
 export function FirstRunOnboarding({ ready }: { ready: boolean }) {
@@ -54,7 +55,6 @@ export function OnboardingSheet({
 }) {
   const { settings, updateSettings } = useSettings();
   const { rem, reducedMotion } = useAppTheme();
-  const { height } = useWindowDimensions();
   const [step, setStep] = useState(0);
   const [width, setWidth] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -101,7 +101,7 @@ export function OnboardingSheet({
       saving.current = false;
       close();
     } catch {
-      setError('완료 상태를 저장하지 못했어요. 확인 버튼을 다시 눌러주세요.');
+      setError('완료 상태를 저장하지 못했어요. 시작하기 버튼을 다시 눌러주세요.');
     } finally {
       saving.current = false;
       setBusy(false);
@@ -109,20 +109,20 @@ export function OnboardingSheet({
   };
   const openWeb = () => {
     void Linking.openURL('https://to-ok.me').catch(() => {
-      setError('TOOK 웹을 열지 못했어요. 다시 시도해주세요.');
+      setError('포포툭 웹을 열지 못했어요. 다시 시도해주세요.');
     });
   };
   return (
     <BottomSheetModal
       visible
-      maxHeight={height * 0.85}
       fixedHeight
+      fillContent
       scrollEnabled={!firstRun && !busy}
       dismissible={!firstRun}
       onClose={onClose}
       onBeforeClose={() => allowClose.current && !saving.current}
-      footer={
-        <View className="items-center gap-2 px-6 py-1">
+      footer={(close) => (
+        <View className="w-full max-w-lg self-center gap-2 px-6 pt-1">
           {!!error && (
             <Text accessibilityRole="alert" className="text-sm text-theme-danger">
               {error}
@@ -131,17 +131,17 @@ export function OnboardingSheet({
           <View
             accessibilityRole="tablist"
             accessibilityLabel="앱 안내 단계"
-            className="flex-row items-center justify-center gap-2"
+            className="flex-row items-center justify-center"
           >
             {titles.map((title, index) => (
               <Pressable
                 key={title}
                 accessibilityRole="tab"
                 accessibilityLabel={`${index + 1}단계, ${title}`}
-                accessibilityState={{ selected: index === step, disabled: busy }}
-                disabled={busy}
+                accessibilityState={{ selected: index === step, disabled: busy || !width }}
+                disabled={busy || !width}
                 onPress={() => selectStep(index)}
-                className="items-center justify-center"
+                className="h-8 items-center justify-center px-1 active:opacity-65"
               >
                 <Animated.View
                   className={`h-2.5 ios:curve-continuous rounded-full ${index === step ? 'bg-theme-accent' : 'bg-theme-text-disabled'}`}
@@ -155,9 +155,35 @@ export function OnboardingSheet({
               </Pressable>
             ))}
           </View>
+          <View className="flex-row gap-3">
+            {step > 0 && (
+              <Button
+                label="이전"
+                subtle
+                outline
+                disabled={busy || !width}
+                onPress={() => selectStep(step - 1)}
+                className="flex-1"
+              />
+            )}
+            <Button
+              label={
+                busy
+                  ? '저장 중…'
+                  : step === titles.length - 1
+                    ? firstRun
+                      ? '포포툭 시작하기'
+                      : '닫기'
+                    : '다음'
+              }
+              disabled={busy || !width}
+              onPress={() => (step === titles.length - 1 ? confirm(close) : selectStep(step + 1))}
+              className="flex-1"
+            />
+          </View>
         </View>
-      }
-      renderBody={(close) => (
+      )}
+      renderBody={() => (
         <ScrollView
           ref={carousel}
           horizontal
@@ -190,29 +216,34 @@ export function OnboardingSheet({
           contentContainerClassName="h-full flex-row"
         >
           {[
-            <WelcomePage key="welcome" onOpenWeb={openWeb} />,
+            <WelcomePage
+              key="welcome"
+              imageWidth={Math.max(0, Math.min(width - rem * 3, rem * 21))}
+            />,
             <ThemePage key="theme" settings={settings} busy={busy} onChange={change} />,
             <UsagePage key="usage" imageWidth={imageWidth} />,
             <CalendarGuidePage key="calendar" />,
             ...(Platform.OS === 'android'
               ? [<WidgetPage key="widget" imageWidth={imageWidth} />]
               : []),
-            <BackupPage key="backup" busy={busy} onConfirm={() => confirm(close)} />,
-          ].map((content) => (
-            <View key={content.key} className="h-full justify-center py-6" style={{ width }}>
-              {content.key === 'calendar' ? (
-                <ScrollView
-                  nestedScrollEnabled
-                  directionalLockEnabled
-                  showsVerticalScrollIndicator={false}
-                  className="flex-1 min-h-0 w-full max-w-lg self-center"
-                  contentContainerClassName="grow justify-center px-6"
-                >
-                  {content}
-                </ScrollView>
-              ) : (
-                <View className="w-full max-w-lg self-center px-6">{content}</View>
-              )}
+            <BackupPage key="backup" onOpenWeb={openWeb} />,
+          ].map((content, index) => (
+            <View
+              key={content.key}
+              accessibilityElementsHidden={index !== step}
+              importantForAccessibility={index === step ? 'auto' : 'no-hide-descendants'}
+              className="h-full"
+              style={{ width }}
+            >
+              <ScrollView
+                nestedScrollEnabled
+                directionalLockEnabled
+                showsVerticalScrollIndicator={false}
+                className="flex-1 min-h-0 w-full max-w-lg self-center"
+                contentContainerClassName="grow justify-center px-6 py-6"
+              >
+                {content}
+              </ScrollView>
             </View>
           ))}
         </ScrollView>
