@@ -65,7 +65,7 @@ export default function Home() {
             onLayout={({ nativeEvent }) => setContentHeight(nativeEvent.layout.height)}
           >
             <View className="mt-8 shrink-0 flex-row items-center">
-              <Wordmark size={appRem * 3.3} mode={mode} />
+              <Wordmark size={appRem * 3.5} mode={mode} />
             </View>
             <HomeGreeting />
             <View className="gap-3 shrink-0">
