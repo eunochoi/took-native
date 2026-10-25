@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "포포툭",
-    "slug": "took-native",
+    "slug": "pawpaw-took-native",
     "version": "2.1.9",
     "scheme": ["pawpaw-took", "took-local"],
     "orientation": "portrait",
@@ -107,7 +107,7 @@
     "updates": {
       "enabled": true,
       "fallbackToCacheTimeout": 2000,
-      "url": "https://u.expo.dev/b859b201-9bc7-42a0-889b-9b48bae5da45",
+      "url": "https://u.expo.dev/61638f98-2897-44cf-9d58-ba4336a243e8",
       "requestHeaders": {
         "expo-channel-name": "production"
       }
@@ -121,12 +121,13 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "b859b201-9bc7-42a0-889b-9b48bae5da45"
+        "projectId": "61638f98-2897-44cf-9d58-ba4336a243e8"
       }
     },
     "locales": {
       "ko": "./assets/locales/ko.json",
       "en": "./assets/locales/en.json"
-    }
+    },
+    "owner": "eooooostudio"
   }
 }
