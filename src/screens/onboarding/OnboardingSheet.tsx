@@ -231,7 +231,7 @@ export function OnboardingSheet({
                     ? '저장 중…'
                     : step === titles.length - 1
                       ? firstRun
-                        ? '오늘 툭 시작하기'
+                        ? 'BlooLog 시작하기'
                         : '닫기'
                       : '다음'
                 }

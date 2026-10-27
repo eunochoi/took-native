@@ -132,7 +132,7 @@ export function WelcomePage({ imageWidth }: { imageWidth: number }) {
           어떤 색의 하루라도 괜찮아.
         </Text>
         <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
-          오늘 툭에서 오늘의 마음을 기록하고,{'\n'}좋은 습관을 더하고, 줄이고 싶은 습관은 덜어내요.
+          BlooLog에서 오늘의 마음을 기록하고,{'\n'}좋은 습관을 더하고, 줄이고 싶은 습관은 덜어내요.
         </Text>
       </View>
     </View>
