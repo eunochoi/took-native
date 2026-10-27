@@ -173,7 +173,7 @@ export function DiaryEmotionPicker({
                       <PickerOption
                         selected={selected}
                         accessibilityLabel={`${emotion.name}, ${emotion.description}`}
-                        className="flex-1 w-full gap-2 rounded-2xl px-4 py-6"
+                        className={`grow w-full gap-2 rounded-2xl border px-4 py-6 ${selected ? 'border-theme-accent' : 'border-transparent'}`}
                         onPress={() => {
                           initialScrollPending.current = false;
                           setDraft(allowDeselect && selected ? null : id);
