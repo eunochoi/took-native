@@ -157,7 +157,7 @@ export function OnboardingSheet({
   };
   const openWeb = () => {
     void Linking.openURL('https://to-ok.me').catch(() => {
-      setError('오늘 툭 웹을 열지 못했어요. 다시 시도해주세요.');
+      setError('웹 서비스를 열지 못했어요. 다시 시도해주세요.');
     });
   };
   return (

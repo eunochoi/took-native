@@ -43,26 +43,26 @@ export function BackupPage({ onOpenWeb }: { onOpenWeb: () => void }) {
         <View className="h-px bg-theme-border/50" />
         <View className="gap-2">
           <Text className="text-center text-[15.75px] leading-[24.5px] font-semibold">
-            웹에서 이용
+            웹 서비스 이용
           </Text>
           <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
-            웹은 계정으로 로그인해 서버에 저장하고,{'\n'}다른 기기에서도 기록을 볼 수 있어요.
+            웹 서비스는 계정으로 로그인해 서버에 저장하고,{'\n'}다른 기기에서도 기록을 볼 수 있어요.
           </Text>
           <Pressable
             accessibilityRole="link"
-            accessibilityLabel="오늘 툭 웹 열기"
+            accessibilityLabel="웹 서비스 열기"
             onPress={onOpenWeb}
             className="min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-xl active:opacity-65"
           >
             <Text className="text-[14px] leading-[21px] font-semibold text-theme-accent">
-              오늘 툭 웹 열기
+              웹 서비스 열기
             </Text>
             <AppIcon name="arrow-forward" size={iconSizes.sm} className="text-theme-accent" />
           </Pressable>
         </View>
       </View>
       <InfoNotice textClassName="text-[10.5px] leading-[17.5px]" adjustsFontSizeToFit={false}>
-        앱과 웹의 기록은 자동으로 연동되지 않아요.
+        BlooLog 앱과 웹 서비스의 기록은 자동으로 연동되지 않아요.
       </InfoNotice>
     </View>
   );

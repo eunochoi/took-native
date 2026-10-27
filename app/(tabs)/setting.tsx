@@ -216,14 +216,14 @@ export default function SettingsScreen() {
           </Pressable>
           <Pressable
             accessibilityRole="link"
-            accessibilityLabel="TOOK 웹"
+            accessibilityLabel="웹 서비스 열기"
             accessibilityState={{ disabled }}
             disabled={disabled}
             onPress={() => {
               void Linking.openURL('https://to-ok.me').catch(() =>
                 showNotice({
                   tone: 'error',
-                  title: 'TOOK 웹을 열지 못했어요',
+                  title: '웹 서비스를 열지 못했어요',
                   message: '인터넷 연결을 확인하고 다시 시도해주세요.',
                 }),
               );

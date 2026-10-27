@@ -406,7 +406,7 @@ test('settings restores the three actions to a sticky toolbar below the shared t
   assert.equal(guide.props.children[0].props.name, 'info');
   assert.equal(guide.props.children[1].props.children, '소개');
   assert.equal(privacy.props.accessibilityLabel, '개인정보처리방침');
-  assert.equal(web.props.accessibilityLabel, 'TOOK 웹');
+  assert.equal(web.props.accessibilityLabel, '웹 서비스 열기');
   assert.equal(privacy.props.children[0].type, 'AppIcon');
   assert.equal(privacy.props.children[1].props.children, '개인정보처리방침');
   assert.equal(web.props.children.type, 'AppIcon');
