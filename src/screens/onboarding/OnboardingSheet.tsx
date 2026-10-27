@@ -157,7 +157,7 @@ export function OnboardingSheet({
   };
   const openWeb = () => {
     void Linking.openURL('https://to-ok.me').catch(() => {
-      setError('포포툭 웹을 열지 못했어요. 다시 시도해주세요.');
+      setError('오늘 툭 웹을 열지 못했어요. 다시 시도해주세요.');
     });
   };
   return (
@@ -231,7 +231,7 @@ export function OnboardingSheet({
                     ? '저장 중…'
                     : step === titles.length - 1
                       ? firstRun
-                        ? '포포툭 시작하기'
+                        ? '오늘 툭 시작하기'
                         : '닫기'
                       : '다음'
                 }

@@ -50,12 +50,12 @@ export function BackupPage({ onOpenWeb }: { onOpenWeb: () => void }) {
           </Text>
           <Pressable
             accessibilityRole="link"
-            accessibilityLabel="포포툭 웹 열기"
+            accessibilityLabel="오늘 툭 웹 열기"
             onPress={onOpenWeb}
             className="min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-xl active:opacity-65"
           >
             <Text className="text-[14px] leading-[21px] font-semibold text-theme-accent">
-              포포툭 웹 열기
+              오늘 툭 웹 열기
             </Text>
             <AppIcon name="arrow-forward" size={iconSizes.sm} className="text-theme-accent" />
           </Pressable>

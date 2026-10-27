@@ -236,7 +236,7 @@ test('first-run gate waits for app readiness and shows only if completion is abs
 test('visiting all pages leaves completion absent and relaunch shows the guide', async () => {
   const h = harness();
   const last = await lastPage(h);
-  assert.equal(last.buttons.at(-1).props.label, '포포툭 시작하기');
+  assert.equal(last.buttons.at(-1).props.label, '오늘 툭 시작하기');
   assert.equal(await h.storage.hasCompletedOnboarding(), false);
   assert.deepEqual(h.writes, []);
   const relaunch = harness(h.values);
