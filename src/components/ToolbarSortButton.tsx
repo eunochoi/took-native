@@ -1,10 +1,11 @@
+import { useI18n } from '../i18n/react';
 import { ToolbarButton } from './ToolbarButton';
 
 export function ToolbarSortButton({
   sort,
   priorityFirst = false,
   recordSort,
-  sortLabel = '생성일',
+  sortLabel,
   accessibilityLabel,
   onPress,
 }: {
@@ -15,26 +16,27 @@ export function ToolbarSortButton({
   accessibilityLabel: string;
   onPress: () => void;
 }) {
+  const { t } = useI18n();
   const showPriority = sort !== 'CUSTOM' && priorityFirst;
   const displayLabel =
     sort === 'CUSTOM'
-      ? '커스텀'
+      ? t('ui.custom')
       : [
-          showPriority ? '중요' : null,
-          recordSort === 'ASC' ? '짧은 기록' : null,
-          sort === 'ASC' ? '과거' : null,
+          showPriority ? t('ui.priorityShort') : null,
+          recordSort === 'ASC' ? t('ui.shortRecords') : null,
+          sort === 'ASC' ? t('ui.older') : null,
         ]
           .filter(Boolean)
-          .join(' · ') || '정렬';
+          .join(' · ') || t('ui.sort');
   const label =
     sort === 'CUSTOM'
-      ? '커스텀'
-      : `${recordSort ? `현재 기록 ${recordSort === 'DESC' ? '긴 기록순' : '짧은 기록순'} · ` : ''}${sortLabel} ${sort === 'DESC' ? '최신순' : '과거순'}`;
+      ? t('ui.custom')
+      : `${recordSort ? `${t('ui.currentRecord', { value: t(recordSort === 'DESC' ? 'ui.longest' : 'ui.shortest') })} · ` : ''}${sortLabel ?? t('ui.createdDate')} ${t(sort === 'DESC' ? 'ui.newest' : 'ui.oldest')}`;
   return (
     <ToolbarButton
       icon="sort"
       label={displayLabel}
-      accessibilityLabel={`${accessibilityLabel}, ${showPriority ? '중요한 항목 먼저 · ' : ''}${label}`}
+      accessibilityLabel={`${accessibilityLabel}, ${showPriority ? `${t('ui.priorityFirst')} · ` : ''}${label}`}
       onPress={onPress}
     />
   );

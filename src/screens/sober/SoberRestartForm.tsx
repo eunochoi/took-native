@@ -1,3 +1,5 @@
+import { translateErrorMessage } from '../../i18n/errors';
+import { useI18n } from '../../i18n/react';
 import { useQuery } from '@tanstack/react-query';
 import { usePreventRemove } from 'expo-router/react-navigation';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -26,6 +28,8 @@ export function SoberRestartForm({
   restartId?: number;
   initialDate?: string | string[];
 }) {
+  const { t, language } = useI18n();
+
   const db = useSQLiteContext();
   const { colors } = useAppTheme();
   const { showNotice } = useNotice();
@@ -71,15 +75,15 @@ export function SoberRestartForm({
     },
     (failure) => {
       setError(failure.message);
-      showNotice({ tone: 'error', title: '기록을 처리하지 못했어요', message: failure.message });
+      showNotice({ tone: 'error', title: t('sober.recordFailed'), message: failure.message });
     },
   );
   const busy = mutation.isPending || saved;
   const notifySaving = () =>
     showNotice({
       tone: 'info',
-      title: '잠시만 기다려주세요',
-      message: '다시 시작 기록을 저장하고 있어요.',
+      title: t('sober.wait'),
+      message: t('sober.savingRestart'),
     });
   usePreventRemove(mutation.isPending, notifySaving);
   const onBeforeClose = () => {
@@ -91,10 +95,10 @@ export function SoberRestartForm({
     ? () =>
         showNotice({
           tone: 'success',
-          title: editing ? '다시 시작 기록을 수정했어요' : '다시 시작 기록을 추가했어요',
+          title: editing ? t('sober.restartEdited') : t('sober.restartAdded'),
         })
     : undefined;
-  const title = editing ? '다시 시작 기록 수정' : '다시 시작 기록 추가';
+  const title = editing ? t('sober.restartEdit') : t('sober.restartAdd');
   const backRoute =
     !validId || (!sober.isPending && !sober.data)
       ? '/sober'
@@ -118,16 +122,14 @@ export function SoberRestartForm({
         {validParams && <QueryState query={sober} />}
         {validParams && editing && !!sober.data && <QueryState query={records} />}
         {(!validParams || (!sober.isPending && !sober.error && !sober.data)) && (
-          <Text className="text-center text-base">거리두기 항목이나 날짜를 확인해주세요.</Text>
+          <Text className="text-center text-base">{t('sober.checkItemDate')}</Text>
         )}
         {validParams &&
           editing &&
           !!sober.data &&
           !records.isPending &&
           !records.error &&
-          !record && (
-            <Text className="text-center text-base">다시 시작 기록을 찾을 수 없어요.</Text>
-          )}
+          !record && <Text className="text-center text-base">{t('sober.restartNotFound')}</Text>}
       </BottomSheetPage>
     );
   const item = sober.data;
@@ -141,7 +143,7 @@ export function SoberRestartForm({
       footer={
         <Button
           labelWeight="normal"
-          label={editing ? '수정한 기록 저장하기' : '다시 시작 기록하기'}
+          label={editing ? t('diary.saveEdited') : t('sober.recordRestart')}
           disabled={busy}
           onPress={() => {
             if (saving.current || busy) return;
@@ -164,7 +166,7 @@ export function SoberRestartForm({
                   saving.current = false;
                 });
             } catch (failure) {
-              setError(failure instanceof Error ? failure.message : '다시 시도해주세요.');
+              setError(failure instanceof Error ? failure.message : t('common.retryMessage'));
             }
           }}
         />
@@ -183,9 +185,9 @@ export function SoberRestartForm({
           }}
         />
         <View className="gap-2">
-          <Text className="text-base font-normal">메모 (선택)</Text>
+          <Text className="text-base font-normal">{t('sober.noteOptional')}</Text>
           <TextInput
-            accessibilityLabel="다시 시작 메모"
+            accessibilityLabel={t('sober.note')}
             value={memo}
             editable={!busy}
             onChangeText={(value) => {
@@ -197,7 +199,7 @@ export function SoberRestartForm({
             scrollEnabled
             maxLength={SOBER_MEMO_MAX_LENGTH}
             textAlignVertical="top"
-            placeholder="다시 시작하는 이유나 지금의 생각을 남겨보세요."
+            placeholder={t('sober.notePlaceholder')}
             placeholderTextColor={colors.textTertiary}
             className="h-28 ios:curve-continuous rounded-2xl bg-transparent border border-theme-border p-4 text-base text-theme-text-primary font-normal"
           />
@@ -205,7 +207,7 @@ export function SoberRestartForm({
         </View>
         {!!error && (
           <Text accessibilityRole="alert" className="text-sm text-theme-danger">
-            {error}
+            {translateErrorMessage(error, language)}
           </Text>
         )}
       </View>

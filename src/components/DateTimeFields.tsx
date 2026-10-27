@@ -1,4 +1,6 @@
-import { format, parseISO } from 'date-fns';
+import { formatDisplayDate } from '../i18n/format';
+import { useI18n } from '../i18n/react';
+import { format } from 'date-fns';
 import { useState } from 'react';
 import { TextInput, View } from 'react-native';
 import type { dateTimeDraft } from '../domain/date';
@@ -29,6 +31,8 @@ export function DateTimeFields({
   disabled?: boolean;
   onChange: (draft: ReturnType<typeof dateTimeDraft>) => void;
 }) {
+  const { t, formatLocale } = useI18n();
+
   const now = useCurrentMinute();
   const today = format(new Date(now), 'yyyy-MM-dd');
   const { colors, iconSizes } = useAppTheme();
@@ -38,10 +42,10 @@ export function DateTimeFields({
     <View className="gap-5">
       {collapsible && (
         <View className="gap-2">
-          <Text className="text-base">시작 시간</Text>
+          <Text className="text-base">{t('habit.startTime')}</Text>
           <FormPickerRow
-            label={`${format(parseISO(draft.date), 'yyyy년 M월 d일')} ${draft.hour}:${draft.minute}`}
-            accessibilityLabel="다시 시작 시간 선택"
+            label={`${formatDisplayDate(draft.date, formatLocale, 'date')} ${draft.hour}:${draft.minute}`}
+            accessibilityLabel={t('habit.restartTimeChoice')}
             disabled={disabled}
             leading={<AppIcon name="date" size={iconSizes.md} color={colors.textSecondary} />}
             onPress={() => setExpanded(!expanded)}
@@ -68,7 +72,7 @@ export function DateTimeFields({
           <View className="flex-row items-center justify-center gap-3">
             <View className={TIME_INPUT_CONTAINER_CLASS_NAME}>
               <TextInput
-                accessibilityLabel="시 (0~23)"
+                accessibilityLabel={t('habit.hourInput')}
                 keyboardType="number-pad"
                 maxLength={2}
                 editable={!disabled}
@@ -83,7 +87,7 @@ export function DateTimeFields({
             <Text>:</Text>
             <View className={TIME_INPUT_CONTAINER_CLASS_NAME}>
               <TextInput
-                accessibilityLabel="분 (0~59)"
+                accessibilityLabel={t('habit.minuteInput')}
                 keyboardType="number-pad"
                 maxLength={2}
                 editable={!disabled}

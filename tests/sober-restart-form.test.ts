@@ -1,3 +1,5 @@
+import { translateErrorMessage } from '../src/i18n/errors';
+import { mockI18n, formatDisplayDate, soberI18n } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -16,6 +18,7 @@ function nodes(node: any): any[] {
 }
 
 function form(props: { soberId: number; restartId?: number; initialDate?: string | string[] }) {
+  let language: 'ko' | 'en' = 'ko';
   const slots: any[] = [];
   let cursor = 0;
   let dirty = false;
@@ -50,6 +53,10 @@ function form(props: { soberId: number; restartId?: number; initialDate?: string
       Error,
       Date,
       require: (name: string) => {
+        if (name.endsWith('/i18n/errors')) return { translateErrorMessage };
+        if (name.endsWith('/i18n/sober')) return soberI18n;
+        if (name.endsWith('/i18n/react')) return mockI18n(() => language);
+        if (name.endsWith('/i18n/format')) return { formatDisplayDate };
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react')
           return {
@@ -151,6 +158,9 @@ function form(props: { soberId: number; restartId?: number; initialDate?: string
   };
   return {
     render,
+    setLanguage: (value: 'ko' | 'en') => {
+      language = value;
+    },
     sober,
     records,
     writes,
@@ -311,4 +321,39 @@ test('query errors during a save keep the dismissal guard and successful close r
   assert.equal(ui.render().props.closeRequested, true);
   assert.equal(ui.render().props.onBeforeClose(), true);
   assert.equal(typeof ui.render().props.onClosed, 'function');
+});
+
+test('English restart editing preserves the note and timestamp through language change and save retry', async () => {
+  const ui = form({ soberId: 1, restartId: 2 });
+  ui.memo().props.onChangeText('나의 메모');
+  ui.fields().props.onChange({ date: '2024-03-04', hour: '11', minute: '22' });
+  ui.setLanguage('en');
+  assert.equal(ui.render().props.title, 'Edit restart record');
+  assert.equal(ui.memo().props.accessibilityLabel, 'Restart note');
+  assert.equal(ui.memo().props.value, '나의 메모');
+  assert.equal(ui.fields().props.draft.date, '2024-03-04');
+  ui.render().props.footer.props.onPress();
+  ui.fail();
+  await tick();
+  assert.equal(ui.render().props.closeRequested, false);
+  assert.equal(ui.memo().props.value, '나의 메모');
+  ui.render().props.footer.props.onPress();
+  ui.succeed();
+  await tick();
+  assert.equal(ui.render().props.closeRequested, true);
+  ui.render().props.onClosed();
+  assert(ui.notices.some((notice) => notice.title === 'Restart record updated'));
+});
+
+test('restart date-time errors translate inline and changing language keeps the invalid draft', () => {
+  const ui = form({ soberId: 1, restartId: 2 });
+  ui.setLanguage('en');
+  ui.fields().props.onChange({ date: '2024-03-04', hour: '24', minute: '00' });
+  ui.render().props.footer.props.onPress();
+  const alert = () => nodes(ui.render()).find((node) => node.props.accessibilityRole === 'alert');
+  assert.equal(alert().props.children, 'Enter an hour from 0 to 23 and a minute from 0 to 59.');
+  assert.equal(ui.writes.length, 0);
+  ui.setLanguage('ko');
+  assert.equal(alert().props.children, '시간은 0~23시, 분은 0~59분으로 입력해주세요.');
+  assert.equal(ui.fields().props.draft.hour, '24');
 });

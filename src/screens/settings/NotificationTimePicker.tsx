@@ -1,3 +1,5 @@
+import { translateErrorMessage } from '../../i18n/errors';
+import { useI18n } from '../../i18n/react';
 import { useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
@@ -21,6 +23,7 @@ export function NotificationTimePicker({
   onClose: () => void;
   onApply: (time: string | null) => Promise<void>;
 }) {
+  const { t, language } = useI18n();
   const [hour, setHour] = useState(value?.slice(0, 2) ?? '21');
   const [minute, setMinute] = useState(value?.slice(3) ?? '00');
   const [busy, setBusy] = useState(false);
@@ -36,7 +39,7 @@ export function NotificationTimePicker({
       saving.current = false;
       close();
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : '다시 시도해주세요.');
+      setError(failure instanceof Error ? failure.message : t('common.retryMessage'));
     } finally {
       saving.current = false;
       setBusy(false);
@@ -50,7 +53,7 @@ export function NotificationTimePicker({
       onBeforeClose={() => !saving.current}
       footer={(close) => (
         <Button
-          label={busy ? '저장 중…' : '저장'}
+          label={busy ? t('common.saving') : t('common.save')}
           disabled={busy}
           onPress={() => {
             if (
@@ -59,7 +62,7 @@ export function NotificationTimePicker({
               Number(hour) > 23 ||
               Number(minute) > 59
             ) {
-              setError('시는 0~23, 분은 0~59로 입력해주세요.');
+              setError(t('settings.invalidTime'));
               return;
             }
             void apply(`${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`, close);
@@ -72,7 +75,7 @@ export function NotificationTimePicker({
           <View className="flex-row items-center justify-center gap-3">
             <View className={TIME_INPUT_CONTAINER_CLASS_NAME}>
               <TextInput
-                accessibilityLabel="시 (0~23)"
+                accessibilityLabel={t('settings.hourInput')}
                 keyboardType="number-pad"
                 maxLength={2}
                 editable={!busy}
@@ -88,7 +91,7 @@ export function NotificationTimePicker({
             <Text>:</Text>
             <View className={TIME_INPUT_CONTAINER_CLASS_NAME}>
               <TextInput
-                accessibilityLabel="분 (0~59)"
+                accessibilityLabel={t('settings.minuteInput')}
                 keyboardType="number-pad"
                 maxLength={2}
                 editable={!busy}
@@ -106,14 +109,14 @@ export function NotificationTimePicker({
             <Button
               outline
               subtle
-              label="알림 해제"
+              label={t('settings.disableReminder')}
               disabled={busy}
               onPress={() => void apply(null, close)}
             />
           )}
           {!!error && (
             <Text accessibilityRole="alert" className="text-sm text-theme-danger">
-              {error}
+              {translateErrorMessage(error, language)}
             </Text>
           )}
         </View>

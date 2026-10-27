@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -18,6 +19,7 @@ function harness(
   path: string,
   status: { dates?: Record<string, any>; months?: Record<string, any>; busy?: boolean } = {},
 ) {
+  let language: 'ko' | 'en' = 'ko';
   const state: any[] = [];
   const refs: any[] = [];
   let cursor = 0;
@@ -36,6 +38,8 @@ function harness(
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/i18n/react')) return mockI18n(() => language);
+        if (name.endsWith('/i18n/format')) return { formatDisplayDate };
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
         if (name === 'react')
           return {
@@ -134,6 +138,9 @@ function harness(
           deferred = after;
         });
       return tree;
+    },
+    setLanguage: (value: 'ko' | 'en') => {
+      language = value;
     },
     applied,
     saved,
@@ -425,4 +432,44 @@ test('diary picker loads recorded dates for the visible month and updates marker
   assert.deepEqual(calendar().props.diaryDates, ['2026-10-08']);
   calendar().props.onMonthChange('2026-09');
   assert.deepEqual(calendar().props.diaryDates, ['2026-09-15']);
+});
+
+test('English date picker keeps duplicate and future-date guards and applies the ISO date after close', () => {
+  const ui = harness('src/screens/diary/DiaryDatePicker.tsx', {
+    dates: { '2026-10-14': { data: { id: 2 } } },
+  });
+  ui.setLanguage('en');
+  assert.equal(ui.render().props.title, 'Choose diary date');
+  assert.equal(ui.render().props.footer.props.disabled, true);
+  assert(
+    nodes(ui.render()).some(
+      (node) => node.props.children === 'This date already has an entry. Choose another date.',
+    ),
+  );
+  nodes(ui.render())
+    .find((node) => node.type === 'DatePickerCalendar')
+    .props.onSelect('2026-10-15');
+  assert.equal(ui.render().props.footer.props.disabled, true);
+  nodes(ui.render())
+    .find((node) => node.type === 'DatePickerCalendar')
+    .props.onSelect('2026-10-10');
+  ui.render().props.footer.props.onPress();
+  assert.deepEqual(ui.applied, []);
+  ui.finish();
+  assert.deepEqual(ui.applied, ['2026-10-10']);
+});
+
+test('diary editor changes its labels without clearing text or date draft', () => {
+  const ui = harness('src/screens/DiaryForm.tsx');
+  nodes(ui.render())
+    .find((node) => node.type === 'TextInput')
+    .props.onChangeText('내 하루');
+  ui.setLanguage('en');
+  const tree = ui.render();
+  const input = nodes(tree).find((node) => node.type === 'TextInput');
+  assert.equal(input.props.value, '내 하루');
+  assert.equal(input.props.accessibilityLabel, 'Diary text');
+  assert.equal(input.props.placeholder, 'Write about a moment you want to remember.');
+  assert.equal(tree.props.title, 'Wednesday, Oct 14, 2026');
+  assert.equal(tree.props.footer.props.label, 'Save entry');
 });

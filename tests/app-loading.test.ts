@@ -1,3 +1,5 @@
+import { translateErrorMessage } from '../src/i18n/errors';
+import { mockI18n } from './helpers/i18n';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -31,6 +33,8 @@ function harness(path: string, modules: Record<string, any>) {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/i18n/errors')) return { translateErrorMessage };
+        if (name.endsWith('/i18n/react')) return mockI18n();
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react')
           return {
@@ -82,6 +86,8 @@ function settingsHarness() {
   const fonts = deferred<void>();
   const errors: Error[] = [];
   let refreshes = 0;
+  const languages: string[] = [];
+  let stored: any = null;
   let write = async () => {};
   const h = harness('../src/settings/SettingsProvider.tsx', {
     'expo-font': { loadAsync: () => fonts.promise },
@@ -89,8 +95,19 @@ function settingsHarness() {
     '../db': { withWriteLock: (fn: any) => fn() },
     './model': { DEFAULT_SETTINGS, parseSettings },
     '../widgets/sober': { refreshSoberWidgets: () => refreshes++ },
+    '../i18n/locale': {
+      setLanguagePreference: (value: string) => languages.push(value),
+      subscribeLocale: () => () => {},
+    },
   });
-  const db = { getFirstAsync: () => read.promise, runAsync: () => write() };
+  const db = {
+    getFirstAsync: () => stored ?? read.promise,
+    runAsync: async (_query: string, ...values: unknown[]) => {
+      await write();
+      const value = values.find((item) => typeof item === 'string' && item.startsWith('{'));
+      if (value) stored = { value };
+    },
+  };
   const props = {
     children: 'app',
     onError: (error: Error) => errors.push(error),
@@ -100,6 +117,11 @@ function settingsHarness() {
     read,
     fonts,
     errors,
+    languages,
+    stored: () => stored,
+    setStored: (value: any) => {
+      stored = value;
+    },
     refreshes: () => refreshes,
     setWrite: (next: () => Promise<void>) => {
       write = next;
@@ -275,4 +297,41 @@ test('loading artwork matches each platform native splash source and display siz
     assert(logo.props.className.split(' ').includes(`h-[${expected.imageWidth}px]`));
     assert.equal(logo.props.resizeMode, 'contain');
   }
+});
+
+test('language is loaded before revealing the app, updates immediately and rolls back on save failure', async () => {
+  const h = settingsHarness();
+  h.render();
+  h.read.resolve({ value: JSON.stringify({ ...DEFAULT_SETTINGS, language: 'ko' }) });
+  h.fonts.resolve();
+  await tick();
+  assert.equal(h.languages.at(-1), 'ko');
+  assert.equal(h.render().props.value.settings.language, 'ko');
+  const pending = deferred<void>();
+  h.setWrite(() => pending.promise);
+  const saving = h.render().props.value.updateSettings({ language: 'en' });
+  assert.equal(h.languages.at(-1), 'en');
+  assert.equal(h.render().props.value.settings.language, 'en');
+  assert.equal(h.refreshes(), 0);
+  pending.reject(new Error('save failed'));
+  await assert.rejects(saving, /save failed/);
+  assert.equal(h.languages.at(-1), 'ko');
+  assert.equal(h.render().props.value.settings.language, 'ko');
+  assert.equal(h.refreshes(), 0);
+  h.setWrite(async () => {});
+  await h.render().props.value.updateSettings({ language: 'en' });
+  assert.equal(h.render().props.value.settings.language, 'en');
+  assert.equal(JSON.parse(h.stored().value).language, 'en');
+  assert.equal(h.refreshes(), 1);
+  const reopened = settingsHarness();
+  reopened.render();
+  reopened.read.resolve(h.stored());
+  reopened.fonts.resolve();
+  await tick();
+  assert.equal(reopened.render().props.value.settings.language, 'en');
+  assert.equal(reopened.languages.at(-1), 'en');
+  h.setStored({ value: JSON.stringify({ ...DEFAULT_SETTINGS }) });
+  await h.render().props.value.reloadSettings();
+  assert.equal(h.languages.at(-1), 'system');
+  assert.equal(h.render().props.value.settings.language, 'system');
 });

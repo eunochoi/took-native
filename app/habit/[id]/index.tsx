@@ -1,5 +1,6 @@
+import { formatDisplayDate } from '../../../src/i18n/format';
+import { useI18n } from '../../../src/i18n/react';
 import { useQuery } from '@tanstack/react-query';
-import { format, parseISO } from 'date-fns';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useMemo } from 'react';
@@ -16,6 +17,8 @@ import { HabitStatistics } from '../../../src/screens/habit/HabitStatistics';
 import { useAppTheme } from '../../../src/theme/AppThemeProvider';
 
 export default function HabitDetail() {
+  const { t, formatLocale } = useI18n();
+
   const { rem: appRem } = useAppTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const db = useSQLiteContext();
@@ -29,7 +32,7 @@ export default function HabitDetail() {
     <>
       <BottomSheetPage
         backRoute="/habit"
-        title={habit?.name ?? '습관 정보'}
+        title={habit?.name ?? t('habit.info')}
         menuAction={
           habit ? (
             <HabitMenu habit={habit} onDeleted={() => router.dismissTo('/habit')} />
@@ -47,10 +50,12 @@ export default function HabitDetail() {
                 </View>
                 <HabitStars priority={habit.priority} size={appRem * 1.3} />
                 <Text className="-mt-2 text-sm text-theme-text-secondary">
-                  {habit.priority === 0 ? '자유 기록' : `매일 기록`}
+                  {habit.priority === 0 ? t('habit.free') : t('habit.daily')}
                 </Text>
                 <Text className="text-sm text-theme-text-secondary">
-                  {format(parseISO(habit.initial_started_at), 'yyyy년 M월 d일 HH:mm')} 시작
+                  {t('habit.started', {
+                    value: formatDisplayDate(habit.initial_started_at, formatLocale, 'dateTime'),
+                  })}
                 </Text>
               </View>
               <HabitStatistics
@@ -61,13 +66,13 @@ export default function HabitDetail() {
               />
               {habit.priority > 0 && (
                 <View className="gap-2">
-                  <InfoNotice>실천 가능일은 선택 기간 내 시작일~오늘이에요.</InfoNotice>
-                  <InfoNotice>실천율 = 실천 횟수 ÷ 실천 가능일 × 100</InfoNotice>
+                  <InfoNotice>{t('habit.eligibleNotice')}</InfoNotice>
+                  <InfoNotice>{t('habit.rateNotice')}</InfoNotice>
                 </View>
               )}
             </>
           ) : !query.isPending && !query.error ? (
-            <Text>습관을 찾을 수 없습니다.</Text>
+            <Text>{t('habit.notFound')}</Text>
           ) : null}
         </View>
       </BottomSheetPage>

@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
 import { ActivityIndicator, View } from 'react-native';
@@ -13,6 +14,8 @@ import { DayInfoDiarySection } from './DayInfoDiarySection';
 import { DayInfoHabitSection } from './DayInfoHabitSection';
 
 export function DayInfo({ date, today }: { date: string; today: string }) {
+  const { t } = useI18n();
+
   const { showNotice } = useNotice();
   const { colors } = useAppTheme();
   const db = useSQLiteContext();
@@ -24,7 +27,8 @@ export function DayInfo({ date, today }: { date: string; today: string }) {
       setHabitCompletion(db, id, targetDate, checked),
     'habitCompletion',
     undefined,
-    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
+    (error) =>
+      showNotice({ tone: 'error', title: t('diary.processFailed'), message: error.message }),
   );
   const pending = diary.isPending || habits.isPending || completions.isPending;
   const error = diary.isError || habits.isError || completions.isError;
@@ -38,7 +42,7 @@ export function DayInfo({ date, today }: { date: string; today: string }) {
       {error ? (
         <QueryError
           className="min-h-32"
-          message="기록을 불러오지 못했어요."
+          message={t('calendar.recordsFailed')}
           onRetry={() => {
             void diary.refetch();
             void habits.refetch();
@@ -48,7 +52,7 @@ export function DayInfo({ date, today }: { date: string; today: string }) {
       ) : pending ? (
         <View className="min-h-32 items-center justify-center">
           <ActivityIndicator
-            accessibilityLabel="선택 날짜 기록 불러오는 중"
+            accessibilityLabel={t('calendar.recordsLoading')}
             color={colors.accent}
           />
         </View>

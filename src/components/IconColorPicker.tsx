@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/react';
 import { useState } from 'react';
 import { View, type ScrollView } from 'react-native';
 import { HABIT_ICON_COLORS, type HabitIconColorKey } from '../domain/constants';
@@ -18,6 +19,8 @@ export function IconColorPicker({
   onApply: (value: HabitIconColorKey) => void;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
+
   const [draft, setDraft] = useState(value);
   const { colors } = useAppTheme();
   const keys: HabitIconColorKey[] = [
@@ -27,12 +30,12 @@ export function IconColorPicker({
   return (
     <BottomSheetModal
       visible
-      title="아이콘 색상"
+      title={t('habit.iconColor')}
       onClose={onClose}
       footer={(close) => (
         <Button
           labelWeight="normal"
-          label="선택 완료"
+          label={t('habit.selectionDone')}
           onPress={() => close(() => onApply(draft))}
         />
       )}
@@ -49,8 +52,9 @@ export function IconColorPicker({
           contentContainerClassName="gap-1 pt-6 pb-7"
           columnWrapperClassName="gap-1"
           renderItem={({ item: key }) => {
-            const { value: backgroundColor, label } =
-              key === 'theme' ? { value: colors.accent, label: '기본' } : HABIT_ICON_COLORS[key];
+            const { value: backgroundColor } =
+              key === 'theme' ? { value: colors.accent } : HABIT_ICON_COLORS[key];
+            const label = key === 'theme' ? t('habit.defaultColor') : t(`iconColors.${key}`);
             return (
               <View className="flex-1 min-w-0">
                 <PickerOption

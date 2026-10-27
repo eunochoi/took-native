@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { InfoNotice } from '../../components/InfoNotice';
@@ -22,6 +23,8 @@ export function DayInfoHabitSection({
   pendingId: number | null;
   onToggle: (id: number, checked: boolean) => void;
 }) {
+  const { t } = useI18n();
+
   const { colors, iconSizes } = useAppTheme();
   const { openModal } = useModalNavigation();
   const editable = date >= shiftDate(today, -3) && date <= today;
@@ -40,7 +43,7 @@ export function DayInfoHabitSection({
       >
         <Pressable
           accessibilityRole="checkbox"
-          accessibilityLabel={`${habit.name}${habit.priority === 0 ? ', 자유 기록' : ''}`}
+          accessibilityLabel={`${habit.name}${habit.priority === 0 ? `, ${t('calendar.free')}` : ''}`}
           accessibilityState={{ checked: habit.completed, disabled }}
           disabled={disabled}
           onPress={() => onToggle(habit.id, !habit.completed)}
@@ -61,14 +64,14 @@ export function DayInfoHabitSection({
             {habit.name}
           </Text>
           {habit.priority === 0 ? (
-            <Text className="text-xs text-theme-text-secondary">자유 기록</Text>
+            <Text className="text-xs text-theme-text-secondary">{t('calendar.free')}</Text>
           ) : (
             <HabitStars priority={habit.priority} color={habitColor} className="shrink-0" />
           )}
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${habit.name} 습관 정보 보기`}
+          accessibilityLabel={t('calendar.habitLink', { value: habit.name })}
           onPress={() => {
             openModal(`/habit/${habit.id}`);
           }}
@@ -83,7 +86,7 @@ export function DayInfoHabitSection({
     <View className="px-1 pt-1 shrink-0">
       <View className="flex-row items-center justify-between gap-2 py-2">
         <Text accessibilityRole="header" className="text-base font-semibold">
-          습관 목록
+          {t('calendar.habitsTitle')}
         </Text>
         {habits.length > 0 && (
           <View className="flex-row justify-center items-center gap-2">
@@ -92,14 +95,14 @@ export function DayInfoHabitSection({
             )}
             {counted.length > 0 && (
               <Text className="tracking-tighter text-sm text-theme-accent">
-                매일 기록 {done}/{counted.length} 완료
+                {t('calendar.dailyCompleted', { value: `${done}/${counted.length}` })}
               </Text>
             )}
             {excludedDone > 0 && (
               <>
                 <Text className="tracking-tighter text-sm text-theme-text-secondary">·</Text>
                 <Text className="tracking-tighter text-sm text-theme-text-secondary">
-                  자유 기록 {excludedDone}건
+                  {t('calendar.freeCompleted', { count: excludedDone })}
                 </Text>
               </>
             )}
@@ -109,15 +112,13 @@ export function DayInfoHabitSection({
       <View className="px-1 pt-3">
         {habits.length ? (
           <View className="min-h-56 gap-2">
-            {!editable && (
-              <InfoNotice>습관 체크는 오늘부터 3일 전까지 변경할 수 있어요.</InfoNotice>
-            )}
+            {!editable && <InfoNotice>{t('calendar.checkNotice')}</InfoNotice>}
             {habits.map(renderHabit)}
           </View>
         ) : (
           <View className="h-56 items-center justify-center">
             <Text className="text-center text-sm leading-relaxed text-theme-text-tertiary">
-              이날은 등록된 습관 항목이 없어요.
+              {t('calendar.habitsEmpty')}
             </Text>
           </View>
         )}

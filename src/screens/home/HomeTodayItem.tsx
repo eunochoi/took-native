@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { Text } from '../../components/Text';
@@ -19,10 +20,11 @@ export function HomeTodayItem({
   onPress: () => void;
   children: ReactNode;
 }) {
+  const { t } = useI18n();
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={pending ? `${title} 확인 중` : accessibilityLabel}
+      accessibilityLabel={pending ? t('home.checking', { title }) : accessibilityLabel}
       accessibilityState={{ disabled: !!disabled, busy: pending }}
       disabled={disabled}
       onPress={onPress}

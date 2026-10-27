@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
@@ -24,6 +25,7 @@ export function HomeStatsScreen({
   currentYear: number;
   onYearChange: (year: number) => void;
 }) {
+  const { t } = useI18n();
   const db = useSQLiteContext();
   const { iconSizes } = useAppTheme();
   const [picker, setPicker] = useState(false);
@@ -34,23 +36,27 @@ export function HomeStatsScreen({
   const restarts = useQuery(soberQueries.restarts(db));
   const sections = [
     {
-      label: '일기',
+      id: 'diary',
+      label: t('home.diary'),
       queries: [diary],
       content: diary.data ? <DiaryAnalysis stats={diary.data} year={year} /> : null,
     },
     {
-      label: '감정',
+      id: 'emotion',
+      label: t('home.emotion'),
       fullBleed: true,
       queries: [diary],
       content: diary.data ? <EmotionStats stats={diary.data} year={year} /> : null,
     },
     {
-      label: '습관',
+      id: 'habit',
+      label: t('home.habit'),
       queries: [habit],
       content: habit.data ? <HabitAnalysis stats={habit.data} year={year} /> : null,
     },
     {
-      label: '거리두기',
+      id: 'sober',
+      label: t('navigation.sober'),
       queries: [sobers, restarts],
       content:
         sobers.data && restarts.data ? (
@@ -63,7 +69,7 @@ export function HomeStatsScreen({
     <>
       <BottomSheetPage
         backRoute="/"
-        title="기록 분석"
+        title={t('home.insightsTitle')}
         scrollFade
         contentKey={year}
         contentFullBleed
@@ -72,7 +78,7 @@ export function HomeStatsScreen({
           <View className="gap-14">
             {sections.map((section) => (
               <View
-                key={section.label}
+                key={section.id}
                 className={
                   section.fullBleed && section.queries.every((query) => query.data)
                     ? undefined
@@ -82,8 +88,8 @@ export function HomeStatsScreen({
                 {section.queries.some((query) => query.isError && !query.data) ? (
                   <QueryError
                     className="min-h-32"
-                    message={`${section.label} 기록을 불러오지 못했어요.`}
-                    retryAccessibilityLabel={`${section.label} 기록 다시 시도`}
+                    message={t('home.sectionFailed', { title: section.label })}
+                    retryAccessibilityLabel={t('home.sectionRetry', { title: section.label })}
                     onRetry={() => {
                       section.queries.forEach((query) => {
                         if (query.isError) void query.refetch();
@@ -100,17 +106,19 @@ export function HomeStatsScreen({
 
             <View className="px-[5%]">
               <View className="gap-2 px-2">
-                <Text className="text-xl font-bold">다른 연도도 확인해 볼까요?</Text>
+                <Text className="text-xl font-bold">{t('home.otherYearTitle')}</Text>
                 <Text className="text-base text-theme-text-secondary">
-                  연도를 바꿔 다른 해의 기록도 살펴보세요.
+                  {t('home.otherYearDescription')}
                 </Text>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`${year}년, 연도 선택`}
+                  accessibilityLabel={t('home.yearChoice', { count: year })}
                   onPress={() => setPicker(true)}
                   className="py-2 my-3 self-end flex-row items-center justify-center gap-2 active:opacity-70"
                 >
-                  <Text className="text-base font-semibold text-theme-accent-deep">연도 선택</Text>
+                  <Text className="text-base font-semibold text-theme-accent-deep">
+                    {t('home.chooseYear')}
+                  </Text>
                   <AppIcon
                     name="arrow-forward"
                     size={iconSizes.md}

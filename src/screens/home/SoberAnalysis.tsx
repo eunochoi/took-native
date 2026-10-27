@@ -1,4 +1,6 @@
-import { format, parseISO } from 'date-fns';
+import { formatSoberDuration } from '../../i18n/sober';
+import { formatDisplayDate } from '../../i18n/format';
+import { useI18n } from '../../i18n/react';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { InfoNotice } from '../../components/InfoNotice';
@@ -6,7 +8,7 @@ import { SoberIcon } from '../../components/SoberIcon';
 import { Text } from '../../components/Text';
 import { UnderlineTab } from '../../components/UnderlineTab';
 import type { Sober, SoberRestart } from '../../db/types';
-import { formatSoberDuration, getSoberStreaks } from '../../domain/sober';
+import { getSoberStreaks } from '../../domain/sober';
 import { useCurrentMinute } from '../../hooks/useCurrentMinute';
 import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
@@ -14,6 +16,8 @@ import { MUTED_CARD_BORDER_CLASS_NAME, UNDERLINE_TAB_LIST_CLASS_NAME } from '../
 import { AnalysisHeader } from './AnalysisHeader';
 
 export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts: SoberRestart[] }) {
+  const { t, language, formatLocale } = useI18n();
+
   const { openModal } = useModalNavigation();
   const now = useCurrentMinute();
   const { rem: appRem } = useAppTheme();
@@ -37,12 +41,14 @@ export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts:
     .slice(0, 3);
   return (
     <View className="gap-4">
-      <AnalysisHeader title="거리두기 기록">전체 항목 {sobers.length}개</AnalysisHeader>
+      <AnalysisHeader title={t('stats.soberTitle')}>
+        {t('stats.totalItems', { count: sobers.length })}
+      </AnalysisHeader>
       <View accessibilityRole="tablist" className={UNDERLINE_TAB_LIST_CLASS_NAME}>
         {(
           [
-            { value: 'top', label: '오래 유지한 순' },
-            { value: 'bottom', label: '짧게 유지한 순' },
+            { value: 'top', label: t('stats.longestFirst') },
+            { value: 'bottom', label: t('stats.shortestFirst') },
           ] as const
         ).map((option) => (
           <UnderlineTab
@@ -59,14 +65,24 @@ export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts:
       >
         {records.length ? (
           visibleRecords.map(({ sober, record }, index) => {
-            const status = record.current ? '진행 중' : '종료';
-            const duration = formatSoberDuration(record.duration);
+            const status = record.current ? t('stats.inProgress') : t('stats.ended');
+            const duration = formatSoberDuration(record.duration, language);
             const [days, hours, minutes] = duration.split(' ');
+            const range = t('stats.dateRange', {
+              title: formatDisplayDate(record.start, formatLocale, 'shortDateTime'),
+              value: record.current
+                ? t('sober.current')
+                : formatDisplayDate(record.end, formatLocale, 'shortDateTime'),
+            });
             return (
               <Pressable
                 key={`${sober.id}:${record.start}:${record.current ? 'current' : record.end}:${index}`}
                 accessibilityRole="button"
-                accessibilityLabel={`${sober.name}, ${status}, ${duration}, ${format(parseISO(record.start), 'yy년 M월 d일 HH:mm')}부터 ${record.current ? '현재까지' : `${format(parseISO(record.end), 'yy년 M월 d일 HH:mm')}까지`}, 거리두기 정보`}
+                accessibilityLabel={t('stats.recordDetails', {
+                  title: sober.name,
+                  value: `${status}, ${duration}`,
+                  setting: range,
+                })}
                 onPress={() => {
                   openModal(`/sober/${sober.id}`);
                 }}
@@ -98,7 +114,9 @@ export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts:
                     >
                       {days.slice(0, -1)}
                     </Text>
-                    <Text className="text-base text-theme-text-secondary">일</Text>
+                    <Text className="text-base text-theme-text-secondary">
+                      {t('stats.daysUnit')}
+                    </Text>
                   </View>
                   <Text
                     numberOfLines={1}
@@ -113,11 +131,11 @@ export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts:
           })
         ) : (
           <Text className="text-center text-theme-text-secondary text-sm">
-            아직 거리두기 기록이 없어요.
+            {t('stats.soberEmpty')}
           </Text>
         )}
       </View>
-      <InfoNotice>선택 연도와 관계없이 전체 기간 기록이에요.</InfoNotice>
+      <InfoNotice>{t('stats.soberNotice')}</InfoNotice>
     </View>
   );
 }

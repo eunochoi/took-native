@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { useAnimatedRef } from 'react-native-reanimated';
@@ -33,6 +34,8 @@ export function IconPicker<Key extends string>({
   onApply: (value: Key) => void;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
+
   const { rem: appRem } = useAppTheme();
   const { width, height, fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -123,7 +126,7 @@ export function IconPicker<Key extends string>({
           >
             <PickerOption
               selected={category.id === id}
-              accessibilityLabel={`${label} 카테고리`}
+              accessibilityLabel={t('diary.category', { value: label })}
               className="min-h-12 rounded-full px-4 py-2"
               onPress={() => {
                 if (category.id === id) return;
@@ -239,7 +242,7 @@ export function IconPicker<Key extends string>({
       footer={(close) => (
         <Button
           labelWeight="normal"
-          label="선택 완료"
+          label={t('habit.selectionDone')}
           onPress={() => close(() => onApply(draft))}
         />
       )}

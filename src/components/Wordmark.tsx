@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/react';
 import { Image, type ImageProps } from 'react-native';
 import { useSettings } from '../settings/SettingsProvider';
 import { useAppTheme } from '../theme/AppThemeProvider';
@@ -40,12 +41,13 @@ export function Wordmark({
   onLoad?: ImageProps['onLoad'];
   onError?: ImageProps['onError'];
 }) {
+  const { t } = useI18n();
   const { settings } = useSettings();
   const theme = useAppTheme();
   return (
     <Image
       source={images[settings.themeAccent][mode ?? theme.mode]}
-      accessibilityLabel="BlooLog 로고"
+      accessibilityLabel={t('ui.brandLogo')}
       accessible
       className="shrink-0"
       style={{ height: size, width: size * (dimensions.width / dimensions.height) }}

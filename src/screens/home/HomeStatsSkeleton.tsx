@@ -1,11 +1,13 @@
+import { useI18n } from '../../i18n/react';
 import { View } from 'react-native';
 
 export function HomeStatsSkeleton() {
+  const { t } = useI18n();
   return (
     <View
       accessible
       accessibilityRole="progressbar"
-      accessibilityLabel="선택한 기록 불러오는 중"
+      accessibilityLabel={t('home.recordsLoading')}
       accessibilityState={{ busy: true }}
       className="w-full gap-6"
     >

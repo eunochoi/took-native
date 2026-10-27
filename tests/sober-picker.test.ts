@@ -1,3 +1,5 @@
+import { translateErrorMessage } from '../src/i18n/errors';
+import { mockI18n, formatDisplayDate } from './helpers/i18n';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -8,7 +10,11 @@ import { dateTimeDraft, parseDateTime } from '../src/domain/date';
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
 const jsx = (type: unknown, props: any) => ({ type, props });
-function renderComponent(file: 'DateTimePicker' | 'DateTimeFields', props: any) {
+function renderComponent(
+  file: 'DateTimePicker' | 'DateTimeFields',
+  props: any,
+  language: 'ko' | 'en' = 'ko',
+) {
   const exports: any = {};
   const slots: any[] = [];
   let cursor = 0;
@@ -23,6 +29,9 @@ function renderComponent(file: 'DateTimePicker' | 'DateTimeFields', props: any) 
       exports,
       Error,
       require: (name: string) => {
+        if (name.endsWith('/i18n/errors')) return { translateErrorMessage };
+        if (name.endsWith('/i18n/react')) return mockI18n(language);
+        if (name.endsWith('/i18n/format')) return { formatDisplayDate };
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react')
           return {
@@ -172,4 +181,41 @@ test('disabled shared fields reject calendar, month and clock changes during sav
     nodes(render()).find((node) => node.type === 'DatePickerCalendar').props.month,
     '2024-01',
   );
+});
+
+test('English date-time validation stays English and saving keeps canonical ISO values', () => {
+  const applied: string[] = [];
+  const render = renderComponent(
+    'DateTimePicker',
+    {
+      mode: 'start',
+      title: 'Start',
+      value: '2024-02-29T00:00:00.000Z',
+      onClose: () => {},
+      onApply: (iso: string) => applied.push(iso),
+    },
+    'en',
+  );
+  const change = (draft: unknown) =>
+    nodes(render())
+      .find((node) => node.type === 'DateTimeFields')
+      .props.onChange(draft);
+  const save = () =>
+    render()
+      .props.footer((action: () => void) => {
+        action();
+        return true;
+      })
+      .props.onPress();
+  change({ date: '2024-02-29', hour: '24', minute: '00' });
+  save();
+  assert.equal(
+    nodes(render()).find((node) => node.props.accessibilityRole === 'alert').props.children,
+    'Enter an hour from 0 to 23 and a minute from 0 to 59.',
+  );
+  assert.equal(applied.length, 0);
+  change({ date: '2024-02-29', hour: '23', minute: '59' });
+  save();
+  assert.equal(applied.length, 1);
+  assert.deepEqual(dateTimeDraft(applied[0]), { date: '2024-02-29', hour: '23', minute: '59' });
 });

@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { format, parseISO } from 'date-fns';
 import { View } from 'react-native';
 import { RecordMenuButton } from '../../components/RecordMenuButton';
@@ -14,6 +15,8 @@ export function SoberRestartCard({
   pending?: boolean;
   onMenu?: (record: SoberRestart) => void;
 }) {
+  const { t } = useI18n();
+
   const time = format(parseISO(record.restarted_at), 'HH:mm');
   return (
     <View className="gap-2 ios:curve-continuous rounded-2xl bg-transparent border border-theme-border p-4">
@@ -22,7 +25,7 @@ export function SoberRestartCard({
         {onMenu && (
           <RecordMenuButton
             muted
-            accessibilityLabel={`${time} 다시 시작 기록 메뉴`}
+            accessibilityLabel={t('sober.restartMenu', { value: time })}
             disabled={pending}
             onPress={() => onMenu(record)}
             className={`-mr-4 w-11 items-center justify-center ${pending ? 'opacity-40' : 'opacity-100'}`}

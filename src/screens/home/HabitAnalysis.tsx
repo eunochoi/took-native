@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { HabitIcon } from '../../components/HabitIcon';
@@ -17,23 +18,27 @@ export function HabitAnalysis({
   stats: Awaited<ReturnType<typeof getHabitStats>>;
   year: number;
 }) {
+  const { t } = useI18n();
+
   const { rem: appRem } = useAppTheme();
   const { openModal } = useModalNavigation();
   const [tab, setTab] = useState<'top' | 'bottom'>('top');
   const habits = stats[tab].slice(0, 3);
   return (
     <View className="gap-4">
-      <AnalysisHeader title="습관 기록">{year}년 · 별 1개 이상 기준</AnalysisHeader>
+      <AnalysisHeader title={t('stats.habitTitle')}>
+        {t('stats.habitYear', { count: year })}
+      </AnalysisHeader>
       <View accessibilityRole="tablist" className={UNDERLINE_TAB_LIST_CLASS_NAME}>
         {(
           [
             {
               value: 'top',
-              label: '상위 Top 3',
+              label: t('stats.topThree'),
             },
             {
               value: 'bottom',
-              label: '하위 Top 3',
+              label: t('stats.bottomThree'),
             },
           ] as const
         ).map((option) => (
@@ -68,24 +73,26 @@ export function HabitAnalysis({
                   priority={habit.priority}
                   size={appRem}
                   className="opacity-80"
-                  accessibilityLabel={`중요도 ${habit.priority}`}
+                  accessibilityLabel={t('stats.priority', { count: habit.priority })}
                 />
               </View>
               <View className="flex-row items-baseline gap-1">
                 <Text className="text-theme-text-primary font-semibold text-2xl">
                   {habit.count}
                 </Text>
-                <Text className="text-base text-theme-text-secondary">회</Text>
+                <Text className="text-base text-theme-text-secondary">
+                  {t('stats.timesUnit', { count: habit.count })}
+                </Text>
               </View>
             </Pressable>
           ))
         ) : (
           <Text className="text-center text-theme-text-secondary text-sm">
-            {year}년에 완료한 집계 대상 습관이 없어요.
+            {t('stats.habitEmpty', { count: year })}
           </Text>
         )}
       </View>
-      <InfoNotice>자유 기록은 습관 기록 집계에 포함되지 않아요.</InfoNotice>
+      <InfoNotice>{t('stats.freeNotice')}</InfoNotice>
     </View>
   );
 }

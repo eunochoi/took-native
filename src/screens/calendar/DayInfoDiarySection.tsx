@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
@@ -17,6 +18,8 @@ export function DayInfoDiarySection({
   today: string;
   diary: DiaryDetail | null;
 }) {
+  const { t } = useI18n();
+
   const { colors, rem: appRem } = useAppTheme();
   const { openModal } = useModalNavigation();
   const open = () => {
@@ -28,7 +31,7 @@ export function DayInfoDiarySection({
       <View className="h-12 flex-row items-center justify-between gap-2 py-2">
         <View className="min-w-0 flex-1 flex-row items-center gap-2">
           <Text accessibilityRole="header" className="text-base font-semibold">
-            감정 일기
+            {t('diary.emotionDiary')}
           </Text>
         </View>
         {diary && <DiaryMenu diary={diary} today={today} />}
@@ -44,7 +47,7 @@ export function DayInfoDiarySection({
               )}
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="일기 전체 보기"
+                accessibilityLabel={t('diary.viewEntry')}
                 onPress={open}
                 className="flex-1 min-w-0"
               >
@@ -55,22 +58,18 @@ export function DayInfoDiarySection({
             </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="일기 전체 보기"
+              accessibilityLabel={t('diary.viewEntry')}
               onPress={open}
               className="min-h-9 flex-row items-center self-end"
             >
-              <Text className="text-sm text-theme-accent">일기 전체 보기</Text>
+              <Text className="text-sm text-theme-accent">{t('diary.viewEntry')}</Text>
               <AppIcon name="chevron-right" size={appRem * 1.125} color={colors.accent} />
             </Pressable>
           </View>
         ) : (
           <View className="min-h-32 items-center justify-center px-2">
-            <Text className="mt-1 text-sm text-theme-text-tertiary">
-              아직 작성한 일기가 없어요.
-            </Text>
-            <Text className="mt-1 text-sm text-theme-text-tertiary">
-              하루의 이야기를 가볍게 남겨보세요.
-            </Text>
+            <Text className="mt-1 text-sm text-theme-text-tertiary">{t('diary.empty')}</Text>
+            <Text className="mt-1 text-sm text-theme-text-tertiary">{t('diary.dayHint')}</Text>
             <Pressable
               accessibilityRole="button"
               onPress={() => {
@@ -83,7 +82,7 @@ export function DayInfoDiarySection({
                 className="text-xs leading-none text-theme-text-on-accent"
                 style={{ includeFontPadding: false, textAlignVertical: 'center' }}
               >
-                일기 쓰기
+                {t('diary.write')}
               </Text>
             </Pressable>
           </View>

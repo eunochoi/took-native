@@ -1,3 +1,4 @@
+import { mockI18n } from './helpers/i18n';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -37,10 +38,11 @@ function load(path: string, dependencies: Record<string, unknown>) {
   return exports;
 }
 
-function harness(rem = 15) {
+function harness(rem = 15, language: 'ko' | 'en' = 'ko') {
   const changed: Partial<Settings>[] = [];
   const component = load('../src/screens/settings/AppearanceSettingsSection.tsx', {
     'react-native': { View: 'View', Pressable: 'Pressable' },
+    '../../i18n/react': mockI18n(language),
     'react/jsx-runtime': { jsx, jsxs: jsx },
     '../../components/AppIcon': { AppIcon: 'Icon' },
     '../../components/PickerOption': { PickerOption: 'Option' },
@@ -225,4 +227,23 @@ test('all appearance choices disable during saves and retain the existing dimmin
     assert.equal(emotion.props.disabled, true);
     assert.equal(emotion.props.dimmed, dimmed);
   }
+});
+
+test('English appearance labels preserve the existing theme and font choices', () => {
+  const ui = harness(15, 'en');
+  const tree = ui.render({ themeAccent: 'yellow', emotionStyle: 'simple' });
+  const text = nodes(tree, 'Text').map((node) => node.props.children);
+  for (const label of [
+    'Appearance',
+    'Accent color',
+    'Deep teal',
+    'Emotion icons',
+    'Simple',
+    'Background',
+    'Font size',
+    'Abc',
+  ]) {
+    assert(text.includes(label), label);
+  }
+  assert(nodes(tree, 'Option').every((option) => !/[가-힣]/.test(option.props.accessibilityLabel)));
 });

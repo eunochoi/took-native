@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate, soberI18n } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -11,6 +12,7 @@ type Node = { type: string; props: any };
 
 // Run the real picker handlers and re-render its draft state without native UI.
 function picker(mode: 'AUTO' | 'MANUAL', days: number | null) {
+  let language: 'ko' | 'en' = 'ko';
   const states: unknown[] = [];
   let cursor = 0;
   const exports: Record<string, Function> = {};
@@ -25,6 +27,9 @@ function picker(mode: 'AUTO' | 'MANUAL', days: number | null) {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/i18n/react')) return mockI18n(() => language);
+        if (name.endsWith('/i18n/format')) return { formatDisplayDate };
+        if (name.endsWith('/i18n/sober')) return soberI18n;
         if (name === 'react')
           return {
             useState: (initial: unknown) => {
@@ -93,7 +98,13 @@ function picker(mode: 'AUTO' | 'MANUAL', days: number | null) {
       button: nodes.find((node) => node.type === 'Button')!,
     };
   };
-  return { render, applied };
+  return {
+    render,
+    applied,
+    setLanguage: (value: 'ko' | 'en') => {
+      language = value;
+    },
+  };
 }
 
 test('period and custom editors only commit to the goal card on completion', () => {
@@ -230,4 +241,21 @@ test('custom days retain saved values and reject invalid entries before they can
     assert.deepEqual(ui.applied.at(-1), ['MANUAL', Number(value)]);
     view.cards[2].props.onPress();
   }
+});
+
+test('English custom goal rejects zero, preserves the draft across languages and keeps MANUAL days', () => {
+  const ui = picker('AUTO', null);
+  ui.setLanguage('en');
+  assert.equal(ui.render().shell.props.title, 'How long would you like to cut back?');
+  ui.render().cards[2].props.onPress();
+  assert.equal(ui.render().input!.props.accessibilityLabel, 'Custom goal days');
+  ui.render().input!.props.onChangeText('0');
+  assert.equal(ui.render().editorButton!.props.disabled, true);
+  ui.render().input!.props.onChangeText('123');
+  ui.render().editorButton!.props.onPress();
+  assert.equal(ui.render().cards[2].props.note, 'Selected goal: 123 days');
+  ui.setLanguage('ko');
+  assert.equal(ui.render().cards[2].props.note, '선택한 목표: 123일');
+  ui.render().button.props.onPress();
+  assert.deepEqual(ui.applied.at(-1), ['MANUAL', 123]);
 });

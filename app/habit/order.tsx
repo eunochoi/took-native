@@ -1,3 +1,4 @@
+import { useI18n } from '../../src/i18n/react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { usePreventRemove } from 'expo-router/react-navigation';
@@ -21,6 +22,8 @@ import { useSettings } from '../../src/settings/SettingsProvider';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
 
 export default function HabitOrder() {
+  const { t } = useI18n();
+
   const { showNotice } = useNotice();
   const { colors, rem: appRem } = useAppTheme();
   const scrollRef = useAnimatedRef<ScrollView>();
@@ -50,8 +53,8 @@ export default function HabitOrder() {
   usePreventRemove(saving, () =>
     showNotice({
       tone: 'info',
-      title: '잠시만 기다려주세요',
-      message: '저장이 진행 중입니다. 완료될 때까지 기다려주세요.',
+      title: t('habit.wait'),
+      message: t('habit.savingHint'),
     }),
   );
   useEffect(() => {
@@ -85,7 +88,7 @@ export default function HabitOrder() {
     <>
       <BottomSheetPage
         backRoute="/habit"
-        title="습관 순서 설정"
+        title={t('habit.orderTitle')}
         scrollRef={scrollRef}
         scrollEnabled={!dragging}
         onBeforeClose={() => {
@@ -93,21 +96,25 @@ export default function HabitOrder() {
           if (saving)
             showNotice({
               tone: 'info',
-              title: '잠시만 기다려주세요',
-              message: '저장이 진행 중입니다. 완료될 때까지 기다려주세요.',
+              title: t('habit.wait'),
+              message: t('habit.savingHint'),
             });
           return false;
         }}
         footer={
           <FormSubmitButton
             disabled={!changes || saving || dragging || query.isPending || query.isError}
-            label="순서 저장하기"
+            label={t('habit.saveOrder')}
             onPress={() => {
               setSaving(true);
               void updateSettings({ habitOrder: isDefault ? [] : (order ?? []) })
                 .then(() => setSaved(true))
                 .catch((error: Error) =>
-                  showNotice({ tone: 'error', title: '저장하지 못했어요', message: error.message }),
+                  showNotice({
+                    tone: 'error',
+                    title: t('habit.saveFailed'),
+                    message: error.message,
+                  }),
                 )
                 .finally(() => setSaving(false));
             }}
@@ -127,7 +134,9 @@ export default function HabitOrder() {
                 className={`flex-1 min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-xl border border-theme-accent/30 px-2 py-2 active:opacity-65 ${!changes || saving || dragging ? 'opacity-40' : 'opacity-100'}`}
               >
                 <AppIcon name="undo" size={appRem * 1.125} color={colors.accentText} />
-                <Text className="shrink text-sm text-theme-accent-text">변경사항 취소</Text>
+                <Text className="shrink text-sm text-theme-accent-text">
+                  {t('habit.cancelChanges')}
+                </Text>
               </Pressable>
               <Pressable
                 accessibilityRole="button"
@@ -142,7 +151,7 @@ export default function HabitOrder() {
               >
                 <AppIcon name="restart-alt" size={appRem * 1.125} color={colors.accentText} />
                 <Text className="shrink text-center text-sm text-theme-accent-text">
-                  기본 순서로 초기화
+                  {t('habit.resetOrder')}
                 </Text>
               </Pressable>
             </View>

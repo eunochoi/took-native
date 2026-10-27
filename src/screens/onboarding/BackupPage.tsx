@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { InfoNotice } from '../../components/InfoNotice';
@@ -6,6 +7,7 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 import { MUTED_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 
 export function BackupPage({ onOpenWeb }: { onOpenWeb: () => void }) {
+  const { t } = useI18n();
   const { iconSizes } = useAppTheme();
   return (
     <View className="w-full grow justify-between gap-6">
@@ -14,10 +16,10 @@ export function BackupPage({ onOpenWeb }: { onOpenWeb: () => void }) {
           accessibilityRole="header"
           className="text-center text-[21px] leading-[28px] font-semibold tracking-tight"
         >
-          소중한 기록을 보관해요
+          {t('onboarding.backupTitle')}
         </Text>
         <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
-          삭제·기기 변경 전 백업하세요.
+          {t('onboarding.backupDescription')}
         </Text>
       </View>
       <View
@@ -25,44 +27,44 @@ export function BackupPage({ onOpenWeb }: { onOpenWeb: () => void }) {
       >
         <View className="gap-2">
           <Text className="text-center text-[15.75px] leading-[24.5px] font-semibold">
-            이 기기에 저장
+            {t('onboarding.localTitle')}
           </Text>
           <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
-            계정 없이 바로 시작할 수 있어요.{'\n'}앱의 기록은 이 기기에 저장돼요.
+            {t('onboarding.localDescription')}
           </Text>
         </View>
         <View className="h-px bg-theme-border/50" />
         <View className="gap-2">
           <Text className="text-center text-[15.75px] leading-[24.5px] font-semibold">
-            백업·복원
+            {t('onboarding.backupRestore')}
           </Text>
           <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
-            설정에서 기록을 백업하고,{'\n'}새 기기에서 백업 파일을 복원해요.
+            {t('onboarding.restoreDescription')}
           </Text>
         </View>
         <View className="h-px bg-theme-border/50" />
         <View className="gap-2">
           <Text className="text-center text-[15.75px] leading-[24.5px] font-semibold">
-            웹 서비스 이용
+            {t('onboarding.webTitle')}
           </Text>
           <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
-            웹 서비스는 계정으로 로그인해 서버에 저장하고,{'\n'}다른 기기에서도 기록을 볼 수 있어요.
+            {t('onboarding.webDescription')}
           </Text>
           <Pressable
             accessibilityRole="link"
-            accessibilityLabel="웹 서비스 열기"
+            accessibilityLabel={t('settings.webOpen')}
             onPress={onOpenWeb}
             className="min-h-12 flex-row items-center justify-center gap-2 ios:curve-continuous rounded-xl active:opacity-65"
           >
             <Text className="text-[14px] leading-[21px] font-semibold text-theme-accent">
-              웹 서비스 열기
+              {t('settings.webOpen')}
             </Text>
             <AppIcon name="arrow-forward" size={iconSizes.sm} className="text-theme-accent" />
           </Pressable>
         </View>
       </View>
       <InfoNotice textClassName="text-[10.5px] leading-[17.5px]" adjustsFontSizeToFit={false}>
-        BlooLog 앱과 웹 서비스의 기록은 자동으로 연동되지 않아요.
+        {t('onboarding.webNotice')}
       </InfoNotice>
     </View>
   );

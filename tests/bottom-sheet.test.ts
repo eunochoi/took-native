@@ -1,3 +1,4 @@
+import { mockI18n } from './helpers/i18n';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -146,6 +147,7 @@ function harness(
     },
     cancelAnimationFrame: () => {},
     require: (name: string) => {
+      if (name.endsWith('/i18n/react')) return mockI18n();
       if (name.endsWith('/NoticeProvider')) return { NoticeHost: () => null };
       const sheetModule = sheetModules[name.split('/').at(-1)!];
       if (sheetModule) return sheetModule;

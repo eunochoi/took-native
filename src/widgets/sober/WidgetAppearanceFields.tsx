@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { View } from 'react-native';
 import { PickerOption } from '../../components/PickerOption';
 import { Text } from '../../components/Text';
@@ -12,10 +13,11 @@ export function WidgetAppearanceFields({
   disabled: boolean;
   onChange: (patch: Partial<SoberWidgetSettings>) => void;
 }) {
+  const { t } = useI18n();
   return (
     <>
       <View className="gap-3">
-        <Text className="text-xl font-semibold">배경</Text>
+        <Text className="text-xl font-semibold">{t('widget.background')}</Text>
         <View className="flex-row gap-3">
           {(['white', 'black', 'transparent'] as const).map((background) => (
             <View key={background} className="flex-1">
@@ -23,13 +25,15 @@ export function WidgetAppearanceFields({
                 compact
                 selected={widgetSettings?.background === background}
                 disabled={disabled}
-                accessibilityLabel={`${background === 'white' ? '흰색' : background === 'black' ? '검정' : '투명'} 배경`}
+                accessibilityLabel={t('widget.backgroundChoice', {
+                  value: t(`widget.${background}`),
+                })}
                 onPress={() => onChange({ background })}
               >
                 <Text
                   className={`text-base ${widgetSettings?.background === background ? 'text-theme-accent-deep' : ''}`}
                 >
-                  {background === 'white' ? '흰색' : background === 'black' ? '검정' : '투명'}
+                  {t(`widget.${background}`)}
                 </Text>
               </PickerOption>
             </View>
@@ -37,7 +41,7 @@ export function WidgetAppearanceFields({
         </View>
       </View>
       <View className="gap-3">
-        <Text className="text-xl font-semibold">글씨 색상</Text>
+        <Text className="text-xl font-semibold">{t('widget.textColor')}</Text>
         <View className="flex-row gap-3">
           {(['black', 'white'] as const).map((textColor) => (
             <View key={textColor} className="flex-1">
@@ -45,13 +49,13 @@ export function WidgetAppearanceFields({
                 compact
                 selected={widgetSettings?.textColor === textColor}
                 disabled={disabled}
-                accessibilityLabel={textColor === 'black' ? '검정 글씨' : '흰색 글씨'}
+                accessibilityLabel={t('widget.textChoice', { value: t(`widget.${textColor}`) })}
                 onPress={() => onChange({ textColor })}
               >
                 <Text
                   className={`text-base ${widgetSettings?.textColor === textColor ? 'text-theme-accent-deep' : ''}`}
                 >
-                  {textColor === 'black' ? '검정' : '흰색'}
+                  {t(`widget.${textColor}`)}
                 </Text>
               </PickerOption>
             </View>

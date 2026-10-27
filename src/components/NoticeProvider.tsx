@@ -1,3 +1,5 @@
+import { useI18n } from '../i18n/react';
+import { translateErrorMessage } from '../i18n/errors';
 import {
   createContext,
   useCallback,
@@ -29,6 +31,7 @@ interface NoticeContextValue {
 const NoticeContext = createContext<NoticeContextValue | null>(null);
 
 export function NoticeProvider({ children }: { children: ReactNode }) {
+  const { language } = useI18n();
   const [notice, setNotice] = useState<Notice | null>(null);
   const [hosts, setHosts] = useState<string[]>([]);
   const sequence = useRef(0);
@@ -42,8 +45,13 @@ export function NoticeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!notice) return;
     AccessibilityInfo.announceForAccessibility(
-      [notice.title, notice.message].filter(Boolean).join('. '),
+      [notice.title, notice.message && translateErrorMessage(notice.message, language)]
+        .filter(Boolean)
+        .join('. '),
     );
+  }, [notice, language]);
+  useEffect(() => {
+    if (!notice) return;
     const timeout = setTimeout(
       () => {
         setNotice((current) => (current?.id === notice.id ? null : current));
@@ -89,6 +97,7 @@ function NoticeSurface({
   modal: boolean;
   active: boolean;
 }) {
+  const { language } = useI18n();
   const id = useId();
   const insets = useSafeAreaInsets();
   const { rem } = useAppTheme();
@@ -117,7 +126,7 @@ function NoticeSurface({
         </Text>
         {!!notice.message && (
           <Text className="mt-1 text-center text-sm text-theme-text-secondary">
-            {notice.message}
+            {translateErrorMessage(notice.message, language)}
           </Text>
         )}
       </View>

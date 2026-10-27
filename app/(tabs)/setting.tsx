@@ -19,11 +19,13 @@ import { TabBottomSpacer } from '../../src/components/TabBottomSpacer';
 import { Text } from '../../src/components/Text';
 import { Toolbar } from '../../src/components/Toolbar';
 import { useScrollFade } from '../../src/hooks/useScrollFade';
+import { useI18n } from '../../src/i18n/react';
 import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
 import { OnboardingSheet } from '../../src/screens/onboarding/OnboardingSheet';
 import { AppearanceSettingsSection } from '../../src/screens/settings/AppearanceSettingsSection';
 import { BackupDestinationPicker } from '../../src/screens/settings/BackupDestinationPicker';
 import { BackupSection } from '../../src/screens/settings/BackupSection';
+import { LanguageSettingsSection } from '../../src/screens/settings/LanguageSettingsSection';
 import { NotificationSettingsSection } from '../../src/screens/settings/NotificationSettingsSection';
 import type { Settings } from '../../src/settings/model';
 import { useSettings } from '../../src/settings/SettingsProvider';
@@ -32,6 +34,7 @@ import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 import { refreshSoberWidgets } from '../../src/widgets/sober';
 
 export default function SettingsScreen() {
+  const { t } = useI18n();
   const { showNotice } = useNotice();
   const { colors, rem: appRem, iconSizes } = useAppTheme();
   const fade = useScrollFade();
@@ -77,8 +80,8 @@ export default function SettingsScreen() {
     } catch (error) {
       showNotice({
         tone: 'error',
-        title: '설정을 저장하지 못했어요',
-        message: error instanceof Error ? error.message : '다시 시도해주세요.',
+        title: t('settings.saveFailed'),
+        message: error instanceof Error ? error.message : t('common.retryMessage'),
       });
     } finally {
       active.current = false;
@@ -94,17 +97,17 @@ export default function SettingsScreen() {
       if (exported && destination === 'device')
         showNotice({
           tone: 'success',
-          title: '백업 저장 완료',
+          title: t('settings.backupSaved'),
           message:
             exported > 1
-              ? `같은 세트의 백업 파일 ${exported}개를 선택한 폴더에 저장했어요. 복원할 때 모두 함께 선택해주세요.`
-              : '선택한 폴더에 백업 파일을 저장했어요.',
+              ? t('settings.backupPartsSaved', { count: exported })
+              : t('settings.backupSingleSaved'),
         });
     } catch (error) {
       showNotice({
         tone: 'error',
-        title: '백업하지 못했어요',
-        message: error instanceof Error ? error.message : '다시 시도해주세요.',
+        title: t('settings.backupFailed'),
+        message: error instanceof Error ? error.message : t('common.retryMessage'),
       });
     } finally {
       active.current = false;
@@ -128,8 +131,8 @@ export default function SettingsScreen() {
       if (mounted.current)
         showNotice({
           tone: 'error',
-          title: '복원하지 못했어요',
-          message: error instanceof Error ? error.message : '파일을 확인해주세요.',
+          title: t('settings.restoreFailed'),
+          message: error instanceof Error ? error.message : t('settings.checkFile'),
         });
     } finally {
       if (!restoreSelection.current) {
@@ -154,19 +157,19 @@ export default function SettingsScreen() {
       if (mounted.current)
         showNotice({
           tone: 'success',
-          title: '복원 완료',
-          message: '백업의 기록과 설정을 불러왔어요.',
+          title: t('settings.restored'),
+          message: t('settings.restoredMessage'),
         });
     } catch (error) {
       if (mounted.current)
         showNotice({
           tone: 'error',
-          title: restored ? '기록은 복원됐어요' : '복원하지 못했어요',
+          title: restored ? t('settings.restoredButReloadFailed') : t('settings.restoreFailed'),
           message: restored
-            ? '화면을 새로 불러오지 못했어요. 앱을 다시 실행해주세요.'
+            ? t('settings.restartAfterRestore')
             : error instanceof Error
               ? error.message
-              : '파일을 확인해주세요.',
+              : t('settings.checkFile'),
         });
     } finally {
       discardBackupSelection(uris);
@@ -191,7 +194,7 @@ export default function SettingsScreen() {
         <View collapsable={false} pointerEvents="none" className="h-0 overflow-visible">
           <ScrollEdgeFade edge="top" visible={fade.topVisible} />
         </View>
-        <PageTopSection title="앱 설정" hashtags="#맞춤 #취향" />
+        <PageTopSection title={t('settings.title')} hashtags={t('settings.hashtags')} />
         <Toolbar>
           <Pressable
             accessibilityRole="button"
@@ -201,30 +204,34 @@ export default function SettingsScreen() {
             className={`shrink-0 flex-row items-center justify-center gap-1.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
           >
             <AppIcon name="info" size={appRem * 1.2} className="text-theme-accent" />
-            <Text className="text-sm leading-snug text-theme-text-secondary">소개</Text>
+            <Text className="text-sm leading-snug text-theme-text-secondary">
+              {t('settings.about')}
+            </Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ disabled }}
             disabled={disabled}
-            accessibilityLabel="개인정보처리방침"
+            accessibilityLabel={t('settings.privacy')}
             onPress={() => openModal('/privacy')}
             className={`shrink-0 flex-row items-center justify-center gap-1.5 active:opacity-65 ${disabled ? 'opacity-40' : 'opacity-100'}`}
           >
             <AppIcon name="privacy-tip" size={appRem * 1.2} className="text-theme-accent" />
-            <Text className="text-sm leading-snug text-theme-text-secondary">개인정보처리방침</Text>
+            <Text className="text-sm leading-snug text-theme-text-secondary">
+              {t('settings.privacy')}
+            </Text>
           </Pressable>
           <Pressable
             accessibilityRole="link"
-            accessibilityLabel="웹 서비스 열기"
+            accessibilityLabel={t('settings.webOpen')}
             accessibilityState={{ disabled }}
             disabled={disabled}
             onPress={() => {
               void Linking.openURL('https://to-ok.me').catch(() =>
                 showNotice({
                   tone: 'error',
-                  title: '웹 서비스를 열지 못했어요',
-                  message: '인터넷 연결을 확인하고 다시 시도해주세요.',
+                  title: t('settings.webFailed'),
+                  message: t('settings.checkConnection'),
                 }),
               );
             }}
@@ -243,7 +250,7 @@ export default function SettingsScreen() {
           />
           <View className="gap-3">
             <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
-              습관 정렬
+              {t('settings.habitOrder')}
             </Text>
             <Pressable
               accessibilityRole="button"
@@ -252,10 +259,17 @@ export default function SettingsScreen() {
               onPress={() => openModal('/habit/order')}
               className={`py-2 px-1 flex-row items-center justify-between gap-2 ${disabled ? 'opacity-40' : 'opacity-100'}`}
             >
-              <Text className="text-base text-theme-text-secondary">습관 목록 순서 개인화</Text>
+              <Text className="text-base text-theme-text-secondary">
+                {t('settings.customHabitOrder')}
+              </Text>
               <AppIcon name="low-priority" size={iconSizes.md} color={colors.accent} />
             </Pressable>
           </View>
+          <LanguageSettingsSection
+            value={settings.language}
+            disabled={disabled}
+            onChange={(language) => change({ language })}
+          />
           <BackupSection
             activity={activity}
             onExport={() => setBackupPicker(true)}
@@ -280,9 +294,10 @@ export default function SettingsScreen() {
       <ConfirmModal
         danger
         visible={pendingRestore !== null}
-        title="백업으로 복원할까요?"
-        message={'기록·사진·설정이 백업 내용으로 바뀌어요.\n복원 전 현재 데이터를 백업해주세요.'}
-        confirmLabel="복원"
+        title={t('settings.restoreConfirm')}
+        message={t('settings.restoreWarning')}
+        confirmLabel={t('settings.restore')}
+        cancelLabel={t('common.cancel')}
         onCancel={cancelRestore}
         onConfirm={() => void restoreSelected()}
       />

@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate, soberI18n } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -55,6 +56,9 @@ for (const [label, record, events, elapsed] of [
     runInNewContext(source, {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/i18n/react')) return mockI18n();
+        if (name.endsWith('/i18n/format')) return { formatDisplayDate };
+        if (name.endsWith('/i18n/sober')) return soberI18n;
         if (name.endsWith('theme/colors')) return require('../src/theme/colors');
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name.endsWith('domain/constants')) return require('../src/domain/constants');

@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate, soberI18n } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
@@ -117,6 +118,9 @@ function screen() {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/i18n/react')) return mockI18n();
+        if (name.endsWith('/i18n/format')) return { formatDisplayDate };
+        if (name.endsWith('/i18n/sober')) return soberI18n;
         if (name.endsWith('/SoberRestartActions'))
           return {
             SoberRestartActions: ({ children }: any) =>
@@ -329,6 +333,9 @@ test('shared restart card retains memo text and menu behavior while supporting r
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/i18n/react')) return mockI18n();
+        if (name.endsWith('/i18n/format')) return { formatDisplayDate };
+        if (name.endsWith('/i18n/sober')) return soberI18n;
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'date-fns') return require(name);
         if (name === 'react-native') return { View: 'View' };

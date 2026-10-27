@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -14,6 +15,7 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 import { HomeTodayItem } from './HomeTodayItem';
 
 export function HomeTodaySober() {
+  const { t } = useI18n();
   const db = useSQLiteContext();
   const router = useRouter();
   const { settings } = useSettings();
@@ -28,7 +30,7 @@ export function HomeTodaySober() {
   const sober = sortSobers(sobers.data ?? [], settings, restarts.data ?? [], now)[0];
   const pending = sobers.isPending || (!!sober && restarts.isPending);
   const error = sobers.isError || (!!sober && restarts.isError);
-  const status = error ? '불러오기 실패' : (sober?.name ?? '기록 없음');
+  const status = error ? t('home.loadFailed') : (sober?.name ?? t('home.noRecord'));
   const days =
     sober && !pending && !error
       ? Math.floor(
@@ -42,10 +44,12 @@ export function HomeTodaySober() {
 
   return (
     <HomeTodayItem
-      title="거리두기"
+      title={t('navigation.sober')}
       status={status}
       pending={pending}
-      accessibilityLabel={`거리두기 이동, ${status}${days !== null ? `, ${days}일차` : ''}`}
+      accessibilityLabel={t('home.soberLinkStatus', {
+        value: `${status}${days !== null ? `, ${t('home.dayOrdinal', { count: days })}` : ''}`,
+      })}
       onPress={() => (sober ? openModal(`/sober/${sober.id}`) : router.push('/sober'))}
     >
       {days !== null ? (
@@ -56,7 +60,7 @@ export function HomeTodaySober() {
           className="w-full text-center text-2xl leading-tight font-bold"
           style={{ color: resolveIconColor(sober?.icon_color ?? 'theme', colors.accent) }}
         >
-          {`${days}일차`}
+          {t('home.dayOrdinal', { count: days })}
         </Text>
       ) : (
         <AppIcon name="sober" size={rem * 3.5} className="text-theme-text-disabled" />

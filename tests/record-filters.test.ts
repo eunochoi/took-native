@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate, soberI18n } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -30,7 +31,7 @@ function nodes(tree: any): any[] {
       : []),
   ];
 }
-function harness(file: string, results: Record<string, any> = {}) {
+function harness(file: string, results: Record<string, any> = {}, language: 'ko' | 'en' = 'ko') {
   const state: any[] = [];
   let cursor = 0;
   const routes: unknown[] = [];
@@ -47,6 +48,9 @@ function harness(file: string, results: Record<string, any> = {}) {
       {
         exports,
         require: (name: string) => {
+          if (name.endsWith('/i18n/sober')) return soberI18n;
+          if (name.endsWith('/i18n/react')) return mockI18n(language);
+          if (name.endsWith('/i18n/format')) return { formatDisplayDate };
           if (name.endsWith('theme/classes')) return require('../src/theme/classes');
           if (name.endsWith('theme/colors')) return require('../src/theme/colors');
           if (name.endsWith('domain/selection')) return require('../src/domain/selection');
@@ -730,4 +734,27 @@ test('exclusion-only filter hides the achievement card and keeps recorded items 
   assert.deepEqual(habitIds(ui), [1]);
   applyPageFilter(ui, 'Habit', { completedOnly: false, priorities: [] });
   assert(nodes(ui.render()).some((node) => node.type === 'HabitTodayProgress'));
+});
+
+test('English trend dates use numeric US order while preserving percentages, bars and record inputs', () => {
+  const results = { completions: { data: [{ habit_id: 1, date: today }], isError: false } };
+  const props = { today, habits: [habit(1, 1), habit(2, 1), habit(3, 1)], onClose: () => {} };
+  const original = JSON.stringify({ results, props });
+  const korean = harness('src/screens/habit/HabitFlowSheet.tsx', results).render(props);
+  const english = harness('src/screens/habit/HabitFlowSheet.tsx', results, 'en').render(props);
+  const texts = (tree: any) =>
+    nodes(tree)
+      .filter((node) => node.type === 'Text')
+      .flatMap((node) => [node.props.children].flat())
+      .join('');
+  assert(texts(korean).includes('2026.10.8 ~ 10.14'));
+  assert(texts(english).includes('10/8/2026 ~ 10/14'));
+  assert(texts(english).includes('33.3%'));
+  assert(!/[가-힣]/.test(texts(english)));
+  const heights = (tree: any) =>
+    nodes(tree)
+      .filter((node) => node.props.style?.height !== undefined)
+      .map((node) => node.props.style.height);
+  assert.deepEqual(heights(english), heights(korean));
+  assert.equal(JSON.stringify({ results, props }), original);
 });

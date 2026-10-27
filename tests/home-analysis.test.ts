@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate, soberI18n } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -19,6 +20,7 @@ function render(
   props: any,
   selection?: unknown,
   scenario: {
+    language?: 'ko' | 'en';
     results?: Record<string, any>;
     routes?: unknown[];
     layoutWidth?: number;
@@ -41,6 +43,9 @@ function render(
     {
       exports,
       require: (dependency: string) => {
+        if (dependency.endsWith('/i18n/react')) return mockI18n(scenario.language ?? 'ko');
+        if (dependency.endsWith('/i18n/format')) return { formatDisplayDate };
+        if (dependency.endsWith('/i18n/sober')) return soberI18n;
         const componentName = dependency.split('/').at(-1)!;
         if (
           ['HomeTodayItem', 'HomeTodayDiary', 'HomeTodayHabit', 'HomeTodaySober'].includes(
@@ -52,10 +57,15 @@ function render(
           };
         if (dependency === 'react-native-svg')
           return { __esModule: true, default: 'Svg', Circle: 'Circle' };
+        if (dependency.endsWith('/AnalysisHeader'))
+          return {
+            AnalysisHeader: (headerProps: any) =>
+              render('AnalysisHeader', headerProps, undefined, scenario),
+          };
         if (dependency.endsWith('/DiaryStatisticsSummary'))
           return {
             DiaryStatisticsSummary: (summaryProps: any) =>
-              render('DiaryStatisticsSummary', summaryProps),
+              render('DiaryStatisticsSummary', summaryProps, undefined, scenario),
           };
         if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
@@ -725,4 +735,180 @@ test('habit donut follows the calendar progress colors at the 25 and 75 percent 
     if (completed) assert.equal(circles[1].props.stroke, color);
     assert.equal(circles.length, completed === 0 ? 1 : 2);
   }
+});
+
+test('English home cards translate emotions, counts and empty states while preserving diary navigation', () => {
+  const routes: unknown[] = [];
+  const tree = render('HomeTodaySection', { today: '2026-10-05' }, undefined, {
+    language: 'en',
+    routes,
+    results: { diary: { data: { id: 42, emotion: 1 } } },
+  });
+  const buttons = nodes(tree).filter((node) => node.type === 'Pressable');
+  assert(text(buttons[0]).includes("Today's diary"));
+  assert(text(buttons[0]).includes("Recorded 'Joyful'"));
+  assert(text(buttons[1]).includes('Add a habit'));
+  assert(text(buttons[2]).includes('No record'));
+  assert(!/[가-힣]/.test(text(tree)));
+  buttons[0].props.onPress();
+  assert.deepEqual(routes, ['/diary/42']);
+  const pending = render('HomeTodaySection', { today: '2026-10-05' }, undefined, {
+    language: 'en',
+    results: { diary: { isPending: true } },
+  });
+  assert(nodes(pending).some((node) => node.props.accessibilityLabel === "Checking Today's diary"));
+});
+
+test('English Cut Back card translates the day count and preserves a user-authored Korean name', () => {
+  const tree = render('HomeTodaySection', { today: '2026-10-05' }, undefined, {
+    language: 'en',
+    results: {
+      sobers: {
+        data: [
+          {
+            id: 7,
+            name: '내 기록',
+            icon_key: 'smoking',
+            icon_color: 'theme',
+            initial_started_at: '2026-10-01T00:00:00.000Z',
+            goal_mode: 'AUTO',
+            goal_days: null,
+          },
+        ],
+      },
+      restarts: { data: [] },
+    },
+  });
+  const card = nodes(tree).find((node) =>
+    node.props.accessibilityLabel?.startsWith('Open Cut Back'),
+  );
+  assert(text(card).includes('Day 5'));
+  assert(text(card).includes('내 기록'));
+  assert(!text(card).includes('일차'));
+});
+
+test('English diary analysis preserves totals, streaks and monthly bar heights', () => {
+  const stats = {
+    ...emptyStats(),
+    total: 3,
+    current: 4,
+    longest: 8,
+    monthlyAverage: 1.5,
+    monthly: [2, 1, ...Array(10).fill(0)],
+  };
+  const snapshot = JSON.stringify(stats);
+  const korean = render('DiaryAnalysis', { stats, year: 2024 });
+  const english = render('DiaryAnalysis', { stats, year: 2024 }, undefined, { language: 'en' });
+  const content = text(english);
+  for (const label of [
+    'Diary records',
+    '2024 · 3 logs',
+    'Current streak',
+    'Longest streak',
+    'Monthly average',
+    '4d',
+    '8d',
+    '1.5logs',
+  ])
+    assert(content.includes(label), label);
+  assert(!/[가-힣]/.test(content));
+  const heights = (tree: any) =>
+    nodes(tree)
+      .filter((node) => node.props.style?.height !== undefined)
+      .map((node) => node.props.style.height);
+  assert.deepEqual(heights(english), heights(korean));
+  assert.equal(JSON.stringify(stats), snapshot);
+});
+
+test('English emotion statistics retain half-year counts, all emotion cards and group proportions', () => {
+  const stats = emptyStats();
+  stats.halves[0][0] = 1;
+  stats.halves[0][10] = 2;
+  stats.halves[1][6] = 4;
+  stats.emotions = stats.halves[0].map((count, index) => count + stats.halves[1][index]);
+  const snapshot = JSON.stringify(stats);
+  const english = render('EmotionStats', { stats, year: 2024 }, 1, { language: 'en' });
+  assert(text(english).includes('First half · 3 logs'));
+  assert(!/[가-힣]/.test(text(english)));
+  const cells = nodes(english).filter((node) => node.props?.children?.[0]?.type === 'EmotionImage');
+  assert.equal(cells.length, 12);
+  assert.equal(text(cells[0]), 'Happy1time');
+  assert.equal(text(cells[10]), 'Tired2times');
+  const proportions = nodes(english).find((node) =>
+    node.props.accessibilityLabel?.startsWith('Emotion proportions'),
+  );
+  assert(proportions.props.accessibilityLabel.includes('Positive 1 time 33%'));
+  assert(proportions.props.accessibilityLabel.includes('Neutral 2 times 67%'));
+  const second = render('EmotionStats', { stats, year: 2024 }, 2, { language: 'en' });
+  assert(text(second).includes('Second half · 4 logs'));
+  assert.equal(JSON.stringify(stats), snapshot);
+});
+
+test('English habit rankings keep the selected order, counts, names and detail destinations', () => {
+  const first = {
+    id: 1,
+    name: '나의 습관',
+    icon_key: 'water',
+    icon_color: 'theme',
+    priority: 2,
+    count: 3,
+  };
+  const second = { ...first, id: 2, name: '내 기록', count: 1 };
+  const stats = { top: [first, second], bottom: [second, first] };
+  const routes: unknown[] = [];
+  const korean = render('HabitAnalysis', { stats, year: 2024 }, 'bottom');
+  const english = render('HabitAnalysis', { stats, year: 2024 }, 'bottom', {
+    language: 'en',
+    routes,
+  });
+  assert(text(english).includes('Habit records'));
+  assert(text(english).includes('Bottom 3'));
+  const rows = english.props.children[2].props.children;
+  assert.deepEqual(
+    rows.map((row: any) => row.key),
+    korean.props.children[2].props.children.map((row: any) => row.key),
+  );
+  assert(text(rows[0]).includes('내 기록'));
+  assert(text(rows[0]).includes('1time'));
+  rows[0].props.onPress();
+  assert.deepEqual(routes, ['/habit/2']);
+});
+
+test('English Cut Back rankings preserve intervals, status, names and navigation', () => {
+  const sobers = [1, 2].map((id) => ({
+    id,
+    name: `내 기록 ${id}`,
+    icon_key: 'coffee',
+    icon_color: 'theme',
+    initial_started_at: `2026-10-0${id}T00:00:00.000Z`,
+    goal_mode: 'AUTO',
+    goal_days: null,
+  }));
+  const restarts = [{ id: 1, sober_id: 1, restarted_at: '2026-10-04T00:00:00.000Z' }];
+  const snapshot = JSON.stringify({ sobers, restarts });
+  const routes: unknown[] = [];
+  const korean = render('SoberAnalysis', { sobers, restarts });
+  const english = render('SoberAnalysis', { sobers, restarts }, undefined, {
+    language: 'en',
+    routes,
+  });
+  assert(text(english).includes('Cut Back records'));
+  assert(text(english).includes('In progress'));
+  assert(text(english).includes('Ended'));
+  const rows = english.props.children[2].props.children;
+  assert.deepEqual(
+    rows.map((row: any) => row.key),
+    korean.props.children[2].props.children.map((row: any) => row.key),
+  );
+  assert(
+    rows.every(
+      (row: any) =>
+        !/[가-힣]/.test(
+          row.props.accessibilityLabel.replace(row.props.accessibilityLabel.split(',')[0], ''),
+        ),
+    ),
+  );
+  rows[0].props.onPress();
+  assert.deepEqual(routes, [`/sober/${rows[0].key.split(':')[0]}`]);
+  assert.equal(JSON.stringify({ sobers, restarts }), snapshot);
 });

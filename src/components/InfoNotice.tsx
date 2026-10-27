@@ -10,11 +10,13 @@ export function InfoNotice({
   className,
   textClassName,
   adjustsFontSizeToFit = true,
+  numberOfLines = 1,
 }: {
   children: ReactNode;
   className?: string;
   textClassName?: string;
   adjustsFontSizeToFit?: boolean;
+  numberOfLines?: number;
 }) {
   const { colors, rem: appRem } = useAppTheme();
   return (
@@ -23,7 +25,7 @@ export function InfoNotice({
         <AppIcon name="info-outline" size={appRem} color={colors.accent} accessible={false} />
       </View>
       <Text
-        numberOfLines={1}
+        numberOfLines={numberOfLines}
         adjustsFontSizeToFit={adjustsFontSizeToFit}
         className={twMerge(
           'flex-1 text-xs leading-5 text-theme-accent-deep tracking-tighter',

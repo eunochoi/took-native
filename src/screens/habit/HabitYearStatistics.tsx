@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '../../components/Text';
@@ -17,6 +18,8 @@ export function HabitYearStatistics({
   today: string;
   unavailable: boolean;
 }) {
+  const { t } = useI18n();
+
   const [year, setYear] = useState(Number(today.slice(0, 4)));
   const yearly = useMemo(
     () => getHabitYearSummary(year, dates, startedDate, today),
@@ -25,13 +28,23 @@ export function HabitYearStatistics({
   return (
     <View className="gap-6">
       <Text accessibilityRole="header" className="text-xl font-semibold">
-        연간 기록
+        {t('habit.yearly')}
       </Text>
       <HabitStatisticsSummary
         stats={[
-          { label: '실천 횟수', icon: 'check', value: yearly.completed, unit: '회' },
-          { label: '놓친 횟수', icon: 'close', value: yearly.missed, unit: '회' },
-          { label: '실천율', icon: 'habit-rate', value: yearly.rate ?? '—', unit: '%' },
+          {
+            label: t('habit.completionCount'),
+            icon: 'check',
+            value: yearly.completed,
+            unit: t('habit.timesUnit'),
+          },
+          {
+            label: t('habit.missedCount'),
+            icon: 'close',
+            value: yearly.missed,
+            unit: t('habit.timesUnit'),
+          },
+          { label: t('habit.rate'), icon: 'habit-rate', value: yearly.rate ?? '—', unit: '%' },
         ]}
         unavailable={unavailable}
       />

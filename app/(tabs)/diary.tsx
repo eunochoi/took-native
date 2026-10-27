@@ -1,7 +1,7 @@
+import { useI18n } from '../../src/i18n/react';
 import { selectionSummary } from '../../src/domain/selection';
 import {
   DIARY_SEASONS,
-  DIARY_EMOTION_GROUPS,
   diaryPeriodLabel,
   type DiarySeason,
   type DiaryEmotionGroup,
@@ -43,6 +43,8 @@ type Row =
   | { kind: 'diary'; diary: DiaryDetail; first: boolean };
 
 export default function DiaryList() {
+  const { t, language } = useI18n();
+
   const { showNotice } = useNotice();
   const { colors, rem: appRem } = useAppTheme();
   const db = useSQLiteContext();
@@ -78,7 +80,7 @@ export default function DiaryList() {
   const emptyContent = failedWithoutData ? (
     <QueryError
       className="min-h-64"
-      message="일기 목록을 불러오지 못했어요."
+      message={t('diary.listFailed')}
       onRetry={() => {
         void list.refetch();
       }}
@@ -88,14 +90,21 @@ export default function DiaryList() {
   ) : (
     <EmptyState
       icon={<AppIcon name="diary" size={appRem * 1.875} color={colors.accent} />}
-      title={hasFilter ? '선택한 조건의 일기가 없어요.' : '아직 작성한 일기가 없어요.'}
-      description={
-        hasFilter
-          ? '필터를 바꾸거나 새로운 일기를 작성해 보세요.'
-          : '오늘의 감정과 생각을 첫 번째 일기로 남겨보세요.'
-      }
+      title={hasFilter ? t('diary.filteredEmpty') : t('diary.empty')}
+      description={hasFilter ? t('diary.filteredHint') : t('diary.emptyHint')}
     />
   );
+  const periodLabel =
+    language === 'ko' || (year !== null && seasons.length > 0)
+      ? diaryPeriodLabel(year, seasons)
+      : seasons.length
+        ? (Object.keys(DIARY_SEASONS) as DiarySeason[])
+            .filter((season) => seasons.includes(season))
+            .map((season) => `${t(`diary.${season}`)} (${t(`diary.${season}Range`)})`)
+            .join(' · ')
+        : year === null
+          ? t('diary.allPeriod')
+          : t('diary.yearAll', { count: year });
   return (
     <ColorView className={PAGE_CLASS_NAME}>
       <FlatList
@@ -119,14 +128,14 @@ export default function DiaryList() {
               </View>
             );
           if (item.kind === 'title')
-            return <PageTopSection title="일기 목록" hashtags="#감정 #끄적끄적" />;
+            return <PageTopSection title={t('diary.listTitle')} hashtags={t('diary.listTags')} />;
           if (item.kind === 'toolbar')
             return (
               <Toolbar>
                 <ToolbarSortButton
                   sort={settings.diarySort}
-                  sortLabel="날짜"
-                  accessibilityLabel="일기 정렬"
+                  sortLabel={t('diary.dateLabel')}
+                  accessibilityLabel={t('diary.sortTitle')}
                   onPress={() => setPicker('sort')}
                 />
                 <ToolbarFilterButton
@@ -135,31 +144,34 @@ export default function DiaryList() {
                       year === null
                         ? null
                         : year === Number(today.slice(0, 4))
-                          ? '올해'
-                          : `${String(year % 100).padStart(2, '0')}년`,
+                          ? t('diary.thisYear')
+                          : t('diary.shortYear', { value: String(year % 100).padStart(2, '0') }),
                       selectionSummary(
-                        seasons.map((season) => DIARY_SEASONS[season].label),
+                        seasons.map((season) => t(`diary.${season}`)),
                         4,
                         '',
                       ) || null,
                       selectionSummary(
-                        emotionGroups.map((group) => DIARY_EMOTION_GROUPS[group].label),
+                        emotionGroups.map((group) => t(`diary.${group}`)),
                         3,
                         '',
                       ) || null,
                     ]
                       .filter(Boolean)
-                      .join(' · ') || '필터'
+                      .join(' · ') || t('diary.filter')
                   }
-                  accessibilityLabel={`일기 필터, ${diaryPeriodLabel(year, seasons)} · ${selectionSummary(
-                    emotionGroups.map((group) => DIARY_EMOTION_GROUPS[group].label),
-                    3,
-                    '전체 감정',
-                  )}`}
+                  accessibilityLabel={t('diary.filterSummary', {
+                    title: periodLabel,
+                    value: selectionSummary(
+                      emotionGroups.map((group) => t(`diary.${group}`)),
+                      3,
+                      t('diary.allEmotions'),
+                    ),
+                  })}
                   onPress={() => setPicker('filter')}
                 />
                 <ToolbarAddButton
-                  label="일기 추가"
+                  label={t('diary.add')}
                   onPress={() =>
                     openModal({ pathname: '/diary/new', params: { allowDateChange: 'true' } })
                   }
@@ -192,7 +204,7 @@ export default function DiaryList() {
               {list.isFetchingNextPage && (
                 <ActivityIndicator
                   color={colors.accent}
-                  accessibilityLabel="일기 목록 더 불러오는 중"
+                  accessibilityLabel={t('diary.loadingMore')}
                 />
               )}
               {list.isError && list.data && (
@@ -216,8 +228,8 @@ export default function DiaryList() {
 
       {picker === 'sort' && (
         <RecordSortPicker
-          title="일기 정렬"
-          sortLabel="날짜 정렬"
+          title={t('diary.sortTitle')}
+          sortLabel={t('diary.dateSort')}
           sort={settings.diarySort}
           onClose={() => setPicker(null)}
           onApply={(sort) => {
@@ -226,7 +238,11 @@ export default function DiaryList() {
             void updateSettings({ diarySort: sort })
               .then(() => scroll.current?.scrollToOffset({ offset: 0, animated: true }))
               .catch((error: Error) =>
-                showNotice({ tone: 'error', title: '설정 저장 실패', message: error.message }),
+                showNotice({
+                  tone: 'error',
+                  title: t('diary.settingsFailed'),
+                  message: error.message,
+                }),
               );
           }}
         />

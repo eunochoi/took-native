@@ -1,3 +1,4 @@
+import { useI18n } from '../../src/i18n/react';
 import { PageTopSection } from '../../src/components/PageTopSection';
 import { EmptyState } from '../../src/components/EmptyState';
 import { useModalNavigation } from '../../src/navigation/ModalNavigationProvider';
@@ -43,6 +44,8 @@ type Row =
   | { kind: 'state' }
   | { kind: 'sober'; sober: Sober; first: boolean };
 export default function SoberList() {
+  const { t } = useI18n();
+
   const db = useSQLiteContext();
   const { colors, rem: appRem } = useAppTheme();
   const { openModal } = useModalNavigation();
@@ -76,8 +79,12 @@ export default function SoberList() {
   );
   const periodFilter = SOBER_RECORD_FILTERS.find((option) => option.days === filter.minimumDays)!;
   const filterLabel =
-    [filter.priorityOnly ? '중요' : null, periodFilter.shortLabel].filter(Boolean).join(' · ') ||
-    '필터';
+    [
+      filter.priorityOnly ? t('sober.priorityShort') : null,
+      periodFilter.days === 0 ? '' : t(`sober.period${periodFilter.days}Short`),
+    ]
+      .filter(Boolean)
+      .join(' · ') || t('habit.filter');
   const ready = !!list.data && !!restarts.data;
   const failed = list.isError || restarts.isError;
   const disabledAdd = !ready || failed;
@@ -94,7 +101,7 @@ export default function SoberList() {
     void updateSettings(patch)
       .then(() => scroll.current?.scrollToOffset({ offset: 0, animated: true }))
       .catch((error: Error) =>
-        showNotice({ tone: 'error', title: '설정을 저장하지 못했어요', message: error.message }),
+        showNotice({ tone: 'error', title: t('settings.saveFailed'), message: error.message }),
       );
   return (
     <ColorView className={PAGE_CLASS_NAME}>
@@ -119,7 +126,7 @@ export default function SoberList() {
               </View>
             );
           if (item.kind === 'title')
-            return <PageTopSection title="거리두기" hashtags="#절제 #디톡스" />;
+            return <PageTopSection title={t('sober.title')} hashtags={t('sober.tags')} />;
           if (item.kind === 'toolbar')
             return (
               <Toolbar>
@@ -127,12 +134,15 @@ export default function SoberList() {
                   sort={settings.soberSort}
                   recordSort={settings.soberRecordSort}
                   priorityFirst={settings.soberPriorityFirst}
-                  accessibilityLabel="거리두기 항목 정렬"
+                  accessibilityLabel={t('sober.sortItem')}
                   onPress={() => setSortOpen(true)}
                 />
                 <ToolbarFilterButton
                   label={filterLabel}
-                  accessibilityLabel={`거리두기 필터, ${filter.priorityOnly ? '중요한 항목만' : '중요도 전체'}, 현재 기록 ${periodFilter.label}`}
+                  accessibilityLabel={t('sober.filterSummary', {
+                    title: filter.priorityOnly ? t('sober.priorityOnly') : t('sober.allPriorities'),
+                    value: t(`sober.period${periodFilter.days}`),
+                  })}
                   onPress={() => setFilterOpen(true)}
                 />
                 <ToolbarAddButton
@@ -141,7 +151,7 @@ export default function SoberList() {
                     if (sorted.length >= MAX_SOBER_COUNT) {
                       showNotice({
                         tone: 'info',
-                        title: `거리두기는 최대 ${MAX_SOBER_COUNT}개까지 만들 수 있어요.`,
+                        title: t('sober.maxItems', { count: MAX_SOBER_COUNT }),
                       });
                       return;
                     }
@@ -171,7 +181,7 @@ export default function SoberList() {
               {failed ? (
                 <QueryError
                   className="min-h-64"
-                  message="거리두기 목록을 불러오지 못했어요."
+                  message={t('sober.listFailed')}
                   onRetry={() => {
                     void list.refetch();
                     void restarts.refetch();
@@ -179,21 +189,13 @@ export default function SoberList() {
                 />
               ) : !ready ? (
                 <View className={EMPTY_STATE_CLASS_NAME}>
-                  <Text className="text-theme-text-secondary">기록을 불러오는 중이에요.</Text>
+                  <Text className="text-theme-text-secondary">{t('sober.recordsLoading')}</Text>
                 </View>
               ) : (
                 <EmptyState
                   icon={<AppIcon name="sober" size={appRem * 1.875} color={colors.accent} />}
-                  title={
-                    hasFilter
-                      ? '선택한 조건의 거리두기가 없어요.'
-                      : '아직 시작한 거리두기가 없어요.'
-                  }
-                  description={
-                    hasFilter
-                      ? '필터 조건을 바꿔보세요.'
-                      : '잠시 거리를 두고 싶은 것을 추가해보세요.'
-                  }
+                  title={hasFilter ? t('sober.filteredEmpty') : t('sober.empty')}
+                  description={hasFilter ? t('habit.filterHint') : t('sober.emptyHint')}
                 />
               )}
             </View>
@@ -205,7 +207,7 @@ export default function SoberList() {
               <View style={{ paddingHorizontal: '5%' }}>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="거리두기 추가"
+                  accessibilityLabel={t('sober.add')}
                   disabled={disabledAdd}
                   onPress={() => {
                     if (!disabledAdd && sorted.length < MAX_SOBER_COUNT) openModal('/sober/new');
@@ -222,7 +224,7 @@ export default function SoberList() {
             {ready && filtered.length > 0 && failed ? (
               <QueryError
                 className="pt-4"
-                message="거리두기 목록을 불러오지 못했어요."
+                message={t('sober.listFailed')}
                 onRetry={() => {
                   void list.refetch();
                   void restarts.refetch();
@@ -248,12 +250,12 @@ export default function SoberList() {
       )}
       {sortOpen && (
         <RecordSortPicker
-          title="거리두기 정렬"
-          sortLabel="생성일"
+          title={t('sober.sort')}
+          sortLabel={t('ui.createdDate')}
           sort={settings.soberSort}
           recordSort={settings.soberRecordSort}
           priorityFirst={settings.soberPriorityFirst}
-          ascendingLabel="과거순"
+          ascendingLabel={t('ui.oldest')}
           onClose={() => setSortOpen(false)}
           onApply={(sort, priorityFirst, recordSort) => {
             setSortOpen(false);

@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate, soberI18n } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -42,6 +43,9 @@ function scenario(file = '../app/sober/[id]/index.tsx') {
       {
         exports,
         require: (name: string) => {
+          if (name.endsWith('/i18n/sober')) return soberI18n;
+          if (name.endsWith('/i18n/react')) return mockI18n();
+          if (name.endsWith('/i18n/format')) return { formatDisplayDate };
           if (name.endsWith('/SoberRestartActions')) {
             const actions: Record<string, Function> = {};
             load('../src/screens/sober/SoberRestartActions.tsx', actions);

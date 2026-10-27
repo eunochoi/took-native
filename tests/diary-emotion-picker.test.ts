@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -16,6 +17,7 @@ function nodes(tree: any): any[] {
 }
 
 function picker(value: number | null, allowDeselect = false) {
+  let language: 'ko' | 'en' = 'ko';
   const state: any[] = [];
   const refs: any[] = [];
   let cursor = 0;
@@ -41,6 +43,8 @@ function picker(value: number | null, allowDeselect = false) {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/i18n/react')) return mockI18n(() => language);
+        if (name.endsWith('/i18n/format')) return { formatDisplayDate };
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react')
           return {
@@ -102,6 +106,9 @@ function picker(value: number | null, allowDeselect = false) {
   }
   return {
     render,
+    setLanguage: (value: 'ko' | 'en') => {
+      language = value;
+    },
     dimensions,
     theme,
     applied,
@@ -279,4 +286,19 @@ test('editing reveals the initial row after opening and category changes reset t
     nativeEvent: { layout: { y: 200 } },
   });
   assert.equal(ui.scrolls.length, 1);
+});
+
+test('emotion picker translates names and descriptions while preserving selection and stored emotion IDs', () => {
+  const ui = picker(10);
+  ui.setLanguage('en');
+  assert.equal(ui.render().shell.props.title, 'How are you feeling today?');
+  assert.equal(ui.option('Neutral category').props.selected, true);
+  assert.equal(ui.option('Tired, Low on energy and feeling worn out').props.selected, true);
+  ui.option('Mixed, A subtle mix of good and difficult feelings').props.onPress();
+  ui.setLanguage('ko');
+  assert.equal(ui.emotion(11).props.selected, true);
+  ui.confirm();
+  assert.deepEqual(ui.applied, []);
+  ui.finishClose();
+  assert.deepEqual(ui.applied, [11]);
 });

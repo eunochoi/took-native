@@ -1,4 +1,6 @@
 // @refresh reset
+import { useI18n } from '../src/i18n/react';
+import { translateErrorMessage } from '../src/i18n/errors';
 import { themeColors } from '../src/theme/colors';
 import { AppThemeProvider, useAppTheme } from '../src/theme/AppThemeProvider';
 import '../global.css';
@@ -124,6 +126,7 @@ function Navigation({ onReady }: { onReady: () => void }) {
   );
 }
 export default function RootLayout() {
+  const { t, language } = useI18n();
   const [error, setError] = useState<Error | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [navigationReady, setNavigationReady] = useState(false);
@@ -163,9 +166,9 @@ export default function RootLayout() {
                 void SplashScreen.hideAsync();
               }}
             >
-              <NativeText style={{ fontSize: 20 }}>앱을 준비하지 못했어요</NativeText>
-              <NativeText>{error.message}</NativeText>
-              <NativeText>기존 기록은 삭제하지 않았습니다. 다시 시도해주세요.</NativeText>
+              <NativeText style={{ fontSize: 20 }}>{t('ui.startupFailed')}</NativeText>
+              <NativeText>{translateErrorMessage(error.message, language)}</NativeText>
+              <NativeText>{t('ui.recordsPreserved')}</NativeText>
               <Pressable
                 accessibilityRole="button"
                 onPress={() => {
@@ -181,7 +184,7 @@ export default function RootLayout() {
                   borderCurve: Platform.OS === 'ios' ? 'continuous' : undefined,
                 }}
               >
-                <NativeText>다시 시도</NativeText>
+                <NativeText>{t('common.retry')}</NativeText>
               </Pressable>
             </SafeAreaView>
           ) : (

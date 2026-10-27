@@ -1,7 +1,9 @@
+import { t, type Language } from '../../i18n/core';
+import { formatSoberDuration, formatSoberGoal } from '../../i18n/sober';
 import { FlexWidget, OverlapWidget, SvgWidget, TextWidget } from 'react-native-android-widget';
 import type { Sober, SoberRestart } from '../../db/types';
 import { isHabitIconColor, resolveIconColor } from '../../domain/constants';
-import { formatSoberDuration, formatSoberGoal, getSoberSummary } from '../../domain/sober';
+import { getSoberSummary } from '../../domain/sober';
 import { ACCENT_PALETTES } from '../../theme/colors';
 import type { Settings } from '../../settings/model';
 import tokens from '../../theme/tokens.json';
@@ -13,6 +15,7 @@ export function SoberWidget({
   sober,
   restarts = [],
   themeAccent = 'blue',
+  language = 'en',
   width,
   height,
   now = Date.now(),
@@ -21,6 +24,7 @@ export function SoberWidget({
   sober: Sober | null;
   restarts?: SoberRestart[];
   themeAccent?: Settings['themeAccent'];
+  language?: Language;
   width: number;
   height: number;
   now?: number;
@@ -43,8 +47,14 @@ export function SoberWidget({
   const summary = sober ? getSoberSummary(sober, restarts, now) : null;
   const label =
     sober && summary
-      ? `${sober.name}, ${formatSoberDuration(summary.duration)}, 목표 ${formatSoberGoal(summary.goalDays)}, ${summary.progress.toFixed(1)}%`
-      : '표시할 거리두기를 선택해주세요.';
+      ? t('widget.details', {
+          locale: language,
+          title: sober.name,
+          value: formatSoberDuration(summary.duration, language),
+          setting: formatSoberGoal(summary.goalDays, language),
+          period: summary.progress.toFixed(1),
+        })
+      : t('widget.chooseHint', { locale: language });
   const textStyle = { color: text, fontFamily: 'TmoneyRoundWindRegular', fontSize: 12 * scale };
   const boldStyle = {
     ...textStyle,
@@ -83,7 +93,7 @@ export function SoberWidget({
           <SvgWidget svg={icon} style={{ width: 28 * scale, height: 28 * scale }} />
         </FlexWidget>
         <TextWidget
-          text={sober ? sober.name : '거리두기'}
+          text={sober ? sober.name : t('widget.title', { locale: language })}
           maxLines={1}
           truncate="END"
           style={{ color: text, textAlign: 'center', fontSize: 16 * scale, width: trackWidth }}
@@ -92,7 +102,7 @@ export function SoberWidget({
       {summary ? (
         <FlexWidget style={{ width: 'match_parent', flexGap: 6 * scale }}>
           <TextWidget
-            text={formatSoberDuration(summary.duration)}
+            text={formatSoberDuration(summary.duration, language)}
             maxLines={1}
             style={{ ...boldStyle, fontSize: 17 * scale, textAlign: 'center', width: trackWidth }}
           />
@@ -117,7 +127,10 @@ export function SoberWidget({
             style={{ width: 'match_parent', flexDirection: 'row', justifyContent: 'space-between' }}
           >
             <TextWidget
-              text={`목표 ${formatSoberGoal(summary.goalDays)}`}
+              text={t('widget.goal', {
+                locale: language,
+                value: formatSoberGoal(summary.goalDays, language),
+              })}
               style={{ ...textStyle, paddingLeft: 2 }}
             />
             <TextWidget
@@ -128,11 +141,9 @@ export function SoberWidget({
         </FlexWidget>
       ) : (
         <TextWidget
-          text={
-            settings
-              ? '선택한 거리두기 항목이 없어요. 위젯 설정에서 다시 선택해주세요.'
-              : '위젯 설정에서 거리두기를 선택해주세요.'
-          }
+          text={t(settings ? 'widget.selectedMissing' : 'widget.unconfigured', {
+            locale: language,
+          })}
           style={{ ...textStyle, textAlign: 'center' }}
         />
       )}

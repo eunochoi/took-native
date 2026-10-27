@@ -1,3 +1,4 @@
+import { mockI18n } from './helpers/i18n';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -29,6 +30,7 @@ test('color picker combines theme and eleven colors in equal-height four-column 
     {
       exports,
       require(name: string) {
+        if (name.endsWith('/i18n/react')) return mockI18n();
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react')
           return {

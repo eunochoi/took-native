@@ -1,8 +1,11 @@
-import { format, parseISO } from 'date-fns';
+import { formatDisplayDate } from '../../i18n/format';
+import { formatSoberGoal } from '../../i18n/sober';
+import { useI18n } from '../../i18n/react';
+import { parseISO } from 'date-fns';
 import { View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
-import { formatSoberGoal, type getSoberSummary } from '../../domain/sober';
+import { type getSoberSummary } from '../../domain/sober';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 
 export function SoberStatisticsSummary({
@@ -12,6 +15,8 @@ export function SoberStatisticsSummary({
   summary: ReturnType<typeof getSoberSummary>;
   initialStartedAt: string;
 }) {
+  const { t, language, formatLocale } = useI18n();
+
   const { rem: appRem } = useAppTheme();
   const longestMinutes = Math.max(0, Math.floor(summary.longest / 60000));
   const initialStart = parseISO(initialStartedAt);
@@ -21,21 +26,24 @@ export function SoberStatisticsSummary({
         [
           {
             icon: 'flag',
-            label: '진행률',
+            label: t('sober.progress'),
             value: `${summary.progress.toFixed(0)}%`,
-            note: `목표 ${formatSoberGoal(summary.goalDays)}`,
+            note: t('sober.goalLabel', { value: formatSoberGoal(summary.goalDays, language) }),
           },
           {
             icon: 'play-circle-outline',
-            label: '첫 시작일',
-            value: format(initialStart, 'M월 d일'),
-            note: format(initialStart, 'yyyy년'),
+            label: t('sober.firstStart'),
+            value: formatDisplayDate(initialStartedAt, formatLocale, 'dayShort'),
+            note: t('home.year', { count: initialStart.getFullYear() }),
           },
           {
             icon: 'emoji-events',
-            label: '최고 기록',
-            value: `${Math.floor(longestMinutes / 1440)}일`,
-            note: `${Math.floor((longestMinutes % 1440) / 60)}시간 ${longestMinutes % 60}분`,
+            label: t('sober.longest'),
+            value: t('sober.dayCount', { count: Math.floor(longestMinutes / 1440) }),
+            note: t('sober.hoursMinutes', {
+              value: Math.floor((longestMinutes % 1440) / 60),
+              count: longestMinutes % 60,
+            }),
           },
         ] as const
       ).map((stat, index) => (

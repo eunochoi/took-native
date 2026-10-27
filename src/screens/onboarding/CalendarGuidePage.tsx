@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { MUTED_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 import { View } from 'react-native';
 import { InfoNotice } from '../../components/InfoNotice';
@@ -6,6 +7,7 @@ import { CalendarHabitProgress } from '../calendar/CalendarHabitProgress';
 import { CalendarRecordCounts } from '../calendar/CalendarRecordCounts';
 
 export function CalendarGuidePage() {
+  const { t } = useI18n();
   return (
     <View className="w-full grow justify-between gap-6">
       <View className="gap-2">
@@ -13,10 +15,10 @@ export function CalendarGuidePage() {
           accessibilityRole="header"
           className="text-center text-[21px] leading-[28px] font-semibold tracking-tight"
         >
-          달력 기록을 읽어요
+          {t('onboarding.calendarTitle')}
         </Text>
         <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
-          한 달의 일기와 습관을 확인해요.
+          {t('onboarding.calendarDescription')}
         </Text>
       </View>
       <View
@@ -25,16 +27,16 @@ export function CalendarGuidePage() {
         <View className="gap-4">
           <View className="gap-2">
             <Text className="text-center text-[15.75px] leading-[24.5px] font-semibold">
-              습관 진행바
+              {t('onboarding.progressTitle')}
             </Text>
             <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
-              색상과 길이로 습관 완료율을 확인해요.
+              {t('onboarding.progressDescription')}
             </Text>
           </View>
           {[
-            { label: '분홍 · 25% 미만', done: 1, total: 5 },
-            { label: '노랑 · 25% 이상 75% 미만', done: 2, total: 4 },
-            { label: '초록 · 75% 이상', done: 4, total: 4 },
+            { label: t('onboarding.lowBand'), done: 1, total: 5 },
+            { label: t('onboarding.mediumBand'), done: 2, total: 4 },
+            { label: t('onboarding.highBand'), done: 4, total: 4 },
           ].map(({ label, done, total }) => (
             <View key={label} className="gap-1.5">
               <Text className="text-[14px] leading-[21px] text-theme-text-secondary">{label}</Text>
@@ -42,13 +44,13 @@ export function CalendarGuidePage() {
             </View>
           ))}
           <Text className="text-center text-[10.5px] leading-[14px] text-theme-text-secondary">
-            완료율이 0%인 날에는 진행바를 표시하지 않아요.
+            {t('onboarding.zeroProgress')}
           </Text>
         </View>
         <View className="h-px bg-theme-border/50" />
         <View className="gap-3">
           <Text className="text-center text-[15.75px] leading-[24.5px] font-semibold">
-            상단 툴바의 숫자
+            {t('onboarding.toolbarNumbers')}
           </Text>
           <View className="items-center">
             <CalendarRecordCounts
@@ -59,13 +61,12 @@ export function CalendarGuidePage() {
             />
           </View>
           <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
-            일기 숫자는 이번 달에 쓴 일기의 개수예요.{'\n'}습관 숫자는 각 진행바 색상에 해당하는
-            날짜 수예요.
+            {t('onboarding.toolbarDescription')}
           </Text>
         </View>
       </View>
       <InfoNotice textClassName="text-[10.5px] leading-[17.5px]" adjustsFontSizeToFit={false}>
-        자유 기록 습관은 완료율 계산에 포함되지 않아요.
+        {t('onboarding.freeNotice')}
       </InfoNotice>
     </View>
   );

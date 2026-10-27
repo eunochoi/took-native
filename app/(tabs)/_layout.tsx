@@ -1,3 +1,4 @@
+import { useI18n } from '../../src/i18n/react';
 import { Tabs } from 'expo-router';
 import { Easing, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,6 +7,7 @@ import { useAppTheme } from '../../src/theme/AppThemeProvider';
 import tokens from '../../src/theme/tokens.json';
 
 export default function TabLayout() {
+  const { t } = useI18n();
   const { colors, reducedMotion } = useAppTheme();
   const insets = useSafeAreaInsets();
   return (
@@ -30,12 +32,12 @@ export default function TabLayout() {
         sceneStyle: { backgroundColor: colors.surface },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: '홈' }} />
-      <Tabs.Screen name="calendar" options={{ title: '월간 기록' }} />
-      <Tabs.Screen name="diary" options={{ title: '일기 목록' }} />
-      <Tabs.Screen name="habit" options={{ title: '습관 관리' }} />
-      <Tabs.Screen name="sober" options={{ title: '거리두기' }} />
-      <Tabs.Screen name="setting" options={{ title: '설정' }} />
+      <Tabs.Screen name="index" options={{ title: t('navigation.index') }} />
+      <Tabs.Screen name="calendar" options={{ title: t('navigation.calendar') }} />
+      <Tabs.Screen name="diary" options={{ title: t('navigation.diary') }} />
+      <Tabs.Screen name="habit" options={{ title: t('navigation.habit') }} />
+      <Tabs.Screen name="sober" options={{ title: t('navigation.sober') }} />
+      <Tabs.Screen name="setting" options={{ title: t('navigation.setting') }} />
     </Tabs>
   );
 }

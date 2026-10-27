@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate, soberI18n } from './helpers/i18n';
 import { useCalendarNavigation } from './helpers/calendar-navigation';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -23,6 +24,9 @@ function evaluate(
       exports,
       ...globals,
       require: (name: string) => {
+        if (name.endsWith('/i18n/sober')) return soberI18n;
+        if (name.endsWith('/i18n/format')) return { formatDisplayDate };
+        if (name.endsWith('/i18n/react')) return mockI18n();
         if (name in mocks) return mocks[name];
         if (name.endsWith('theme/classes')) return require('../src/theme/classes');
         if (name.endsWith('theme/colors')) return require('../src/theme/colors');

@@ -1,3 +1,5 @@
+import { useI18n } from '../i18n/react';
+import { t } from '../i18n/core';
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 import { useRootNavigationState, useRouter } from 'expo-router';
@@ -16,19 +18,20 @@ Notifications.setNotificationHandler({
 });
 
 export function NotificationController() {
+  const { language } = useI18n();
   const { showNotice } = useNotice();
   const { settings } = useSettings();
   const router = useRouter();
   const navigation = useRootNavigationState();
-  const current = useRef(settings);
-  current.current = settings;
+  const current = useRef({ settings, language });
+  current.current = { settings, language };
   useEffect(() => {
     const sync = () => {
-      void syncReminders(current.current).catch(() => {
+      void syncReminders(current.current.settings, current.current.language).catch(() => {
         showNotice({
           tone: 'error',
-          title: '알림을 예약하지 못했어요',
-          message: '설정에서 알림 시간을 다시 저장해주세요.',
+          title: t('notifications.syncFailed', { locale: current.current.language }),
+          message: t('notifications.syncRetry', { locale: current.current.language }),
         });
       });
     };
@@ -42,6 +45,7 @@ export function NotificationController() {
     settings.habitReminderTime,
     settings.soberReminderTime,
     showNotice,
+    language,
   ]);
   useEffect(() => {
     if (!navigation?.key) return;

@@ -1,3 +1,6 @@
+import { t, type Language } from '../src/i18n/core';
+import { translateErrorMessage } from '../src/i18n/errors';
+import { mockI18n } from './helpers/i18n';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -17,7 +20,11 @@ function nodes(tree: any, type: string): any[] {
   ];
 }
 
-function load(path: string, dependencies: Record<string, unknown>) {
+function load(
+  path: string,
+  dependencies: Record<string, unknown>,
+  language: Language | (() => Language) = 'ko',
+) {
   const exports: any = {};
   runInNewContext(
     ts.transpileModule(readFileSync(new URL(path, import.meta.url), 'utf8'), {
@@ -27,6 +34,9 @@ function load(path: string, dependencies: Record<string, unknown>) {
       exports,
       Error,
       require: (name: string) => {
+        if (name.endsWith('/i18n/errors')) return { translateErrorMessage };
+        if (name.endsWith('/i18n/react')) return mockI18n(language);
+        if (name.endsWith('/i18n/core')) return { t };
         assert(name in dependencies, `Unexpected dependency: ${name}`);
         return dependencies[name];
       },
@@ -35,9 +45,13 @@ function load(path: string, dependencies: Record<string, unknown>) {
   return exports;
 }
 
-function harness() {
+function harness(platform: 'android' | 'ios' = 'android') {
+  let language: Language = 'ko';
+  let channel: any = null;
+  let channelReads = 0;
   let permission = { granted: true, canAskAgain: true };
   const scheduled = new Map<string, any>();
+  const reservations: any[] = [];
   const events: string[] = [];
   let failSchedule = false;
   let grant = true;
@@ -51,6 +65,12 @@ function harness() {
         'Use the system default channel sound without a custom filename',
       );
       events.push('channel');
+      channel = { id: _id, ...options };
+      return channel;
+    },
+    getNotificationChannelAsync: async () => {
+      channelReads++;
+      return channel;
     },
     getPermissionsAsync: async () => permission,
     requestPermissionsAsync: async () => {
@@ -69,15 +89,26 @@ function harness() {
         failSchedule = false;
         throw new Error('schedule failed');
       }
+      reservations.push(plain(notification));
       scheduled.set(notification.identifier, notification);
       return notification.identifier;
     },
   };
-  const service = load('../src/notifications/index.ts', { 'expo-notifications': native });
+  const service = load('../src/notifications/index.ts', {
+    'expo-notifications': native,
+    '../i18n/locale': { getLocale: () => ({ language }) },
+    'react-native': { Platform: { OS: platform } },
+  });
   return {
     service,
     scheduled,
+    reservations,
     events,
+    channel: () => channel,
+    channelReads: () => channelReads,
+    setLanguage: (value: Language) => {
+      language = value;
+    },
     deny: (canAskAgain = true) => {
       permission = { granted: false, canAskAgain };
     },
@@ -460,4 +491,253 @@ test('controller waits for navigation, routes notification taps and cleans up fo
   assert.equal(notices[0].title, '알림을 예약하지 못했어요');
   nextCleanups.forEach((cleanup) => cleanup());
   assert.equal(removed, 3);
+});
+
+test('language changes replace all three reminders at the same times without duplicates or unrelated cancellation', async () => {
+  const h = harness();
+  const times = {
+    ...DEFAULT_SETTINGS,
+    diaryReminderTime: '00:00',
+    habitReminderTime: '12:30',
+    soberReminderTime: '23:59',
+  };
+  h.scheduled.set('other', { identifier: 'other' });
+  await h.service.syncReminders(times);
+  const original = plain([...h.scheduled.values()].filter((item) => item.identifier !== 'other'));
+  h.setLanguage('en');
+  await h.service.syncReminders(times);
+  assert.equal(h.scheduled.size, 4);
+  for (const before of original) {
+    const next = h.scheduled.get(before.identifier);
+    assert.deepEqual(plain(next.trigger), before.trigger);
+    assert.deepEqual(plain(next.content.data), before.content.data);
+    assert.equal(next.content.sound, 'default');
+    assert(!/[가-힣]/.test(next.content.title + next.content.body));
+  }
+  assert.equal(h.scheduled.get('took-diaryReminderTime').content.title, 'Diary reminder');
+  assert.equal(h.scheduled.get('took-habitReminderTime').content.title, 'Habit reminder');
+  assert.equal(h.scheduled.get('took-soberReminderTime').content.title, 'Cut Back reminder');
+  assert.equal(h.channel().id, 'daily-reminders');
+  assert.equal(h.channel().name, 'Diary, Habit and Cut Back reminders');
+  h.events.length = 0;
+  await h.service.syncReminders(times);
+  assert.deepEqual(h.events, []);
+  h.setLanguage('ko');
+  await h.service.syncReminders(times);
+  assert.equal(
+    h.scheduled.get('took-diaryReminderTime').content.body,
+    '오늘의 감정을 일기에 남겨보세요.',
+  );
+  assert.equal(h.scheduled.size, 4);
+});
+
+test('same-language copy changes refresh a reservation and an existing inactive channel can be renamed', async () => {
+  const h = harness();
+  const times = { ...DEFAULT_SETTINGS, diaryReminderTime: '21:00' };
+  await h.service.syncReminders(times);
+  h.scheduled.get('took-diaryReminderTime').content.body = '이전 안내';
+  h.events.length = 0;
+  await h.service.syncReminders(times);
+  assert(h.events.includes('cancel:took-diaryReminderTime'));
+  assert(h.events.includes('schedule:took-diaryReminderTime'));
+  assert.equal(
+    h.scheduled.get('took-diaryReminderTime').content.body,
+    '오늘의 감정을 일기에 남겨보세요.',
+  );
+  await h.service.syncReminders(DEFAULT_SETTINGS);
+  h.setLanguage('en');
+  h.events.length = 0;
+  await h.service.syncReminders(DEFAULT_SETTINGS);
+  assert.equal(h.channel().name, 'Diary, Habit and Cut Back reminders');
+  assert.deepEqual(h.events, ['channel']);
+  assert.equal(h.scheduled.size, 0);
+});
+
+test('queued locale snapshots stay consistent and the latest language wins', async () => {
+  const h = harness();
+  const times = { ...DEFAULT_SETTINGS, diaryReminderTime: '08:05' };
+  h.setLanguage('en');
+  const english = h.service.syncReminders(times);
+  h.setLanguage('ko');
+  const korean = h.service.syncReminders(times);
+  await Promise.all([english, korean]);
+  assert.deepEqual(
+    h.reservations.map((item) => item.content.title),
+    ['Diary reminder', '일기 작성 알림'],
+  );
+  assert.equal(h.scheduled.size, 1);
+  assert.equal(h.scheduled.get('took-diaryReminderTime').content.title, '일기 작성 알림');
+  assert.equal(h.scheduled.get('took-diaryReminderTime').trigger.minute, 5);
+});
+
+test('English save failures restore the old time in the selected language and leave the queue usable', async () => {
+  for (const scheduleFailure of [true, false]) {
+    const h = harness();
+    const times = { ...DEFAULT_SETTINGS, diaryReminderTime: '21:00' };
+    await h.service.syncReminders(times);
+    h.setLanguage('en');
+    if (scheduleFailure) h.failSchedule();
+    await assert.rejects(
+      h.service.saveReminder(times, 'diaryReminderTime', '08:30', async () => {
+        throw new Error('disk full');
+      }),
+    );
+    assert.equal(h.scheduled.size, 1);
+    assert.equal(h.scheduled.get('took-diaryReminderTime').content.data.reminderTime, '21:00');
+    assert.equal(h.scheduled.get('took-diaryReminderTime').content.title, 'Diary reminder');
+    await h.service.syncReminders(DEFAULT_SETTINGS);
+    assert.equal(h.scheduled.size, 0);
+  }
+});
+
+test('revoked permission cancels owned reminders during a language change without requesting permission', async () => {
+  const h = harness();
+  const times = { ...DEFAULT_SETTINGS, diaryReminderTime: '21:00' };
+  await h.service.syncReminders(times);
+  h.scheduled.set('other', { identifier: 'other' });
+  h.deny(false);
+  h.setLanguage('en');
+  h.events.length = 0;
+  await h.service.syncReminders(times);
+  assert.deepEqual([...h.scheduled.keys()], ['other']);
+  assert(!h.events.includes('permission'));
+  assert.equal(h.channel().name, 'Diary, Habit and Cut Back reminders');
+});
+
+test('permission and invalid-time errors display in English while leaving denied settings untouched', async () => {
+  const h = harness();
+  h.setLanguage('en');
+  h.deny(false);
+  let persisted = false;
+  await assert.rejects(
+    h.service.saveReminder(DEFAULT_SETTINGS, 'diaryReminderTime', '21:00', async () => {
+      persisted = true;
+    }),
+    (error: Error) => {
+      assert.equal(
+        translateErrorMessage(error.message, 'en'),
+        'Allow notifications for BlooLog in your device settings.',
+      );
+      assert.equal(
+        translateErrorMessage(error.message, 'ko'),
+        '기기 설정에서 BlooLog의 알림을 허용해주세요.',
+      );
+      return true;
+    },
+  );
+  assert.equal(persisted, false);
+  assert.equal(h.scheduled.size, 0);
+  await assert.rejects(
+    h.service.saveReminder(DEFAULT_SETTINGS, 'diaryReminderTime', '24:00', async () => {}),
+    (error: Error) => {
+      assert.equal(translateErrorMessage(error.message, 'en'), 'Please enter a valid time.');
+      return true;
+    },
+  );
+});
+
+test('controller reacts to language changes, keeps foreground sync current and localizes scheduling failures', async () => {
+  let language: Language = 'ko';
+  let cursor = 0;
+  let fail = false;
+  let foreground: (state: string) => void = () => {};
+  let removed = 0;
+  const slots: any[] = [];
+  const effects: (() => void)[] = [];
+  const synced: any[] = [];
+  const notices: any[] = [];
+  const settings = { ...DEFAULT_SETTINGS, diaryReminderTime: '21:00' };
+  const showNotice = (notice: any) => notices.push(notice);
+  const router = { push: () => {} };
+  const component = load(
+    '../src/notifications/NotificationController.tsx',
+    {
+      react: {
+        useRef: (value: unknown) => {
+          const i = cursor++;
+          return slots[i] ?? (slots[i] = { current: value });
+        },
+        useEffect: (effect: () => any, deps: unknown[]) => {
+          const i = cursor++;
+          const previous = slots[i];
+          if (previous && deps.every((value, index) => Object.is(value, previous.deps[index])))
+            return;
+          const record = { deps, cleanup: undefined as any };
+          slots[i] = record;
+          effects.push(() => {
+            previous?.cleanup?.();
+            record.cleanup = effect();
+          });
+        },
+      },
+      'react-native': {
+        AppState: {
+          addEventListener: (_event: string, listener: (state: string) => void) => {
+            foreground = listener;
+            return {
+              remove: () => {
+                removed++;
+              },
+            };
+          },
+        },
+      },
+      'expo-router': { useRouter: () => router, useRootNavigationState: () => undefined },
+      'expo-notifications': { setNotificationHandler: () => {} },
+      '../settings/SettingsProvider': { useSettings: () => ({ settings }) },
+      '../components/NoticeProvider': { useNotice: () => ({ showNotice }) },
+      './index': {
+        REMINDERS: [],
+        syncReminders: async (times: unknown, locale: Language) => {
+          synced.push({ times, locale });
+          if (fail) throw new Error('schedule failed');
+        },
+      },
+    },
+    () => language,
+  ).NotificationController;
+  const render = () => {
+    cursor = 0;
+    component();
+    effects.splice(0).forEach((effect) => effect());
+  };
+  render();
+  render();
+  assert.deepEqual(
+    synced.map((call) => call.locale),
+    ['ko'],
+  );
+  language = 'en';
+  render();
+  assert.deepEqual(
+    synced.map((call) => call.locale),
+    ['ko', 'en'],
+  );
+  fail = true;
+  foreground('active');
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  assert.equal(notices.at(-1).title, 'Could not schedule reminders');
+  assert.equal(notices.at(-1).message, 'Save your reminder times again in Settings.');
+  fail = false;
+  language = 'ko';
+  render();
+  foreground('active');
+  assert.equal(synced.at(-1).locale, 'ko');
+  assert.equal(synced.at(-1).times, settings);
+  slots.forEach((slot) => slot?.cleanup?.());
+  assert.equal(removed, 3);
+});
+
+test('iOS reminders switch language without calling Android channel APIs', async () => {
+  const h = harness('ios');
+  const times = { ...DEFAULT_SETTINGS, diaryReminderTime: '21:00' };
+  await h.service.syncReminders(times);
+  h.setLanguage('en');
+  await h.service.saveReminder(times, 'diaryReminderTime', '08:30', async () => {});
+  assert.equal(h.channel(), null);
+  assert.equal(h.channelReads(), 0);
+  assert(!h.events.includes('channel'));
+  assert.equal(h.scheduled.size, 1);
+  assert.equal(h.scheduled.get('took-diaryReminderTime').content.title, 'Diary reminder');
+  assert.equal(h.scheduled.get('took-diaryReminderTime').trigger.hour, 8);
 });

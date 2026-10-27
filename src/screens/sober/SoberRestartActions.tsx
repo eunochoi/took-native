@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { usePreventRemove } from 'expo-router/react-navigation';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useRef, useState, type ReactNode } from 'react';
@@ -24,6 +25,8 @@ export function SoberRestartActions({
     onBeforeClose: () => boolean;
   }) => ReactNode;
 }) {
+  const { t } = useI18n();
+
   const db = useSQLiteContext();
   const { openModal } = useModalNavigation();
   const { showNotice } = useNotice();
@@ -34,15 +37,15 @@ export function SoberRestartActions({
   const mutation = useRecordMutation(
     (restartId: number) => deleteSoberRestart(db, restartId, soberId),
     'sober',
-    () => showNotice({ tone: 'success', title: '다시 시작 기록을 삭제했어요' }),
+    () => showNotice({ tone: 'success', title: t('sober.restartDeleted') }),
     (error) =>
-      showNotice({ tone: 'error', title: '기록을 처리하지 못했어요', message: error.message }),
+      showNotice({ tone: 'error', title: t('sober.recordFailed'), message: error.message }),
   );
   const notifyDeleting = () =>
     showNotice({
       tone: 'info',
-      title: '잠시만 기다려주세요',
-      message: '다시 시작 기록을 삭제하고 있어요.',
+      title: t('sober.wait'),
+      message: t('sober.deletingRestart'),
     });
   usePreventRemove(mutation.isPending, notifyDeleting);
   const onMenu = (record: SoberRestart) => {
@@ -58,15 +61,15 @@ export function SoberRestartActions({
       {children({ pending: mutation.isPending, onMenu, onBeforeClose })}
       <BottomSheetModal
         visible={menu !== null}
-        title="다시 시작 기록"
+        title={t('sober.restartRecord')}
         onClose={() => setOverlay(null)}
       >
         {(close) => (
           <View className="gap-3">
             <PickerAction
               icon="edit"
-              title="기록 수정하기"
-              description="일시와 메모를 바꿔요."
+              title={t('sober.editRecord')}
+              description={t('sober.editRecordHint')}
               singleLineDescription
               onPress={() => {
                 const record = menu;
@@ -81,8 +84,8 @@ export function SoberRestartActions({
             />
             <PickerAction
               icon="delete-outline"
-              title="기록 삭제하기"
-              description="이 재시작 기록을 삭제해요."
+              title={t('sober.deleteRecord')}
+              description={t('sober.deleteRecordHint')}
               singleLineDescription
               danger
               onPress={() => {
@@ -97,10 +100,10 @@ export function SoberRestartActions({
       </BottomSheetModal>
       <ConfirmModal
         visible={confirm !== null}
-        title="기록을 삭제하시겠어요?"
-        message="이 다시 시작 기록과 메모가 삭제되고, 경과 시간과 통계가 다시 계산돼요. 삭제한 뒤에는 되돌릴 수 없어요."
+        title={t('sober.deleteRecordTitle')}
+        message={t('sober.deleteRecordWarning')}
         danger
-        confirmLabel="삭제하기"
+        confirmLabel={t('diary.deleteAction')}
         onCancel={() => setOverlay(null)}
         onConfirm={() => {
           if (!confirm || deleting.current || mutation.isPending) return;

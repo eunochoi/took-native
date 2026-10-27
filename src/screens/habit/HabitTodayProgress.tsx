@@ -1,12 +1,12 @@
-import { getHabitDaySummary } from '../../domain/habitStats';
-import { format, parseISO } from 'date-fns';
-import { ko } from 'date-fns/locale';
 import { Pressable, View } from 'react-native';
 import { twMerge } from 'tailwind-merge';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
 import type { Completion, Habit } from '../../db/types';
 import { shiftDate } from '../../domain/date';
+import { getHabitDaySummary } from '../../domain/habitStats';
+import { formatDisplayDate } from '../../i18n/format';
+import { useI18n } from '../../i18n/react';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { PROGRESS_FILL_CLASS_NAME, PROGRESS_TRACK_CLASS_NAME } from '../../theme/classes';
 
@@ -21,6 +21,8 @@ export function HabitTodayProgress({
   records: Pick<Completion, 'habit_id' | 'date'>[];
   onPress: () => void;
 }) {
+  const { t, formatLocale } = useI18n();
+
   const { colors, rem: appRem } = useAppTheme();
   const days = Array.from({ length: 4 }, (_, index) => {
     const date = shiftDate(today, -index);
@@ -29,8 +31,8 @@ export function HabitTodayProgress({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="습관 흐름 상세보기"
-      accessibilityHint="최근 7일 완료율과 이전 7일 비교를 확인해요."
+      accessibilityLabel={t('habit.flowLink')}
+      accessibilityHint={t('habit.flowHint')}
       onPress={onPress}
       className="flex-1 gap-4 bg-theme-surface px-2 py-5 active:opacity-65"
     >
@@ -47,11 +49,11 @@ export function HabitTodayProgress({
             numberOfLines={1}
             className="text-base text-center font-semibold"
           >
-            습관 흐름
+            {t('habit.flow')}
           </Text>
         </View>
         <Text className="h-5 text-sm leading-5 text-center text-theme-text-secondary">
-          최근 4일
+          {t('habit.lastFour')}
         </Text>
       </View>
       <View className="flex-row justify-around">
@@ -61,7 +63,16 @@ export function HabitTodayProgress({
               key={date}
               accessible
               accessibilityRole="image"
-              accessibilityLabel={`${date}${date === today ? ', 오늘' : ''}, ${total ? `${total}개 중 ${completed}개 완료, ${Math.round(percent ?? 0)}%` : '시작한 습관 없음'}`}
+              accessibilityLabel={t('habit.flowDay', {
+                title: `${date}${date === today ? `, ${t('calendar.today')}` : ''}`,
+                value: total
+                  ? t('habit.completionSummary', {
+                      value: total,
+                      count: completed,
+                      setting: Math.round(percent ?? 0),
+                    })
+                  : t('habit.noneStarted'),
+              })}
               className="flex-1 min-w-0 items-center gap-1"
             >
               <Text
@@ -70,7 +81,9 @@ export function HabitTodayProgress({
                   'h-5 text-sm leading-5',
                 )}
               >
-                {date === today ? '오늘' : format(parseISO(date), 'eee', { locale: ko })}
+                {date === today
+                  ? t('calendar.today')
+                  : formatDisplayDate(date, formatLocale, 'weekdayShort')}
               </Text>
               <View className={`h-12 w-5 justify-end rounded-lg ${PROGRESS_TRACK_CLASS_NAME}`}>
                 {total ? (

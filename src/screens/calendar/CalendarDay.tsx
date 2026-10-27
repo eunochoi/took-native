@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { getDay, parseISO } from 'date-fns';
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
@@ -40,6 +41,8 @@ export function CalendarDay({
   contentClassName?: string;
   textClassName?: string;
 }) {
+  const { t } = useI18n();
+
   const outside = date.slice(0, 7) !== month;
   const isToday = date === today;
   const isSelected = date === selected;
@@ -48,7 +51,9 @@ export function CalendarDay({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={[label ?? date, isToday ? '오늘' : ''].filter(Boolean).join(', ')}
+      accessibilityLabel={[label ?? date, isToday ? t('calendar.today') : '']
+        .filter(Boolean)
+        .join(', ')}
       accessibilityState={{ selected: isSelected, disabled: unavailable }}
       disabled={unavailable}
       onPress={() => {
@@ -65,7 +70,7 @@ export function CalendarDay({
     >
       {children ?? (
         <View
-          key={"default-day"}
+          key={'default-day'}
           className={twMerge('w-3/5 aspect-square items-center justify-center', contentClassName)}
         >
           <Text

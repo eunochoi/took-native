@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { InfoNotice } from '../../components/InfoNotice';
 import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -24,6 +25,8 @@ export function DiaryDatePicker({
   onClose: () => void;
   onApply: (date: string) => void;
 }) {
+  const { t } = useI18n();
+
   const db = useSQLiteContext();
   const today = useToday();
   const { iconSizes } = useAppTheme();
@@ -46,12 +49,12 @@ export function DiaryDatePicker({
     <BottomSheetModal
       visible
       fixedHeight
-      title="일기 날짜 선택"
+      title={t('diary.chooseDate')}
       headerAction={
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="오늘 날짜 선택"
-          accessibilityHint="이번 달로 이동하고 오늘 날짜를 선택해요."
+          accessibilityLabel={t('diary.chooseToday')}
+          accessibilityHint={t('diary.chooseTodayHint')}
           onPress={() => {
             setDraft(today);
             setMonth(today.slice(0, 7));
@@ -60,13 +63,13 @@ export function DiaryDatePicker({
           className="min-h-9 flex-row items-center justify-center gap-1 px-1 active:opacity-70"
         >
           <AppIcon name="today" size={iconSizes.md} className="text-theme-accent" />
-          <Text className="text-sm text-theme-text-secondary">오늘</Text>
+          <Text className="text-sm text-theme-text-secondary">{t('calendar.today')}</Text>
         </Pressable>
       }
       onClose={onClose}
       footer={(close) => (
         <Button
-          label="선택 완료"
+          label={t('diary.selectionDone')}
           disabled={disabled}
           onPress={() => {
             if (!disabled && draft !== null) close(() => onApply(draft));
@@ -90,23 +93,23 @@ export function DiaryDatePicker({
         />
         {diaries.isError ? (
           <QueryError
-            message="일기가 있는 날짜를 확인하지 못했어요."
+            message={t('diary.recordedDatesFailed')}
             onRetry={() => void diaries.refetch()}
           />
         ) : draft !== null && existing.isError ? (
           <QueryError
-            message="선택한 날짜의 일기를 확인하지 못했어요."
+            message={t('diary.selectedDateFailed')}
             onRetry={() => void existing.refetch()}
           />
         ) : (
           <InfoNotice>
             {draft === null
-              ? '일기를 작성할 날짜를 선택해주세요.'
+              ? t('diary.chooseDateHint')
               : existing.isPending
-                ? '선택한 날짜의 일기를 확인하고 있어요.'
+                ? t('diary.checkingDate')
                 : occupied
-                  ? '이미 일기가 있는 날짜예요. 다른 날짜를 선택해주세요.'
-                  : '날짜를 바꿔도 작성 중인 내용과 사진은 유지돼요.'}
+                  ? t('diary.dateOccupied')
+                  : t('diary.datePreserved')}
           </InfoNotice>
         )}
       </View>

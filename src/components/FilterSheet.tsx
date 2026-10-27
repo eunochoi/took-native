@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/react';
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { useAppTheme } from '../theme/AppThemeProvider';
@@ -21,11 +22,12 @@ export function FilterSheet({
   onReset: () => void;
   onApply: () => void;
 }) {
+  const { t } = useI18n();
   const { iconSizes } = useAppTheme();
   const resetButton = (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="선택 초기화"
+      accessibilityLabel={t('ui.resetSelection')}
       onPress={onReset}
       hitSlop={resetInHeader ? 6 : undefined}
       className={
@@ -42,7 +44,7 @@ export function FilterSheet({
             : 'text-base text-theme-text-secondary'
         }
       >
-        초기화
+        {t('ui.reset')}
       </Text>
     </Pressable>
   );
@@ -58,8 +60,8 @@ export function FilterSheet({
           {!resetInHeader && resetButton}
           <Button
             className="w-full"
-            label="적용하기"
-            accessibilityLabel={`${title} 적용`}
+            label={t('ui.apply')}
+            accessibilityLabel={t('ui.applyTitle', { title })}
             onPress={() => close(onApply)}
           />
         </View>

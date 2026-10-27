@@ -1,3 +1,6 @@
+import { t, resolveLocale, i18n } from '../src/i18n/core';
+import * as soberI18n from '../src/i18n/sober';
+import { mockI18n } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { test } from 'node:test';
@@ -38,7 +41,14 @@ function load(path: string, mocks: Record<string, unknown>) {
     __DEV__: true,
     Promise,
     console: { warn() {} },
-    require: (name: string) => (name in mocks ? mocks[name] : localRequire(name)),
+    require: (name: string) => {
+      if (name in mocks) return mocks[name];
+      if (name.endsWith('/i18n/core')) return { t, resolveLocale };
+      if (name.endsWith('/i18n/sober')) return soberI18n;
+      if (name.endsWith('/i18n/locale')) return { readDeviceLocale: () => 'ko-KR' };
+      if (name.endsWith('/i18n/react')) return mockI18n();
+      return localRequire(name);
+    },
   });
   return exports;
 }
@@ -449,6 +459,7 @@ test('actual library serializes selected icons, transparent background and share
   } as Sober;
   const tree = buildWidgetTree(
     SoberWidget({
+      language: 'ko',
       settings: { ...defaultWidgetSettings(1), background: 'transparent', textColor: 'white' },
       sober,
       width: 205,
@@ -464,6 +475,7 @@ test('actual library serializes selected icons, transparent background and share
   assert.equal(texts.find((node) => node.props.text === '잘자기').props.color, '#FFFFFF');
   const blackTree = buildWidgetTree(
     SoberWidget({
+      language: 'ko',
       settings: { ...defaultWidgetSettings(1), background: 'black' },
       sober,
       width: 180,
@@ -488,6 +500,7 @@ test('actual library serializes selected icons, transparent background and share
   for (const icon_key of Object.keys(icons) as Sober['icon_key'][]) {
     const selected = buildWidgetTree(
       SoberWidget({
+        language: 'ko',
         settings: { ...defaultWidgetSettings(1), accent: 'pink' },
         themeAccent: 'purple',
         sober: { ...sober, icon_key },
@@ -509,6 +522,7 @@ test('actual library serializes selected icons, transparent background and share
   for (const icon_color of ['theme', ...Object.keys(HABIT_ICON_COLORS)] as Sober['icon_color'][]) {
     const colored = buildWidgetTree(
       SoberWidget({
+        language: 'ko',
         settings: defaultWidgetSettings(1),
         themeAccent: 'green',
         sober: { ...sober, icon_color },
@@ -526,6 +540,7 @@ test('actual library serializes selected icons, transparent background and share
   for (const themeAccent of [undefined, 'invalid']) {
     const fallback = buildWidgetTree(
       SoberWidget({
+        language: 'ko',
         settings: defaultWidgetSettings(1),
         sober,
         themeAccent,
@@ -548,6 +563,7 @@ test('actual library serializes selected icons, transparent background and share
     for (const size of [110, 180]) {
       const durationTree = buildWidgetTree(
         SoberWidget({
+          language: 'ko',
           settings: defaultWidgetSettings(1),
           sober,
           width: size,
@@ -563,8 +579,37 @@ test('actual library serializes selected icons, transparent background and share
     }
   }
   assert.doesNotThrow(() =>
-    buildWidgetTree(SoberWidget({ settings: null, sober: null, width: 180, height: 180 })),
+    buildWidgetTree(
+      SoberWidget({ language: 'ko', settings: null, sober: null, width: 180, height: 180 }),
+    ),
   );
+  const now = Date.parse('2026-10-03T03:04:00Z');
+  const props = { settings: defaultWidgetSettings(1), sober, width: 180, height: 180, now };
+  const koTree = buildWidgetTree(SoberWidget({ ...props, language: 'ko' }));
+  const enTree = buildWidgetTree(SoberWidget({ ...props, language: 'en' }));
+  const englishTexts = flatten(enTree)
+    .filter((node) => node.type === 'TextWidget')
+    .map((node) => node.props.text);
+  assert(englishTexts.includes('2d 3h 4m'));
+  assert(englishTexts.includes('Goal 1 month'));
+  assert.equal(enTree.props.clickActionData.uri, koTree.props.clickActionData.uri);
+  assert.deepEqual(
+    flatten(enTree).map((node) => [node.props.width, node.props.height]),
+    flatten(koTree).map((node) => [node.props.width, node.props.height]),
+  );
+  assert(enTree.props.accessibilityLabel.includes('2d 3h 4m'));
+  assert(!/[가-힣]/.test(enTree.props.accessibilityLabel.replace(sober.name, '')));
+  for (const settings of [null, defaultWidgetSettings(1)]) {
+    const empty = buildWidgetTree(
+      SoberWidget({ settings, sober: null, language: 'en', width: 110, height: 110 }),
+    );
+    assert(!/[가-힣]/.test(empty.props.accessibilityLabel));
+    assert(
+      flatten(empty)
+        .filter((node) => node.type === 'TextWidget')
+        .every((node) => !/[가-힣]/.test(node.props.text)),
+    );
+  }
 });
 
 test('native widget sync updates existing Android preview and emits iOS catalog without prebuild', () => {
@@ -611,6 +656,167 @@ test('native widget sync updates existing Android preview and emits iOS catalog 
     syncNativeAssets(project);
     assert(fs.readFileSync(nativePreview).equals(preview));
     assert(fs.readFileSync(join(imageset, 'icon.png')).equals(png));
+  } finally {
+    fs.rmSync(project, { recursive: true, force: true });
+  }
+});
+
+test('headless widgets resolve saved manual and system languages without changing the app locale', async () => {
+  const appLocale = i18n.locale;
+  let device = 'ja-JP';
+  let row: any = null;
+  let failure = false;
+  let recordReads = 0;
+  let closed = 0;
+  const db = {
+    getFirstAsync: async () => {
+      if (failure) throw new Error('unreadable');
+      return row;
+    },
+    closeAsync: async () => {
+      closed++;
+    },
+  };
+  const { loadWidgetDisplaySettings, loadWidgetRecord } = load('../src/widgets/sober/storage.ts', {
+    '../../i18n/locale': { readDeviceLocale: () => device },
+    'expo-sqlite': { openDatabaseAsync: async () => db },
+    '../../db': { withReadLock: (work: any) => work(), withWriteLock: (work: any) => work() },
+    '../../db/sober': {
+      getSoberById: async () => {
+        recordReads++;
+        return { id: 1 };
+      },
+      getSoberRestarts: async () => [],
+    },
+  });
+  for (const [preference, tag, expected] of [
+    ['en', 'ko-KR', 'en'],
+    ['ko', 'en-US', 'ko'],
+    ['system', 'ko-KR', 'ko'],
+    ['system', 'en-GB', 'en'],
+    ['system', 'ja-JP', 'en'],
+    ['system', 'fr-FR', 'en'],
+    ['invalid', 'ko-KR', 'ko'],
+  ]) {
+    device = tag;
+    row = { value: JSON.stringify({ language: preference, themeAccent: 'purple' }) };
+    const result = await loadWidgetDisplaySettings(db);
+    assert.equal(result.language, expected);
+    assert.equal(result.themeAccent, 'purple');
+  }
+  device = 'fr-FR';
+  for (const value of [null, '{broken', 'null', '{}']) {
+    row = value === null ? null : { value };
+    assert.equal((await loadWidgetDisplaySettings(db)).language, 'en');
+  }
+  failure = true;
+  assert.equal((await loadWidgetDisplaySettings(db)).themeAccent, 'blue');
+  failure = false;
+  row = { value: JSON.stringify({ language: 'ko' }) };
+  const empty = await loadWidgetRecord();
+  assert.equal(empty.language, 'ko');
+  assert.equal(empty.sober, null);
+  assert.equal(recordReads, 0);
+  assert.equal(closed, 1);
+  assert.equal(i18n.locale, appLocale);
+});
+
+test('unconfigured widget tasks also read persisted display language', async () => {
+  const ids: unknown[] = [];
+  const task = load('../src/widgets/sober/task.tsx', {
+    './model': { SOBER_WIDGET_NAME: 'Sober' },
+    './storage': {
+      loadWidgetSettings: async () => null,
+      loadWidgetRecord: async (id: unknown) => {
+        ids.push(id);
+        return { sober: null, restarts: [], themeAccent: 'blue', language: 'en' };
+      },
+    },
+    './SoberWidget': { SoberWidget: () => null },
+  });
+  const tree = await task.renderSoberWidget({ widgetId: 10, width: 180, height: 180 });
+  assert.equal(tree.props.language, 'en');
+  assert.deepEqual(ids, [undefined]);
+});
+
+test('Android launcher resources provide English fallback and Korean labels without changing widget identity', async () => {
+  const project = fs.mkdtempSync(join(tmpdir(), 'bloolog-widget-locale-'));
+  const callbacks: any = {};
+  const config = { android: { package: 'com.everstamp' } };
+  const pluginModule: any = { exports: {} };
+  runInNewContext(
+    fs.readFileSync(new URL('../plugins/withSamsungSoberWidget.cjs', import.meta.url), 'utf8'),
+    {
+      module: pluginModule,
+      exports: pluginModule.exports,
+      require: (name: string) =>
+        name === 'expo/config-plugins'
+          ? {
+              AndroidConfig: {
+                Manifest: { getMainApplicationOrThrow: (manifest: any) => manifest.application },
+              },
+              withAndroidManifest: (value: any, callback: any) => {
+                callbacks.manifest = callback;
+                return value;
+              },
+              withDangerousMod: (value: any, [_platform, callback]: any) => {
+                callbacks.resources = callback;
+                return value;
+              },
+            }
+          : require(name),
+    },
+  );
+  try {
+    pluginModule.exports(config);
+    const resources = join(project, 'app/src/main/res');
+    fs.mkdirSync(join(resources, 'xml'), { recursive: true });
+    const provider = join(resources, 'xml/widgetprovider_sober.xml');
+    fs.writeFileSync(
+      provider,
+      '<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android" android:description="@string/widget_sober_description" />',
+    );
+    const manifest: any = {
+      modResults: { application: { receiver: [{ $: { 'android:name': '.widget.Sober' } }] } },
+    };
+    for (let repeat = 0; repeat < 2; repeat++) {
+      callbacks.manifest(manifest);
+      await callbacks.resources({ ...config, modRequest: { platformProjectRoot: project } });
+    }
+    const english = fs.readFileSync(
+      join(resources, 'values/took_sober_widget_strings.xml'),
+      'utf8',
+    );
+    const korean = fs.readFileSync(
+      join(resources, 'values-ko/took_sober_widget_strings.xml'),
+      'utf8',
+    );
+    assert(english.includes('>Cut Back Timer</string>'));
+    assert(korean.includes('>거리두기 타이머</string>'));
+    const { AndroidConfig } = require('expo/config-plugins');
+    for (const [directory, label] of [
+      ['values', 'Cut Back Timer'],
+      ['values-ko', '거리두기 타이머'],
+    ]) {
+      const xml = await AndroidConfig.Resources.readResourcesXMLAsync({
+        path: join(resources, directory, 'took_sober_widget_strings.xml'),
+      });
+      assert.equal(
+        xml.resources.string.find((item: any) => item.$.name === 'took_sober_widget_label')._,
+        label,
+      );
+    }
+    assert(!english.includes('BlooLog'));
+    const generated = fs.readFileSync(provider, 'utf8');
+    assert(generated.includes('android:description="@string/took_sober_widget_description"'));
+    assert.equal((generated.match(/android:previewLayout=/g) ?? []).length, 1);
+    assert.equal(manifest.modResults.application.receiver[0]['meta-data'].length, 1);
+    const app = JSON.parse(fs.readFileSync(new URL('../app.json', import.meta.url), 'utf8')).expo;
+    const widget = app.plugins.find((plugin: any) => plugin[0] === 'react-native-android-widget')[1]
+      .widgets[0];
+    assert.equal(widget.name, 'Sober');
+    assert.equal(widget.label, '@string/took_sober_widget_label');
+    assert.equal(widget.updatePeriodMillis, 1800000);
   } finally {
     fs.rmSync(project, { recursive: true, force: true });
   }

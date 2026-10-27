@@ -1,4 +1,6 @@
-import { differenceInCalendarDays, format, parseISO } from 'date-fns';
+import { formatDisplayDate } from '../../i18n/format';
+import { useI18n } from '../../i18n/react';
+import { differenceInCalendarDays, parseISO } from 'date-fns';
 import { View } from 'react-native';
 import { Text } from '../../components/Text';
 
@@ -13,6 +15,8 @@ export function HabitRecentRecord({
   today: string;
   unavailable: boolean;
 }) {
+  const { t, formatLocale } = useI18n();
+
   const latest = dates
     .filter((date) => date >= startedDate && date <= today)
     .sort()
@@ -21,14 +25,14 @@ export function HabitRecentRecord({
   return (
     <View className="gap-3">
       <Text accessibilityRole="header" className="text-xl font-semibold">
-        최근 기록
+        {t('habit.recentRecord')}
       </Text>
       <Text className="text-base text-theme-text-secondary">
         {unavailable
           ? '—'
           : latest
-            ? `${format(parseISO(latest), 'yyyy년 M월 d일')} · ${daysAgo === 0 ? '오늘' : `${daysAgo}일 전`}`
-            : '아직 기록이 없어요.'}
+            ? `${formatDisplayDate(latest, formatLocale, 'date')} · ${daysAgo === 0 ? t('calendar.today') : t('habit.daysAgo', { count: daysAgo ?? 0 })}`
+            : t('habit.noRecords')}
       </Text>
     </View>
   );

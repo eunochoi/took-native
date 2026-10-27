@@ -39,6 +39,7 @@ async function fixture() {
     'preferences',
     JSON.stringify({
       ...DEFAULT_SETTINGS,
+      language: 'en',
       emotionStyle: 'emoji',
       diarySort: 'ASC',
       habitSort: 'CUSTOM',
@@ -71,6 +72,7 @@ test('DB + images + settings survive backup roundtrip and atomic restore', async
   assert.equal(rows(target.raw, 'SELECT icon_color FROM habits')[0][0], 'lavender');
   assert.equal(rows(target.raw, 'SELECT file_name FROM diary_images')[0][0], 'new-name.jpg');
   const restoredSettings = JSON.parse(String(rows(target.raw, 'SELECT value FROM settings')[0][0]));
+  assert.equal(restoredSettings.language, 'en');
   assert.equal(restoredSettings.emotionStyle, 'emoji');
   assert.equal(restoredSettings.diaryReminderTime, '21:00');
   assert.equal(restoredSettings.habitReminderTime, '08:30');
@@ -243,6 +245,29 @@ test('theme-following color survives backup record replacement', async () => {
   const target = await database();
   await replaceRecords(target.db, records, new Map([['test.jpg', 'restored.jpg']]));
   assert.equal(rows(target.raw, 'SELECT icon_color FROM habits')[0][0], 'theme');
+  source.raw.close();
+  snapshot.raw.close();
+  target.raw.close();
+});
+
+test('a legacy backup without a language preference restores using the device setting', async () => {
+  const source = await fixture();
+  const preferences = JSON.parse(String(rows(source.raw, 'SELECT value FROM settings')[0][0]));
+  delete preferences.language;
+  await source.db.runAsync(
+    'UPDATE settings SET value = ? WHERE key = ?',
+    JSON.stringify(preferences),
+    'preferences',
+  );
+  const decoded = readArchive(createArchive({ ...source.files, 'took.db': source.raw.export() }));
+  const snapshot = await database(decoded.files['took.db']);
+  const records = await readBackupDatabase(snapshot.db, decoded.files);
+  const target = await database();
+  await replaceRecords(target.db, records, new Map([['test.jpg', 'legacy-restored.jpg']]));
+  const restored = JSON.parse(String(rows(target.raw, 'SELECT value FROM settings')[0][0]));
+  assert.equal(restored.language, 'system');
+  assert.equal(restored.themeAccent, 'green');
+  assert.equal(rows(target.raw, 'SELECT text FROM diaries')[0][0], '사진과 기억');
   source.raw.close();
   snapshot.raw.close();
   target.raw.close();

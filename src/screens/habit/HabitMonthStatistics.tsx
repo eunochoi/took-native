@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import { Text } from '../../components/Text';
@@ -31,6 +32,8 @@ export function HabitMonthStatistics({
   summary: ReturnType<typeof getHabitMonthSummary>;
   unavailable: boolean;
 }) {
+  const { t } = useI18n();
+
   const startedDate = localDate(habit.initial_started_at);
   const days = useMemo(() => calendarDays(month), [month]);
   const navigation = useCalendarNavigation(month, onMonthChange, startedDate, today);
@@ -39,37 +42,58 @@ export function HabitMonthStatistics({
   return (
     <View className="gap-6">
       <Text accessibilityRole="header" className="text-xl font-semibold">
-        월간 기록
+        {t('habit.monthly')}
       </Text>
       <HabitStatisticsSummary
         stats={
           habit.priority === 0
             ? [
-                { label: '기록 횟수', icon: 'check', value: summary.completed, unit: '회' },
                 {
-                  label: '평균 기록 주기',
+                  label: t('habit.recordCount'),
+                  icon: 'check',
+                  value: summary.completed,
+                  unit: t('habit.timesUnit'),
+                },
+                {
+                  label: t('habit.averageInterval'),
                   icon: 'date',
                   value:
                     summary.averageInterval === null
                       ? '—'
                       : Number(summary.averageInterval.toFixed(1)),
-                  unit: unavailable || summary.averageInterval === null ? '' : '일',
+                  unit: unavailable || summary.averageInterval === null ? '' : t('habit.daysUnit'),
                 },
               ]
             : [
-                { label: '실천 횟수', icon: 'check', value: summary.completed, unit: '회' },
-                { label: '놓친 횟수', icon: 'close', value: summary.missed, unit: '회' },
-                { label: '실천율', icon: 'habit-rate', value: summary.rate ?? '—', unit: '%' },
+                {
+                  label: t('habit.completionCount'),
+                  icon: 'check',
+                  value: summary.completed,
+                  unit: t('habit.timesUnit'),
+                },
+                {
+                  label: t('habit.missedCount'),
+                  icon: 'close',
+                  value: summary.missed,
+                  unit: t('habit.timesUnit'),
+                },
+                {
+                  label: t('habit.rate'),
+                  icon: 'habit-rate',
+                  value: summary.rate ?? '—',
+                  unit: '%',
+                },
               ]
         }
         unavailable={unavailable}
       />
-      {habit.priority === 0 && (
-        <InfoNotice>습관 시작일을 반영한 월간 경과 일수 ÷ 기록 횟수예요.</InfoNotice>
-      )}
+      {habit.priority === 0 && <InfoNotice>{t('habit.intervalNotice')}</InfoNotice>}
       <View className="px-1">
         <CalendarHeader month={month} today={today} navigation={navigation} />
-        <CalendarGrid {...swipe.panHandlers} accessibilityLabel={`${month} 습관 실천 달력`}>
+        <CalendarGrid
+          {...swipe.panHandlers}
+          accessibilityLabel={t('habit.calendar', { value: month })}
+        >
           {days.map((date) => {
             const outside = date.slice(0, 7) !== month;
             const available = navigation.isDateAvailable(date);
@@ -84,7 +108,7 @@ export function HabitMonthStatistics({
                 onMonthChange={navigation.changeToMonth}
                 disabled={!outside || !available}
                 dimmed={!available}
-                label={`${date}${completed ? ', 완료 기록 있음' : ''}${empty ? ', 실천 기록 없음' : ''}`}
+                label={`${date}${completed ? t('habit.hasRecord') : ''}${empty ? t('habit.noRecord') : ''}`}
                 textClassName="font-medium"
               >
                 {completed ? (

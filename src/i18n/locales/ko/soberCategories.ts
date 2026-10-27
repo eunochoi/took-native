@@ -1,0 +1,16 @@
+export const soberCategoriesKo = {
+  basic: '기본',
+  basicDescription: '나에게 필요한 거리두기를\n자유롭게 정해요.',
+  screen: '화면과 콘텐츠',
+  screenDescription: '잠시 화면을 내려놓고\n나의 시간을 챙겨요.',
+  food: '음식과 음료',
+  foodDescription: '먹는 즐거움을 지키며\n나에게 맞는 양을 찾아요.',
+  spending: '소비와 금전',
+  spendingDescription: '바로 결정하지 않아도 돼요.\n선택할 여유를 가져요.',
+  routine: '생활 패턴',
+  routineDescription: '익숙한 생활도 작은 선택부터\n바꿔갈 수 있어요.',
+  relationships: '마음과 관계',
+  relationshipsDescription: '감정은 자연스러워요.\n반응은 천천히 골라도 돼요.',
+  adult: '19+',
+  adultDescription: '술·담배·성인 콘텐츠와\n나에게 맞는 거리를 정해요.',
+} as const;

@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { moveItem } from '../src/components/sortable/order';
@@ -43,6 +44,8 @@ function renderer(path: string, states: any[], saved: any[] = []) {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/i18n/react')) return mockI18n();
+        if (name.endsWith('/i18n/format')) return { formatDisplayDate };
         if (name.endsWith('/NoticeProvider'))
           return { useNotice: () => ({ showNotice: () => {} }) };
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };

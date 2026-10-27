@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { MUTED_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 import { Image, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
@@ -7,6 +8,7 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 const navigationPreview = require('../../../assets/onboarding/navigation.png');
 
 export function UsagePage({ imageWidth }: { imageWidth: number }) {
+  const { t } = useI18n();
   const { rem, iconSizes } = useAppTheme();
   return (
     <View className="w-full grow justify-between gap-6">
@@ -15,10 +17,10 @@ export function UsagePage({ imageWidth }: { imageWidth: number }) {
           accessibilityRole="header"
           className="text-center text-[21px] leading-[28px] font-semibold tracking-tight"
         >
-          편리하게 사용해요
+          {t('onboarding.usageTitle')}
         </Text>
         <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
-          빠른 이동과 알림으로 기록을 더 편하게 챙겨요.
+          {t('onboarding.usageDescription')}
         </Text>
       </View>
       <View
@@ -26,11 +28,11 @@ export function UsagePage({ imageWidth }: { imageWidth: number }) {
       >
         <View className="items-center gap-2">
           <Text className="text-center text-[15.75px] leading-[24.5px] font-semibold">
-            아래 메뉴를 한 번 더 눌러요
+            {t('onboarding.tapAgain')}
           </Text>
           <Image
             source={navigationPreview}
-            accessibilityLabel="현재 메뉴를 원형 점선으로 표시한 네비게이션 바"
+            accessibilityLabel={t('onboarding.navigationImage')}
             resizeMode="contain"
             style={{
               width: imageWidth,
@@ -40,7 +42,7 @@ export function UsagePage({ imageWidth }: { imageWidth: number }) {
             }}
           />
           <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
-            지금 보고 있는 메뉴를 다시 누르면{'\n'}화면 맨 위로 이동해요.
+            {t('onboarding.tapDescription')}
           </Text>
         </View>
         <View className="h-px bg-theme-border/50" />
@@ -54,10 +56,10 @@ export function UsagePage({ imageWidth }: { imageWidth: number }) {
             />
           </View>
           <Text className="text-center text-[15.75px] leading-[24.5px] font-semibold">
-            잊지 않도록 알림을 받아요
+            {t('onboarding.reminderTitle')}
           </Text>
           <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
-            일기·습관·거리두기를 잊지 않도록{'\n'}원하는 시간에 알려드려요.
+            {t('onboarding.reminderDescription')}
           </Text>
           <View className="max-w-full flex-row items-center gap-2 rounded-full bg-theme-surface px-4 py-2">
             <AppIcon
@@ -67,13 +69,13 @@ export function UsagePage({ imageWidth }: { imageWidth: number }) {
               accessible={false}
             />
             <Text className="min-w-0 shrink text-center text-[10.5px] leading-[14px] text-theme-text-secondary">
-              설정의 기록 알림에서 시간을 정해보세요.
+              {t('onboarding.reminderSettings')}
             </Text>
           </View>
         </View>
       </View>
       <InfoNotice textClassName="text-[10.5px] leading-[17.5px]" adjustsFontSizeToFit={false}>
-        알림 시간은 설정에서 언제든 바꿀 수 있어요.
+        {t('onboarding.reminderNotice')}
       </InfoNotice>
     </View>
   );

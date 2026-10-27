@@ -94,8 +94,8 @@
           "widgets": [
             {
               "name": "Sober",
-              "label": "거리두기 타이머",
-              "description": "선택한 거리두기의 경과 시간과 목표를 확인해요.",
+              "label": "@string/took_sober_widget_label",
+              "description": "Check elapsed time and goals for your selected Cut Back item.",
               "minWidth": "110dp",
               "minHeight": "110dp",
               "targetCellWidth": 2,
@@ -107,7 +107,8 @@
             }
           ]
         }
-      ]
+      ],
+      ["expo-localization", { "supportedLocales": ["en", "ko"] }]
     ],
     "updates": {
       "enabled": true,

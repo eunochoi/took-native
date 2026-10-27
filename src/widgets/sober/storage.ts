@@ -1,3 +1,5 @@
+import { resolveLocale, type Language } from '../../i18n/core';
+import { readDeviceLocale } from '../../i18n/locale';
 import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 import { withReadLock, withWriteLock } from '../../db';
 import { getSoberById, getSoberRestarts } from '../../db/sober';
@@ -53,32 +55,42 @@ export function removeWidgetSettings(id: number) {
     }),
   );
 }
-export function loadWidgetRecord(id: number) {
+export function loadWidgetRecord(id?: number) {
   return withReadLock(async () => {
     const db = await openDatabaseAsync('took.db', { useNewConnection: true });
     try {
-      const sober = await getSoberById(db, id);
-      const [restarts, themeAccent] = await Promise.all([
+      const sober = id === undefined ? null : await getSoberById(db, id);
+      const [restarts, display] = await Promise.all([
         sober ? getSoberRestarts(db, id) : [],
-        loadWidgetThemeAccent(db),
+        loadWidgetDisplaySettings(db),
       ]);
-      return { sober, restarts, themeAccent };
+      return { sober, restarts, ...display };
     } finally {
       await db.closeAsync();
     }
   });
 }
 
-export async function loadWidgetThemeAccent(db: SQLiteDatabase): Promise<Settings['themeAccent']> {
+export async function loadWidgetDisplaySettings(db: SQLiteDatabase): Promise<{
+  themeAccent: Settings['themeAccent'];
+  language: Language;
+}> {
+  let themeAccent = DEFAULT_SETTINGS.themeAccent;
+  let preference = DEFAULT_SETTINGS.language;
   try {
     const row = await db.getFirstAsync<{ value: string }>(
       'SELECT value FROM settings WHERE key = ?',
       'preferences',
     );
-    const accent = row ? JSON.parse(row.value)?.themeAccent : undefined;
-    if (ACCENT_KEYS.includes(accent)) return accent;
+    const value = row ? JSON.parse(row.value) : null;
+    if (ACCENT_KEYS.includes(value?.themeAccent)) themeAccent = value.themeAccent;
+    if (['system', 'ko', 'en'].includes(value?.language)) preference = value.language;
   } catch {
-    // A missing or unreadable preference must not prevent the widget from rendering.
+    // Missing or unreadable preferences use the device language and default accent.
   }
-  return DEFAULT_SETTINGS.themeAccent;
+  return { themeAccent, language: resolveLocale(preference, readDeviceLocale()).language };
+}
+
+export async function loadWidgetThemeAccent(db: SQLiteDatabase): Promise<Settings['themeAccent']> {
+  return (await loadWidgetDisplaySettings(db)).themeAccent;
 }

@@ -5,9 +5,7 @@ import { SoberWidget } from './SoberWidget';
 
 export async function renderSoberWidget(info: WidgetInfo) {
   const settings = await loadWidgetSettings(info.widgetId);
-  const record = settings
-    ? await loadWidgetRecord(settings.soberId)
-    : { sober: null, restarts: [] };
+  const record = await loadWidgetRecord(settings?.soberId);
   return <SoberWidget settings={settings} {...record} width={info.width} height={info.height} />;
 }
 export async function soberWidgetTask(props: WidgetTaskHandlerProps) {

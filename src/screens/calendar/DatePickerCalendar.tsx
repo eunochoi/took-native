@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
@@ -28,6 +29,8 @@ export function DatePickerCalendar({
   onMonthChange: (month: string) => void;
   onSelect: (date: string) => void;
 }) {
+  const { t } = useI18n();
+
   const { colors, iconSizes } = useAppTheme();
   const recorded = useMemo(() => new Set(diaryDates), [diaryDates]);
   const days = useMemo(() => calendarDays(month), [month]);
@@ -36,7 +39,10 @@ export function DatePickerCalendar({
   return (
     <View className="gap-4">
       <CalendarHeader month={month} today={today} navigation={navigation} centerTitle />
-      <CalendarGrid {...swipe.panHandlers} accessibilityLabel={`${month} 날짜 선택 달력`}>
+      <CalendarGrid
+        {...swipe.panHandlers}
+        accessibilityLabel={t('calendar.datePickerLabel', { value: month })}
+      >
         {days.map((date) => {
           const unavailable = !navigation.isDateAvailable(date);
           const hasDiary = date.slice(0, 7) === month && !unavailable && recorded.has(date);
@@ -48,7 +54,7 @@ export function DatePickerCalendar({
               month={month}
               today={today}
               selected={selected}
-              label={hasDiary ? `${date}, 일기 있음` : undefined}
+              label={hasDiary ? t('calendar.dateHasDiary', { value: date }) : undefined}
               showTodayIndicator={false}
               showSelectedIndicator={false}
               disabled={unavailable}

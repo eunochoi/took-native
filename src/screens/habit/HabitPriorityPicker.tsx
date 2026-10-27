@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
@@ -6,8 +7,6 @@ import { InfoNotice } from '../../components/InfoNotice';
 import { PickerOption } from '../../components/PickerOption';
 import { Text } from '../../components/Text';
 import { HabitStars } from './HabitStars';
-
-export const HABIT_PRIORITY_LABELS = ['자유 기록', '낮음', '보통', '높음'] as const;
 
 export function HabitPriorityPicker({
   value,
@@ -18,16 +17,19 @@ export function HabitPriorityPicker({
   onApply: (value: number) => void;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
+  const priorityLabels = [t('habit.free'), t('habit.low'), t('habit.normal'), t('habit.high')];
+
   const [draft, setDraft] = useState(value);
   return (
     <BottomSheetModal
       visible
-      title="우선순위"
+      title={t('habit.priority')}
       onClose={onClose}
       footer={(close) => (
         <Button
           labelWeight="normal"
-          label="선택 완료"
+          label={t('habit.selectionDone')}
           onPress={() => close(() => onApply(draft))}
         />
       )}
@@ -41,8 +43,8 @@ export function HabitPriorityPicker({
             {row.map((priority) => {
               const label =
                 priority === 0
-                  ? '없음 · 자유 기록'
-                  : `${HABIT_PRIORITY_LABELS[priority]} · 매일 기록`;
+                  ? t('habit.freeLabel')
+                  : t('habit.priorityDaily', { value: priorityLabels[priority] });
               return (
                 <View key={priority} className="flex-1">
                   <PickerOption
@@ -62,7 +64,7 @@ export function HabitPriorityPicker({
             })}
           </View>
         ))}
-        <InfoNotice>자유 기록 항목은 완료율과 달성 개수 계산에 포함되지 않아요.</InfoNotice>
+        <InfoNotice>{t('habit.freeItemsNotice')}</InfoNotice>
       </View>
     </BottomSheetModal>
   );

@@ -1,3 +1,4 @@
+import { useI18n } from '../../src/i18n/react';
 import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -14,6 +15,8 @@ import { useAppTheme } from '../../src/theme/AppThemeProvider';
 import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 
 export default function CalendarScreen() {
+  const { t } = useI18n();
+
   const today = useToday();
   const db = useSQLiteContext();
   const { navigationBottom, navigationHeight, rem } = useAppTheme();
@@ -51,7 +54,7 @@ export default function CalendarScreen() {
         overScrollMode="never"
         showsVerticalScrollIndicator={false}
       >
-        <PageTopSection title="월간 기록" hashtags="#기록 #발자국" />
+        <PageTopSection title={t('calendar.title')} hashtags={t('calendar.tags')} />
         <Toolbar>
           <CalendarRecordCounts
             diaryCount={diaries.data?.length ?? 0}

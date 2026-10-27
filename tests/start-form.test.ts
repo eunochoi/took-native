@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate, soberI18n } from './helpers/i18n';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -9,6 +10,7 @@ const ts = require('typescript');
 const jsx = (type: unknown, props: any) => ({ type, props });
 const start = '2024-03-02T10:20:00.000Z';
 function form(name: 'HabitForm' | 'SoberForm', id?: number) {
+  let language: 'ko' | 'en' = 'ko';
   const exports: any = {};
   const slots: any[] = [];
   let cursor = 0;
@@ -36,6 +38,9 @@ function form(name: 'HabitForm' | 'SoberForm', id?: number) {
     {
       exports,
       require: (dependency: string) => {
+        if (dependency.endsWith('/i18n/sober')) return soberI18n;
+        if (dependency.endsWith('/i18n/react')) return mockI18n(() => language);
+        if (dependency.endsWith('/i18n/format')) return { formatDisplayDate };
         if (dependency.endsWith('/NoticeProvider'))
           return { useNotice: () => ({ showNotice: () => {} }) };
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
@@ -112,7 +117,12 @@ function form(name: 'HabitForm' | 'SoberForm', id?: number) {
     };
     return nodes(tree);
   }
-  return { render };
+  return {
+    render,
+    setLanguage: (value: 'ko' | 'en') => {
+      language = value;
+    },
+  };
 }
 
 test('habit and sober forms allow start selection only during creation and explain the immutable start', () => {
@@ -136,4 +146,28 @@ test('habit and sober forms allow start selection only during creation and expla
       }
     }
   }
+});
+
+test('habit editor translates controls without changing the loaded name or locked start time', () => {
+  const ui = form('HabitForm', 1);
+  const before = ui.render();
+  const startRow = before.find(
+    (node) => node.type === 'FormPickerRow' && node.props.accessibilityLabel === '시작 일시 선택',
+  );
+  ui.setLanguage('en');
+  const after = ui.render();
+  assert.equal(after.find((node) => node.type === 'TextInput').props.value, '기록');
+  const translated = after.find(
+    (node) =>
+      node.type === 'FormPickerRow' &&
+      node.props.accessibilityLabel === 'Choose start date and time',
+  );
+  assert.equal(translated.props.disabled, startRow.props.disabled);
+  assert.equal(translated.props.disabled, true);
+  assert(after.some((node) => node.type === 'FormPickerRow' && node.props.label === 'Goal'));
+  assert(
+    after.some(
+      (node) => node.type === 'FormPickerRow' && node.props.label === 'Normal · Daily entry',
+    ),
+  );
 });

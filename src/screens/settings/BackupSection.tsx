@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import { Text } from '../../components/Text';
 import { useAppTheme } from '../../theme/AppThemeProvider';
@@ -13,35 +14,30 @@ export function BackupSection({
   onRestore: () => void;
 }) {
   const { colors } = useAppTheme();
+  const { t } = useI18n();
   return (
     <View className="gap-3">
       <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
-        백업 / 복원
+        {t('settings.backupRestore')}
       </Text>
       <View className="gap-6 px-1 pt-2">
         <View
           className={`${MUTED_CARD_BORDER_CLASS_NAME} gap-4 ios:curve-continuous rounded-2xl bg-theme-surface-muted p-4`}
         >
           <View className="gap-2">
-            <Text className="text-base font-semibold">기록 보관</Text>
-            <Text className={MUTED_DESCRIPTION_CLASS_NAME}>기록·사진·설정을 파일로 저장해요.</Text>
+            <Text className="text-base font-semibold">{t('settings.keepRecords')}</Text>
+            <Text className={MUTED_DESCRIPTION_CLASS_NAME}>{t('settings.backupDescription')}</Text>
           </View>
           <View className="gap-2 border-t border-theme-border/50 pt-4">
-            <Text className="text-base font-semibold">안전한 저장</Text>
-            <Text className={MUTED_DESCRIPTION_CLASS_NAME}>
-              암호화하지 않으니 안전한 곳에 보관해주세요.
-            </Text>
-            <Text className={MUTED_DESCRIPTION_CLASS_NAME}>
-              1GB 초과 시 분할해요. 복원할 땐 같은 세트의 ZIP을 모두 선택해주세요.
-            </Text>
+            <Text className="text-base font-semibold">{t('settings.safeStorage')}</Text>
+            <Text className={MUTED_DESCRIPTION_CLASS_NAME}>{t('settings.unencrypted')}</Text>
+            <Text className={MUTED_DESCRIPTION_CLASS_NAME}>{t('settings.splitBackup')}</Text>
           </View>
           <View className="gap-2 border-t border-theme-border/50 pt-4">
-            <Text className="text-base font-semibold">복원 전 확인</Text>
-            <Text className={MUTED_DESCRIPTION_CLASS_NAME}>
-              현재 데이터가 백업 내용으로 교체돼요.
-            </Text>
+            <Text className="text-base font-semibold">{t('settings.beforeRestore')}</Text>
+            <Text className={MUTED_DESCRIPTION_CLASS_NAME}>{t('settings.replaceData')}</Text>
             <Text className="text-sm font-medium text-theme-danger font-bold">
-              복원 전에 먼저 백업해주세요.
+              {t('settings.backupFirst')}
             </Text>
           </View>
         </View>
@@ -59,7 +55,7 @@ export function BackupSection({
               adjustsFontSizeToFit
               className="min-w-0 shrink text-base text-theme-text-on-accent"
             >
-              {activity === 'export' ? '백업 준비 중…' : '백업하기'}
+              {activity === 'export' ? t('settings.preparingBackup') : t('settings.createBackup')}
             </Text>
           </Pressable>
           <Pressable
@@ -75,7 +71,9 @@ export function BackupSection({
               adjustsFontSizeToFit
               className="min-w-0 shrink text-base text-theme-accent"
             >
-              {activity === 'restore' ? '복원 준비 중…' : '복원하기'}
+              {activity === 'restore'
+                ? t('settings.preparingRestore')
+                : t('settings.restoreBackup')}
             </Text>
           </Pressable>
         </View>

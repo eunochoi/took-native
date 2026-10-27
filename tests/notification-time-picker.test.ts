@@ -1,3 +1,5 @@
+import { translateErrorMessage } from '../src/i18n/errors';
+import { mockI18n } from './helpers/i18n';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -25,6 +27,8 @@ function load(path: string, dependencies: Record<string, unknown>) {
       exports,
       Error,
       require: (name: string) => {
+        if (name.endsWith('/i18n/errors')) return { translateErrorMessage };
+        if (name.endsWith('/i18n/react')) return mockI18n();
         assert(name in dependencies, `Unexpected dependency: ${name}`);
         return dependencies[name];
       },

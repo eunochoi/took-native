@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -12,6 +13,7 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 import { HomeTodayItem } from './HomeTodayItem';
 
 export function HomeTodayHabit({ today }: { today: string }) {
+  const { t } = useI18n();
   const db = useSQLiteContext();
   const router = useRouter();
   const { colors, rem } = useAppTheme();
@@ -35,23 +37,27 @@ export function HomeTodayHabit({ today }: { today: string }) {
           ? colors.progressLow
           : colors.border;
   const status = error
-    ? '불러오기 실패'
+    ? t('home.loadFailed')
     : total === 0
       ? habits.data?.some((habit) => habit.priority === 0)
-        ? `${excludedCompleted}건 자유 기록`
-        : '습관을 추가해 보세요'
+        ? t('home.freeRecords', { count: excludedCompleted })
+        : t('home.addHabit')
       : completed === total
-        ? '완료'
+        ? t('home.completed')
         : `${completed > 0 ? Math.min(99, Math.max(1, Math.round(progress * 100))) : 0}%`;
   const visualSize = rem * 3.5;
   const circumference = 2 * Math.PI * 45.5;
 
   return (
     <HomeTodayItem
-      title="오늘의 습관"
+      title={t('home.habitTitle')}
       status={status}
       pending={pending}
-      accessibilityLabel={`오늘의 습관 이동, ${error ? status : `${completed}/${total} 완료, ${status}`}`}
+      accessibilityLabel={t('home.habitLinkStatus', {
+        value: error
+          ? status
+          : t('home.completedStatus', { value: `${completed}/${total}`, title: status }),
+      })}
       onPress={() => router.push('/habit')}
     >
       {error ? (

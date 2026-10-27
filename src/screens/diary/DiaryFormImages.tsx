@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import type { ScrollView } from 'react-native';
 import { useState } from 'react';
 import { useAnimatedRef } from 'react-native-reanimated';
@@ -25,12 +26,14 @@ function PhotoTile({
   onRemove: () => void;
   onReorder: (from: number, to: number) => void;
 }) {
+  const { t } = useI18n();
+
   const { rem: appRem } = useAppTheme();
   return (
     <View className="relative h-28 w-24 ios:curve-continuous rounded-2xl overflow-hidden">
       <Image
         source={{ uri: image.uri }}
-        accessibilityLabel={`첨부 사진 ${index + 1}`}
+        accessibilityLabel={t('diary.attachedPhoto', { count: index + 1 })}
         className="w-full h-full"
         resizeMode="cover"
       />
@@ -40,7 +43,7 @@ function PhotoTile({
       <Pressable
         disabled={busy}
         accessibilityRole="button"
-        accessibilityLabel={`사진 ${index + 1} 삭제`}
+        accessibilityLabel={t('diary.deletePhoto', { count: index + 1 })}
         onPress={onRemove}
         hitSlop={appRem * 0.25}
         className={`absolute right-2 top-2 h-6 w-6 items-center justify-center ios:curve-continuous rounded-full border border-black/60 bg-black/50 ${busy ? 'opacity-40' : 'opacity-100'}`}
@@ -52,12 +55,12 @@ function PhotoTile({
           <View
             accessible
             accessibilityRole="button"
-            accessibilityLabel={`사진 ${index + 1} 순서 변경`}
-            accessibilityHint="좌우로 끌어 사진 순서를 변경하세요."
+            accessibilityLabel={t('diary.reorderPhoto', { count: index + 1 })}
+            accessibilityHint={t('diary.reorderHint')}
             accessibilityState={{ disabled: busy }}
             accessibilityActions={[
-              { name: 'decrement', label: '앞으로 이동' },
-              { name: 'increment', label: '뒤로 이동' },
+              { name: 'decrement', label: t('diary.moveForward') },
+              { name: 'increment', label: t('diary.moveBackward') },
             ]}
             onAccessibilityAction={(event) => {
               if (busy) return;
@@ -91,6 +94,8 @@ export function DiaryFormImages({
   onReorder: (from: number, to: number) => void;
   onDragging: (value: boolean) => void;
 }) {
+  const { t } = useI18n();
+
   const { colors, rem: appRem } = useAppTheme();
   const scrollRef = useAnimatedRef<ScrollView>();
   const [dragging, setDragging] = useState(false);
@@ -132,7 +137,7 @@ export function DiaryFormImages({
         {images.length < DIARY_IMAGE_MAX_COUNT && (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="사진 추가"
+            accessibilityLabel={t('diary.addPhoto')}
             disabled={busy || dragging}
             onPress={onPick}
             className={`h-28 w-24 ios:curve-continuous rounded-2xl border border-dashed border-theme-accent bg-theme-surface/40 items-center justify-center gap-2 ${busy || dragging ? 'opacity-40' : 'opacity-100'}`}
@@ -142,7 +147,7 @@ export function DiaryFormImages({
             ) : (
               <AppIcon name="add" size={appRem * 1.75} color={colors.accent} />
             )}
-            <Text className="text-xs text-theme-text-secondary">사진 추가</Text>
+            <Text className="text-xs text-theme-text-secondary">{t('diary.addPhoto')}</Text>
           </Pressable>
         )}
       </View>

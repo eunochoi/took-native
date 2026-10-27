@@ -1,11 +1,14 @@
+import { useI18n } from '../../i18n/react';
 import { View } from 'react-native';
 
 export function HabitListSkeleton() {
+  const { t } = useI18n();
+
   return (
     <View
       accessible
       accessibilityRole="progressbar"
-      accessibilityLabel="습관 기록 불러오는 중"
+      accessibilityLabel={t('habit.listLoading')}
       accessibilityState={{ busy: true }}
       className="w-full"
     >

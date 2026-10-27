@@ -1,3 +1,5 @@
+import { mockI18n } from './helpers/i18n';
+import { translateErrorMessage } from '../src/i18n/errors';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -9,6 +11,7 @@ const ts = require('typescript');
 const jsx = (type: unknown, props: any) => ({ type, props });
 
 function harness() {
+  let language: 'ko' | 'en' = 'ko';
   const components = new Map<string, any[]>();
   const timers = new Map<number, { callback: () => void; duration: number }>();
   const announcements: string[] = [];
@@ -45,6 +48,8 @@ function harness() {
       },
       clearTimeout: (id: number) => timers.delete(id),
       require: (name: string) => {
+        if (name.endsWith('/i18n/react')) return mockI18n(() => language);
+        if (name.endsWith('/i18n/errors')) return { translateErrorMessage };
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react')
           return {
@@ -114,6 +119,10 @@ function harness() {
   refresh();
   return {
     refresh,
+    setLanguage: (value: 'ko' | 'en') => {
+      language = value;
+      refresh();
+    },
     host,
     unmount,
     timers,
@@ -211,4 +220,30 @@ test('standalone widget sheets can render without a notice provider; consumers r
   const ui = harness();
   assert.equal(ui.outsideProvider(), null);
   assert.throws(() => ui.outsideConsumer(), /NoticeProvider/);
+});
+
+test('error notices translate display and screen-reader announcements while keeping the same active notice', () => {
+  const ui = harness();
+  ui.setLanguage('en');
+  ui.show({
+    title: 'Backup failed',
+    tone: 'error',
+    message: '백업 파일이 빠졌습니다. 1, 3번 파일을 함께 선택해주세요. (전체 4개)',
+  });
+  const id = ui.notice().id;
+  const english = nodes(ui.host('root'))
+    .filter((node) => node.type === 'Text')
+    .map((node) => node.props.children);
+  assert(english.includes('Backup files are missing. Also select files 1, 3. (4 files in total)'));
+  assert(ui.announcements.at(-1)?.includes('Also select files 1, 3.'));
+  assert(!/[가-힣]/.test(ui.announcements.at(-1)!));
+  const timers = [...ui.timers.keys()];
+  ui.setLanguage('ko');
+  assert.deepEqual([...ui.timers.keys()], timers);
+  assert.equal(ui.notice().id, id);
+  const korean = nodes(ui.host('root'))
+    .filter((node) => node.type === 'Text')
+    .map((node) => node.props.children);
+  assert(korean.includes(ui.notice().message));
+  assert(ui.announcements.at(-1)?.includes(ui.notice().message));
 });

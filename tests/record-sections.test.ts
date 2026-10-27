@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate, soberI18n } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -33,6 +34,9 @@ function section(path: string, name: string, initialProps: Record<string, unknow
     {
       exports,
       require: (dependency: string) => {
+        if (dependency.endsWith('/i18n/sober')) return soberI18n;
+        if (dependency.endsWith('/i18n/react')) return mockI18n();
+        if (dependency.endsWith('/i18n/format')) return { formatDisplayDate };
         if (dependency === 'react')
           return {
             useState: (initial: unknown) => {
@@ -203,7 +207,7 @@ test('sober analysis ranks individual past and current streaks across items', ()
     3,
   );
   const header = longest.nodes.find((node) => node.type === 'AnalysisHeader');
-  assert.equal(header.props.children.join(''), '전체 항목 2개');
+  assert.equal([header.props.children].flat().join(''), '전체 항목 2개');
   const timeRows = longest.nodes
     .filter(
       (node) =>
@@ -289,12 +293,7 @@ test('day habits show all rows in order and retain totals and completion actions
   const checkboxes = all.nodes.filter((node) => node.props.accessibilityRole === 'checkbox');
   assert.equal(checkboxes.length, habits.length);
   assert.equal(expandButton(all.nodes), undefined);
-  assert(
-    all.nodes.some(
-      (node) =>
-        JSON.stringify(node.props.children) === JSON.stringify(['매일 기록 ', 4, '/', 6, ' 완료']),
-    ),
-  );
+  assert(all.nodes.some((node) => [node.props.children].flat().join('') === '매일 기록 4/6 완료'));
   assert.deepEqual(
     all.nodes
       .filter((node) => node.type === 'Text' && /^습관 \d$/.test(node.props.children))
@@ -358,10 +357,7 @@ test('day habits retain the recent-four-day lock and empty state for dates witho
   );
   assert(
     !recentEmpty.nodes.some(
-      (node) =>
-        node.type === 'Text' &&
-        Array.isArray(node.props.children) &&
-        node.props.children.includes(' 완료'),
+      (node) => node.type === 'Text' && [node.props.children].flat().join('').includes(' 완료'),
     ),
   );
   const unchecked = ui.render({ habits: habits.map((habit) => ({ ...habit, completed: false })) });
@@ -370,10 +366,7 @@ test('day habits retain the recent-four-day lock and empty state for dates witho
     habits.length,
   );
   assert(
-    unchecked.nodes.some(
-      (node) =>
-        JSON.stringify(node.props.children) === JSON.stringify(['매일 기록 ', 0, '/', 6, ' 완료']),
-    ),
+    unchecked.nodes.some((node) => [node.props.children].flat().join('') === '매일 기록 0/6 완료'),
   );
   assert(
     !unchecked.nodes.some(

@@ -1,0 +1,16 @@
+export const soberCategoriesEn = {
+  basic: 'Basics',
+  basicDescription: 'Choose the distance\nthat feels right for you.',
+  screen: 'Screens and content',
+  screenDescription: 'Put the screen down for a moment\nand make time for yourself.',
+  food: 'Food and drinks',
+  foodDescription: 'Keep enjoying food\nand find the amount that suits you.',
+  spending: 'Spending and money',
+  spendingDescription: 'You do not have to decide right away.\nGive yourself room to choose.',
+  routine: 'Daily routines',
+  routineDescription: 'Small choices can change\nfamiliar routines.',
+  relationships: 'Feelings and relationships',
+  relationshipsDescription: 'Feelings are natural.\nYou can take your time responding.',
+  adult: '19+',
+  adultDescription: 'Choose your own distance from\nalcohol, smoking, and adult content.',
+} as const;

@@ -1,19 +1,17 @@
+import { useI18n } from '../../i18n/react';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { PickerOption } from '../../components/PickerOption';
 import { Text } from '../../components/Text';
 import type { Settings } from '../../settings/model';
 import { useAppTheme } from '../../theme/AppThemeProvider';
-import { ACCENT_LABELS as accentLabels, ACCENT_KEYS as accents } from '../../theme/accents';
+import { ACCENT_KEYS as accents } from '../../theme/accents';
 import { ACCENT_PALETTES } from '../../theme/colors';
 import { EmotionIconStyleSelector } from './EmotionIconStyleSelector';
 
 const modes = ['light', 'dark', 'system'] as const;
 const sizes = ['small', 'normal', 'large'] as const;
-const modeLabels = { light: '밝게', dark: '어둡게', system: '자동' };
-const sizeLabels = { small: '작게', normal: '보통', large: '크게' };
 const previewSizes = { small: 13, normal: 17, large: 23 };
-const emotionStyleLabels = { basic: '기본형', simple: '단순형', emoji: '이모지' };
 
 export function AppearanceSettingsSection({
   settings,
@@ -27,22 +25,48 @@ export function AppearanceSettingsSection({
   onChange: (patch: Partial<Settings>) => void;
 }) {
   const { rem: appRem } = useAppTheme();
+  const { t } = useI18n();
+  const modeLabels = {
+    light: t('settings.themeLight'),
+    dark: t('settings.themeDark'),
+    system: t('settings.themeSystem'),
+  };
+  const sizeLabels = {
+    small: t('settings.small'),
+    normal: t('settings.normal'),
+    large: t('settings.large'),
+  };
+  const emotionStyleLabels = {
+    basic: t('settings.basic'),
+    simple: t('settings.simple'),
+    emoji: t('settings.emoji'),
+  };
+  const accentLabels = {
+    blue: t('settings.blue'),
+    green: t('settings.green'),
+    purple: t('settings.purple'),
+    pink: t('settings.pink'),
+    yellow: t('settings.yellow'),
+    grey: t('settings.grey'),
+  };
   return (
     <View className="gap-3">
       <Text accessibilityRole="header" className="text-xl py-2 font-semibold">
-        화면 꾸미기
+        {t('settings.appearance')}
       </Text>
       <View className="gap-6 py-2 px-1">
         <View className="gap-3">
           <View className="w-full min-w-0 flex-row flex-wrap items-center justify-between gap-2">
-            <Text className="min-w-0 text-base text-theme-text-secondary">강조 색상</Text>
+            <Text className="min-w-0 text-base text-theme-text-secondary">
+              {t('settings.accentColor')}
+            </Text>
             <Text className="ml-auto text-base text-theme-accent">
               {accentLabels[settings.themeAccent]}
             </Text>
           </View>
           <View
             accessibilityRole="radiogroup"
-            accessibilityLabel="강조 색상"
+            accessibilityLabel={t('settings.accentColor')}
             className={`my-2 w-full flex-row items-start gap-3 py-2 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
           >
             {accents.map((accent) => {
@@ -51,7 +75,7 @@ export function AppearanceSettingsSection({
                 <Pressable
                   key={accent}
                   accessibilityRole="radio"
-                  accessibilityLabel={`${accentLabels[accent]} 강조 색상`}
+                  accessibilityLabel={t('settings.accentChoice', { color: accentLabels[accent] })}
                   accessibilityState={{ checked, disabled }}
                   disabled={disabled}
                   onPress={() => onChange({ themeAccent: accent })}
@@ -76,7 +100,9 @@ export function AppearanceSettingsSection({
         </View>
         <View className="gap-3">
           <View className="w-full min-w-0 flex-row flex-wrap items-center justify-between gap-2">
-            <Text className="min-w-0 text-base text-theme-text-secondary">감정 아이콘</Text>
+            <Text className="min-w-0 text-base text-theme-text-secondary">
+              {t('settings.emotionIcons')}
+            </Text>
             <Text className="ml-auto text-base text-theme-accent">
               {emotionStyleLabels[settings.emotionStyle]}
             </Text>
@@ -90,12 +116,14 @@ export function AppearanceSettingsSection({
         </View>
         <View className="gap-3">
           <View className="w-full min-w-0 flex-row flex-wrap items-center justify-between gap-2">
-            <Text className="min-w-0 text-base text-theme-text-secondary">배경 색상</Text>
+            <Text className="min-w-0 text-base text-theme-text-secondary">
+              {t('settings.background')}
+            </Text>
             <Text className="ml-auto text-base text-theme-accent">
               {modeLabels[settings.themeMode]}
             </Text>
           </View>
-          <View accessibilityLabel="배경 색상" className="my-2 flex-row gap-2">
+          <View accessibilityLabel={t('settings.background')} className="my-2 flex-row gap-2">
             {modes.map((themeMode) => {
               const selected = settings.themeMode === themeMode;
               return (
@@ -103,7 +131,14 @@ export function AppearanceSettingsSection({
                   key={themeMode}
                   selected={selected}
                   disabled={disabled}
-                  accessibilityLabel={`배경 색상, ${modeLabels[themeMode]}${themeMode === 'system' ? ', 기기 설정 따르기' : ''}`}
+                  accessibilityLabel={
+                    themeMode === 'system'
+                      ? t('settings.themeSystemChoice')
+                      : t('settings.choice', {
+                          setting: t('settings.background'),
+                          value: modeLabels[themeMode],
+                        })
+                  }
                   onPress={() => onChange({ themeMode })}
                   className={`h-[5.666667rem] flex-1 min-w-0 gap-1 px-2 py-2 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
                 >
@@ -126,12 +161,14 @@ export function AppearanceSettingsSection({
         </View>
         <View className="gap-3">
           <View className="w-full min-w-0 flex-row flex-wrap items-center justify-between gap-2">
-            <Text className="min-w-0 text-base text-theme-text-secondary">폰트 크기</Text>
+            <Text className="min-w-0 text-base text-theme-text-secondary">
+              {t('settings.fontSize')}
+            </Text>
             <Text className="ml-auto text-base text-theme-accent">
               {sizeLabels[settings.fontSize]}
             </Text>
           </View>
-          <View accessibilityLabel="폰트 크기" className="my-2 flex-row gap-2">
+          <View accessibilityLabel={t('settings.fontSize')} className="my-2 flex-row gap-2">
             {sizes.map((fontSize) => {
               const selected = settings.fontSize === fontSize;
               return (
@@ -139,7 +176,10 @@ export function AppearanceSettingsSection({
                   key={fontSize}
                   selected={selected}
                   disabled={disabled}
-                  accessibilityLabel={`폰트 크기, ${sizeLabels[fontSize]}`}
+                  accessibilityLabel={t('settings.choice', {
+                    setting: t('settings.fontSize'),
+                    value: sizeLabels[fontSize],
+                  })}
                   onPress={() => onChange({ fontSize })}
                   className={`h-[5.666667rem] flex-1 min-w-0 gap-1 px-2 py-2 ${dimmed ? 'opacity-40' : 'opacity-100'}`}
                 >
@@ -152,7 +192,7 @@ export function AppearanceSettingsSection({
                       adjustsFontSizeToFit
                       className={`w-full text-center font-semibold ${selected ? 'text-theme-accent' : 'text-theme-text-primary'}`}
                     >
-                      가나다
+                      {t('settings.fontPreview')}
                     </Text>
                   </View>
                   <Text

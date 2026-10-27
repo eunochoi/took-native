@@ -1,9 +1,11 @@
-import { format, parseISO } from 'date-fns';
+import { formatDisplayDate } from '../../i18n/format';
+import { formatSoberDuration } from '../../i18n/sober';
+import { useI18n } from '../../i18n/react';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { twMerge } from 'tailwind-merge';
 import { Text } from '../../components/Text';
-import { formatSoberDuration, type SoberStreak } from '../../domain/sober';
+import { type SoberStreak } from '../../domain/sober';
 import { MUTED_DESCRIPTION_CLASS_NAME } from '../../theme/classes';
 
 const RANK_BACKGROUND_CLASSES = [
@@ -18,6 +20,8 @@ const RANK_BACKGROUND_CLASSES = [
 ];
 
 export function SoberLongRecords({ records }: { records: SoberStreak[] }) {
+  const { t, language, formatLocale } = useI18n();
+
   const [expanded, setExpanded] = useState(false);
   const renderRecord = (item: SoberStreak, index: number) => (
     <View
@@ -30,12 +34,16 @@ export function SoberLongRecords({ records }: { records: SoberStreak[] }) {
         <Text className={`text-base font-semibold text-theme-surface`}>{index + 1}</Text>
       </View>
       <View className="flex-1 gap-1">
-        <Text className="text-base font-semibold">{formatSoberDuration(item.duration)}</Text>
+        <Text className="text-base font-semibold">
+          {formatSoberDuration(item.duration, language)}
+        </Text>
         <Text
           className={twMerge(MUTED_DESCRIPTION_CLASS_NAME, item.current && 'text-theme-accent')}
         >
-          {format(parseISO(item.start), 'yy년 M월 d일 HH:mm')} –{' '}
-          {item.current ? '현재' : format(parseISO(item.end), 'yy년 M월 d일 HH:mm')}
+          {formatDisplayDate(item.start, formatLocale, 'shortDateTime')} –{' '}
+          {item.current
+            ? t('sober.current')
+            : formatDisplayDate(item.end, formatLocale, 'shortDateTime')}
         </Text>
       </View>
     </View>
@@ -43,7 +51,7 @@ export function SoberLongRecords({ records }: { records: SoberStreak[] }) {
   return (
     <View className="gap-4">
       <Text accessibilityRole="header" className="text-xl font-semibold">
-        상위 기록
+        {t('sober.topRecords')}
       </Text>
       <View className="px-1 gap-4">
         <View>
@@ -55,7 +63,9 @@ export function SoberLongRecords({ records }: { records: SoberStreak[] }) {
               onPress={() => setExpanded(!expanded)}
               className="min-h-11 items-center justify-center"
             >
-              <Text className="text-sm text-theme-accent">{expanded ? '접기' : '기록 더보기'}</Text>
+              <Text className="text-sm text-theme-accent">
+                {expanded ? t('sober.collapse') : t('sober.moreRecords')}
+              </Text>
             </Pressable>
           )}
         </View>

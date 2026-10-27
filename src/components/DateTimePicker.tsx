@@ -1,3 +1,5 @@
+import { translateErrorMessage } from '../i18n/errors';
+import { useI18n } from '../i18n/react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { dateTimeDraft, parseDateTime } from '../domain/date';
@@ -12,7 +14,7 @@ export function DateTimePicker({
   value,
   minTime,
   description,
-  confirmLabel = '선택 완료',
+  confirmLabel,
   onClose,
   onApply,
 }: {
@@ -25,6 +27,8 @@ export function DateTimePicker({
   onClose: () => void;
   onApply: (iso: string) => void;
 }) {
+  const { t, language } = useI18n();
+
   const [draft, setDraft] = useState(() => dateTimeDraft(value));
   const [error, setError] = useState('');
   return (
@@ -36,15 +40,15 @@ export function DateTimePicker({
       footer={(close) => (
         <Button
           labelWeight="normal"
-          label={confirmLabel}
+          label={confirmLabel ?? t('habit.selectionDone')}
           onPress={() => {
             try {
               const iso = parseDateTime(draft, Date.now());
               if (minTime && Date.parse(iso) < Date.parse(minTime))
-                throw new Error('시작 시각 이후에 기록해주세요.');
+                throw new Error(t('habit.afterStart'));
               close(() => onApply(iso));
             } catch (failure) {
-              setError(failure instanceof Error ? failure.message : '다시 시도해주세요.');
+              setError(failure instanceof Error ? failure.message : t('habit.retry'));
             }
           }}
         />
@@ -62,7 +66,7 @@ export function DateTimePicker({
         />
         {!!error && (
           <Text accessibilityRole="alert" className="text-sm text-theme-danger">
-            {error}
+            {translateErrorMessage(error, language)}
           </Text>
         )}
       </View>

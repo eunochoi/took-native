@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useQuery } from '@tanstack/react-query';
 import { useSQLiteContext } from 'expo-sqlite';
 import { AppIcon } from '../../components/AppIcon';
@@ -9,24 +10,25 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 import { HomeTodayItem } from './HomeTodayItem';
 
 export function HomeTodayDiary({ today }: { today: string }) {
+  const { t } = useI18n();
   const db = useSQLiteContext();
   const { rem } = useAppTheme();
   const { openModal } = useModalNavigation();
   const diary = useQuery(diaryQueries.byDate(db, today));
   const emotion = diary.data?.emotion ?? null;
   const status = diary.isError
-    ? '불러오기 실패'
+    ? t('home.loadFailed')
     : emotion === null
-      ? '기록 없음'
-      : `'${EMOTIONS[emotion].name}' 기록 남김`;
+      ? t('home.noRecord')
+      : t('home.diaryStatus', { value: t(`emotions.${EMOTIONS[emotion].key}`) });
 
   return (
     <HomeTodayItem
-      title="오늘의 일기"
+      title={t('home.diaryTitle')}
       status={status}
       pending={diary.isPending}
       disabled={diary.isPending || diary.isError}
-      accessibilityLabel={`오늘의 일기 이동, ${status}`}
+      accessibilityLabel={t('home.diaryLink', { value: status })}
       onPress={() =>
         openModal(
           diary.data

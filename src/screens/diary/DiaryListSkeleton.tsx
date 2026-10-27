@@ -1,11 +1,14 @@
+import { useI18n } from '../../i18n/react';
 import { View } from 'react-native';
 
 export function DiaryListSkeleton() {
+  const { t } = useI18n();
+
   return (
     <View
       accessible
       accessibilityRole="progressbar"
-      accessibilityLabel="일기 목록 불러오는 중"
+      accessibilityLabel={t('diary.loading')}
       accessibilityState={{ busy: true }}
       className="w-full"
       style={{ paddingHorizontal: '5%' }}

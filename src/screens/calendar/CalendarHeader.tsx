@@ -1,4 +1,5 @@
-import { format, parseISO } from 'date-fns';
+import { formatDisplayDate } from '../../i18n/format';
+import { useI18n } from '../../i18n/react';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
@@ -16,6 +17,8 @@ export function CalendarHeader({
   navigation: ReturnType<typeof useCalendarNavigation>;
   centerTitle?: boolean;
 }) {
+  const { t, formatLocale } = useI18n();
+
   const { colors, rem: appRem } = useAppTheme();
   const todayAvailable = navigation.isDateAvailable(today);
   const arrows = ([-1, 1] as const).map((amount) => {
@@ -24,7 +27,7 @@ export function CalendarHeader({
       <Pressable
         key={amount}
         accessibilityRole="button"
-        accessibilityLabel={amount === -1 ? '이전 달' : '다음 달'}
+        accessibilityLabel={amount === -1 ? t('calendar.previousMonth') : t('calendar.nextMonth')}
         disabled={!enabled}
         onPress={() => navigation.changeMonth(amount)}
         className={`h-10 w-10 items-center justify-center ios:curve-continuous rounded-xl ${enabled ? 'opacity-100' : 'opacity-30'}`}
@@ -42,13 +45,13 @@ export function CalendarHeader({
       {centerTitle && arrows[0]}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${month}, 이번 달로 이동`}
+        accessibilityLabel={t('calendar.monthToday', { value: month })}
         disabled={!todayAvailable}
         onPress={() => navigation.changeToMonth(today.slice(0, 7))}
         className={`flex-1 justify-center ${centerTitle ? 'items-center' : 'items-start'}`}
       >
         <Text accessibilityRole="header" className="text-lg font-semibold">
-          {format(parseISO(`${month}-01`), 'yyyy년 M월')}
+          {formatDisplayDate(`${month}-01`, formatLocale, 'month')}
         </Text>
       </Pressable>
       {centerTitle ? (
@@ -58,8 +61,8 @@ export function CalendarHeader({
           {arrows[0]}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="오늘로 이동"
-            accessibilityHint="오늘이 속한 월을 보여줘요."
+            accessibilityLabel={t('calendar.goToday')}
+            accessibilityHint={t('calendar.goTodayHint')}
             accessibilityState={{ disabled: !todayAvailable }}
             disabled={!todayAvailable}
             onPress={() => {

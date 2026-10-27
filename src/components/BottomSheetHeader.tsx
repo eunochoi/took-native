@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/react';
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { useAppTheme } from '../theme/AppThemeProvider';
@@ -23,13 +24,14 @@ export function BottomSheetHeader({
   menuAction?: ReactNode;
   onClose?: () => void;
 }) {
+  const { t } = useI18n();
   const { iconSizes } = useAppTheme();
   return (
     <View className="shrink-0 items-center ">
       {onClose && (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="닫기"
+          accessibilityLabel={t('common.close')}
           onPress={() => onClose()}
           className="h-9 w-9 items-center justify-center ios:curve-continuous rounded-full"
           hitSlop={4}

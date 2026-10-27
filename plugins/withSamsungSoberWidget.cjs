@@ -31,6 +31,26 @@ module.exports = function withSamsungSoberWidget(config) {
       await fs.mkdir(path.join(resources, 'values'), { recursive: true });
       await fs.mkdir(path.join(resources, 'xml'), { recursive: true });
       await fs.mkdir(path.join(resources, 'layout'), { recursive: true });
+      await fs.mkdir(path.join(resources, 'values-ko'), { recursive: true });
+      // Launcher metadata follows Android's resource locale, independently of JS startup.
+      for (const [directory, label, description] of [
+        [
+          'values',
+          'Cut Back Timer',
+          'Check elapsed time and goals for your selected Cut Back item.',
+        ],
+        ['values-ko', '거리두기 타이머', '선택한 거리두기의 경과 시간과 목표를 확인해요.'],
+      ]) {
+        await fs.writeFile(
+          path.join(resources, directory, 'took_sober_widget_strings.xml'),
+          `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="took_sober_widget_label">${label}</string>
+  <string name="took_sober_widget_description">${description}</string>
+</resources>
+`,
+        );
+      }
       await fs.writeFile(
         path.join(resources, 'layout/took_sober_preview.xml'),
         `<?xml version="1.0" encoding="utf-8"?>
@@ -50,6 +70,10 @@ module.exports = function withSamsungSoberWidget(config) {
       await fs.writeFile(
         providerPath,
         provider
+          .replace(
+            /android:description="[^"]*"/,
+            'android:description="@string/took_sober_widget_description"',
+          )
           .replace(/\s+android:previewLayout="[^"]*"/g, '')
           .replace(
             '<appwidget-provider',

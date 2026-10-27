@@ -1,3 +1,4 @@
+import { useI18n } from '../../../src/i18n/react';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -21,6 +22,8 @@ import { SoberStatisticsSummary } from '../../../src/screens/sober/SoberStatisti
 import { SoberStatus } from '../../../src/screens/sober/SoberStatus';
 
 export default function SoberDetail() {
+  const { t } = useI18n();
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const soberId = typeof id === 'string' && /^\d+$/.test(id) ? Number(id) : NaN;
   const validId = Number.isSafeInteger(soberId) && soberId > 0;
@@ -49,11 +52,11 @@ export default function SoberDetail() {
   const sober = query.data;
   if (!validId || !sober || restarts.isPending || query.error || restarts.error)
     return (
-      <BottomSheetPage title="거리두기 정보" backRoute="/sober">
+      <BottomSheetPage title={t('sober.info')} backRoute="/sober">
         {validId && <QueryState query={query} />}
         {validId && !!sober && <QueryState query={restarts} />}
         {(!validId || (!query.isPending && !query.error && !sober)) && (
-          <Text className="px-6">거리두기 항목을 찾을 수 없어요.</Text>
+          <Text className="px-6">{t('sober.notFound')}</Text>
         )}
       </BottomSheetPage>
     );
@@ -80,7 +83,7 @@ export default function SoberDetail() {
             <Button
               labelWeight="normal"
               className="w-full"
-              label="다시 시작하기"
+              label={t('sober.restart')}
               onPress={() =>
                 openModal({ pathname: '/sober/[id]/restart/new', params: { id: String(soberId) } })
               }
@@ -89,7 +92,7 @@ export default function SoberDetail() {
               subtle
               labelWeight="normal"
               className="w-full"
-              label="메모 기록보기"
+              label={t('sober.viewNotes')}
               onPress={() =>
                 openModal({ pathname: '/sober/[id]/memos', params: { id: String(soberId) } })
               }
@@ -99,7 +102,7 @@ export default function SoberDetail() {
         {!!sober.description && (
           <View className="gap-3">
             <Text accessibilityRole="header" className="text-xl font-semibold">
-              나의 다짐
+              {t('sober.pledge')}
             </Text>
             <Text className="px-1 text-base text-theme-text-secondary">{sober.description}</Text>
           </View>

@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -13,6 +14,7 @@ function nodes(node: any): any[] {
   return [node, ...nodes(node.props?.children)];
 }
 function harness(path: string, name: string) {
+  let language: 'ko' | 'en' = 'ko';
   const exports: Record<string, Function> = {};
   const slots: any[] = [];
   let cursor = 0;
@@ -36,6 +38,8 @@ function harness(path: string, name: string) {
     {
       exports,
       require: (dependency: string) => {
+        if (dependency.endsWith('/i18n/format')) return { formatDisplayDate };
+        if (dependency.endsWith('/i18n/react')) return mockI18n(() => language);
         if (dependency.endsWith('theme/classes')) return require('../src/theme/classes');
         if (dependency.endsWith('.png')) return dependency;
         if (dependency.endsWith('domain/diaryFilters'))
@@ -128,6 +132,9 @@ function harness(path: string, name: string) {
     },
   );
   return {
+    setLanguage: (value: 'ko' | 'en') => {
+      language = value;
+    },
     results,
     pushes,
     changes,
@@ -406,4 +413,30 @@ test('home greeting retains its welcome copy and all three hashtag destinations'
   assert.equal(links.length, 3);
   links.forEach((link) => link.props.onPress());
   assert.deepEqual(ui.pushes, ['/calendar', '/habit', '/sober']);
+});
+
+test('home greeting and insights title follow language changes without changing destinations', () => {
+  const h = harness('src/screens/home/HomeGreeting.tsx', 'HomeGreeting');
+  h.setLanguage('en');
+  let view = h.render();
+  const labels = view.nodes
+    .filter((node) => node.type === 'Text')
+    .map((node) => node.props.children)
+    .flat()
+    .join('');
+  assert(labels.includes('Every kind of day'));
+  assert(labels.includes('A page in my story'));
+  assert(!/[가-힣]/.test(labels));
+  for (const button of view.nodes.filter((node) => node.type === 'Pressable'))
+    button.props.onPress();
+  assert.deepEqual(h.pushes, ['/calendar', '/habit', '/sober']);
+  h.setLanguage('ko');
+  view = h.render();
+  assert(view.nodes.some((node) => node.type === 'Text' && node.props.children === '어떤 하루든'));
+  const stats = harness('src/screens/home/HomeStatsScreen.tsx', 'HomeStatsScreen');
+  stats.setLanguage('en');
+  assert.equal(
+    stats.render().nodes.find((node) => node.type === 'BottomSheetPage').props.title,
+    'Record insights',
+  );
 });

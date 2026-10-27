@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/react';
 import { InfoNotice } from './InfoNotice';
 import { useState } from 'react';
 import { Pressable, Switch, View } from 'react-native';
@@ -14,8 +15,8 @@ export function RecordSortPicker({
   priorityFirst,
   recordSort,
   allowCustom = false,
-  ascendingLabel = '과거순',
-  sortLabel = '생성일 정렬',
+  ascendingLabel,
+  sortLabel,
   onClose,
   onApply,
 }: {
@@ -33,6 +34,7 @@ export function RecordSortPicker({
     recordSort?: 'ASC' | 'DESC',
   ) => void;
 }) {
+  const { t } = useI18n();
   const { colors, iconSizes } = useAppTheme();
   const [draftSort, setSort] = useState(sort);
   const [draftRecordSort, setRecordSort] = useState(recordSort);
@@ -40,15 +42,15 @@ export function RecordSortPicker({
     sort === 'CUSTOM' ? false : (priorityFirst ?? false),
   );
   const options = [
-    { value: 'DESC', label: '최신순' },
-    { value: 'ASC', label: ascendingLabel },
-    ...(allowCustom ? [{ value: 'CUSTOM', label: '커스텀' }] : []),
+    { value: 'DESC', label: t('ui.newest') },
+    { value: 'ASC', label: ascendingLabel ?? t('ui.oldest') },
+    ...(allowCustom ? [{ value: 'CUSTOM', label: t('ui.custom') }] : []),
   ] as { value: 'ASC' | 'DESC' | 'CUSTOM'; label: string }[];
   const prioritySection = priorityFirst !== undefined && (
     <View className="flex-row items-center justify-between gap-3">
-      <Text className="text-base font-semibold">중요한 항목 먼저</Text>
+      <Text className="text-base font-semibold">{t('ui.priorityFirst')}</Text>
       <Switch
-        accessibilityLabel="중요한 항목 먼저"
+        accessibilityLabel={t('ui.priorityFirst')}
         value={draftPriority}
         onValueChange={(value) => {
           if (value && draftSort === 'CUSTOM') setSort('DESC');
@@ -66,7 +68,7 @@ export function RecordSortPicker({
       headerAction={
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="선택 초기화"
+          accessibilityLabel={t('ui.resetSelection')}
           onPress={() => {
             setSort('DESC');
             setPriority(false);
@@ -76,13 +78,13 @@ export function RecordSortPicker({
           className="min-h-9 flex-row items-center justify-center gap-1 px-1 active:opacity-70"
         >
           <AppIcon name="restart-alt" size={iconSizes.md} className="text-theme-accent" />
-          <Text className="text-sm text-theme-text-secondary">초기화</Text>
+          <Text className="text-sm text-theme-text-secondary">{t('ui.reset')}</Text>
         </Pressable>
       }
       onClose={onClose}
       footer={(closePicker) => (
         <Button
-          label="적용하기"
+          label={t('ui.apply')}
           onPress={() =>
             closePicker(() => {
               const priority = draftSort === 'CUSTOM' ? false : draftPriority;
@@ -97,7 +99,7 @@ export function RecordSortPicker({
         {prioritySection}
         {recordSort && (
           <View className="gap-3">
-            <Text className="text-base font-semibold">기록</Text>
+            <Text className="text-base font-semibold">{t('ui.records')}</Text>
             <View className="flex-row gap-3">
               {(['DESC', 'ASC'] as const).map((value) => (
                 <View key={value} className="flex-1">
@@ -105,13 +107,15 @@ export function RecordSortPicker({
                     keepUncheckedBorder
                     compact
                     selected={draftRecordSort === value}
-                    accessibilityLabel={`현재 기록 ${value === 'DESC' ? '긴 기록순' : '짧은 기록순'}`}
+                    accessibilityLabel={t('ui.currentRecord', {
+                      value: t(value === 'DESC' ? 'ui.longest' : 'ui.shortest'),
+                    })}
                     onPress={() => setRecordSort(value)}
                   >
                     <Text
                       className={`text-base ${draftRecordSort === value ? 'text-theme-accent-deep' : ''}`}
                     >
-                      {value === 'DESC' ? '긴 기록순' : '짧은 기록순'}
+                      {t(value === 'DESC' ? 'ui.longest' : 'ui.shortest')}
                     </Text>
                   </PickerOption>
                 </View>
@@ -120,7 +124,7 @@ export function RecordSortPicker({
           </View>
         )}
         <View className="gap-3">
-          <Text className="text-base font-semibold">{sortLabel}</Text>
+          <Text className="text-base font-semibold">{sortLabel ?? t('ui.createdDateSort')}</Text>
           <View className="flex-row gap-3">
             {options.map((option) => (
               <View key={option.value} className="flex-1">
@@ -147,12 +151,14 @@ export function RecordSortPicker({
         <View className="gap-1">
           <InfoNotice>
             {draftSort === 'CUSTOM'
-              ? '직접 정한 순서로 보여드려요.'
+              ? t('ui.customDescription')
               : recordSort
-                ? `${draftPriority ? '중요도, ' : ''}현재 기록, 생성일 순으로 정렬해요.`
-                : `${draftPriority ? '중요한 항목부터, ' : ''}${sortLabel.replace(/ 정렬$/, '')} 순으로 정렬해요.`}
+                ? t('ui.recordsDescription', { value: draftPriority ? t('ui.priorityPrefix') : '' })
+                : t('ui.sortDescription', {
+                    value: `${draftPriority ? t('ui.importantPrefix') : ''}${(sortLabel ?? t('ui.createdDateSort')).replace(/ 정렬$/, '')}`,
+                  })}
           </InfoNotice>
-          {allowCustom && <InfoNotice>커스텀과 중요도 우선은 함께 선택할 수 없어요.</InfoNotice>}
+          {allowCustom && <InfoNotice>{t('ui.sortPriorityConflict')}</InfoNotice>}
         </View>
       </View>
     </BottomSheetModal>

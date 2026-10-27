@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useEffect, useRef, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -19,15 +20,6 @@ import { ThemePage } from './ThemePage';
 import { UsagePage } from './UsagePage';
 import { WelcomePage } from './WelcomePage';
 import { WidgetPage } from './WidgetPage';
-
-const titles = [
-  `안녕, 나는 '블루'야!`,
-  '나에게 맞게 설정해요',
-  '편리하게 사용해요',
-  '달력 기록을 읽어요',
-  ...(Platform.OS === 'android' ? ['위젯으로 바로 확인해요'] : []),
-  '소중한 기록을 보관해요',
-] as const;
 
 export function FirstRunOnboarding({ ready }: { ready: boolean }) {
   const [required, setRequired] = useState(false);
@@ -56,6 +48,15 @@ export function OnboardingSheet({
   firstRun?: boolean;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
+  const titles = [
+    t('onboarding.welcomeTitle'),
+    t('onboarding.themeTitle'),
+    t('onboarding.usageTitle'),
+    t('onboarding.calendarTitle'),
+    ...(Platform.OS === 'android' ? [t('onboarding.widgetTitle')] : []),
+    t('onboarding.backupTitle'),
+  ];
   const { settings, updateSettings } = useSettings();
   const { rem, reducedMotion } = useAppTheme();
   const [step, setStep] = useState(0);
@@ -128,7 +129,7 @@ export function OnboardingSheet({
     try {
       await updateSettings(patch);
     } catch {
-      setError('설정을 저장하지 못했어요. 다시 선택해주세요.');
+      setError(t('onboarding.saveFailed'));
     } finally {
       saving.current = false;
       setBusy(false);
@@ -149,7 +150,7 @@ export function OnboardingSheet({
       saving.current = false;
       close();
     } catch {
-      setError('완료 상태를 저장하지 못했어요. 시작하기 버튼을 다시 눌러주세요.');
+      setError(t('onboarding.completeFailed'));
     } finally {
       saving.current = false;
       setBusy(false);
@@ -157,7 +158,7 @@ export function OnboardingSheet({
   };
   const openWeb = () => {
     void Linking.openURL('https://to-ok.me').catch(() => {
-      setError('웹 서비스를 열지 못했어요. 다시 시도해주세요.');
+      setError(t('onboarding.webFailed'));
     });
   };
   return (
@@ -182,14 +183,14 @@ export function OnboardingSheet({
           )}
           <View
             accessibilityRole="tablist"
-            accessibilityLabel="앱 안내 단계"
+            accessibilityLabel={t('onboarding.steps')}
             className="flex-row items-center justify-center"
           >
             {titles.map((title, index) => (
               <Pressable
-                key={title}
+                key={index}
                 accessibilityRole="tab"
-                accessibilityLabel={`${index + 1}단계, ${title}`}
+                accessibilityLabel={t('onboarding.stepTitle', { count: index + 1, title })}
                 accessibilityState={{ selected: index === step, disabled: busy || !width }}
                 disabled={busy || !width}
                 onPress={() => selectStep(index)}
@@ -211,7 +212,7 @@ export function OnboardingSheet({
             {step > 0 && (
               <View className="min-w-0 flex-1 basis-0">
                 <Button
-                  label="이전"
+                  label={t('common.previous')}
                   labelSize="lg"
                   labelClassName="text-[15.75px] leading-[24.5px]"
                   subtle
@@ -228,12 +229,12 @@ export function OnboardingSheet({
                 labelClassName="text-[15.75px] leading-[24.5px]"
                 label={
                   busy
-                    ? '저장 중…'
+                    ? t('common.saving')
                     : step === titles.length - 1
                       ? firstRun
-                        ? 'BlooLog 시작하기'
-                        : '닫기'
-                      : '다음'
+                        ? t('onboarding.start')
+                        : t('common.close')
+                      : t('common.next')
                 }
                 disabled={busy || !width}
                 onPress={() => (step === titles.length - 1 ? confirm(close) : selectStep(step + 1))}
@@ -255,10 +256,13 @@ export function OnboardingSheet({
             bounces={false}
             overScrollMode="never"
             directionalLockEnabled
-            accessibilityLabel={`앱 안내, ${titles.length}단계 중 ${step + 1}단계`}
+            accessibilityLabel={t('onboarding.stepStatus', {
+              value: titles.length,
+              count: step + 1,
+            })}
             accessibilityActions={[
-              { name: 'increment', label: '다음 안내' },
-              { name: 'decrement', label: '이전 안내' },
+              { name: 'increment', label: t('onboarding.nextGuide') },
+              { name: 'decrement', label: t('onboarding.previousGuide') },
             ]}
             onAccessibilityAction={({ nativeEvent }) =>
               selectStep(step + (nativeEvent.actionName === 'increment' ? 1 : -1))

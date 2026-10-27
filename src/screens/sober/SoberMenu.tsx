@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { RecordMenuButton } from '../../components/RecordMenuButton';
 import { useState } from 'react';
@@ -22,6 +23,8 @@ export function SoberMenu({
   showDetail?: boolean;
   disabled?: boolean;
 }) {
+  const { t } = useI18n();
+
   const db = useSQLiteContext();
   const { openModal } = useModalNavigation();
   const [open, setOpen] = useState(false);
@@ -31,12 +34,13 @@ export function SoberMenu({
     () => deleteSober(db, sober.id),
     'sober',
     onDeleted,
-    (error) => showNotice({ tone: 'error', title: '삭제하지 못했어요', message: error.message }),
+    (error) =>
+      showNotice({ tone: 'error', title: t('sober.deleteFailed'), message: error.message }),
   );
   return (
     <>
       <RecordMenuButton
-        accessibilityLabel={`${sober.name} 메뉴`}
+        accessibilityLabel={t('sober.menu', { value: sober.name })}
         accessibilityState={{ disabled: disabled || mutation.isPending }}
         disabled={disabled || mutation.isPending}
         onPress={() => setOpen(true)}
@@ -48,23 +52,23 @@ export function SoberMenu({
             {showDetail && (
               <PickerAction
                 icon="info-outline"
-                title="상세보기"
-                description="거리두기 현황과 기록을 확인해요."
+                title={t('habit.menuDetail')}
+                description={t('sober.detailHint')}
                 singleLineDescription
                 onPress={() => close(() => openModal(`/sober/${sober.id}`))}
               />
             )}
             <PickerAction
               icon="edit"
-              title="수정하기"
-              description="이름·목표·아이콘을 바꿔요."
+              title={t('sober.editAction')}
+              description={t('sober.editHint')}
               singleLineDescription
               onPress={() => close(() => openModal(`/sober/${sober.id}/edit`))}
             />
             <PickerAction
               icon="delete-outline"
-              title="삭제하기"
-              description="항목과 재시작 기록을 삭제해요."
+              title={t('diary.deleteAction')}
+              description={t('sober.deleteHint')}
               singleLineDescription
               danger
               onPress={() => close(() => setConfirm(true))}
@@ -75,9 +79,9 @@ export function SoberMenu({
       <ConfirmModal
         visible={confirm}
         danger
-        title="이 거리두기를 삭제할까요?"
-        message={`‘${sober.name}’의 거리두기와 모든 다시 시작 기록이 삭제돼요. 삭제한 뒤에는 되돌릴 수 없어요.`}
-        confirmLabel="삭제하기"
+        title={t('sober.deleteTitle')}
+        message={t('sober.deleteWarning', { value: sober.name })}
+        confirmLabel={t('diary.deleteAction')}
         onCancel={() => setConfirm(false)}
         onConfirm={() => {
           setConfirm(false);

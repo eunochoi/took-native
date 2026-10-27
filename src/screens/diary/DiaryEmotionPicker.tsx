@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useRef, useState } from 'react';
 import { View, useWindowDimensions, type ScrollView } from 'react-native';
 import { useAnimatedRef } from 'react-native-reanimated';
@@ -13,11 +14,6 @@ import { DIARY_EMOTION_GROUPS, type DiaryEmotionGroup } from '../../domain/diary
 import { useAppTheme } from '../../theme/AppThemeProvider';
 
 const categories = ['positive', 'neutral', 'negative'] as const;
-const categoryDescriptions: Record<DiaryEmotionGroup, string> = {
-  positive: '마음이 밝거나 편안했던 순간',
-  neutral: '담담함부터 피로, 미묘하게 섞인 마음까지',
-  negative: '마음이 무겁거나 복잡했던 순간',
-};
 
 export function DiaryEmotionPicker({
   value,
@@ -30,6 +26,8 @@ export function DiaryEmotionPicker({
   onClose: () => void;
   onApply: (value: number | null) => void;
 }) {
+  const { t } = useI18n();
+
   const { rem: appRem } = useAppTheme();
   const { width, height, fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -84,7 +82,7 @@ export function DiaryEmotionPicker({
           <PickerOption
             key={id}
             selected={categoryId === id}
-            accessibilityLabel={`${DIARY_EMOTION_GROUPS[id].label} 카테고리`}
+            accessibilityLabel={t('diary.category', { value: t(`diary.${id}`) })}
             className="min-h-12 rounded-full px-4 py-2"
             onPress={() => {
               if (categoryId === id) return;
@@ -96,7 +94,7 @@ export function DiaryEmotionPicker({
             <Text
               className={`text-sm ${categoryId === id ? 'font-semibold text-theme-accent' : 'text-theme-text-secondary'}`}
             >
-              {DIARY_EMOTION_GROUPS[id].label}
+              {t(`diary.${id}`)}
             </Text>
           </PickerOption>
         ))}
@@ -106,13 +104,15 @@ export function DiaryEmotionPicker({
           <EmotionImage emotion={category.emotions[0]} size={appRem * 2.75} />
         </View>
         <View className="min-w-0 flex-1 gap-1.5">
-          <Text className="text-base font-semibold text-theme-accent-deep">{category.label}</Text>
+          <Text className="text-base font-semibold text-theme-accent-deep">
+            {t(`diary.${categoryId}`)}
+          </Text>
           <Text
             className="text-sm leading-5 tracking-tight text-theme-text-secondary"
             lineBreakStrategyIOS="hangul-word"
             textBreakStrategy="balanced"
           >
-            {categoryDescriptions[categoryId]}
+            {t(`diary.${categoryId}Summary`)}
           </Text>
         </View>
       </View>
@@ -124,7 +124,7 @@ export function DiaryEmotionPicker({
       visible
       fixedHeight
       scrollFade
-      title={allowDeselect ? '어떤 감정의 기록을 볼까요?' : '오늘의 감정을 골라주세요'}
+      title={allowDeselect ? t('diary.chooseEmotionFilter') : t('diary.chooseEmotion')}
       onClose={onClose}
       scrollRef={scrollRef}
       contentKey={contentKey}
@@ -172,7 +172,10 @@ export function DiaryEmotionPicker({
                     <View key={emotion.key} className="flex-1 min-w-0">
                       <PickerOption
                         selected={selected}
-                        accessibilityLabel={`${emotion.name}, ${emotion.description}`}
+                        accessibilityLabel={t('diary.emotionSummary', {
+                          title: t(`emotions.${emotion.key}`),
+                          value: t(`emotions.${emotion.key}Description`),
+                        })}
                         className={`grow w-full gap-2 rounded-2xl border px-4 py-6 ${selected ? 'border-theme-accent' : 'border-transparent'}`}
                         onPress={() => {
                           initialScrollPending.current = false;
@@ -183,14 +186,14 @@ export function DiaryEmotionPicker({
                         <Text
                           className={`text-base text-center font-semibold ${selected ? 'text-theme-accent' : 'text-theme-text-primary'}`}
                         >
-                          {emotion.name}
+                          {t(`emotions.${emotion.key}`)}
                         </Text>
                         <Text
                           className="w-full text-center text-sm leading-5 tracking-tight text-theme-text-secondary"
                           lineBreakStrategyIOS="hangul-word"
                           textBreakStrategy="balanced"
                         >
-                          {emotion.description}
+                          {t(`emotions.${emotion.key}Description`)}
                         </Text>
                       </PickerOption>
                     </View>
@@ -205,7 +208,7 @@ export function DiaryEmotionPicker({
       footer={(closePicker) => (
         <Button
           labelWeight="normal"
-          label={allowDeselect ? '적용하기' : '선택 완료'}
+          label={allowDeselect ? t('ui.apply') : t('diary.selectionDone')}
           disabled={!allowDeselect && draft === null}
           onPress={() => closePicker(() => onApply(draft))}
         />

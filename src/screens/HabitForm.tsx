@@ -1,5 +1,6 @@
+import { formatDisplayDate } from '../i18n/format';
+import { useI18n } from '../i18n/react';
 import { useQuery } from '@tanstack/react-query';
-import { format, parseISO } from 'date-fns';
 import { usePreventRemove } from 'expo-router/react-navigation';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
@@ -20,7 +21,6 @@ import { saveHabit } from '../db/habit';
 import {
   DEFAULT_HABIT_ICON_COLOR,
   HABIT_ICON_COLORS,
-  HABIT_ICON_OPTIONS,
   type HabitIconColorKey,
   type HabitIconKey,
 } from '../domain/constants';
@@ -30,10 +30,13 @@ import { useAppTheme } from '../theme/AppThemeProvider';
 import { FORM_TEXT_INPUT_CLASS_NAME, SECTION_TITLE_CLASS_NAME } from '../theme/classes';
 import { adjustColorBrightness } from '../theme/colors';
 import { HabitIconPicker } from './habit/HabitIconPicker';
-import { HABIT_PRIORITY_LABELS, HabitPriorityPicker } from './habit/HabitPriorityPicker';
+import { HabitPriorityPicker } from './habit/HabitPriorityPicker';
 import { HabitStars } from './habit/HabitStars';
 
 export function HabitForm({ id }: { id?: number }) {
+  const { t, formatLocale } = useI18n();
+  const priorityLabels = [t('habit.free'), t('habit.low'), t('habit.normal'), t('habit.high')];
+
   const { showNotice } = useNotice();
   const { colors, rem: appRem } = useAppTheme();
   const db = useSQLiteContext();
@@ -70,26 +73,28 @@ export function HabitForm({ id }: { id?: number }) {
       }),
     'habit',
     () => setSaved(true),
-    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
+    (error) =>
+      showNotice({ tone: 'error', title: t('habit.processFailed'), message: error.message }),
   );
   usePreventRemove(mutation.isPending, () =>
     showNotice({
       tone: 'info',
-      title: '잠시만 기다려주세요',
-      message: '저장이 진행 중입니다. 완료될 때까지 기다려주세요.',
+      title: t('habit.wait'),
+      message: t('habit.savingHint'),
     }),
   );
   const iconBackgroundColor =
     iconColor === 'theme' ? colors.accent : HABIT_ICON_COLORS[iconColor].value;
-  const title = id ? '습관 항목 수정' : '습관 항목 추가';
-  const iconLabel = HABIT_ICON_OPTIONS.find((option) => option.key === icon)?.label ?? '아이콘';
-  const colorLabel = iconColor === 'theme' ? '기본 테마색' : HABIT_ICON_COLORS[iconColor].label;
+  const title = id ? t('habit.editTitle') : t('habit.addTitle');
+  const iconLabel = t(`habitIcons.${icon}`);
+  const colorLabel =
+    iconColor === 'theme' ? t('habit.defaultThemeColor') : t(`iconColors.${iconColor}`);
   const onClosed = saved
     ? () =>
-      showNotice({
-        tone: 'success',
-        title: id ? '습관을 수정했어요' : '습관을 추가했어요',
-      })
+        showNotice({
+          tone: 'success',
+          title: id ? t('habit.edited') : t('habit.added'),
+        })
     : undefined;
   if (id !== undefined && (query.isPending || query.error || !query.data || !loaded.current))
     return (
@@ -100,7 +105,7 @@ export function HabitForm({ id }: { id?: number }) {
         title={title}
       >
         <QueryState query={query} />
-        {!query.isPending && !query.error && <Text className="px-6">습관을 찾을 수 없습니다.</Text>}
+        {!query.isPending && !query.error && <Text className="px-6">{t('habit.notFound')}</Text>}
       </BottomSheetPage>
     );
   return (
@@ -113,8 +118,8 @@ export function HabitForm({ id }: { id?: number }) {
         if (!mutation.isPending) return true;
         showNotice({
           tone: 'info',
-          title: '잠시만 기다려주세요',
-          message: '저장이 진행 중입니다. 완료될 때까지 기다려주세요.',
+          title: t('habit.wait'),
+          message: t('habit.savingHint'),
         });
         return false;
       }}
@@ -123,7 +128,9 @@ export function HabitForm({ id }: { id?: number }) {
           loading={mutation.isPending}
           disabled={!name.trim() || mutation.isPending}
           onPress={() => mutation.mutate(undefined)}
-          label={mutation.isPending ? '저장 중...' : id ? '수정한 습관 저장하기' : '습관 저장하기'}
+          label={
+            mutation.isPending ? t('habit.saving') : id ? t('habit.saveEdited') : t('habit.save')
+          }
         />
       }
       overlays={
@@ -153,7 +160,7 @@ export function HabitForm({ id }: { id?: number }) {
           {picker === 'date' && id === undefined && (
             <DateTimePicker
               mode="start"
-              title="언제부터 습관을 시작했나요?"
+              title={t('habit.whenStart')}
               value={initialStartedAt}
               onClose={() => setPicker(null)}
               onApply={setInitialStartedAt}
@@ -164,16 +171,16 @@ export function HabitForm({ id }: { id?: number }) {
     >
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-          습관 이름
+          {t('habit.name')}
         </Text>
         <View className="gap-3 px-1">
           <TextInput
-            accessibilityLabel="습관 이름"
+            accessibilityLabel={t('habit.name')}
             value={name}
             onChangeText={setName}
             maxLength={HABIT_NAME_MAX_LENGTH}
             editable={!mutation.isPending}
-            placeholder="매일 물 마시기"
+            placeholder={t('habit.namePlaceholder')}
             placeholderTextColor={colors.textTertiary}
             className={`min-h-12 ${FORM_TEXT_INPUT_CLASS_NAME}`}
           />
@@ -182,26 +189,28 @@ export function HabitForm({ id }: { id?: number }) {
       </View>
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-          우선순위
+          {t('habit.priority')}
         </Text>
         <FormPickerRow
           label={
-            priority === 0 ? '없음 · 자유 기록' : `${HABIT_PRIORITY_LABELS[priority]} · 매일 기록`
+            priority === 0
+              ? t('habit.freeLabel')
+              : t('habit.priorityDaily', { value: priorityLabels[priority] })
           }
-          accessibilityLabel="우선순위 선택"
+          accessibilityLabel={t('habit.priorityChoice')}
           disabled={mutation.isPending}
           onPress={() => setPicker('priority')}
           leading={<HabitStars priority={priority} size={appRem * 1.25} />}
         />
-        {priority === 0 && <InfoNotice>완료율과 달성 개수 계산에는 포함되지 않아요.</InfoNotice>}
+        {priority === 0 && <InfoNotice>{t('habit.freeNotice')}</InfoNotice>}
       </View>
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-          아이콘
+          {t('habit.icon')}
         </Text>
         <FormPickerRow
           label={iconLabel}
-          accessibilityLabel="아이콘 선택"
+          accessibilityLabel={t('habit.chooseIcon')}
           disabled={mutation.isPending}
           onPress={() => setPicker('icon')}
           leading={<HabitIcon name={icon} colorKey={iconColor} size={appRem * 1.75} />}
@@ -209,11 +218,11 @@ export function HabitForm({ id }: { id?: number }) {
       </View>
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-          아이콘 색상
+          {t('habit.iconColor')}
         </Text>
         <FormPickerRow
           label={colorLabel}
-          accessibilityLabel="아이콘 색상 선택"
+          accessibilityLabel={t('habit.chooseIconColor')}
           disabled={mutation.isPending}
           onPress={() => setPicker('color')}
           leading={
@@ -229,15 +238,15 @@ export function HabitForm({ id }: { id?: number }) {
       </View>
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-          시작 일시
+          {t('habit.startedAt')}
         </Text>
         <FormPickerRow
-          label={format(parseISO(initialStartedAt), 'yyyy년 M월 d일 HH:mm')}
-          accessibilityLabel="시작 일시 선택"
+          label={formatDisplayDate(initialStartedAt, formatLocale, 'dateTime')}
+          accessibilityLabel={t('habit.chooseStartedAt')}
           disabled={id !== undefined || mutation.isPending}
           onPress={() => setPicker('date')}
         />
-        <InfoNotice>시작 일시는 저장 후 변경할 수 없어요.</InfoNotice>
+        <InfoNotice>{t('habit.startedNotice')}</InfoNotice>
       </View>
     </RecordFormLayout>
   );

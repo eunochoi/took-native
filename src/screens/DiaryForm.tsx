@@ -1,6 +1,6 @@
+import { formatDisplayDate } from '../i18n/format';
+import { useI18n } from '../i18n/react';
 import { useQuery } from '@tanstack/react-query';
-import { format, parseISO } from 'date-fns';
-import { ko } from 'date-fns/locale';
 import { usePreventRemove } from 'expo-router/react-navigation';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -40,6 +40,8 @@ export function DiaryForm({
   initialDate?: string;
   allowDateChange?: boolean;
 }) {
+  const { t, formatLocale } = useI18n();
+
   const { showNotice } = useNotice();
   const { colors, rem: appRem, iconSizes } = useAppTheme();
   const db = useSQLiteContext();
@@ -92,23 +94,21 @@ export function DiaryForm({
   }, []);
   const mutation = useRecordMutation(
     async () => {
-      if (date === null || !isDate(date) || date > today)
-        throw new Error('일기 날짜를 선택해주세요.');
-      if (emotion === null) throw new Error('오늘의 감정을 선택해주세요.');
+      if (date === null || !isDate(date) || date > today) throw new Error(t('diary.dateRequired'));
+      if (emotion === null) throw new Error(t('diary.emotionRequired'));
       return saveDiaryImages(db, { id, date, emotion, text }, images);
     },
     'diary',
     () => setSaved(true),
-    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
+    (error) =>
+      showNotice({ tone: 'error', title: t('diary.processFailed'), message: error.message }),
   );
   const busy = mutation.isPending || picking;
   usePreventRemove(busy, () =>
     showNotice({
       tone: 'info',
-      title: '잠시만 기다려주세요',
-      message: mutation.isPending
-        ? '저장이 진행 중입니다. 완료될 때까지 기다려주세요.'
-        : '사진을 준비하고 있습니다.',
+      title: t('diary.wait'),
+      message: mutation.isPending ? t('diary.savingHint') : t('diary.preparingPhotos'),
     }),
   );
   const onReorder = useCallback((from: number, to: number) => {
@@ -119,27 +119,25 @@ export function DiaryForm({
       return next;
     });
   }, []);
-  const title = date
-    ? format(parseISO(date), 'yyyy. M. d. EEEE', { locale: ko })
-    : '날짜를 선택해주세요';
+  const title = date ? formatDisplayDate(date, formatLocale, 'form') : t('diary.datePrompt');
   const onClosed = saved
     ? () =>
-      showNotice({
-        tone: 'success',
-        title: id ? '일기를 수정했어요' : '일기를 저장했어요',
-      })
+        showNotice({
+          tone: 'success',
+          title: id ? t('diary.edited') : t('diary.saved'),
+        })
     : undefined;
   if (id !== undefined && (query.isPending || query.error || !query.data))
     return (
       <BottomSheetPage
-        title="일기 수정"
+        title={t('diary.editTitle')}
         backRoute="/diary"
         closeRequested={saved && !mutation.isPending}
         onClosed={onClosed}
       >
         <View className="items-center justify-center">
           <QueryState query={query} />
-          {!query.isPending && !query.error && <Text>일기를 찾을 수 없습니다.</Text>}
+          {!query.isPending && !query.error && <Text>{t('diary.notFound')}</Text>}
         </View>
       </BottomSheetPage>
     );
@@ -153,23 +151,21 @@ export function DiaryForm({
       titleAction={
         id !== undefined || allowDateChange
           ? {
-            accessibilityLabel: `${title}, 일기 날짜 선택`,
-            disabled: busy || dragging || picker !== null,
-            onPress: () => {
-              Keyboard.dismiss();
-              setPicker('date');
-            },
-          }
+              accessibilityLabel: t('diary.dateChoice', { title }),
+              disabled: busy || dragging || picker !== null,
+              onPress: () => {
+                Keyboard.dismiss();
+                setPicker('date');
+              },
+            }
           : undefined
       }
       onBeforeClose={() => {
         if (!busy) return true;
         showNotice({
           tone: 'info',
-          title: '잠시만 기다려주세요',
-          message: mutation.isPending
-            ? '저장이 진행 중입니다. 완료될 때까지 기다려주세요.'
-            : '사진을 준비하고 있습니다.',
+          title: t('diary.wait'),
+          message: mutation.isPending ? t('diary.savingHint') : t('diary.preparingPhotos'),
         });
         return false;
       }}
@@ -178,7 +174,9 @@ export function DiaryForm({
           loading={mutation.isPending}
           disabled={busy || dragging || date === null || emotion === null || !text.trim()}
           onPress={() => mutation.mutate(undefined)}
-          label={mutation.isPending ? '저장 중...' : id ? '수정한 기록 저장하기' : '기록 저장하기'}
+          label={
+            mutation.isPending ? t('diary.saving') : id ? t('diary.saveEdited') : t('diary.save')
+          }
         />
       }
       overlays={
@@ -231,7 +229,7 @@ export function DiaryForm({
                     if (mounted.current)
                       showNotice({
                         tone: 'error',
-                        title: '사진을 추가하지 못했어요',
+                        title: t('diary.photoFailed'),
                         message: error.message,
                       });
                   })
@@ -248,7 +246,7 @@ export function DiaryForm({
         <View className="shrink-0 pb-4">
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="오늘의 감정 선택"
+            accessibilityLabel={t('diary.chooseTodayEmotion')}
             accessibilityState={{ expanded: picker === 'emotion', disabled: busy }}
             disabled={busy}
             onPress={() => {
@@ -266,14 +264,16 @@ export function DiaryForm({
               )}
             </View>
             <View className="flex-1 min-w-0 gap-1">
-              <Text className={SECTION_TITLE_CLASS_NAME}>오늘의 감정</Text>
+              <Text className={SECTION_TITLE_CLASS_NAME}>{t('diary.todayEmotion')}</Text>
               <Text className="text-sm text-theme-text-secondary">
-                {emotion !== null ? EMOTIONS[emotion].name : '감정을 골라주세요'}
+                {emotion !== null
+                  ? t(`emotions.${EMOTIONS[emotion].key}`)
+                  : t('diary.emotionPrompt')}
               </Text>
             </View>
             <View className="flex-row items-center gap-0.5">
               <Text className="text-base text-theme-text-secondary">
-                {emotion !== null ? '변경' : '선택'}
+                {emotion !== null ? t('diary.change') : t('diary.choose')}
               </Text>
               <AppIcon name="chevron-right" size={iconSizes.md} color={colors.secondary} />
             </View>
@@ -282,11 +282,11 @@ export function DiaryForm({
       )}
       <View className="shrink min-h-0 gap-3 pt-2">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-          오늘의 이야기
+          {t('diary.storyTitle')}
         </Text>
         <View className="shrink min-h-0 gap-3 p-1">
           <TextInput
-            accessibilityLabel="일기 내용"
+            accessibilityLabel={t('diary.content')}
             multiline
             scrollEnabled
             value={text}
@@ -296,7 +296,7 @@ export function DiaryForm({
             }
             editable={!busy && picker === null}
             maxLength={DIARY_TEXT_MAX_LENGTH}
-            placeholder="기억하고 싶은 순간을 남겨보세요."
+            placeholder={t('diary.placeholder')}
             placeholderTextColor={colors.tertiary}
             textAlignVertical="top"
             className={`shrink min-h-0 pb-6 ${FORM_TEXT_INPUT_CLASS_NAME}`}
@@ -308,7 +308,7 @@ export function DiaryForm({
       {!keyboardVisible && (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`사진 관리, ${images.length}장`}
+          accessibilityLabel={t('diary.photoManage', { count: images.length })}
           accessibilityState={{ expanded: picker === 'images', disabled: busy }}
           disabled={busy}
           onPress={() => {
@@ -318,7 +318,9 @@ export function DiaryForm({
           className="shrink-0 min-h-12 flex-row items-center gap-2 ios:curve-continuous rounded-2xl px-2 active:opacity-70"
         >
           <AppIcon name="image" size={iconSizes.md} className="text-theme-accent" />
-          <Text className="flex-1 text-base text-theme-text-secondary">사진 {images.length}장</Text>
+          <Text className="flex-1 text-base text-theme-text-secondary">
+            {t('diary.photos', { count: images.length })}
+          </Text>
           <AppIcon name="chevron-right" size={iconSizes.md} className="text-theme-text-secondary" />
         </Pressable>
       )}

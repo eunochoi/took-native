@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { ACCENT_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 import { View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
@@ -13,6 +14,8 @@ export function DiaryStatisticsSummary({
   longest: number;
   monthlyAverage: number;
 }) {
+  const { t } = useI18n();
+
   const { colors, iconSizes } = useAppTheme();
   return (
     <View
@@ -21,22 +24,22 @@ export function DiaryStatisticsSummary({
       {(
         [
           {
-            label: '현재 연속 기록',
+            label: t('stats.currentStreak'),
             icon: 'calendar',
             value: current,
-            unit: '일',
+            unit: t('stats.daysUnit'),
           },
           {
-            label: '역대 최고 기록',
+            label: t('stats.longestStreak'),
             icon: 'emoji-events',
             value: longest,
-            unit: '일',
+            unit: t('stats.daysUnit'),
           },
           {
-            label: '월평균 일기',
+            label: t('stats.monthlyAverage'),
             icon: 'description',
             value: Number(monthlyAverage.toFixed(1)),
-            unit: '개',
+            unit: t('stats.logsUnit', { count: Number(monthlyAverage.toFixed(1)) }),
           },
         ] as const
       ).map((stat, index) => (

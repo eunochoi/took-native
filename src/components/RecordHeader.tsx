@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/react';
 import { useAppTheme } from '../theme/AppThemeProvider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ReactNode } from 'react';
@@ -17,6 +18,7 @@ export function RecordHeader({
   onBack?: () => void;
   rightAction?: ReactNode;
 }) {
+  const { t } = useI18n();
   const { colors, iconSizes } = useAppTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -27,7 +29,7 @@ export function RecordHeader({
     >
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="뒤로가기"
+        accessibilityLabel={t('ui.back')}
         className="h-11 w-8 justify-center"
         onPress={onBack ?? (() => (router.canGoBack() ? router.back() : router.replace(backRoute)))}
       >

@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useState } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import type { UseQueryResult } from '@tanstack/react-query';
@@ -19,20 +20,21 @@ export function HomeYearPicker({
   onClose: () => void;
   onApply: (year: number) => void;
 }) {
+  const { t } = useI18n();
   const [tempYear, setTempYear] = useState(year);
   const { height } = useWindowDimensions();
   const years = [...new Set([...(query.data ?? []), currentYear])].sort((a, b) => b - a);
   return (
     <BottomSheetModal
       visible
-      title="어느 해의 기록을 볼까요?"
+      title={t('home.yearTitle')}
       onClose={onClose}
       footer={
         !query.isError && !query.isPending
           ? (closePicker) => (
               <Button
                 labelWeight="normal"
-                label="적용하기"
+                label={t('ui.apply')}
                 onPress={() => closePicker(() => onApply(tempYear))}
               />
             )
@@ -42,13 +44,13 @@ export function HomeYearPicker({
       <>
         {query.isError ? (
           <QueryError
-            message="선택할 수 있는 연도를 불러오지 못했어요."
+            message={t('home.yearsFailed')}
             onRetry={() => {
               void query.refetch();
             }}
           />
         ) : query.isPending ? (
-          <Text className="text-center text-theme-text-secondary">연도를 불러오는 중이에요.</Text>
+          <Text className="text-center text-theme-text-secondary">{t('home.yearsLoading')}</Text>
         ) : (
           <>
             <ScrollView
@@ -68,13 +70,13 @@ export function HomeYearPicker({
                   >
                     <PickerOption
                       selected={tempYear === value}
-                      accessibilityLabel={`${value}년`}
+                      accessibilityLabel={t('home.year', { count: value })}
                       onPress={() => setTempYear(value)}
                     >
                       <Text
                         className={`text-base font-normal ${tempYear === value ? 'text-theme-accent-deep' : 'text-theme-text-primary'}`}
                       >
-                        {value}년
+                        {t('home.year', { count: value })}
                       </Text>
                     </PickerOption>
                   </View>

@@ -1,0 +1,51 @@
+export const statsKo = {
+  diaryTitle: '일기 기록',
+  currentStreak: '현재 연속 기록',
+  longestStreak: '역대 최고 기록',
+  monthlyAverage: '월평균 일기',
+  daysUnit: '일',
+  streakNotice: '연속·최고 기록은 전체 기간 기준이에요.',
+  averageNotice: '월평균은 선택 연도 기준, 올해는 현재 월까지예요.',
+  emotionTitle: '감정 기록',
+  all: '전체',
+  firstHalf: '전반기',
+  secondHalf: '후반기',
+  habitTitle: '습관 기록',
+  topThree: '상위 Top 3',
+  bottomThree: '하위 Top 3',
+  freeNotice: '자유 기록은 습관 기록 집계에 포함되지 않아요.',
+  soberTitle: '거리두기 기록',
+  longestFirst: '오래 유지한 순',
+  shortestFirst: '짧게 유지한 순',
+  inProgress: '진행 중',
+  ended: '종료',
+  soberEmpty: '아직 거리두기 기록이 없어요.',
+  soberNotice: '선택 연도와 관계없이 전체 기간 기록이에요.',
+  priority: '중요도 %{count}',
+  habitYear: '%{count}년 · 별 1개 이상 기준',
+  habitEmpty: '%{count}년에 완료한 집계 대상 습관이 없어요.',
+  emotionRatio: '감정 비율, %{value}',
+  dateRange: '%{title}부터 %{value}까지',
+  recordDetails: '%{title}, %{value}, %{setting}, 거리두기 정보',
+  logsUnit: {
+    other: '개',
+  },
+  timesUnit: {
+    other: '회',
+  },
+  yearCount: {
+    other: '%{title}년 %{count}개',
+  },
+  emotionPeriod: {
+    other: '%{title}년 %{value} %{count}개',
+  },
+  emotionCount: {
+    other: '%{title} %{count}회',
+  },
+  groupShare: {
+    other: '%{title} %{count}회 %{value}%',
+  },
+  totalItems: {
+    other: '전체 항목 %{count}개',
+  },
+} as const;

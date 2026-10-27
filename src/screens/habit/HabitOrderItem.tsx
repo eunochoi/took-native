@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { AppIcon } from '../../components/AppIcon';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { View } from 'react-native';
@@ -19,6 +20,8 @@ export function HabitOrderItem({
   disabled: boolean;
   onMove: (from: number, to: number) => void;
 }) {
+  const { t } = useI18n();
+
   const { colors, rem: appRem } = useAppTheme();
   return (
     <View className="h-16 flex-row items-center gap-3 px-2 py-3 ios:curve-continuous rounded-lg overflow-hidden">
@@ -32,12 +35,12 @@ export function HabitOrderItem({
         <View
           accessible
           accessibilityRole="button"
-          accessibilityLabel={`${habit.name} 순서 변경`}
-          accessibilityHint="위아래로 끌어 습관 순서를 변경하세요."
+          accessibilityLabel={t('habit.orderAction', { value: habit.name })}
+          accessibilityHint={t('habit.orderHint')}
           accessibilityState={{ disabled }}
           accessibilityActions={[
-            { name: 'decrement', label: '위로 이동' },
-            { name: 'increment', label: '아래로 이동' },
+            { name: 'decrement', label: t('habit.moveUp') },
+            { name: 'increment', label: t('habit.moveDown') },
           ]}
           onAccessibilityAction={(event) => {
             if (disabled) return;

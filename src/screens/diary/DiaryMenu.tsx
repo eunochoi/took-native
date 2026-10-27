@@ -1,9 +1,10 @@
+import { formatDisplayDate } from '../../i18n/format';
+import { useI18n } from '../../i18n/react';
 import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { RecordMenuButton } from '../../components/RecordMenuButton';
 import { useNotice } from '../../components/NoticeProvider';
 import { View } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
-import { format, parseISO } from 'date-fns';
 import { useState } from 'react';
 import { deleteDiary } from '../../db/diary';
 import type { Diary } from '../../db/types';
@@ -24,6 +25,8 @@ export function DiaryMenu({
   onDeleted?: () => void;
   showDetail?: boolean;
 }) {
+  const { t, formatLocale } = useI18n();
+
   const { showNotice } = useNotice();
   const db = useSQLiteContext();
   const { openModal } = useModalNavigation();
@@ -36,14 +39,17 @@ export function DiaryMenu({
     },
     'diary',
     onDeleted,
-    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
+    (error) =>
+      showNotice({ tone: 'error', title: t('diary.processFailed'), message: error.message }),
   );
-  const title = `${format(parseISO(diary.date), 'yyyy년 M월 d일')} 일기`;
+  const title = t('diary.dateTitle', {
+    value: formatDisplayDate(diary.date, formatLocale, 'date'),
+  });
   return (
     <>
       <RecordMenuButton
         muted
-        accessibilityLabel="일기 메뉴"
+        accessibilityLabel={t('diary.menu')}
         accessibilityState={{ expanded: open, disabled: mutation.isPending }}
         disabled={mutation.isPending}
         onPress={() => setOpen(true)}
@@ -55,16 +61,16 @@ export function DiaryMenu({
             {showDetail && (
               <PickerAction
                 icon="info-outline"
-                title="상세보기"
-                description="일기와 사진을 자세히 확인해요."
+                title={t('diary.detail')}
+                description={t('diary.detailHint')}
                 singleLineDescription
                 onPress={() => closePicker(() => openModal(`/diary/${diary.id}`))}
               />
             )}
             <PickerAction
               icon="edit"
-              title="일기 수정하기"
-              description="내용과 사진을 수정해요."
+              title={t('diary.edit')}
+              description={t('diary.editHint')}
               singleLineDescription
               disabled={diary.date > today}
               onPress={() =>
@@ -75,8 +81,8 @@ export function DiaryMenu({
             />
             <PickerAction
               icon="delete-outline"
-              title="일기 삭제하기"
-              description="일기와 사진을 삭제해요."
+              title={t('diary.delete')}
+              description={t('diary.deleteHint')}
               singleLineDescription
               danger
               onPress={() => closePicker(() => setConfirmOpen(true))}
@@ -87,9 +93,9 @@ export function DiaryMenu({
       <ConfirmModal
         danger
         visible={confirmOpen}
-        title="정말 삭제하시겠어요?"
-        message="삭제한 뒤에는 되돌릴 수 없어요."
-        confirmLabel="삭제하기"
+        title={t('diary.deleteTitle')}
+        message={t('diary.deleteWarning')}
+        confirmLabel={t('diary.deleteAction')}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => {
           setConfirmOpen(false);

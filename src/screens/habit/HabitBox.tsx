@@ -1,5 +1,5 @@
-import { format, parseISO } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { formatDisplayDate } from '../../i18n/format';
+import { useI18n } from '../../i18n/react';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { HabitIcon } from '../../components/HabitIcon';
@@ -25,6 +25,8 @@ export function HabitBox({
   disabled: boolean;
   onToggle: (id: number, date: string, checked: boolean) => void;
 }) {
+  const { t, formatLocale } = useI18n();
+
   const { colors, rem: appRem, iconSizes } = useAppTheme();
   const { openModal } = useModalNavigation();
   const habitColor = resolveIconColor(habit.icon_color, colors.accent);
@@ -37,7 +39,9 @@ export function HabitBox({
       <View className="relative">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${habit.name}${excluded ? ', 자유 기록' : ''} 습관 정보`}
+          accessibilityLabel={t('habit.habitInfo', {
+            value: `${habit.name}${excluded ? `, ${t('habit.free')}` : ''}`,
+          })}
           onPress={() => openModal(`/habit/${habit.id}`)}
           className="items-center gap-2"
         >
@@ -53,7 +57,7 @@ export function HabitBox({
           <View className="h-5 items-center justify-center">
             {excluded ? (
               <Text className="h-5 text-sm leading-5 text-center text-theme-text-secondary">
-                자유 기록
+                {t('habit.free')}
               </Text>
             ) : (
               <HabitStars priority={habit.priority} color={habitColor} size={appRem} />
@@ -72,7 +76,11 @@ export function HabitBox({
             <Pressable
               key={date}
               accessibilityRole="checkbox"
-              accessibilityLabel={`${habit.name} ${format(parseISO(date), 'M월 d일')} ${excluded ? '기록' : '완료'}`}
+              accessibilityLabel={t('habit.habitDayAction', {
+                title: habit.name,
+                value: formatDisplayDate(date, formatLocale, 'dayShort'),
+                setting: excluded ? t('habit.record') : t('common.done'),
+              })}
               accessibilityState={{ checked: completed, disabled: locked }}
               disabled={locked}
               onPress={() => onToggle(habit.id, date, !completed)}
@@ -82,7 +90,9 @@ export function HabitBox({
                 className="h-5 text-sm leading-5 text-theme-text-secondary"
                 style={date === today ? { color: habitColor } : undefined}
               >
-                {date === today ? '오늘' : format(parseISO(date), 'eee', { locale: ko })}
+                {date === today
+                  ? t('calendar.today')
+                  : formatDisplayDate(date, formatLocale, 'weekdayShort')}
               </Text>
               <Text className="h-5 text-sm leading-5 text-theme-text-secondary">
                 {Number(date.slice(-2))}

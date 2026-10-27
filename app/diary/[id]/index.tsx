@@ -1,6 +1,6 @@
+import { formatDisplayDate } from '../../../src/i18n/format';
+import { useI18n } from '../../../src/i18n/react';
 import { useQuery } from '@tanstack/react-query';
-import { format, parseISO } from 'date-fns';
-import { ko } from 'date-fns/locale';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { View } from 'react-native';
@@ -17,6 +17,8 @@ import { DiaryMenu } from '../../../src/screens/diary/DiaryMenu';
 import { useAppTheme } from '../../../src/theme/AppThemeProvider';
 
 export default function DiaryDetail() {
+  const { t, formatLocale } = useI18n();
+
   const { colors, rem: appRem, iconSizes } = useAppTheme();
   const today = useToday();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -24,9 +26,7 @@ export default function DiaryDetail() {
   const router = useRouter();
   const query = useQuery(diaryQueries.byId(db, Number(id)));
   const diary = query.data;
-  const title = diary
-    ? format(parseISO(diary.date), 'yyyy년 M월 d일 EEEE', { locale: ko })
-    : '일기';
+  const title = diary ? formatDisplayDate(diary.date, formatLocale, 'long') : t('diary.title');
   return (
     <BottomSheetPage
       backRoute="/diary"
@@ -47,9 +47,11 @@ export default function DiaryDetail() {
               <View className="flex-row items-center gap-5">
                 <EmotionImage emotion={diary.emotion} size={appRem * 3.5} />
                 <View>
-                  <Text className="text-sm font-bold text-theme-accent">오늘의 감정</Text>
+                  <Text className="text-sm font-bold text-theme-accent">
+                    {t('diary.todayEmotion')}
+                  </Text>
                   <Text className="mt-1 font-bold text-xl font-medium text-theme-text-primary">
-                    {EMOTIONS[diary.emotion]?.name ?? EMOTIONS[9].name}
+                    {t(`emotions.${(EMOTIONS[diary.emotion] ?? EMOTIONS[9]).key}`)}
                   </Text>
                 </View>
               </View>
@@ -79,7 +81,7 @@ export default function DiaryDetail() {
               <View>
                 <View className="mb-4 flex-row items-center gap-2">
                   <AppIcon name="image" size={appRem * 1.125} color={colors.accentText} />
-                  <Text className="text-sm text-theme-text-secondary">함께 남긴 장면</Text>
+                  <Text className="text-sm text-theme-text-secondary">{t('diary.scenes')}</Text>
                 </View>
                 <DiaryGallery
                   key={diary.images.map((image) => image.file_name).join(',')}
@@ -90,7 +92,7 @@ export default function DiaryDetail() {
             )}
           </>
         ) : !query.isPending && !query.error ? (
-          <Text>일기를 찾을 수 없습니다.</Text>
+          <Text>{t('diary.notFound')}</Text>
         ) : null}
       </View>
     </BottomSheetPage>

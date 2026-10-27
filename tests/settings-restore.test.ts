@@ -1,4 +1,6 @@
+import { mockI18n } from './helpers/i18n';
 import test from 'node:test';
+import { DEFAULT_SETTINGS, type Settings } from '../src/settings/model';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -7,6 +9,7 @@ const require = createRequire(import.meta.url);
 const ts = require('typescript');
 const tick = () => new Promise<void>((resolve) => setImmediate(resolve));
 function harness() {
+  let language: 'ko' | 'en' = 'ko';
   const slots: any[] = [];
   let cursor = 0;
   const effects: (() => void)[] = [];
@@ -14,7 +17,7 @@ function harness() {
   let restore: () => Promise<void> = async () => {};
   let reload: () => Promise<void> = async () => {};
   let cancel: () => Promise<void> = async () => {};
-  let update: () => Promise<void> = async () => {};
+  let update: (patch: Partial<Settings>) => Promise<void> = async () => {};
   const events: string[] = [];
   const discarded: string[][] = [];
   const notices: any[] = [];
@@ -33,6 +36,7 @@ function harness() {
     'Text',
     'BackupDestinationPicker',
     'AppearanceSettingsSection',
+    'LanguageSettingsSection',
     'BackupSection',
     'PageTopSection',
     'NotificationSettingsSection',
@@ -49,6 +53,7 @@ function harness() {
       exports,
       Error,
       require: (name: string) => {
+        if (name.endsWith('/i18n/react')) return mockI18n(() => language);
         if (name.endsWith('/NoticeProvider'))
           return { useNotice: () => ({ showNotice: (notice: any) => notices.push(notice) }) };
         if (name.endsWith('/widgets/sober'))
@@ -115,8 +120,8 @@ function harness() {
         if (name.includes('SettingsProvider'))
           return {
             useSettings: () => ({
-              settings: {},
-              updateSettings: () => update(),
+              settings: { ...DEFAULT_SETTINGS },
+              updateSettings: (patch: Partial<Settings>) => update(patch),
               reloadSettings: async () => {
                 events.push('reload');
                 await reload();
@@ -158,6 +163,11 @@ function harness() {
   render();
   return {
     render,
+    setLanguage: (next: 'ko' | 'en') => {
+      language = next;
+      render();
+    },
+    pageTitle: () => find(tree, 'PageTopSection').props,
     events,
     discarded,
     scroll: () => find(tree, 'ScrollView'),
@@ -170,6 +180,7 @@ function harness() {
     confirm: () => find(tree, 'ConfirmModal').props,
     notice: () => notices.at(-1),
     appearance: () => find(tree, 'AppearanceSettingsSection').props,
+    language: () => find(tree, 'LanguageSettingsSection').props,
     setUpdate(fn: typeof update) {
       update = fn;
     },
@@ -402,6 +413,7 @@ test('settings restores the three actions to a sticky toolbar below the shared t
   assert.equal(toolbar.type, 'Toolbar');
   assert.equal(toolbar.props.fadeVisible, undefined);
   assert.equal(body.props.children[0].type, 'NotificationSettingsSection');
+  assert(body.props.children.some((child: any) => child?.type === 'LanguageSettingsSection'));
   const [guide, privacy, web] = toolbar.props.children;
   assert.equal(guide.props.children[0].props.name, 'info');
   assert.equal(guide.props.children[1].props.children, '소개');
@@ -440,4 +452,44 @@ test('settings toolbar stays disabled while a settings save is running', async (
   for (const button of ui.toolbar().props.children) {
     assert.equal(button.props.disabled, false);
   }
+});
+
+test('language selection uses the existing save guard and disables choices while saving', async () => {
+  const h = harness();
+  const patches: Partial<Settings>[] = [];
+  let finish!: () => void;
+  h.setUpdate((patch) => {
+    patches.push(patch);
+    return new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+  });
+  assert.equal(h.language().value, 'system');
+  const saving = h.language().onChange('en');
+  h.render();
+  assert.equal(h.language().disabled, true);
+  await h.language().onChange('ko');
+  assert.deepEqual(JSON.parse(JSON.stringify(patches)), [{ language: 'en' }]);
+  finish();
+  await saving;
+  h.render();
+  assert.equal(h.language().disabled, false);
+});
+
+test('switching the selected language translates settings copy and restore confirmation without remounting', () => {
+  const h = harness();
+  assert.equal(h.pageTitle().title, '앱 설정');
+  assert.equal(h.confirm().title, '백업으로 복원할까요?');
+  h.setLanguage('en');
+  assert.equal(h.pageTitle().title, 'Settings');
+  assert.equal(h.toolbar().props.children[0].props.children[1].props.children, 'About');
+  assert.equal(h.toolbar().props.children[1].props.accessibilityLabel, 'Privacy policy');
+  assert.equal(h.toolbar().props.children[2].props.accessibilityLabel, 'Open web service');
+  assert.equal(h.confirm().title, 'Restore this backup?');
+  assert.equal(h.confirm().cancelLabel, 'Cancel');
+  assert.equal(h.confirm().confirmLabel, 'Restore');
+  assert.match(h.confirm().message, /will be replaced/);
+  h.setLanguage('ko');
+  assert.equal(h.pageTitle().title, '앱 설정');
+  assert.equal(h.confirm().cancelLabel, '취소');
 });

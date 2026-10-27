@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -37,6 +38,8 @@ export function DiaryFilterPicker({
     emotionGroups: DiaryEmotionGroup[],
   ) => void;
 }) {
+  const { t } = useI18n();
+
   const initialYear = year !== null && year >= 1900 && year <= currentYear ? year : null;
   const [draftYear, setYear] = useState(initialYear);
   const [yearOpen, setYearOpen] = useState(false);
@@ -51,7 +54,7 @@ export function DiaryFilterPicker({
       : draftYear;
   return (
     <FilterSheet
-      title="일기 필터"
+      title={t('diary.filterTitle')}
       resetInHeader
       onClose={onClose}
       onReset={() => {
@@ -62,22 +65,24 @@ export function DiaryFilterPicker({
       onApply={() => onApply(selectedYear, draftSeasons, draftEmotionGroups)}
     >
       <View className="gap-4">
-        <Text className="text-base font-semibold">연도</Text>
+        <Text className="text-base font-semibold">{t('diary.yearLabel')}</Text>
         <FormPickerRow
-          label={selectedYear === null ? '전체 연도' : `${selectedYear}년`}
-          accessibilityLabel="연도 선택"
+          label={
+            selectedYear === null ? t('diary.allYears') : t('home.year', { count: selectedYear })
+          }
+          accessibilityLabel={t('home.chooseYear')}
           disabled={false}
           onPress={() => setYearOpen(true)}
         />
       </View>
       <View className="gap-4">
         <View className="flex-row items-baseline justify-between gap-3">
-          <Text className="text-base font-semibold">계절</Text>
+          <Text className="text-base font-semibold">{t('diary.seasonLabel')}</Text>
           <Text className="min-w-0 shrink text-right text-sm text-theme-text-secondary">
             {selectionSummary(
-              draftSeasons.map((season) => DIARY_SEASONS[season].label),
+              draftSeasons.map((season) => t(`diary.${season}`)),
               4,
-              '전체 계절',
+              t('diary.allSeasons'),
             )}
           </Text>
         </View>
@@ -98,7 +103,7 @@ export function DiaryFilterPicker({
                       compact
                       checkbox
                       selected={selected}
-                      accessibilityLabel={DIARY_SEASONS[value].label}
+                      accessibilityLabel={t(`diary.${value}`)}
                       onPress={() =>
                         setSeasons(
                           (Object.keys(DIARY_SEASONS) as DiarySeason[]).filter((season) =>
@@ -108,7 +113,7 @@ export function DiaryFilterPicker({
                       }
                     >
                       <Text className={`text-base ${selected ? 'text-theme-accent-deep' : ''}`}>
-                        {DIARY_SEASONS[value].label}
+                        {t(`diary.${value}`)}
                       </Text>
                     </PickerOption>
                   </View>
@@ -118,22 +123,26 @@ export function DiaryFilterPicker({
           ))}
         </View>
       </View>
-      <InfoNotice>
-        {(Object.keys(DIARY_SEASONS) as DiarySeason[])
-          .map(
-            (season) =>
-              `${DIARY_SEASONS[season].label} ${DIARY_SEASONS[season].monthsLabel.replace('다음 해 ', '다음 ')}`,
+      <InfoNotice numberOfLines={0} adjustsFontSizeToFit={false}>
+        {(
+          [
+            ['spring', 'summer'],
+            ['autumn', 'winter'],
+          ] as const
+        )
+          .map((row) =>
+            row.map((season) => `${t(`diary.${season}`)} ${t(`diary.${season}Months`)}`).join(', '),
           )
-          .join(', ')}
+          .join('\n')}
       </InfoNotice>
       <View className="gap-4">
         <View className="flex-row items-baseline justify-between gap-3">
-          <Text className="text-base font-semibold">감정</Text>
+          <Text className="text-base font-semibold">{t('diary.emotionLabel')}</Text>
           <Text className="shrink text-sm text-theme-text-secondary">
             {selectionSummary(
-              draftEmotionGroups.map((group) => DIARY_EMOTION_GROUPS[group].label),
+              draftEmotionGroups.map((group) => t(`diary.${group}`)),
               3,
-              '전체 감정',
+              t('diary.allEmotions'),
             )}
           </Text>
         </View>
@@ -147,8 +156,9 @@ export function DiaryFilterPicker({
                   compact
                   dense
                   checkbox
+                  className="flex-1"
                   selected={selected}
-                  accessibilityLabel={DIARY_EMOTION_GROUPS[value].label}
+                  accessibilityLabel={t(`diary.${value}`)}
                   onPress={() =>
                     setEmotionGroups(
                       (Object.keys(DIARY_EMOTION_GROUPS) as DiaryEmotionGroup[]).filter((group) =>
@@ -158,11 +168,11 @@ export function DiaryFilterPicker({
                   }
                 >
                   <Text className={`text-base ${selected ? 'text-theme-accent-deep' : ''}`}>
-                    {DIARY_EMOTION_GROUPS[value].label}
+                    {t(`diary.${value}`)}
                   </Text>
                   <View className="min-h-8 w-full items-center justify-center">
                     <Text className="w-full text-center text-xs leading-4 text-theme-text-secondary">
-                      {DIARY_EMOTION_GROUPS[value].description}
+                      {t(`diary.${value}Names`)}
                     </Text>
                   </View>
                 </PickerOption>
@@ -171,9 +181,9 @@ export function DiaryFilterPicker({
           })}
         </View>
       </View>
-      <InfoNotice>여러 개 선택할 수 있어요. 다시 누르면 해제돼요.</InfoNotice>
+      <InfoNotice>{t('diary.multiHint')}</InfoNotice>
       {yearOpen && (
-        <BottomSheetModal visible title="연도 선택" onClose={() => setYearOpen(false)}>
+        <BottomSheetModal visible title={t('home.chooseYear')} onClose={() => setYearOpen(false)}>
           {(close) => (
             <View className="gap-3">
               {[null, ...(yearsQuery.data ?? [])].map((value) => (
@@ -182,13 +192,15 @@ export function DiaryFilterPicker({
                   key={value ?? 'all'}
                   compact
                   selected={selectedYear === value}
-                  accessibilityLabel={value === null ? '전체 연도' : `${value}년`}
+                  accessibilityLabel={
+                    value === null ? t('diary.allYears') : t('home.year', { count: value })
+                  }
                   onPress={() => close(() => setYear(value))}
                 >
                   <Text
                     className={`text-base ${selectedYear === value ? 'text-theme-accent-deep' : ''}`}
                   >
-                    {value === null ? '전체 연도' : `${value}년`}
+                    {value === null ? t('diary.allYears') : t('home.year', { count: value })}
                   </Text>
                 </PickerOption>
               ))}

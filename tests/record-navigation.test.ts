@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate, soberI18n } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -86,6 +87,9 @@ function form(kind: string, router: unknown, isNew = false) {
     {
       exports,
       require: (dependency: string) => {
+        if (dependency.endsWith('/i18n/sober')) return soberI18n;
+        if (dependency.endsWith('/i18n/react')) return mockI18n();
+        if (dependency.endsWith('/i18n/format')) return { formatDisplayDate };
         if (dependency.endsWith('/NoticeProvider'))
           return { useNotice: () => ({ showNotice: (notice: any) => notices.push(notice) }) };
         if (dependency === 'react-native')
@@ -165,6 +169,9 @@ function form(kind: string, router: unknown, isNew = false) {
     {
       exports: pageExports,
       require: (dependency: string) => {
+        if (dependency.endsWith('/i18n/sober')) return soberI18n;
+        if (dependency.endsWith('/i18n/react')) return mockI18n();
+        if (dependency.endsWith('/i18n/format')) return { formatDisplayDate };
         if (dependency === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (dependency === 'react')
           return { useRef: (current: unknown) => ({ current }), useLayoutEffect: () => {} };

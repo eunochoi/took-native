@@ -4,6 +4,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { withWriteLock } from '../db';
 import { DEFAULT_SETTINGS, parseSettings, type Settings } from './model';
 import { refreshSoberWidgets } from '../widgets/sober';
+import { setLanguagePreference, subscribeLocale } from '../i18n/locale';
 
 interface Context {
   settings: Settings;
@@ -35,6 +36,7 @@ export function SettingsProvider({
     current.current = next;
     persisted.current = next;
     setSettings(next);
+    setLanguagePreference(next.language);
   };
   useEffect(() => {
     let active = true;
@@ -56,6 +58,7 @@ export function SettingsProvider({
         current.current = value;
         persisted.current = value;
         setSettings(value);
+        setLanguagePreference(value.language);
       }
     })().catch((error: Error) => {
       if (active) onError(error);
@@ -64,12 +67,14 @@ export function SettingsProvider({
       active = false;
     };
   }, [db, onError]);
+  useEffect(() => subscribeLocale(() => {}), []);
   if (!settings) return null;
   const updateSettings = async (patch: Partial<Settings>) => {
     const next = parseSettings({ ...current.current, ...patch });
     // Reflect the user's choice immediately; persistence must not delay the transition.
     current.current = next;
     setSettings(next);
+    setLanguagePreference(next.language);
     try {
       await withWriteLock(async () => {
         await db.runAsync(
@@ -79,12 +84,13 @@ export function SettingsProvider({
         );
         persisted.current = next;
       });
-      if (patch.themeAccent !== undefined) refreshSoberWidgets();
+      if (patch.themeAccent !== undefined || patch.language !== undefined) refreshSoberWidgets();
     } catch (error) {
       // An older failure must not undo a newer pending choice.
       if (current.current === next) {
         current.current = persisted.current;
         setSettings(persisted.current);
+        setLanguagePreference(persisted.current.language);
       }
       throw error;
     }

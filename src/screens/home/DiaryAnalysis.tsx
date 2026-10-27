@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { MUTED_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 import { AnalysisHeader } from './AnalysisHeader';
 import { DiaryStatisticsSummary } from './DiaryStatisticsSummary';
@@ -12,11 +13,13 @@ export function DiaryAnalysis({
   stats: Awaited<ReturnType<typeof getDiaryStats>>;
   year: number;
 }) {
+  const { t } = useI18n();
+
   const max = Math.max(...stats.monthly, 1);
   return (
     <View className="gap-4">
-      <AnalysisHeader title="일기 기록">
-        {year}년 {stats.total}개
+      <AnalysisHeader title={t('stats.diaryTitle')}>
+        {t('stats.yearCount', { title: year, count: stats.total })}
       </AnalysisHeader>
       <DiaryStatisticsSummary
         current={stats.current}
@@ -46,8 +49,8 @@ export function DiaryAnalysis({
         ))}
       </View>
       <View className="gap-2">
-        <InfoNotice>연속·최고 기록은 전체 기간 기준이에요.</InfoNotice>
-        <InfoNotice>월평균은 선택 연도 기준, 올해는 현재 월까지예요.</InfoNotice>
+        <InfoNotice>{t('stats.streakNotice')}</InfoNotice>
+        <InfoNotice>{t('stats.averageNotice')}</InfoNotice>
       </View>
     </View>
   );

@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/react';
 import { useEffect, type ReactNode, type ComponentProps } from 'react';
 import {
   KeyboardAvoidingView,
@@ -83,6 +84,7 @@ export function BottomSheetModal({
     scroll: Pick<ReturnType<typeof useBottomSheetMotion>, 'panGesture' | 'scrollRef' | 'onScroll'>,
   ) => ReactNode;
 }) {
+  const { t } = useI18n();
   const { rem: appRem, reducedMotion: reduceMotion } = useAppTheme();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
@@ -216,7 +218,7 @@ export function BottomSheetModal({
               accessible={dismissible}
               disabled={!dismissible}
               accessibilityRole="button"
-              accessibilityLabel="닫기"
+              accessibilityLabel={t('common.close')}
               onPress={() => closeSheet()}
               className={`absolute inset-0 ${dimBackdrop ? 'bg-theme-overlay/25' : ''}`}
             />

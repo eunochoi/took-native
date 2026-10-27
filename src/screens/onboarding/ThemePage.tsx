@@ -1,16 +1,14 @@
+import { useI18n } from '../../i18n/react';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { InfoNotice } from '../../components/InfoNotice';
 import { PickerOption } from '../../components/PickerOption';
 import { Text } from '../../components/Text';
 import type { Settings } from '../../settings/model';
-import { ACCENT_KEYS, ACCENT_LABELS } from '../../theme/accents';
+import { ACCENT_KEYS } from '../../theme/accents';
 import { ACCENT_PALETTES } from '../../theme/colors';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { EmotionIconStyleSelector } from '../settings/EmotionIconStyleSelector';
-
-const modes = { light: '밝게', dark: '어둡게', system: '자동' } as const;
-const sizes = { small: '작게', normal: '보통', large: '크게' } as const;
 
 export function ThemePage({
   settings,
@@ -21,6 +19,17 @@ export function ThemePage({
   busy: boolean;
   onChange: (patch: Partial<Settings>) => Promise<void>;
 }) {
+  const { t } = useI18n();
+  const modes = {
+    light: t('settings.themeLight'),
+    dark: t('settings.themeDark'),
+    system: t('settings.themeSystem'),
+  };
+  const sizes = {
+    small: t('settings.small'),
+    normal: t('settings.normal'),
+    large: t('settings.large'),
+  };
   const { rem } = useAppTheme();
   return (
     <View className="w-full grow justify-between gap-6">
@@ -29,27 +38,27 @@ export function ThemePage({
           accessibilityRole="header"
           className="text-center text-[21px] leading-[28px] font-semibold tracking-tight"
         >
-          나에게 맞게 설정해요
+          {t('onboarding.themeTitle')}
         </Text>
         <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
-          지금 고른 모습이 앱에 바로 적용돼요.
+          {t('onboarding.themeDescription')}
         </Text>
       </View>
       <View className="gap-5">
         <View className="gap-3">
           <Text className="text-center text-[15.75px] leading-[24.5px] font-semibold">
-            강조 색상
+            {t('settings.accentColor')}
           </Text>
           <View
             accessibilityRole="radiogroup"
-            accessibilityLabel="강조 색상"
+            accessibilityLabel={t('settings.accentColor')}
             className={`w-full flex-row items-start gap-3 ${busy ? 'opacity-40' : 'opacity-100'}`}
           >
             {ACCENT_KEYS.map((accent) => (
               <Pressable
                 key={accent}
                 accessibilityRole="radio"
-                accessibilityLabel={`${ACCENT_LABELS[accent]} 강조 색상`}
+                accessibilityLabel={t('settings.accentChoice', { color: t(`settings.${accent}`) })}
                 accessibilityState={{ checked: settings.themeAccent === accent, disabled: busy }}
                 disabled={busy}
                 onPress={() => void onChange({ themeAccent: accent })}
@@ -73,7 +82,7 @@ export function ThemePage({
         </View>
         <View className="gap-3">
           <Text className="text-center text-[15.75px] leading-[24.5px] font-semibold">
-            감정 아이콘
+            {t('settings.emotionIcons')}
           </Text>
           <EmotionIconStyleSelector
             compact
@@ -86,7 +95,7 @@ export function ThemePage({
         </View>
         <View className="gap-3">
           <Text className="text-center text-[15.75px] leading-[24.5px] font-semibold">
-            배경 색상
+            {t('settings.background')}
           </Text>
           <View className="flex-row gap-2">
             {Object.entries(modes).map(([value, label]) => (
@@ -96,7 +105,7 @@ export function ThemePage({
                   dense
                   selected={settings.themeMode === value}
                   disabled={busy}
-                  accessibilityLabel={`${label} 배경`}
+                  accessibilityLabel={t('onboarding.backgroundChoice', { value: label })}
                   onPress={() => void onChange({ themeMode: value as Settings['themeMode'] })}
                 >
                   <Text
@@ -111,7 +120,7 @@ export function ThemePage({
         </View>
         <View className="gap-3">
           <Text className="text-center text-[15.75px] leading-[24.5px] font-semibold">
-            폰트 크기
+            {t('settings.fontSize')}
           </Text>
           <View className="flex-row gap-2">
             {Object.entries(sizes).map(([value, label]) => (
@@ -121,7 +130,7 @@ export function ThemePage({
                   dense
                   selected={settings.fontSize === value}
                   disabled={busy}
-                  accessibilityLabel={`${label} 글자 크기`}
+                  accessibilityLabel={t('onboarding.fontChoice', { value: label })}
                   onPress={() => void onChange({ fontSize: value as Settings['fontSize'] })}
                 >
                   <Text
@@ -136,7 +145,7 @@ export function ThemePage({
         </View>
       </View>
       <InfoNotice textClassName="text-[10.5px] leading-[17.5px]" adjustsFontSizeToFit={false}>
-        설정에서 언제든 다시 바꿀 수 있어요.
+        {t('onboarding.themeNotice')}
       </InfoNotice>
     </View>
   );

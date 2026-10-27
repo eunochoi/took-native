@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { View } from 'react-native';
 import { twMerge } from 'tailwind-merge';
 import { AppIcon } from '../../components/AppIcon';
@@ -18,6 +19,7 @@ export function CalendarRecordCounts({
   textSize?: 'sm' | 'base';
   textClassName?: string;
 }) {
+  const { t } = useI18n();
   const { iconSizes } = useAppTheme();
   return (
     <View
@@ -28,21 +30,30 @@ export function CalendarRecordCounts({
           key: 'diary',
           icon: 'diary' as const,
           className: 'text-theme-accent',
-          value: `${diaryCount}개`,
-          label: `일기 ${diaryCount}개`,
+          value: t('calendar.entryNumber', { count: diaryCount }),
+          label: t('calendar.diaryCount', { count: diaryCount }),
         },
         ...(
           [
-            { band: 'high', label: '75% 이상', className: 'text-theme-progress-high' },
-            { band: 'medium', label: '25% 이상 75% 미만', className: 'text-theme-progress-medium' },
-            { band: 'low', label: '25% 미만', className: 'text-theme-progress-low' },
+            { band: 'high', label: t('calendar.high'), className: 'text-theme-progress-high' },
+            {
+              band: 'medium',
+              label: t('calendar.medium'),
+              className: 'text-theme-progress-medium',
+            },
+            { band: 'low', label: t('calendar.low'), className: 'text-theme-progress-low' },
           ] as const
         ).map(({ band, label, className }) => ({
           key: band,
           icon: 'habit' as const,
           className,
-          value: unavailable ? '–' : `${counts?.[band] ?? 0}일`,
-          label: `습관 완료율 ${label}, ${unavailable ? '불러오지 못함' : `${counts?.[band] ?? 0}일`}`,
+          value: unavailable ? '–' : t('calendar.compactDayCount', { count: counts?.[band] ?? 0 }),
+          label: t('calendar.bandCount', {
+            title: label,
+            value: unavailable
+              ? t('calendar.unavailable')
+              : t('common.dayCount', { count: counts?.[band] ?? 0 }),
+          }),
         })),
       ].map(({ key, icon, className, value, label }) => (
         <View

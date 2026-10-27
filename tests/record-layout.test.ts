@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate } from './helpers/i18n';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -16,6 +17,8 @@ function load(file: string, modules: Record<string, any> = {}) {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/i18n/format')) return { formatDisplayDate };
+        if (name.endsWith('/i18n/react')) return mockI18n();
         if (name in modules) return modules[name];
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react-native')

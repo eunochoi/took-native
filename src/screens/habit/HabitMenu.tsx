@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { RecordMenuButton } from '../../components/RecordMenuButton';
 import { useNotice } from '../../components/NoticeProvider';
@@ -20,6 +21,8 @@ export function HabitMenu({
   onDeleted?: () => void;
   showDetail?: boolean;
 }) {
+  const { t } = useI18n();
+
   const { showNotice } = useNotice();
   const db = useSQLiteContext();
   const { openModal } = useModalNavigation();
@@ -29,12 +32,13 @@ export function HabitMenu({
     () => deleteHabit(db, habit.id),
     'habit',
     onDeleted,
-    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
+    (error) =>
+      showNotice({ tone: 'error', title: t('habit.processFailed'), message: error.message }),
   );
   return (
     <>
       <RecordMenuButton
-        accessibilityLabel={`${habit.name} 메뉴`}
+        accessibilityLabel={t('habit.menu', { value: habit.name })}
         accessibilityState={{ expanded: open, disabled: mutation.isPending }}
         disabled={mutation.isPending}
         onPress={() => setOpen(true)}
@@ -46,23 +50,23 @@ export function HabitMenu({
             {showDetail && (
               <PickerAction
                 icon="info-outline"
-                title="상세보기"
-                description="습관과 기록 흐름을 확인해요."
+                title={t('habit.menuDetail')}
+                description={t('habit.menuDetailHint')}
                 singleLineDescription
                 onPress={() => closePicker(() => openModal(`/habit/${habit.id}`))}
               />
             )}
             <PickerAction
               icon="edit"
-              title="습관 수정하기"
-              description="이름·우선순위 등을 바꿔요."
+              title={t('habit.edit')}
+              description={t('habit.editHint')}
               singleLineDescription
               onPress={() => closePicker(() => openModal(`/habit/${habit.id}/edit`))}
             />
             <PickerAction
               icon="delete-outline"
-              title="습관 삭제하기"
-              description="습관과 모든 기록을 삭제해요."
+              title={t('habit.delete')}
+              description={t('habit.deleteHint')}
               singleLineDescription
               danger
               onPress={() => closePicker(() => setConfirmOpen(true))}
@@ -73,9 +77,9 @@ export function HabitMenu({
       <ConfirmModal
         danger
         visible={confirmOpen}
-        title="정말 삭제하시겠어요?"
-        message="삭제한 뒤에는 되돌릴 수 없어요."
-        confirmLabel="삭제하기"
+        title={t('habit.deleteTitle')}
+        message={t('habit.deleteWarning')}
+        confirmLabel={t('habit.deleteAction')}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => {
           setConfirmOpen(false);

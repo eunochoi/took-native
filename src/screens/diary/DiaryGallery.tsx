@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { useRef, useState } from 'react';
 import { FlatList, Image, Pressable, View, useWindowDimensions } from 'react-native';
@@ -12,13 +13,15 @@ type DiaryGalleryProps = {
 };
 
 export function DiaryGallery(props: DiaryGalleryProps) {
+  const { t } = useI18n();
+
   const { images, detail, square, onPress } = props;
   if (images.length === 0) return null;
   if (!detail && images.length === 1) {
     return (
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="사진 1 일기 상세보기"
+        accessibilityLabel={t('diary.photoDetail', { count: 1 })}
         onPress={onPress}
         className={`w-full ${square ? 'aspect-square ios:curve-continuous rounded-xl border border-theme-border-muted' : 'aspect-[4/3] ios:curve-continuous rounded-lg'} overflow-hidden`}
       >
@@ -34,6 +37,8 @@ export function DiaryGallery(props: DiaryGalleryProps) {
 }
 
 function DiaryGalleryPages({ images, detail = false, square = false, onPress }: DiaryGalleryProps) {
+  const { t } = useI18n();
+
   const { rem: appRem } = useAppTheme();
   const { width: windowWidth } = useWindowDimensions();
   const [width, setWidth] = useState(0);
@@ -84,8 +89,11 @@ function DiaryGalleryPages({ images, detail = false, square = false, onPress }: 
               accessibilityRole="button"
               accessibilityLabel={
                 detail
-                  ? `사진 ${index + 1} ${fullView === item.id ? '크롭해서 보기' : '전체 보기'}`
-                  : `사진 ${index + 1} 일기 상세보기`
+                  ? t('diary.photoAction', {
+                      count: index + 1,
+                      value: fullView === item.id ? t('diary.crop') : t('diary.fullPhoto'),
+                    })
+                  : t('diary.photoDetail', { count: index + 1 })
               }
               accessibilityState={detail ? { selected: fullView === item.id } : undefined}
               onPress={detail ? () => setFullView(fullView === item.id ? null : item.id) : onPress}
@@ -109,7 +117,7 @@ function DiaryGalleryPages({ images, detail = false, square = false, onPress }: 
       )}
       {images.length > 1 && (
         <View
-          accessibilityLabel={`사진 ${page + 1} / ${images.length}`}
+          accessibilityLabel={t('diary.photoPage', { count: page + 1, value: images.length })}
           className="flex-row justify-center py-1.5"
         >
           {images.map((image, index) => (

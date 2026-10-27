@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { InfoNotice } from '../../components/InfoNotice';
 import { useState } from 'react';
 import { Switch, View } from 'react-native';
@@ -31,12 +32,18 @@ export function SoberFilterPicker({
   onClose: () => void;
   onApply: (filter: SoberFilter) => void;
 }) {
+  const { t } = useI18n();
+
+  const recordFilters = SOBER_RECORD_FILTERS.map((option) => ({
+    ...option,
+    label: t(`sober.period${option.days}`),
+  }));
   const { colors } = useAppTheme();
   const [draft, setDraft] = useState(filter);
   const [periodOpen, setPeriodOpen] = useState(false);
   return (
     <FilterSheet
-      title="거리두기 필터"
+      title={t('sober.filterTitle')}
       resetInHeader
       onClose={onClose}
       onReset={() => setDraft(DEFAULT_SOBER_FILTER)}
@@ -44,9 +51,9 @@ export function SoberFilterPicker({
     >
       <>
         <View className="flex-row items-center justify-between gap-3">
-          <Text className="text-base font-semibold">중요한 항목만 보기</Text>
+          <Text className="text-base font-semibold">{t('sober.onlyImportant')}</Text>
           <Switch
-            accessibilityLabel="중요한 항목만 보기"
+            accessibilityLabel={t('sober.onlyImportant')}
             value={draft.priorityOnly}
             onValueChange={(priorityOnly) => setDraft({ ...draft, priorityOnly })}
             trackColor={{ false: colors.border, true: colors.accent }}
@@ -54,26 +61,30 @@ export function SoberFilterPicker({
           />
         </View>
         <View className="gap-4">
-          <Text className="text-base font-semibold">최소 유지 기간</Text>
+          <Text className="text-base font-semibold">{t('sober.minimumPeriod')}</Text>
           <FormPickerRow
-            label={SOBER_RECORD_FILTERS.find((option) => option.days === draft.minimumDays)!.label}
-            accessibilityLabel="최소 유지 기간 선택"
+            label={recordFilters.find((option) => option.days === draft.minimumDays)!.label}
+            accessibilityLabel={t('sober.minimumPeriodChoice')}
             disabled={false}
             onPress={() => setPeriodOpen(true)}
           />
         </View>
-        <InfoNotice>현재 기록이 선택한 기간 이상인 항목만 보여요.</InfoNotice>
+        <InfoNotice>{t('sober.minimumPeriodHint')}</InfoNotice>
         {periodOpen && (
-          <BottomSheetModal visible title="최소 유지 기간" onClose={() => setPeriodOpen(false)}>
+          <BottomSheetModal
+            visible
+            title={t('sober.minimumPeriod')}
+            onClose={() => setPeriodOpen(false)}
+          >
             {(close) => (
               <View className="gap-3">
-                {SOBER_RECORD_FILTERS.map((option) => (
+                {recordFilters.map((option) => (
                   <PickerOption
                     keepUncheckedBorder
                     key={option.days}
                     compact
                     selected={draft.minimumDays === option.days}
-                    accessibilityLabel={`현재 기록 ${option.label}`}
+                    accessibilityLabel={t('sober.currentRecord', { value: option.label })}
                     onPress={() => close(() => setDraft({ ...draft, minimumDays: option.days }))}
                   >
                     <Text

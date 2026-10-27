@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useState } from 'react';
 import { ScrollView, useWindowDimensions, View } from 'react-native';
 import { EmotionImage } from '../../components/EmotionImage';
@@ -10,7 +11,6 @@ import { DIARY_EMOTION_GROUPS } from '../../domain/diaryFilters';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 import { ACCENT_CARD_BORDER_CLASS_NAME, UNDERLINE_TAB_LIST_CLASS_NAME } from '../../theme/classes';
 import { AnalysisHeader } from './AnalysisHeader';
-const halves = ['전체', '전반기', '후반기'];
 export function EmotionStats({
   stats,
   year,
@@ -18,6 +18,9 @@ export function EmotionStats({
   stats: Awaited<ReturnType<typeof getDiaryStats>>;
   year: number;
 }) {
+  const { t } = useI18n();
+  const halves = [t('stats.all'), t('stats.firstHalf'), t('stats.secondHalf')];
+
   const { rem: appRem, mode } = useAppTheme();
   const { width } = useWindowDimensions();
   const [half, setHalf] = useState(0);
@@ -34,15 +37,15 @@ export function EmotionStats({
     return {
       key,
       className,
-      label: group.label,
+      label: t(`diary.${key}`),
       count: group.emotions.reduce<number>((sum, emotion) => sum + counts[emotion], 0),
     };
   });
   return (
     <View className="gap-4">
       <View className="gap-4 px-[5%]">
-        <AnalysisHeader title="감정 기록">
-          {year}년 {halves[half]} {total}개
+        <AnalysisHeader title={t('stats.emotionTitle')}>
+          {t('stats.emotionPeriod', { title: year, value: halves[half], count: total })}
         </AnalysisHeader>
         <View accessibilityRole="tablist" className={UNDERLINE_TAB_LIST_CLASS_NAME}>
           {halves.map((label, index) => (
@@ -63,14 +66,26 @@ export function EmotionStats({
                 </View>
                 <View className="flex-row items-baseline gap-1">
                   <Text className="text-2xl font-semibold">{group.count}</Text>
-                  <Text className="text-base text-theme-text-secondary">회</Text>
+                  <Text className="text-base text-theme-text-secondary">
+                    {t('stats.timesUnit', { count: group.count })}
+                  </Text>
                 </View>
               </View>
             ))}
           </View>
           <View
             accessible
-            accessibilityLabel={`감정 비율, ${groups.map((group) => `${group.label} ${group.count}회 ${total ? Math.round((group.count / total) * 100) : 0}%`).join(', ')}`}
+            accessibilityLabel={t('stats.emotionRatio', {
+              value: groups
+                .map((group) =>
+                  t('stats.groupShare', {
+                    title: group.label,
+                    count: group.count,
+                    value: total ? Math.round((group.count / total) * 100) : 0,
+                  }),
+                )
+                .join(', '),
+            })}
             className={`h-2 flex-row gap-0.5 overflow-hidden rounded-full ${total ? '' : 'bg-theme-accent/30'}`}
           >
             {groups
@@ -95,7 +110,10 @@ export function EmotionStats({
           <View
             key={emotion.key}
             accessible
-            accessibilityLabel={`${emotion.name} ${counts[index]}회`}
+            accessibilityLabel={t('stats.emotionCount', {
+              title: t(`emotions.${emotion.key}`),
+              count: counts[index],
+            })}
             className="shrink-0 items-center justify-center p-3 border ios:curve-continuous rounded-theme"
             style={{
               width: width * 0.35,
@@ -105,10 +123,14 @@ export function EmotionStats({
           >
             <View className="items-center gap-1">
               <EmotionImage emotion={index} size={appRem * 4} />
-              <Text className="text-sm text-theme-text-secondary">{emotion.name}</Text>
+              <Text className="text-sm text-theme-text-secondary">
+                {t(`emotions.${emotion.key}`)}
+              </Text>
               <View className="flex-row items-baseline gap-1">
                 <Text className="text-2xl font-semibold">{counts[index]}</Text>
-                <Text className="text-base text-theme-text-secondary">회</Text>
+                <Text className="text-base text-theme-text-secondary">
+                  {t('stats.timesUnit', { count: counts[index] })}
+                </Text>
               </View>
             </View>
           </View>
@@ -118,7 +140,7 @@ export function EmotionStats({
       <View className="gap-2 px-[5%]">
         {groups.map((group) => (
           <InfoNotice key={group.key}>
-            {`${group.label}: ${DIARY_EMOTION_GROUPS[group.key].description.replace(/\n/g, ', ')}`}
+            {`${group.label}: ${t(`diary.${group.key}Names`).replace(/\n/g, ', ')}`}
           </InfoNotice>
         ))}
       </View>

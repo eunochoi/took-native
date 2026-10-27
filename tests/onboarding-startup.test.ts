@@ -1,3 +1,5 @@
+import { mockI18n } from './helpers/i18n';
+import { translateErrorMessage } from '../src/i18n/errors';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -14,6 +16,7 @@ function find(tree: any, predicate: (node: any) => boolean): any {
 }
 
 function startupHarness() {
+  let language: 'ko' | 'en' = 'ko';
   const state: any[] = [];
   const timers = new Map<number, { at: number; run: () => void }>();
   const effects: (() => void)[] = [];
@@ -47,6 +50,8 @@ function startupHarness() {
       },
       clearTimeout: (id: number) => timers.delete(id),
       require(name: string) {
+        if (name.endsWith('/i18n/react')) return mockI18n(() => language);
+        if (name.endsWith('/i18n/errors')) return { translateErrorMessage };
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
         if (name === 'react')
           return {
@@ -122,6 +127,9 @@ function startupHarness() {
   };
   return {
     render,
+    setLanguage: (value: 'ko' | 'en') => {
+      language = value;
+    },
     advance(ms: number) {
       now += ms;
       for (const [id, timer] of timers) {
@@ -232,4 +240,29 @@ test('unmount cancels the splash minimum timer', () => {
   assert.equal(h.pendingTimers(), 0);
   h.advance(1500);
   assert.equal(h.hideCalls(), 0);
+});
+
+test('startup failure changes language while preserving retry and the original database error', () => {
+  const h = startupHarness();
+  const first = h.render();
+  const error = new Error('지원하지 않는 DB 버전입니다.');
+  find(first, (node) => node.type === 'SQLiteProvider').props.onError(error);
+  h.setLanguage('en');
+  const screen = h.render();
+  const texts = find(screen, (node) => node.type === 'SafeAreaView').props.children;
+  assert.equal(texts[0].props.children, 'Could not start the app');
+  assert.equal(texts[1].props.children, 'This database version is not supported.');
+  assert.equal(
+    texts[2].props.children,
+    'Your existing records have not been deleted. Please try again.',
+  );
+  assert.equal(texts[3].props.children.props.children, 'Try again');
+  h.setLanguage('ko');
+  assert.equal(
+    find(h.render(), (node) => node.type === 'SafeAreaView').props.children[1].props.children,
+    error.message,
+  );
+  texts[3].props.onPress();
+  assert(find(h.render(), (node) => node.type === 'SQLiteProvider'));
+  assert.equal(error.message, '지원하지 않는 DB 버전입니다.');
 });

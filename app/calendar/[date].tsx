@@ -1,5 +1,5 @@
-import { format, parseISO } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { formatDisplayDate } from '../../src/i18n/format';
+import { useI18n } from '../../src/i18n/react';
 import { useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 import { BottomSheetPage } from '../../src/components/BottomSheetPage';
@@ -8,6 +8,8 @@ import { useToday } from '../../src/queries';
 import { DayInfo } from '../../src/screens/calendar/DayInfo';
 
 export default function CalendarDayInfo() {
+  const { t, formatLocale } = useI18n();
+
   const { date } = useLocalSearchParams<{ date: string }>();
   const today = useToday();
   const selected = isDate(date) && date <= today ? date : today;
@@ -15,7 +17,7 @@ export default function CalendarDayInfo() {
     <BottomSheetPage
       backRoute="/calendar"
       title={
-        selected === today ? '오늘' : format(parseISO(selected), 'M월 d일 EEEE', { locale: ko })
+        selected === today ? t('calendar.today') : formatDisplayDate(selected, formatLocale, 'day')
       }
       contentKey={selected}
     >

@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
@@ -38,6 +39,8 @@ export function SoberMonthCalendar({
   onMonthChange: (month: string) => void;
   onSelect: (date: string) => void;
 }) {
+  const { t } = useI18n();
+
   const { colors, iconSizes } = useAppTheme();
   const achievementDates = useMemo(() => {
     const result = new Map<string, number[]>();
@@ -53,11 +56,14 @@ export function SoberMonthCalendar({
   return (
     <View className="gap-4">
       <Text accessibilityRole="header" className="text-xl font-semibold">
-        월간 기록
+        {t('sober.monthly')}
       </Text>
       <View className="px-1 gap-4">
         <CalendarHeader month={month} today={today} navigation={navigation} />
-        <CalendarGrid {...swipe.panHandlers} accessibilityLabel={`${month} 거리두기 기록 달력`}>
+        <CalendarGrid
+          {...swipe.panHandlers}
+          accessibilityLabel={t('sober.monthLabel', { value: month })}
+        >
           {days.map((date) => {
             const outside = date.slice(0, 7) !== month;
             const unavailable = !navigation.isDateAvailable(date);
@@ -78,11 +84,11 @@ export function SoberMonthCalendar({
                 onSelect={onSelect}
                 label={[
                   date,
-                  ...goals.map((days) => `${days}일 달성!`),
+                  ...goals.map((days) => t('sober.achievement', { count: days })),
                   hasRestart
-                    ? '다시 시작한 날'
+                    ? t('sober.restartDay')
                     : !outside && !unavailable
-                      ? '리셋 없이 지낸 날'
+                      ? t('sober.withoutRestart')
                       : '',
                 ]
                   .filter(Boolean)

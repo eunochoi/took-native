@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate, soberI18n } from './helpers/i18n';
 import { useCalendarNavigation } from './helpers/calendar-navigation';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -25,6 +26,9 @@ function load(path: string, states: unknown[], date = '2026-09-30') {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/i18n/sober')) return soberI18n;
+        if (name.endsWith('/i18n/react')) return mockI18n();
+        if (name.endsWith('/i18n/format')) return { formatDisplayDate };
         if (name.endsWith('/NoticeProvider'))
           return { useNotice: () => ({ showNotice: () => {} }) };
         if (name.endsWith('theme/classes')) return require('../src/theme/classes');
@@ -428,9 +432,7 @@ test('achievement-only day shows its message without an empty state or restart m
   const all = nodes(tree);
   assert(
     all.some(
-      (node) =>
-        node.type === 'Text' &&
-        JSON.stringify(node.props.children) === JSON.stringify([7, '일 달성!']),
+      (node) => node.type === 'Text' && [node.props.children].flat().join('') === '7일 달성!',
     ),
   );
   assert(all.some((node) => node.type === 'Text' && node.props.children === '12:30'));

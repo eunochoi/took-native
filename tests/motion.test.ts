@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate } from './helpers/i18n';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -24,6 +25,8 @@ function load(
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/i18n/format')) return { formatDisplayDate };
+        if (name.endsWith('/i18n/react')) return mockI18n();
         if (name.endsWith('theme/classes')) return require('../src/theme/classes');
         if (name === 'react')
           return {

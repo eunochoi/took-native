@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useState } from 'react';
 import { Image, View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -8,29 +9,30 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 
 const moods = {
   positive: {
-    label: '긍정',
+    label: 'onboarding.positive',
     image: require('../../../assets/cats/cat-blue-p.png'),
-    description: '기쁘고 설레는 날엔 분홍빛이 번져.',
+    description: 'onboarding.positiveStory',
     color: 'bg-theme-emotion-positive',
     bubbleColor: 'emotionPositive',
   },
   neutral: {
-    label: '중립',
+    label: 'onboarding.neutral',
     image: require('../../../assets/cats/cat-blue.png'),
-    description: '특별할 것 없는 날에도 나는 나야.',
+    description: 'onboarding.neutralStory',
     color: 'bg-theme-emotion-neutral',
     bubbleColor: 'emotionNeutral',
   },
   negative: {
-    label: '부정',
+    label: 'onboarding.negative',
     image: require('../../../assets/cats/cat-blue-n.png'),
-    description: '마음이 무거운 날엔 푸른빛이 짙어져.',
+    description: 'onboarding.negativeStory',
     color: 'bg-theme-emotion-negative',
     bubbleColor: 'emotionNegative',
   },
 } as const;
 
 export function WelcomePage({ imageWidth }: { imageWidth: number }) {
+  const { t } = useI18n();
   const { colors, reducedMotion } = useAppTheme();
   const [mood, setMood] = useState<keyof typeof moods>('neutral');
   return (
@@ -40,10 +42,10 @@ export function WelcomePage({ imageWidth }: { imageWidth: number }) {
           accessibilityRole="header"
           className="text-center text-[21px] leading-[28px] font-semibold tracking-tight"
         >
-          안녕, 나는 '블루'야!
+          {t('onboarding.welcomeTitle')}
         </Text>
         <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
-          나는 마음에 따라 털색이 달라지는{'\n'}조금 특별한 고양이야.
+          {t('onboarding.welcomeDescription')}
         </Text>
       </View>
       <View className="gap-4">
@@ -68,14 +70,14 @@ export function WelcomePage({ imageWidth }: { imageWidth: number }) {
               accessibilityLiveRegion="polite"
               className="text-center text-[14px] leading-[21px]"
             >
-              {moods[mood].description}
+              {t(moods[mood].description)}
             </Text>
           </View>
         </View>
         <View
           accessible
           accessibilityRole="image"
-          accessibilityLabel={`${moods[mood].label}인 블루`}
+          accessibilityLabel={t('onboarding.moodImage', { value: t(moods[mood].label) })}
           className="-mt-8 h-48 items-center justify-center"
         >
           <View className="h-full" style={{ width: imageWidth }}>
@@ -111,7 +113,7 @@ export function WelcomePage({ imageWidth }: { imageWidth: number }) {
                   compact
                   dense
                   selected={mood === value}
-                  accessibilityLabel={`${option.label}인 블루 미리보기`}
+                  accessibilityLabel={t('onboarding.moodPreview', { value: t(option.label) })}
                   onPress={() => setMood(value as keyof typeof moods)}
                   className="flex-row gap-2"
                 >
@@ -119,7 +121,7 @@ export function WelcomePage({ imageWidth }: { imageWidth: number }) {
                   <Text
                     className={`text-[14px] leading-[21px] ${mood === value ? 'font-semibold text-theme-accent' : 'text-theme-text-primary'}`}
                   >
-                    {option.label}
+                    {t(option.label)}
                   </Text>
                 </PickerOption>
               </View>
@@ -129,10 +131,10 @@ export function WelcomePage({ imageWidth }: { imageWidth: number }) {
       </View>
       <View className="gap-2">
         <Text className="text-center text-[21px] leading-[28px] font-semibold">
-          어떤 색의 하루라도 괜찮아.
+          {t('onboarding.everyColor')}
         </Text>
         <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
-          BlooLog에서 오늘의 마음을 기록하고,{'\n'}좋은 습관을 더하고, 줄이고 싶은 습관은 덜어내요.
+          {t('onboarding.welcomeSummary')}
         </Text>
       </View>
     </View>

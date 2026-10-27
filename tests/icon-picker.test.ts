@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate, soberI18n } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -18,6 +19,7 @@ function nodes(node: any): any[] {
 }
 
 function picker(kind: 'habit' | 'sober', value: string, colorKey = 'pink') {
+  let language: 'ko' | 'en' = 'ko';
   const slots: any[] = [];
   let cursor = 0;
   let dirty = false;
@@ -84,6 +86,9 @@ function picker(kind: 'habit' | 'sober', value: string, colorKey = 'pink') {
       {
         exports,
         require(name: string) {
+          if (name.endsWith('/i18n/format')) return { formatDisplayDate };
+          if (name.endsWith('/i18n/sober')) return soberI18n;
+          if (name.endsWith('/i18n/react')) return mockI18n(() => language);
           if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
           if (name === 'react') return react;
           if (name === 'react-native')
@@ -154,6 +159,10 @@ function picker(kind: 'habit' | 'sober', value: string, colorKey = 'pink') {
   render();
   return {
     render,
+    setLanguage: (value: 'ko' | 'en') => {
+      language = value;
+      render();
+    },
     applied,
     scrolls,
     chipScrolls,
@@ -422,4 +431,30 @@ test('active categories stay within the scroll range after inset and viewport ch
   h.chipScroll.props.onLayout({ nativeEvent: { layout: { width: 768 } } });
   h.render();
   assert.deepEqual(h.chipScrolls.at(-1), { x: 0, animated: false });
+});
+
+test('habit icon labels and categories switch language without changing the selected icon key', () => {
+  const ui = picker('habit', 'water');
+  ui.setLanguage('en');
+  assert.equal(ui.shell.props.title, 'Habit icon');
+  assert(ui.option('Water'));
+  assert(ui.option('Small care category'));
+  ui.press('Water');
+  ui.press('Done');
+  assert.deepEqual(ui.applied, []);
+  ui.finishClose();
+  assert.deepEqual(ui.applied, ['water']);
+});
+
+test('Cut Back icon picker translates category and label while retaining its saved icon key', () => {
+  const ui = picker('sober', 'phone');
+  ui.setLanguage('en');
+  assert.equal(ui.shell.props.title, 'Cut Back icon');
+  assert(ui.option('Screens and content category'));
+  assert(ui.option('Phone'));
+  ui.press('Phone');
+  ui.press('Done');
+  assert.deepEqual(ui.applied, []);
+  ui.finishClose();
+  assert.deepEqual(ui.applied, ['phone']);
 });

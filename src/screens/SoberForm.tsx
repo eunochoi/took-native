@@ -1,5 +1,7 @@
+import { formatDisplayDate } from '../i18n/format';
+import { formatSoberGoal } from '../i18n/sober';
+import { useI18n } from '../i18n/react';
 import { useQuery } from '@tanstack/react-query';
-import { format, parseISO } from 'date-fns';
 import { usePreventRemove } from 'expo-router/react-navigation';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
@@ -19,7 +21,7 @@ import { Text } from '../components/Text';
 import { saveSober } from '../db/sober';
 import { DEFAULT_HABIT_ICON_COLOR, HABIT_ICON_COLORS } from '../domain/constants';
 import { SOBER_DESCRIPTION_MAX_LENGTH, SOBER_NAME_MAX_LENGTH } from '../domain/limits';
-import { formatSoberGoal, SOBER_ICONS, type SoberInput } from '../domain/sober';
+import type { SoberInput } from '../domain/sober';
 import { soberQueries, useRecordMutation } from '../queries';
 import { useAppTheme } from '../theme/AppThemeProvider';
 import { FORM_TEXT_INPUT_CLASS_NAME, SECTION_TITLE_CLASS_NAME } from '../theme/classes';
@@ -28,6 +30,8 @@ import { SoberGoalPicker } from './sober/SoberGoalPicker';
 import { SoberIconPicker } from './sober/SoberIconPicker';
 
 export function SoberForm({ id }: { id?: number }) {
+  const { t, language, formatLocale } = useI18n();
+
   const db = useSQLiteContext();
   const { colors, rem: appRem } = useAppTheme();
   const query = useQuery({ ...soberQueries.byId(db, id ?? 0), enabled: id !== undefined });
@@ -57,24 +61,24 @@ export function SoberForm({ id }: { id?: number }) {
     () => saveSober(db, draft),
     'sober',
     () => setSaved(true),
-    (error) => showNotice({ tone: 'error', title: '저장하지 못했어요', message: error.message }),
+    (error) => showNotice({ tone: 'error', title: t('sober.saveFailed'), message: error.message }),
   );
   usePreventRemove(mutation.isPending, () =>
     showNotice({
       tone: 'info',
-      title: '잠시만 기다려주세요',
-      message: '거리두기 항목을 저장하고 있어요.',
+      title: t('sober.wait'),
+      message: t('sober.savingHint'),
     }),
   );
   const iconBackgroundColor =
     draft.icon_color === 'theme' ? colors.accent : HABIT_ICON_COLORS[draft.icon_color].value;
-  const title = id ? '거리두기 수정' : '거리두기 추가';
+  const title = id ? t('sober.edit') : t('sober.add');
   const onClosed = saved
     ? () =>
-      showNotice({
-        tone: 'success',
-        title: id ? '거리두기를 수정했어요' : '거리두기를 추가했어요',
-      })
+        showNotice({
+          tone: 'success',
+          title: id ? t('sober.edited') : t('sober.saved'),
+        })
     : undefined;
   if (id !== undefined && (query.isPending || query.error || !query.data || !loaded))
     return (
@@ -85,9 +89,7 @@ export function SoberForm({ id }: { id?: number }) {
         title={title}
       >
         <QueryState query={query} />
-        {!query.isPending && !query.error && (
-          <Text className="px-6">거리두기 항목을 찾을 수 없어요.</Text>
-        )}
+        {!query.isPending && !query.error && <Text className="px-6">{t('sober.notFound')}</Text>}
       </BottomSheetPage>
     );
   return (
@@ -100,8 +102,8 @@ export function SoberForm({ id }: { id?: number }) {
         if (!mutation.isPending) return true;
         showNotice({
           tone: 'info',
-          title: '잠시만 기다려주세요',
-          message: '저장이 진행 중입니다. 완료될 때까지 기다려주세요.',
+          title: t('sober.wait'),
+          message: t('habit.savingHint'),
         });
         return false;
       }}
@@ -109,7 +111,9 @@ export function SoberForm({ id }: { id?: number }) {
         <>
           {mutation.isPending && <ActivityIndicator color={colors.accent} />}
           <Button
-            label={mutation.isPending ? '저장 중...' : id ? '변경사항 저장하기' : '저장하기'}
+            label={
+              mutation.isPending ? t('habit.saving') : id ? t('sober.saveChanges') : t('sober.save')
+            }
             disabled={!draft.name.trim() || mutation.isPending}
             onPress={() => {
               if (saving.current) return;
@@ -137,7 +141,7 @@ export function SoberForm({ id }: { id?: number }) {
           {picker === 'date' && id === undefined && (
             <DateTimePicker
               mode="start"
-              title="언제부터 거리를 두기 시작했나요?"
+              title={t('sober.whenStart')}
               value={draft.initial_started_at}
               onClose={() => setPicker(null)}
               onApply={(initial_started_at) => setDraft({ ...draft, initial_started_at })}
@@ -162,9 +166,9 @@ export function SoberForm({ id }: { id?: number }) {
       }
     >
       <View className="flex-row items-center justify-between gap-3">
-        <Text className={SECTION_TITLE_CLASS_NAME}>중요 항목으로 저장</Text>
+        <Text className={SECTION_TITLE_CLASS_NAME}>{t('sober.important')}</Text>
         <Switch
-          accessibilityLabel="중요 항목으로 저장"
+          accessibilityLabel={t('sober.important')}
           disabled={mutation.isPending}
           value={draft.is_priority === 1}
           onValueChange={(value) => setDraft({ ...draft, is_priority: value ? 1 : 0 })}
@@ -174,16 +178,16 @@ export function SoberForm({ id }: { id?: number }) {
       </View>
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-          거리를 두고 싶은 것
+          {t('sober.nameTitle')}
         </Text>
         <View className="gap-3 px-1">
           <TextInput
-            accessibilityLabel="거리두기 항목 이름"
+            accessibilityLabel={t('sober.nameInput')}
             value={draft.name}
             onChangeText={(name) => setDraft({ ...draft, name })}
             editable={!mutation.isPending}
             maxLength={SOBER_NAME_MAX_LENGTH}
-            placeholder="쇼츠 시청"
+            placeholder={t('sober.namePlaceholder')}
             placeholderTextColor={colors.textTertiary}
             className={`min-h-12 ${FORM_TEXT_INPUT_CLASS_NAME}`}
           />
@@ -192,11 +196,11 @@ export function SoberForm({ id }: { id?: number }) {
       </View>
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-          아이콘
+          {t('habit.icon')}
         </Text>
         <FormPickerRow
-          label={SOBER_ICONS[draft.icon_key].label}
-          accessibilityLabel="아이콘 선택"
+          label={t(`soberIcons.${draft.icon_key}`)}
+          accessibilityLabel={t('habit.chooseIcon')}
           disabled={mutation.isPending}
           onPress={() => setPicker('icon')}
           leading={
@@ -206,13 +210,15 @@ export function SoberForm({ id }: { id?: number }) {
       </View>
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-          아이콘 색상
+          {t('habit.iconColor')}
         </Text>
         <FormPickerRow
           label={
-            draft.icon_color === 'theme' ? '기본 테마색' : HABIT_ICON_COLORS[draft.icon_color].label
+            draft.icon_color === 'theme'
+              ? t('habit.defaultThemeColor')
+              : t(`iconColors.${draft.icon_color}`)
           }
-          accessibilityLabel="아이콘 색상 선택"
+          accessibilityLabel={t('habit.chooseIconColor')}
           disabled={mutation.isPending}
           onPress={() => setPicker('color')}
           leading={
@@ -228,34 +234,38 @@ export function SoberForm({ id }: { id?: number }) {
       </View>
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-          거리두기 목표
+          {t('sober.goal')}
         </Text>
         <FormPickerRow
-          label={draft.goal_mode === 'AUTO' ? '자동 목표' : formatSoberGoal(draft.goal_days!)}
-          accessibilityLabel="목표 선택"
+          label={
+            draft.goal_mode === 'AUTO'
+              ? t('sober.autoGoal')
+              : formatSoberGoal(draft.goal_days!, language)
+          }
+          accessibilityLabel={t('sober.chooseGoal')}
           disabled={mutation.isPending}
           onPress={() => setPicker('goal')}
         />
       </View>
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-          시작 일시
+          {t('habit.startedAt')}
         </Text>
         <FormPickerRow
-          label={format(parseISO(draft.initial_started_at), 'yyyy년 M월 d일 HH:mm')}
-          accessibilityLabel="시작 일시 선택"
+          label={formatDisplayDate(draft.initial_started_at, formatLocale, 'dateTime')}
+          accessibilityLabel={t('habit.chooseStartedAt')}
           disabled={id !== undefined || mutation.isPending}
           onPress={() => setPicker('date')}
         />
-        <InfoNotice>시작 일시는 저장 후 변경할 수 없어요.</InfoNotice>
+        <InfoNotice>{t('habit.startedNotice')}</InfoNotice>
       </View>
       <View className="gap-3">
         <Text accessibilityRole="header" className={SECTION_TITLE_CLASS_NAME}>
-          나의 다짐 (선택)
+          {t('sober.pledgeOptional')}
         </Text>
         <View className="gap-3 px-2">
           <TextInput
-            accessibilityLabel="나의 다짐"
+            accessibilityLabel={t('sober.pledge')}
             value={draft.description ?? ''}
             onChangeText={(description) => setDraft({ ...draft, description })}
             editable={!mutation.isPending}
@@ -263,7 +273,7 @@ export function SoberForm({ id }: { id?: number }) {
             multiline
             scrollEnabled
             textAlignVertical="top"
-            placeholder="밤에는 속을 편하게 하기"
+            placeholder={t('sober.pledgePlaceholder')}
             placeholderTextColor={colors.textTertiary}
             className={`h-28 ${FORM_TEXT_INPUT_CLASS_NAME}`}
           />

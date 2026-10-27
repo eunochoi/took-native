@@ -1,3 +1,4 @@
+import { mockI18n } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -39,6 +40,7 @@ function loadAppIcon() {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/i18n/react')) return mockI18n();
         if (name === 'react/jsx-runtime')
           return {
             jsx: (type: unknown, props: any) => ({ type, props }),
@@ -76,6 +78,7 @@ function render(os: 'ios' | 'android', index: number, rem = 15) {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/i18n/react')) return mockI18n();
         if (name === 'react/jsx-runtime') {
           const jsx = (type: any, props: any) =>
             typeof type === 'function' ? type(props) : { type, props };

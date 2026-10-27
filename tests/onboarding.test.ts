@@ -1,8 +1,9 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import test from 'node:test';
 import { runInNewContext } from 'node:vm';
+import { mockI18n } from './helpers/i18n';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
@@ -24,6 +25,7 @@ function load(file: string, dependencies: Record<string, unknown>) {
       exports,
       Error,
       require: (name: string) => {
+        if (name.endsWith('/i18n/react')) return dependencies[name] ?? mockI18n();
         if (name.endsWith('.png')) return name;
         assert(name in dependencies, `Unexpected dependency: ${name}`);
         return dependencies[name];
@@ -33,12 +35,13 @@ function load(file: string, dependencies: Record<string, unknown>) {
   return exports;
 }
 function harness(values = new Map<string, string>(), platform = 'android') {
+  let language: 'ko' | 'en' = 'ko';
   let failRead = false;
-  let persist: () => Promise<void> = async () => {};
-  let updateSettings: () => Promise<void> = async () => {};
+  let persist: () => Promise<void> = async () => { };
+  let updateSettings: () => Promise<void> = async () => { };
   const writes: string[] = [];
   const slots: any[] = [];
-  const bodyMotion = { panGesture: { kind: 'sheetPan' }, scrollRef: {}, onScroll: () => {} };
+  const bodyMotion = { panGesture: { kind: 'sheetPan' }, scrollRef: {}, onScroll: () => { } };
   const gesture = () => {
     const result: any = { handlers: {}, config: {} };
     for (const key of [
@@ -80,6 +83,7 @@ function harness(values = new Map<string, string>(), platform = 'android') {
     },
   });
   const dependencies = {
+    '../../i18n/react': mockI18n(() => language),
     react: {
       useState: (initial: any) => {
         const i = cursor++;
@@ -108,7 +112,7 @@ function harness(values = new Map<string, string>(), platform = 'android') {
     'react/jsx-runtime': { jsx, jsxs: jsx },
     'react-native': {
       Platform: { OS: platform },
-      Linking: { openURL: async () => {} },
+      Linking: { openURL: async () => { } },
       Pressable: 'Pressable',
       View: 'View',
       ScrollView: 'ScrollView',
@@ -183,6 +187,9 @@ function harness(values = new Map<string, string>(), platform = 'android') {
     writes,
     storage,
     renderSheet,
+    setLanguage: (value: 'ko' | 'en') => {
+      language = value;
+    },
     closes: () => closes,
     setPersist: (fn: typeof persist) => {
       persist = fn;
@@ -301,7 +308,7 @@ test('failed completion stays on the last page and can be retried', async () => 
   assert.equal(failed.body.props.accessibilityLabel, '앱 안내, 6단계 중 6단계');
   assert(nodes(failed.footer, 'Text').some((node) => node.props.accessibilityRole === 'alert'));
   assert.equal(failed.buttons.at(-1).props.disabled, false);
-  h.setPersist(async () => {});
+  h.setPersist(async () => { });
   await failed.buttons.at(-1).props.onPress();
   assert.equal(await h.storage.hasCompletedOnboarding(), true);
   assert.equal(h.closes(), 1);
@@ -399,7 +406,7 @@ test('a failed settings save allows retry and does not complete onboarding', asy
   const failed = h.renderSheet();
   assert(nodes(failed.footer, 'Text').some((node) => node.props.accessibilityRole === 'alert'));
   assert(failed.buttons.every((button) => !button.props.disabled));
-  h.setUpdateSettings(async () => {});
+  h.setUpdateSettings(async () => { });
   await nodes(failed.body, 'ThemePage')[0].props.onChange({ themeMode: 'dark' });
   assert.equal(
     nodes(h.renderSheet().footer, 'Text').filter((node) => node.props.accessibilityRole === 'alert')
@@ -491,10 +498,13 @@ test('Blue preview fades briefly and respects reduced motion', () => {
   }
 });
 
-test('onboarding typography stays at the small preset across all app font settings', () => {
-  for (const rem of [14, 15, 16]) {
+test('onboarding pages translate in both languages and keep typography across all app font settings', () => {
+  for (const [rem, language] of [14, 15, 16].flatMap((rem) =>
+    (['ko', 'en'] as const).map((language) => [rem, language] as const),
+  )) {
     const dependencies: Record<string, unknown> = {
-      react: { useState: (initial: unknown) => [initial, () => {}] },
+      '../../i18n/react': mockI18n(language),
+      react: { useState: (initial: unknown) => [initial, () => { }] },
       'react/jsx-runtime': { jsx, jsxs: jsx },
       'react-native': {
         View: 'View',
@@ -553,10 +563,16 @@ test('onboarding typography stays at the small preset across all app font settin
         imageWidth: 280,
         settings: { fontSize: { 14: 'small', 15: 'normal', 16: 'large' }[rem] },
         busy: false,
-        onChange: async () => {},
-        onOpenWeb: () => {},
+        onChange: async () => { },
+        onOpenWeb: () => { },
       });
       const texts = nodes(tree, 'Text');
+      if (language === 'en') {
+        const content = texts.map((node) => node.props.children).join(' ');
+        assert(!/[가-힣]/.test(content), `${page}: ${content}`);
+        if (page === 'BackupPage') assert(content.includes('do not sync automatically'));
+        if (page === 'WelcomePage') assert(content.includes('Every shade of day is welcome.'));
+      }
       assert(texts.length > 0, page);
       for (const text of texts) {
         const className = text.props.className;
@@ -679,4 +695,30 @@ test('only the active page reports vertical position to the modal and scrolling 
     assert.equal(current.sheet.props.dismissible, true);
     current.buttons.at(-1).props.onPress();
   }
+});
+
+test('switching onboarding language preserves the current step and English completion remains guarded', async () => {
+  const h = harness();
+  h.renderSheet().body.props.onLayout({ nativeEvent: { layout: { width: 360 } } });
+  h.renderSheet().body.props.onMomentumScrollEnd({ nativeEvent: { contentOffset: { x: 360 } } });
+  h.setLanguage('en');
+  assert.equal(h.renderSheet().body.props.accessibilityLabel, 'App guide, step 2 of 6');
+  assert.equal(h.renderSheet().buttons[0].props.label, 'Previous');
+  let last = await lastPage(h);
+  assert.equal(last.buttons.at(-1).props.label, 'Start');
+  h.setPersist(async () => {
+    throw new Error('write failed');
+  });
+  await last.buttons.at(-1).props.onPress();
+  assert.equal(h.closes(), 0);
+  assert(
+    nodes(h.renderSheet().footer, 'Text').some(
+      (node) => node.props.children === 'Could not save completion. Tap Get started again.',
+    ),
+  );
+  h.setPersist(async () => { });
+  last = h.renderSheet();
+  await last.buttons.at(-1).props.onPress();
+  assert.equal(await h.storage.hasCompletedOnboarding(), true);
+  assert.equal(h.closes(), 1);
 });

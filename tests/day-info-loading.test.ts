@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate } from './helpers/i18n';
 import { sortHabits } from '../src/db/habit';
 import { DEFAULT_SETTINGS } from '../src/settings/model';
 import assert from 'node:assert/strict';
@@ -40,6 +41,8 @@ function harness() {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/i18n/react')) return mockI18n();
+        if (name.endsWith('/i18n/format')) return { formatDisplayDate };
         if (name.endsWith('/NoticeProvider'))
           return { useNotice: () => ({ showNotice: () => {} }) };
         if (name.endsWith('domain/date')) return require('../src/domain/date');

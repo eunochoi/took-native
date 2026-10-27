@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { twMerge } from 'tailwind-merge';
 import {
   SELECTION_BOX_CLASS_NAME,
@@ -28,17 +29,19 @@ export function EmotionIconStyleSelector({
   onChange: (value: Settings['emotionStyle']) => void;
 }) {
   const { rem: appRem } = useAppTheme();
+  const { t } = useI18n();
+  const labels = [t('settings.basic'), t('settings.simple'), t('settings.emoji')];
   return (
     <View
       accessibilityRole="radiogroup"
-      accessibilityLabel="감정 아이콘 스타일"
+      accessibilityLabel={t('settings.emotionIconStyle')}
       className={`flex-row gap-2 ${compact ? '' : 'my-2'}`}
     >
       {(['basic', 'simple', 'emoji'] as const).map((style, index) => (
         <Pressable
           key={style}
           accessibilityRole="radio"
-          accessibilityLabel={['기본형', '단순형', '이모지'][index]}
+          accessibilityLabel={labels[index]}
           accessibilityState={{ checked: value === style, disabled }}
           disabled={disabled}
           onPress={() => onChange(style)}
@@ -60,7 +63,7 @@ export function EmotionIconStyleSelector({
               labelClassName,
             )}
           >
-            {['기본형', '단순형', '이모지'][index]}
+            {labels[index]}
           </Text>
         </Pressable>
       ))}

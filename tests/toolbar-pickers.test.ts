@@ -1,3 +1,4 @@
+import { mockI18n, formatDisplayDate, soberI18n } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -20,6 +21,7 @@ function textContent(node: any): string {
   return node?.props ? textContent(node.props.children) : '';
 }
 function picker(path: string, name: string, initial: Record<string, unknown>) {
+  let language: 'ko' | 'en' = 'ko';
   const state: unknown[] = [];
   let cursor = 0;
   let closed = 0;
@@ -34,6 +36,9 @@ function picker(path: string, name: string, initial: Record<string, unknown>) {
       {
         exports,
         require: (dependency: string) => {
+          if (dependency.endsWith('/i18n/sober')) return soberI18n;
+          if (dependency.endsWith('/i18n/format')) return { formatDisplayDate };
+          if (dependency.endsWith('/i18n/react')) return mockI18n(() => language);
           if (dependency.endsWith('/ToolbarButton'))
             return evaluate('src/components/ToolbarButton.tsx');
           if (dependency.endsWith('/HabitPriorityPicker'))
@@ -50,6 +55,9 @@ function picker(path: string, name: string, initial: Record<string, unknown>) {
               {
                 exports: sheetExports,
                 require: (name: string) => {
+                  if (name.endsWith('/i18n/sober')) return soberI18n;
+                  if (name.endsWith('/i18n/format')) return { formatDisplayDate };
+                  if (name.endsWith('/i18n/react')) return mockI18n(() => language);
                   if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
                   if (name === 'react-native') return { View: 'View', Pressable: 'Pressable' };
                   if (name.endsWith('AppThemeProvider'))
@@ -133,6 +141,9 @@ function picker(path: string, name: string, initial: Record<string, unknown>) {
   };
   return {
     render,
+    setLanguage: (value: 'ko' | 'en') => {
+      language = value;
+    },
     applied,
     get closed() {
       return closed;
@@ -478,13 +489,15 @@ test('diary emotion descriptions live inside buttons and the full season legend 
   }
   ui.press('여름');
   assert(text().includes('여름'));
-  const seasonLegend = '봄 3~5월, 여름 6~8월, 가을 9~11월, 겨울 12~다음 2월';
+  const seasonLegend = '봄 3~5월, 여름 6~8월\n가을 9~11월, 겨울 12~다음 2월';
   assert(text().includes(seasonLegend));
   chooseDiaryYear(ui, 2026);
   ui.press('겨울');
   assert(text().includes('여름 · 겨울'));
   const hint = ui.render().content.find((node) => node.props.children === seasonLegend);
   assert.equal(hint.type, 'InfoNotice');
+  assert.equal(hint.props.numberOfLines, 0);
+  assert.equal(hint.props.adjustsFontSizeToFit, false);
   assert(!text().some((value) => typeof value === 'string' && value.includes('2027.02')));
   assert(!text().some((value) => typeof value === 'string' && value.includes('겨울은')));
   ui.press('여름');
@@ -1058,4 +1071,73 @@ test('habit filter places exclusion and stars in a two-by-two grid', () => {
   ui.press('적용하기');
   ui.finish();
   assert.deepEqual(ui.applied, [[{ completedOnly: false, priorities: [0, 3] }]]);
+});
+
+test('English diary filters preserve seasonal and emotion-group values when switching languages', () => {
+  const ui = picker('src/screens/diary/DiaryFilterPicker.tsx', 'DiaryFilterPicker', {
+    year: null,
+    yearsQuery: { data: [2026], isPending: false, isError: false },
+    seasons: [],
+    emotionGroups: [],
+    currentYear: 2026,
+  });
+  ui.setLanguage('en');
+  assert.equal(ui.render().shell.props.title, 'Diary filters');
+  ui.press('Winter');
+  ui.press('Neutral');
+  const content = ui
+    .render()
+    .content.filter((node) => node.type === 'Text' || node.type === 'InfoNotice')
+    .map((node) => node.props.children)
+    .flat()
+    .join('');
+  assert(!/[가-힣]/.test(content));
+  assert(
+    content.includes('Spring Mar–May, Summer Jun–Aug\nAutumn Sep–Nov, Winter Dec–Feb next year'),
+  );
+  ui.setLanguage('ko');
+  assert(
+    ui
+      .render()
+      .content.some((node) => node.props.accessibilityLabel === '겨울' && node.props.selected),
+  );
+  ui.press('적용하기');
+  ui.finish();
+  assert.deepEqual(ui.applied, [[null, ['winter'], ['neutral']]]);
+});
+
+test('English habit filters and priority picker keep their persisted numeric values', () => {
+  const ui = picker('src/screens/habit/HabitFilterPicker.tsx', 'HabitFilterPicker', {
+    filter: { completedOnly: false, priorities: [] },
+  });
+  ui.setLanguage('en');
+  assert.equal(ui.render().shell.props.title, 'Habit filters');
+  ui.press('Show completed only');
+  ui.press('Free entry');
+  ui.press('2 stars');
+  ui.press('Apply');
+  ui.finish();
+  assert.deepEqual(ui.applied, [[{ completedOnly: true, priorities: [0, 2] }]]);
+  const priority = picker('src/screens/habit/HabitPriorityPicker.tsx', 'HabitPriorityPicker', {
+    value: 2,
+  });
+  priority.setLanguage('en');
+  priority.press('None · Free entry');
+  priority.press('Done');
+  priority.finish();
+  assert.deepEqual(priority.applied, [[0]]);
+});
+
+test('English Cut Back filter preserves priority and the 90-day minimum value', () => {
+  const ui = picker('src/screens/sober/SoberFilterPicker.tsx', 'SoberFilterPicker', {
+    filter: { priorityOnly: false, minimumDays: 0 },
+  });
+  ui.setLanguage('en');
+  assert.equal(ui.render().shell.props.title, 'Cut Back filters');
+  ui.press('Show important items only');
+  ui.press('Choose minimum duration');
+  ui.press('Current record 3 months or more');
+  ui.press('Apply');
+  ui.finish();
+  assert.deepEqual(ui.applied, [[{ priorityOnly: true, minimumDays: 90 }]]);
 });

@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { useQuery } from '@tanstack/react-query';
 import { getDay, parseISO } from 'date-fns';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -26,6 +27,8 @@ export function DiaryHabitMonthCalendar(props: {
   fillHeight?: boolean;
   minimumRowHeight?: number;
 }) {
+  const { t } = useI18n();
+
   const days = useMemo(() => calendarDays(props.month), [props.month]);
   const navigation = useCalendarNavigation(
     props.month,
@@ -53,7 +56,7 @@ export function DiaryHabitMonthCalendar(props: {
       {(diaries.isError || completions.isError || habits.isError) && (
         <QueryError
           className="flex-row gap-2"
-          message="월 기록을 불러오지 못했어요."
+          message={t('calendar.monthFailed')}
           onRetry={() => {
             void diaries.refetch();
             void completions.refetch();
@@ -69,7 +72,7 @@ export function DiaryHabitMonthCalendar(props: {
         minimumRowHeight={props.minimumRowHeight}
         fillHeight={props.fillHeight}
         {...swipe.panHandlers}
-        accessibilityLabel={`${props.month} 월간 달력`}
+        accessibilityLabel={t('calendar.monthLabel', { value: props.month })}
       >
         {days.map((date) => {
           const outside = date.slice(0, 7) !== props.month;
@@ -110,11 +113,13 @@ export function DiaryHabitMonthCalendar(props: {
               label={[
                 date,
                 diary
-                  ? `일기 있음, ${EMOTIONS[diary.emotion]?.name}`
+                  ? t('calendar.hasDiary', {
+                      value: t(`emotions.${(EMOTIONS[diary.emotion] ?? EMOTIONS[9]).key}`),
+                    })
                   : count > 0
-                    ? '일기 없음'
+                    ? t('calendar.noDiary')
                     : '',
-                count ? `집계 대상 ${count}/${total}개 완료` : '',
+                count ? t('calendar.completedSummary', { value: `${count}/${total}` }) : '',
               ]
                 .filter(Boolean)
                 .join(', ')}

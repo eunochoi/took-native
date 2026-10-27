@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/react';
 import type { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { Platform, Pressable, View } from 'react-native';
@@ -11,14 +12,15 @@ const surfaceClassName =
 
 type BottomNavProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 const items = [
-  { name: 'index', label: '홈', icon: 'home' },
-  { name: 'calendar', label: '월간 기록', icon: 'calendar' },
-  { name: 'diary', label: '일기 목록', icon: 'diary' },
-  { name: 'habit', label: '습관 관리', icon: 'habit' },
-  { name: 'sober', label: '거리두기', icon: 'sober' },
+  { name: 'index', icon: 'home' },
+  { name: 'calendar', icon: 'calendar' },
+  { name: 'diary', icon: 'diary' },
+  { name: 'habit', icon: 'habit' },
+  { name: 'sober', icon: 'sober' },
 ] as const;
 
 export function BottomNav({ state, navigation }: BottomNavProps) {
+  const { t } = useI18n();
   const { colors, rem, navigationHeight, navigationBottom } = useAppTheme();
   const navigationScale = navigationHeight / navigationMetrics.height;
   const iconSize = Math.min(24, Math.max(22, rem * 1.5));
@@ -42,7 +44,7 @@ export function BottomNav({ state, navigation }: BottomNavProps) {
       <View
         pointerEvents="box-none"
         accessibilityRole="tablist"
-        accessibilityLabel="주요 메뉴"
+        accessibilityLabel={t('navigation.mainMenu')}
         className="self-center flex-row items-center"
         style={{ gap: navigationMetrics.groupGap * navigationScale }}
       >
@@ -63,7 +65,7 @@ export function BottomNav({ state, navigation }: BottomNavProps) {
                 <Pressable
                   key={route.key}
                   accessibilityRole="tab"
-                  accessibilityLabel={item.label}
+                  accessibilityLabel={t(`navigation.${item.name}`)}
                   accessibilityState={{ selected }}
                   onPress={() => {
                     const event = navigation.emit({
@@ -110,7 +112,7 @@ export function BottomNav({ state, navigation }: BottomNavProps) {
             <View className="h-full w-full">
               <Pressable
                 accessibilityRole="tab"
-                accessibilityLabel="설정"
+                accessibilityLabel={t('navigation.setting')}
                 accessibilityState={{ selected: settingSelected }}
                 onPress={() => {
                   const event = navigation.emit({

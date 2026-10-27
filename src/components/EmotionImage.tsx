@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/react';
 import { memo } from 'react';
 import { Image } from 'react-native';
 import { EMOTIONS } from '../domain/constants';
@@ -58,11 +59,12 @@ const EmotionArtwork = memo(function EmotionArtwork({
   fill,
   iconStyle: style,
 }: EmotionProps & { iconStyle: Settings['emotionStyle'] }) {
+  const { t } = useI18n();
   const value = EMOTIONS[emotion] ?? EMOTIONS[9];
   const artwork = style === 'emoji' ? emoji : style === 'simple' ? simple : basic;
   return (
     <Image
-      accessibilityLabel={value.name}
+      accessibilityLabel={t(`emotions.${value.key}`)}
       source={artwork[emotion] ?? artwork[9]}
       className={fill ? 'w-full h-full' : undefined}
       style={{

@@ -1,4 +1,7 @@
+import type { LanguagePreference } from '../i18n/core';
+
 export interface Settings {
+  language: LanguagePreference;
   themeAccent: 'blue' | 'green' | 'purple' | 'pink' | 'yellow' | 'grey';
   themeMode: 'light' | 'dark' | 'system';
   fontSize: 'small' | 'normal' | 'large';
@@ -15,6 +18,7 @@ export interface Settings {
   soberReminderTime: string | null;
 }
 export const DEFAULT_SETTINGS: Settings = {
+  language: 'system',
   themeAccent: 'blue',
   themeMode: 'light',
   fontSize: 'normal',
@@ -36,6 +40,7 @@ export function parseSettings(raw: unknown): Settings {
   const value = raw as Record<string, unknown>;
   const settings = { ...DEFAULT_SETTINGS, ...value };
   if (
+    !['system', 'ko', 'en'].includes(settings.language) ||
     !['blue', 'green', 'purple', 'pink', 'yellow', 'grey'].includes(settings.themeAccent) ||
     !['light', 'dark', 'system'].includes(settings.themeMode) ||
     !['small', 'normal', 'large'].includes(settings.fontSize) ||
@@ -58,6 +63,7 @@ export function parseSettings(raw: unknown): Settings {
     throw new Error('앱 설정을 읽을 수 없습니다.');
   }
   return {
+    language: settings.language,
     themeAccent: settings.themeAccent,
     themeMode: settings.themeMode,
     fontSize: settings.fontSize,

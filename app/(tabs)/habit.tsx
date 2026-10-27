@@ -1,3 +1,4 @@
+import { useI18n } from '../../src/i18n/react';
 import { useQuery } from '@tanstack/react-query';
 import { useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -35,6 +36,8 @@ import { useAppTheme } from '../../src/theme/AppThemeProvider';
 import { PAGE_CLASS_NAME } from '../../src/theme/classes';
 
 export default function HabitList() {
+  const { t } = useI18n();
+
   const [sortOpen, setSortOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [flowOpen, setFlowOpen] = useState(false);
@@ -55,7 +58,8 @@ export default function HabitList() {
       setHabitCompletion(db, id, date, checked),
     'habitCompletion',
     undefined,
-    (error) => showNotice({ tone: 'error', title: '처리하지 못했어요', message: error.message }),
+    (error) =>
+      showNotice({ tone: 'error', title: t('habit.processFailed'), message: error.message }),
   );
   const pending = useRef(new Set<number>());
   const [pendingIds, setPendingIds] = useState<ReadonlySet<number>>(new Set());
@@ -91,9 +95,9 @@ export default function HabitList() {
       (!filter.completedOnly || todayDone.has(habit.id)),
   );
   const filterLabels = [
-    ...(filter.completedOnly ? ['완료'] : []),
+    ...(filter.completedOnly ? [t('common.done')] : []),
     ...(filter.priorities.length > 0 && filter.priorities.length < 4
-      ? filter.priorities.map((priority) => (priority === 0 ? '자유' : priority))
+      ? filter.priorities.map((priority) => (priority === 0 ? t('habit.freeShort') : priority))
       : []),
   ];
   const ready = !!list.data && !!completions.data;
@@ -101,7 +105,7 @@ export default function HabitList() {
     void updateSettings(values)
       .then(() => scroll.current?.scrollTo({ y: 0, animated: true }))
       .catch((error: Error) =>
-        showNotice({ tone: 'error', title: '설정 저장 실패', message: error.message }),
+        showNotice({ tone: 'error', title: t('habit.settingsFailed'), message: error.message }),
       );
   };
   const failed = list.isError || completions.isError;
@@ -120,7 +124,7 @@ export default function HabitList() {
   const emptyContent = failed ? (
     <QueryError
       className="min-h-64"
-      message="습관 목록을 불러오지 못했어요."
+      message={t('habit.failed')}
       onRetry={() => {
         void list.refetch();
         void completions.refetch();
@@ -131,8 +135,8 @@ export default function HabitList() {
   ) : (
     <EmptyState
       icon={<AppIcon name="habit" size={appRem * 1.875} color={colors.accent} />}
-      title={hasFilter ? '선택한 조건의 습관이 없어요.' : '아직 만든 습관이 없어요.'}
-      description={hasFilter ? '필터 조건을 바꿔보세요.' : '작은 목표 하나부터 만들어 보아요.'}
+      title={hasFilter ? t('habit.filteredEmpty') : t('habit.empty')}
+      description={hasFilter ? t('habit.filterHint') : t('habit.emptyHint')}
     />
   );
   return (
@@ -151,12 +155,12 @@ export default function HabitList() {
         <View collapsable={false} pointerEvents="none" className="h-0 overflow-visible">
           <ScrollEdgeFade edge="top" visible={fade.topVisible} />
         </View>
-        <PageTopSection title="습관 관리" hashtags="#실천 #성장" />
+        <PageTopSection title={t('habit.title')} hashtags={t('habit.tags')} />
         <Toolbar>
           <ToolbarSortButton
             sort={settings.habitSort}
             priorityFirst={settings.habitPriorityFirst}
-            accessibilityLabel="습관 정렬"
+            accessibilityLabel={t('habit.sort')}
             onPress={() => setSortOpen(true)}
           />
           <ToolbarFilterButton
@@ -169,14 +173,18 @@ export default function HabitList() {
                         ))
                       : label,
                   )
-                : '필터'
+                : t('habit.filter')
             }
-            accessibilityLabel={`습관 필터, ${filter.completedOnly ? '오늘 완료' : '완료 상태 전체'}, 중요도 ${selectionSummary(
-              filter.priorities.map((priority) =>
-                priority === 0 ? '자유 기록' : '★'.repeat(priority),
+            accessibilityLabel={t('habit.filterSummary', {
+              title: filter.completedOnly ? t('habit.completedToday') : t('habit.allStatus'),
+              value: selectionSummary(
+                filter.priorities.map((priority) =>
+                  priority === 0 ? t('habit.free') : '★'.repeat(priority),
+                ),
+                4,
+                t('habit.all'),
               ),
-              4,
-            )}`}
+            })}
             onPress={() => setFilterOpen(true)}
           />
           <ToolbarAddButton
@@ -185,7 +193,7 @@ export default function HabitList() {
               if (sorted.length >= MAX_HABIT_COUNT) {
                 showNotice({
                   tone: 'info',
-                  title: `습관은 최대 ${MAX_HABIT_COUNT}개까지 만들 수 있어요.`,
+                  title: t('habit.maxHabits', { count: MAX_HABIT_COUNT }),
                 });
                 return;
               }
@@ -213,7 +221,7 @@ export default function HabitList() {
                   ) : item === 'add' ? (
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="습관 추가"
+                      accessibilityLabel={t('habit.add')}
                       disabled={failed}
                       onPress={() => {
                         if (!failed && sorted.length < MAX_HABIT_COUNT) openModal('/habit/new');
@@ -242,7 +250,7 @@ export default function HabitList() {
           {ready && failed && (
             <QueryError
               className="pt-4"
-              message="습관 목록을 불러오지 못했어요."
+              message={t('habit.failed')}
               onRetry={() => {
                 void list.refetch();
                 void completions.refetch();
@@ -270,7 +278,7 @@ export default function HabitList() {
       )}
       {sortOpen && (
         <RecordSortPicker
-          title="습관 정렬"
+          title={t('habit.sort')}
           sort={settings.habitSort}
           priorityFirst={settings.habitPriorityFirst}
           allowCustom

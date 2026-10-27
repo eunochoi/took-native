@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/react';
 import { useRef } from 'react';
 import { View } from 'react-native';
 import { Button } from './Button';
@@ -9,6 +10,7 @@ export function ConfirmModal({
   title,
   message,
   confirmLabel,
+  cancelLabel,
   danger = false,
   onCancel,
   onConfirm,
@@ -17,10 +19,12 @@ export function ConfirmModal({
   title: string;
   message: string;
   confirmLabel: string;
+  cancelLabel?: string;
   danger?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const { t } = useI18n();
   const confirmed = useRef(false);
   return (
     <BottomSheetModal
@@ -35,7 +39,7 @@ export function ConfirmModal({
       footer={(close) => (
         <View className="flex-row gap-3">
           <Button
-            label="취소"
+            label={cancelLabel ?? t('common.cancel')}
             labelWeight="normal"
             outline
             subtle

@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n/react';
 import { MUTED_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, BackHandler, ScrollView, Text as NativeText, View } from 'react-native';
@@ -22,6 +23,7 @@ import { SoberWidget } from './SoberWidget';
 import { WidgetAppearanceFields } from './WidgetAppearanceFields';
 
 export function SoberWidgetConfiguration(props: WidgetConfigurationScreenProps) {
+  const { t } = useI18n();
   const [error, setError] = useState<Error | null>(null);
   const onError = useCallback((value: Error) => setError(value), []);
   return (
@@ -29,7 +31,7 @@ export function SoberWidgetConfiguration(props: WidgetConfigurationScreenProps) 
       <SafeAreaProvider>
         {error ? (
           <SafeAreaView className="flex-1 items-center justify-center p-6">
-            <NativeText>설정을 불러오지 못했어요. 다시 시도해주세요.</NativeText>
+            <NativeText>{t('widget.settingsFailed')}</NativeText>
           </SafeAreaView>
         ) : (
           <SQLiteProvider databaseName="took.db" onInit={initializeDatabase}>
@@ -50,6 +52,7 @@ function ConfigurationContent({
   renderWidget,
   setResult,
 }: WidgetConfigurationScreenProps) {
+  const { t, language } = useI18n();
   const db = useSQLiteContext();
   const { settings: appSettings } = useSettings();
   const [records, setRecords] = useState<Sober[]>([]);
@@ -57,7 +60,7 @@ function ConfigurationContent({
   const [settings, setSettings] = useState<SoberWidgetSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<'widget.loadFailed' | 'widget.saveFailed' | ''>('');
   const [picker, setPicker] = useState(false);
   useEffect(() => {
     let active = true;
@@ -79,7 +82,7 @@ function ConfigurationContent({
       );
     })()
       .catch(() => {
-        if (active) setError('항목을 불러오지 못했어요. 설정을 다시 열어주세요.');
+        if (active) setError('widget.loadFailed');
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -103,11 +106,12 @@ function ConfigurationContent({
         sober={sober}
         restarts={restarts.filter((item) => item.sober_id === sober?.id)}
         themeAccent={appSettings.themeAccent}
+        language={language}
         width={width}
         height={height}
       />
     ),
-    [settings, sober, restarts, appSettings.themeAccent],
+    [settings, sober, restarts, appSettings.themeAccent, language],
   );
   const change = (patch: Partial<SoberWidgetSettings>) =>
     setSettings((value) => (value ? { ...value, ...patch } : value));
@@ -120,27 +124,27 @@ function ConfigurationContent({
       renderWidget(await renderSoberWidget(widgetInfo));
       setResult('ok');
     } catch {
-      setError('위젯 설정을 저장하지 못했어요. 다시 시도해주세요.');
+      setError('widget.saveFailed');
       setSaving(false);
     }
   };
   return (
     <SafeAreaView className="flex-1 bg-theme-background">
       <ScrollView contentContainerClassName="px-[5%] pt-6 pb-8 gap-8">
-        <Text className="text-2xl font-bold">거리두기 설정</Text>
+        <Text className="text-2xl font-bold">{t('widget.configureTitle')}</Text>
         <View
           className={`${MUTED_CARD_BORDER_CLASS_NAME} items-center justify-center ios:curve-continuous rounded-2xl bg-theme-surface-muted p-6`}
         >
           <WidgetPreview width={180} height={180} renderWidget={preview} showBorder={false} />
         </View>
         {loading ? (
-          <ActivityIndicator />
+          <ActivityIndicator accessibilityLabel={t('common.loading')} />
         ) : (
           <>
             <View className="gap-3">
-              <Text className="text-xl font-semibold">표시할 거리두기</Text>
+              <Text className="text-xl font-semibold">{t('widget.chooseRecord')}</Text>
               <Button
-                label={sober?.name ?? '아직 시작한 거리두기가 없어요'}
+                label={sober?.name ?? t('widget.noRecords')}
                 subtle
                 outline
                 disabled={!records.length || saving}
@@ -148,7 +152,7 @@ function ConfigurationContent({
               />
               {!records.length && (
                 <Text className="px-1 text-base text-theme-text-secondary">
-                  앱에서 거리두기를 먼저 추가해주세요.
+                  {t('widget.addFirst')}
                 </Text>
               )}
             </View>
@@ -161,26 +165,30 @@ function ConfigurationContent({
         )}
         {!!error && (
           <Text accessibilityRole="alert" className="text-base text-theme-danger">
-            {error}
+            {error && t(error)}
           </Text>
         )}
       </ScrollView>
       <View className="flex-row gap-3 px-[5%] pb-8">
         <Button
           className="flex-1"
-          label="취소"
+          label={t('common.cancel')}
           subtle
           disabled={saving}
           onPress={() => setResult('cancel')}
         />
         <Button
           className="flex-1"
-          label={saving ? '저장 중' : '적용'}
+          label={saving ? t('widget.saving') : t('widget.apply')}
           disabled={loading || saving || !sober}
           onPress={() => void save()}
         />
       </View>
-      <BottomSheetModal visible={picker} title="표시할 거리두기" onClose={() => setPicker(false)}>
+      <BottomSheetModal
+        visible={picker}
+        title={t('widget.chooseRecord')}
+        onClose={() => setPicker(false)}
+      >
         {(close) => (
           <View className="gap-3">
             {records.map((item) => (

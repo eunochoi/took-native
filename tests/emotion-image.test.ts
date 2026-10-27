@@ -1,3 +1,4 @@
+import { mockI18n } from './helpers/i18n';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -19,6 +20,7 @@ function harness(preferredStyle: string) {
     {
       exports,
       require: (name: string) => {
+        if (name.endsWith('/i18n/react')) return mockI18n();
         if (name === 'react') return { memo: (component: Function) => component };
         if (name === 'react/jsx-runtime')
           return { jsx: (type: unknown, props: any) => ({ type, props }) };

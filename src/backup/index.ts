@@ -1,3 +1,4 @@
+import { t } from '../i18n/core';
 import { Directory, File, Paths } from 'expo-file-system';
 import { deserializeDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 import * as Sharing from 'expo-sharing';
@@ -144,7 +145,7 @@ export async function exportBackup(db: SQLiteDatabase, destination: 'device' | '
       await Sharing.shareAsync(outputs[0].uri, {
         mimeType: 'application/zip',
         UTI: 'public.zip-archive',
-        dialogTitle: 'Google Drive 등으로 백업 공유',
+        dialogTitle: t('settings.backupShareTitle'),
       });
     // Share targets may still be reading the files. Retain recent cache archives for 24 hours.
     return outputs.length;
