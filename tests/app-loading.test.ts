@@ -227,27 +227,41 @@ test('loading logo failure reaches retry UI without reporting readiness', () => 
   assert.equal(h.ready(), 0);
 });
 
-test('wordmark selects light and dark images, preserves its ratio and forwards image events', () => {
+test('wordmark follows accent and mode changes, preserves its ratio and forwards image events', () => {
+  const reference = readFileSync(new URL('../assets/ui/wordmark.png', import.meta.url));
+  const dimensions = { width: reference.readUInt32BE(16), height: reference.readUInt32BE(20) };
+  const settings = { themeAccent: 'blue' };
+  const theme = { mode: 'light' };
   const h = harness('../src/components/Wordmark.tsx', {
     'react-native': {
-      Image: Object.assign('Image', { resolveAssetSource: () => ({ width: 5024, height: 2268 }) }),
+      Image: Object.assign('Image', { resolveAssetSource: () => dimensions }),
     },
+    '../settings/SettingsProvider': { useSettings: () => ({ settings }) },
+    '../theme/AppThemeProvider': { useAppTheme: () => theme },
   });
   const onLoad = () => {};
   const onError = () => {};
-  for (const mode of ['light', 'dark']) {
-    const tree = h.render('Wordmark', { size: 45, mode, onLoad, onError });
-    assert.equal(
-      tree.props.source,
-      `../../assets/ui/${mode === 'dark' ? 'wordmark-dark.png' : 'wordmark.png'}`,
-    );
-    assert.equal(tree.props.style.height, 45);
-    assert.equal(tree.props.style.width, 45 * (5024 / 2268));
-    assert.equal(tree.props.onLoad, onLoad);
-    assert.equal(tree.props.onError, onError);
-    assert.equal(tree.props.accessibilityLabel, 'BlooLog 로고');
+  for (const accent of ['blue', 'purple', 'pink', 'green', 'yellow', 'grey']) {
+    settings.themeAccent = accent;
+    for (const mode of ['light', 'dark']) {
+      theme.mode = mode;
+      const tree = h.render('Wordmark', { size: 45, onLoad, onError });
+      const filename = `../../assets/ui/wordmark-${accent}-${mode}.png`;
+      assert.equal(tree.props.source, filename);
+      const png = readFileSync(new URL(filename.replace('../../', '../'), import.meta.url));
+      assert.equal(png.readUInt32BE(16), dimensions.width);
+      assert.equal(png.readUInt32BE(20), dimensions.height);
+      assert.equal(tree.props.style.height, 45);
+      assert.equal(tree.props.style.width, 45 * (dimensions.width / dimensions.height));
+      assert.equal(tree.props.onLoad, onLoad);
+      assert.equal(tree.props.onError, onError);
+      assert.equal(tree.props.accessibilityLabel, 'BlooLog 로고');
+    }
   }
-  assert.equal(h.render('Wordmark', {}).props.source, '../../assets/ui/wordmark.png');
+  assert.equal(
+    h.render('Wordmark', { mode: 'light' }).props.source,
+    '../../assets/ui/wordmark-grey-light.png',
+  );
 });
 
 test('loading artwork matches each platform native splash source and display size', () => {

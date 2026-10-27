@@ -19,7 +19,7 @@ const out = path.resolve(__dirname, '../assets/ui');
   try {
     const page = await browser.newPage();
     const images = await page.evaluate(
-      async ({ wordmark, character, foreground }) => {
+      async ({ wordmark, character, foreground, palettes }) => {
         const load = async (source) => {
           const image = new Image();
           image.src = 'data:image/png;base64,' + source;
@@ -97,6 +97,62 @@ const out = path.resolve(__dirname, '../assets/ui');
           'wordmark-dark.png': encode(dark),
           'splash-source.png': encode(composition),
         };
+        // Derive one face mask from the approved blue source, retaining its antialiasing.
+        const original = logo.getContext('2d').getImageData(0, 0, logo.width, logo.height);
+        const samples = { body: [0, 0, 0, 0], face: [0, 0, 0, 0] };
+        for (let i = 0; i < original.data.length; i += 4) {
+          const x = (i / 4) % logo.width;
+          const [r, g, b, a] = original.data.subarray(i, i + 4);
+          if (x < blueLeft || a < 240) continue;
+          const sample = (r + g + b) / 3 < 135 ? samples.face : samples.body;
+          sample[0] += r;
+          sample[1] += g;
+          sample[2] += b;
+          sample[3]++;
+        }
+        if (!samples.body[3] || !samples.face[3]) {
+          throw new Error('BlooLog lettering and face could not be separated.');
+        }
+        const body = samples.body.slice(0, 3).map((value) => value / samples.body[3]);
+        const face = samples.face.slice(0, 3).map((value) => value / samples.face[3]);
+        const delta = face.map((value, index) => value - body[index]);
+        const distance = delta.reduce((sum, value) => sum + value * value, 0);
+        const faceMask = new Float32Array(logo.width * logo.height);
+        for (let i = 0; i < original.data.length; i += 4) {
+          if (!original.data[i + 3] || (i / 4) % logo.width < blueLeft) continue;
+          const fraction =
+            delta.reduce(
+              (sum, value, index) => sum + (original.data[i + index] - body[index]) * value,
+              0,
+            ) / distance;
+          faceMask[i / 4] = fraction < 0.06 ? 0 : fraction > 0.94 ? 1 : fraction;
+        }
+        for (const [accent, modes] of Object.entries(palettes)) {
+          for (const [mode, palette] of Object.entries(modes)) {
+            const themed = canvas(logo.width, logo.height);
+            const context = themed.getContext('2d');
+            context.drawImage(mode === 'dark' ? dark : logo, 0, 0);
+            const data = context.getImageData(0, 0, logo.width, logo.height);
+            const accentColor = [1, 3, 5].map((start) =>
+              parseInt(palette.accent.slice(start, start + 2), 16),
+            );
+            // Keep the accent-deep hue while giving the small face enough contrast.
+            const faceColor = [1, 3, 5].map((start) =>
+              Math.round(parseInt(palette.accentDeep.slice(start, start + 2), 16) * 0.7),
+            );
+            for (let i = 0; i < data.data.length; i += 4) {
+              if (!data.data[i + 3] || (i / 4) % logo.width < blueLeft) continue;
+              const fraction = faceMask[i / 4];
+              for (let channel = 0; channel < 3; channel++) {
+                data.data[i + channel] = Math.round(
+                  accentColor[channel] * (1 - fraction) + faceColor[channel] * fraction,
+                );
+              }
+            }
+            context.putImageData(data, 0, 0);
+            results[`wordmark-${accent}-${mode}.png`] = encode(themed);
+          }
+        }
         const data = compositionContext.getImageData(
           0,
           0,
@@ -143,6 +199,26 @@ const out = path.resolve(__dirname, '../assets/ui');
         wordmark: fs.readFileSync(path.join(out, 'wordmark-source.png')).toString('base64'),
         character: fs.readFileSync(path.join(out, 'splash-character.png')).toString('base64'),
         foreground: tokens.colorValues[tokens.colors.dark.textPrimary],
+        palettes: Object.fromEntries(
+          Object.entries(tokens.colors.accents).map(([name, palette]) => [
+            name,
+            Object.fromEntries(
+              ['light', 'dark'].map((mode) => {
+                const references = {
+                  ...palette,
+                  ...(mode === 'dark' ? tokens.colors.accentsDark[name] : {}),
+                };
+                return [
+                  mode,
+                  {
+                    accent: tokens.colorValues[references.accent],
+                    accentDeep: tokens.colorValues[references.accentDeep],
+                  },
+                ];
+              }),
+            ),
+          ]),
+        ),
       },
     );
     for (const [filename, data] of Object.entries(images)) {
