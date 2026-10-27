@@ -5,7 +5,6 @@ const tokens = require('../src/theme/tokens.json');
 const out = path.resolve(__dirname, '../assets/ui');
 
 (async () => {
-  const source = fs.readFileSync(path.join(out, 'wordmark.png')).toString('base64');
   const browser = await chromium.launch({
     executablePath:
       process.env.CHROME_PATH ||
@@ -19,118 +18,134 @@ const out = path.resolve(__dirname, '../assets/ui');
   });
   try {
     const page = await browser.newPage();
-    const data = await page.evaluate(
-      async ({ source, foreground }) => {
-        const image = new Image();
-        image.src = 'data:image/png;base64,' + source;
-        await image.decode();
-        const canvas = document.createElement('canvas');
-        canvas.width = image.naturalWidth;
-        canvas.height = image.naturalHeight;
-        const context = canvas.getContext('2d');
-        context.drawImage(image, 0, 0);
-        const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-        const color = [1, 3, 5].map((start) => parseInt(foreground.slice(start, start + 2), 16));
-        // Keep the entire colored paw area, including its neutral antialiased edges.
-        let pawLeft = canvas.width;
-        let pawRight = 0;
+    const images = await page.evaluate(
+      async ({ wordmark, character, foreground }) => {
+        const load = async (source) => {
+          const image = new Image();
+          image.src = 'data:image/png;base64,' + source;
+          await image.decode();
+          return image;
+        };
+        const canvas = (width, height) => {
+          const result = document.createElement('canvas');
+          result.width = width;
+          result.height = height;
+          return result;
+        };
+        const trim = (image) => {
+          const source = canvas(image.width, image.height);
+          const context = source.getContext('2d');
+          context.drawImage(image, 0, 0);
+          const pixels = context.getImageData(0, 0, source.width, source.height);
+          let left = source.width;
+          let top = source.height;
+          let right = -1;
+          let bottom = -1;
+          for (let i = 0; i < pixels.data.length; i += 4) {
+            // Remove almost invisible alpha noise without leaving empty outer margins.
+            if (pixels.data[i + 3] <= 8) {
+              pixels.data[i + 3] = 0;
+              continue;
+            }
+            const x = (i / 4) % source.width;
+            const y = Math.floor(i / 4 / source.width);
+            left = Math.min(left, x);
+            top = Math.min(top, y);
+            right = Math.max(right, x);
+            bottom = Math.max(bottom, y);
+          }
+          if (right < left) throw new Error('UI source image is empty.');
+          context.putImageData(pixels, 0, 0);
+          const result = canvas(right - left + 1, bottom - top + 1);
+          result.getContext('2d').drawImage(source, -left, -top);
+          return result;
+        };
+        const logo = trim(await load(wordmark));
+        const dark = canvas(logo.width, logo.height);
+        const darkContext = dark.getContext('2d');
+        darkContext.drawImage(logo, 0, 0);
+        const pixels = darkContext.getImageData(0, 0, dark.width, dark.height);
+        // Detect the blue portion rather than relying on specific letter positions.
+        let blueLeft = dark.width;
         for (let i = 0; i < pixels.data.length; i += 4) {
-          if (pixels.data[i + 3] > 20 && pixels.data[i] !== pixels.data[i + 2]) {
-            const x = (i / 4) % canvas.width;
-            pawLeft = Math.min(pawLeft, x);
-            pawRight = Math.max(pawRight, x);
+          const [r, g, b, a] = pixels.data.subarray(i, i + 4);
+          if (a > 128 && b - r > 35 && b - g > 15) {
+            blueLeft = Math.min(blueLeft, (i / 4) % dark.width);
           }
         }
+        if (blueLeft === dark.width) throw new Error('BlooLog blue lettering was not found.');
+        const color = [1, 3, 5].map((start) => parseInt(foreground.slice(start, start + 2), 16));
         for (let i = 0; i < pixels.data.length; i += 4) {
-          const x = (i / 4) % canvas.width;
-          if (
-            (x < pawLeft - 2 || x > pawRight + 2) &&
-            pixels.data[i + 3] &&
-            pixels.data[i] === pixels.data[i + 1] &&
-            pixels.data[i] === pixels.data[i + 2]
-          ) {
+          const x = (i / 4) % dark.width;
+          const [r, g, b, a] = pixels.data.subarray(i, i + 4);
+          // Keep the blue log. and its face colors unchanged.
+          if (x < blueLeft && a && Math.max(r, g, b) - Math.min(r, g, b) <= 24) {
             pixels.data.set(color, i);
           }
         }
-        context.putImageData(pixels, 0, 0);
-        return canvas.toDataURL('image/png').split(',')[1];
-      },
-      { source, foreground: tokens.colorValues[tokens.colors.dark.textPrimary] },
-    );
-    fs.writeFileSync(path.join(out, 'wordmark-dark.png'), Buffer.from(data, 'base64'));
-    const splash = await page.evaluate(
-      async (source) => {
-        const image = new Image();
-        image.src = 'data:image/png;base64,' + source;
-        await image.decode();
-        const sourceCanvas = document.createElement('canvas');
-        sourceCanvas.width = image.naturalWidth;
-        sourceCanvas.height = image.naturalHeight;
-        const sourceContext = sourceCanvas.getContext('2d');
-        sourceContext.drawImage(image, 0, 0);
-        const pixels = sourceContext.getImageData(
+        darkContext.putImageData(pixels, 0, 0);
+        const cat = trim(await load(character));
+        const logoHeight = Math.round((cat.width * logo.height) / logo.width);
+        const gap = Math.round(cat.height * 0.14);
+        const composition = canvas(cat.width, cat.height + gap + logoHeight);
+        const compositionContext = composition.getContext('2d');
+        compositionContext.drawImage(cat, 0, 0);
+        compositionContext.drawImage(logo, 0, cat.height + gap, cat.width, logoHeight);
+        const encode = (image) => image.toDataURL('image/png').split(',')[1];
+        const results = {
+          'wordmark.png': encode(logo),
+          'wordmark-dark.png': encode(dark),
+          'splash-source.png': encode(composition),
+        };
+        const data = compositionContext.getImageData(
           0,
           0,
-          sourceCanvas.width,
-          sourceCanvas.height,
+          composition.width,
+          composition.height,
         ).data;
-        let left = sourceCanvas.width,
-          top = sourceCanvas.height,
-          right = 0,
-          bottom = 0;
-        for (let i = 0; i < pixels.length; i += 4) {
-          if (!pixels[i + 3]) continue;
-          const x = (i / 4) % sourceCanvas.width;
-          const y = Math.floor(i / 4 / sourceCanvas.width);
-          left = Math.min(left, x);
-          top = Math.min(top, y);
-          right = Math.max(right, x);
-          bottom = Math.max(bottom, y);
-        }
-        const width = right - left + 1;
-        const height = bottom - top + 1;
-        const centerX = (left + right) / 2;
-        const centerY = (top + bottom) / 2;
+        const centerX = (composition.width - 1) / 2;
+        const centerY = (composition.height - 1) / 2;
         let radius = 0;
-        for (let i = 0; i < pixels.length; i += 4) {
-          if (!pixels[i + 3]) continue;
-          const x = (i / 4) % sourceCanvas.width;
-          const y = Math.floor(i / 4 / sourceCanvas.width);
+        for (let i = 0; i < data.length; i += 4) {
+          if (!data[i + 3]) continue;
+          const x = (i / 4) % composition.width;
+          const y = Math.floor(i / 4 / composition.width);
           radius = Math.max(radius, Math.hypot(x - centerX, y - centerY));
         }
-        const results = {};
         for (const [filename, maxSize, safeRadius] of [
           ['splash.png', 864, Infinity],
           // At imageWidth 228, radius 400 occupies 91.2dp of Android's 96dp safe radius.
           ['splash-android.png', 720, 400],
         ]) {
-          const canvas = document.createElement('canvas');
-          canvas.width = canvas.height = 1000;
-          const context = canvas.getContext('2d');
-          // Match the splash background before native resizing to avoid dark alpha fringes.
+          const output = canvas(1000, 1000);
+          const context = output.getContext('2d');
           context.fillStyle = '#FFFFFF';
-          context.fillRect(0, 0, canvas.width, canvas.height);
-          const scale = Math.min(maxSize / width, maxSize / height, safeRadius / radius);
-          const drawWidth = width * scale;
-          const drawHeight = height * scale;
+          context.fillRect(0, 0, output.width, output.height);
+          const scale = Math.min(
+            maxSize / composition.width,
+            maxSize / composition.height,
+            safeRadius / radius,
+          );
+          const width = composition.width * scale;
+          const height = composition.height * scale;
           context.drawImage(
-            image,
-            left,
-            top,
+            composition,
+            (output.width - width) / 2,
+            (output.height - height) / 2,
             width,
             height,
-            (canvas.width - drawWidth) / 2,
-            (canvas.height - drawHeight) / 2,
-            drawWidth,
-            drawHeight,
           );
-          results[filename] = canvas.toDataURL('image/png').split(',')[1];
+          results[filename] = encode(output);
         }
         return results;
       },
-      fs.readFileSync(path.join(out, 'splash-source.png')).toString('base64'),
+      {
+        wordmark: fs.readFileSync(path.join(out, 'wordmark-source.png')).toString('base64'),
+        character: fs.readFileSync(path.join(out, 'splash-character.png')).toString('base64'),
+        foreground: tokens.colorValues[tokens.colors.dark.textPrimary],
+      },
     );
-    for (const [filename, data] of Object.entries(splash)) {
+    for (const [filename, data] of Object.entries(images)) {
       fs.writeFileSync(path.join(out, filename), Buffer.from(data, 'base64'));
     }
   } finally {
