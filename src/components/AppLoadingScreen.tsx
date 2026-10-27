@@ -23,7 +23,7 @@ export function AppLoadingScreen({
   return (
     <View
       className="absolute inset-0 items-center justify-center bg-white"
-      accessibilityLabel="TOOK 시작 화면"
+      accessibilityLabel="BlooLog 시작 화면"
       onLayout={() => setLaidOut(true)}
     >
       <StatusBar style="dark" />
@@ -31,7 +31,7 @@ export function AppLoadingScreen({
         source={splash}
         className={Platform.OS === 'android' ? 'h-[228px] w-[228px]' : 'h-[240px] w-[240px]'}
         resizeMode="contain"
-        accessibilityLabel="TOOK"
+        accessibilityLabel="BlooLog 로고"
         onLoad={() => setImageReady(true)}
         onError={({ nativeEvent }) => onError(new Error(nativeEvent.error))}
       />

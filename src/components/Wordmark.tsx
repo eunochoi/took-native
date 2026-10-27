@@ -19,7 +19,7 @@ export function Wordmark({
   return (
     <Image
       source={images[mode]}
-      accessibilityLabel="TOOK"
+      accessibilityLabel="BlooLog 로고"
       accessible
       className="shrink-0"
       style={{ height: size, width: size * (dimensions.width / dimensions.height) }}

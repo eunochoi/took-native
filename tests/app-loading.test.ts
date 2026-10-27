@@ -245,7 +245,7 @@ test('wordmark selects light and dark images, preserves its ratio and forwards i
     assert.equal(tree.props.style.width, 45 * (5024 / 2268));
     assert.equal(tree.props.onLoad, onLoad);
     assert.equal(tree.props.onError, onError);
-    assert.equal(tree.props.accessibilityLabel, 'TOOK');
+    assert.equal(tree.props.accessibilityLabel, 'BlooLog 로고');
   }
   assert.equal(h.render('Wordmark', {}).props.source, '../../assets/ui/wordmark.png');
 });
