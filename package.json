@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "check:boundaries": "node scripts/check-boundaries.cjs",
-    "version:bump": "node scripts/bump-version.cjs"
+    "version:bump": "node scripts/bump-version.cjs",
+    "assets:app-icons": "node scripts/render-app-icons.cjs"
   },
   "dependencies": {
     "@bacons/apple-targets": "5.0.0",
