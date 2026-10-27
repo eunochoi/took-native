@@ -69,7 +69,7 @@ export function SoberWidget({
       }}
       accessibilityLabel={label}
       clickAction="OPEN_URI"
-      clickActionData={{ uri: sober ? `pawpaw-took://sober/${sober.id}` : 'pawpaw-took://sober' }}
+      clickActionData={{ uri: sober ? `took-local://sober/${sober.id}` : 'took-local://sober' }}
     >
       <FlexWidget style={{ alignItems: 'center', flexGap: 7 * scale }}>
         <FlexWidget

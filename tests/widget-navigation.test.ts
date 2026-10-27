@@ -15,22 +15,12 @@ const {
   TabRouter,
 } = require('../node_modules/expo-router/build/react-navigation/routers/TabRouter.js');
 
-test('new and existing widget URLs redirect on cold and warm launches without changing other deep links', () => {
+test('existing widget URLs redirect on cold and warm launches without changing other deep links', () => {
   for (const initial of [true, false]) {
-    for (const path of [
-      'pawpaw-took://sober/42',
-      'pawpaw-took:///sober/42',
-      'took-local://sober/42',
-      'took-local:///sober/42',
-      '/sober/42',
-    ]) {
+    for (const path of ['took-local://sober/42', 'took-local:///sober/42', '/sober/42']) {
       assert.equal(redirectSystemPath({ path, initial }), '/widget?soberId=42');
     }
     for (const path of [
-      'pawpaw-took://sober',
-      'pawpaw-took://sober/',
-      'pawpaw-took://sober/0',
-      'pawpaw-took://sober/9007199254740992',
       'took-local://sober',
       'took-local://sober/',
       'took-local://sober/0',
@@ -39,8 +29,6 @@ test('new and existing widget URLs redirect on cold and warm launches without ch
       assert.equal(redirectSystemPath({ path, initial }), '/widget');
     }
     for (const path of [
-      'pawpaw-took://diary/1',
-      'pawpaw-took://sober/42/edit',
       'took-local://diary/1',
       'took-local://sober/42/edit',
       'https://example.com/sober/42',

@@ -1,8 +1,8 @@
 // Keep installed widgets' existing URLs working for both cold and warm launches.
 export function redirectSystemPath({ path }: { path: string; initial: boolean }) {
   try {
-    const url = new URL(path, 'pawpaw-took://');
-    if (url.protocol !== 'pawpaw-took:' && url.protocol !== 'took-local:') return path;
+    const url = new URL(path, 'took-local://');
+    if (url.protocol !== 'took-local:') return path;
     const pathname = `${url.host ? `/${url.host}` : ''}${url.pathname}`.replace(/\/$/, '');
     const match = /^\/sober(?:\/(\d+))?$/.exec(pathname);
     if (!match) return path;
