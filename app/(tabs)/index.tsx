@@ -32,12 +32,7 @@ export default function Home() {
   const scrollRef = useRef<ScrollView>(null);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
-  const [cardsHeight, setCardsHeight] = useState(0);
-  const pageHeight = Math.max(
-    viewportHeight,
-    contentHeight + cardsHeight + navigationBottom + navigationHeight + appRem,
-  );
-  const overflowing = pageHeight > viewportHeight + 1;
+  const overflowing = contentHeight > viewportHeight + 1;
   useEffect(() => {
     if (viewportHeight > 0 && !overflowing) scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [viewportHeight, overflowing]);
@@ -49,6 +44,7 @@ export default function Home() {
         className="flex-1 min-h-0"
         contentContainerClassName="grow"
         onLayout={({ nativeEvent }) => setViewportHeight(nativeEvent.layout.height)}
+        onContentSizeChange={(_width, height) => setContentHeight(height)}
         scrollEnabled={overflowing}
         bounces={false}
         overScrollMode="never"
@@ -57,23 +53,16 @@ export default function Home() {
         <View
           className="w-full px-[5%] flex justify-between"
           style={{
-            height: viewportHeight > 0 ? pageHeight : undefined,
+            minHeight: viewportHeight,
             paddingBottom: navigationBottom + navigationHeight + appRem,
           }}
         >
-          <View
-            className="shrink-0"
-            onLayout={({ nativeEvent }) => setContentHeight(nativeEvent.layout.height)}
-          >
-            <View className="mt-8 shrink-0 flex-row items-center">
-              <Wordmark size={appRem * 3.5} mode={mode} />
-            </View>
-            <HomeGreeting />
+          <View className="mt-8 shrink-0 flex-row items-center">
+            <Wordmark size={appRem * 2.5} mode={mode} />
           </View>
-          <View
-            className="gap-3 shrink-0"
-            onLayout={({ nativeEvent }) => setCardsHeight(nativeEvent.layout.height)}
-          >
+          <HomeGreeting />
+
+          <View className="gap-3 shrink-0">
             <HomeTodaySection today={today} />
             <HomeAnalysisCard today={today} />
           </View>

@@ -179,20 +179,23 @@ test('home retains its decoration within the page scroll viewport', () => {
   assert.equal(content.filter((node) => node.type === 'HomeAnalysisCard').length, 1);
 });
 
-test('home includes both greeting and card heights when enabling short-window scrolling', () => {
+test('home uses measured content for scrolling at every font size without fixing page height', () => {
   for (const rem of [14, 15, 16]) {
     for (const viewport of [280, 700]) {
-      const tree = load('../app/(tabs)/index.tsx', false, true, [viewport, 210, 300], {
+      const contentHeight = 610;
+      const tree = load('../app/(tabs)/index.tsx', false, true, [viewport, contentHeight], {
         rem,
         bottom: 24,
       }).default();
       const scroll = tree.props.children;
       const page = scroll.props.children;
-      const required = 210 + 300 + 24 + 64 + rem;
-      assert.equal(page.props.style.height, Math.max(viewport, required));
-      assert.equal(scroll.props.scrollEnabled, required > viewport + 1);
-      assert.equal(typeof page.props.children[0].props.onLayout, 'function');
-      assert.equal(typeof page.props.children[1].props.onLayout, 'function');
+      assert.equal(page.props.style.minHeight, viewport);
+      assert.equal(page.props.style.height, undefined);
+      assert.equal(page.props.style.paddingBottom, 24 + 64 + rem);
+      assert.equal(scroll.props.scrollEnabled, contentHeight > viewport + 1);
+      assert.equal(typeof scroll.props.onContentSizeChange, 'function');
+      assert.equal(page.props.children[0].props.onLayout, undefined);
+      assert.equal(page.props.children[2].props.onLayout, undefined);
     }
   }
 });

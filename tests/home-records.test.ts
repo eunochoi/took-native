@@ -200,9 +200,8 @@ test('home fills a normal window, scrolls short windows and resets when all reco
   const resets: unknown[] = [];
   scroll.props.ref.current = { scrollTo: (value: unknown) => resets.push(value) };
   scroll.props.onLayout({ nativeEvent: { layout: { height: 800 } } });
-  const content = ui.render().nodes.find((node) => node.type === 'View' && node.props.onLayout);
-  content.props.onLayout({ nativeEvent: { layout: { height: 500 } } });
-  assert.equal(viewport().props.children.props.style.height, 800);
+  scroll.props.onContentSizeChange(360, 800);
+  assert.equal(viewport().props.children.props.style.minHeight, 800);
   assert.equal(
     viewport().props.children.props.style.paddingBottom,
     ui.theme.navigationBottom + ui.theme.navigationHeight + ui.theme.rem,
@@ -217,14 +216,18 @@ test('home fills a normal window, scrolls short windows and resets when all reco
   );
   const beforeShrink = resets.length;
   scroll.props.onLayout({ nativeEvent: { layout: { height: 400 } } });
+  scroll.props.onContentSizeChange(360, 604.5);
   assert.equal(viewport().props.scrollEnabled, true);
-  assert.equal(viewport().props.children.props.style.height, 604.5);
+  assert.equal(viewport().props.children.props.style.minHeight, 400);
+  assert.equal(viewport().props.children.props.style.height, undefined);
   assert.equal(resets.length, beforeShrink);
   // A wrapped loading/error message can make the required content taller without resizing the window.
-  content.props.onLayout({ nativeEvent: { layout: { height: 560 } } });
-  assert.equal(viewport().props.children.props.style.height, 664.5);
+  scroll.props.onContentSizeChange(360, 664.5);
+  assert.equal(viewport().props.scrollEnabled, true);
+  assert.equal(viewport().props.children.props.style.minHeight, 400);
   scroll.props.onLayout({ nativeEvent: { layout: { height: 900 } } });
-  assert.equal(viewport().props.children.props.style.height, 900);
+  scroll.props.onContentSizeChange(360, 900);
+  assert.equal(viewport().props.children.props.style.minHeight, 900);
   assert.equal(viewport().props.scrollEnabled, false);
   assert.equal(viewport().props.ref, scroll.props.ref);
   assert.equal(JSON.stringify(resets.at(-1)), JSON.stringify({ y: 0, animated: false }));
@@ -351,12 +354,15 @@ test('year picker closes independently and analysis queries follow the selected 
   assert.equal(sheet(ui.render()).props.contentKey, 2024);
 });
 
-test('home retains its shared padding wrapper and the original greeting layout', () => {
+test('home retains shared padding and the updated brand, greeting and summary layout', () => {
   const view = harness('app/(tabs)/index.tsx', 'default').render();
-  const content = view.nodes.find((node) => node.type === 'View' && node.props.onLayout);
-  assert.equal(content.props.className, 'shrink-0 px-[5%]');
+  const content = view.nodes.find((node) => node.type === 'ScrollView').props.children;
+  assert(content.props.className.split(' ').includes('px-[5%]'));
+  assert(content.props.className.split(' ').includes('justify-between'));
   const [brand, greeting, summary] = content.props.children;
   assert(!brand.props.className.includes('px-'));
+  assert.equal(brand.props.children.type, 'Wordmark');
+  assert.equal(brand.props.children.props.size, 15 * 2.5);
   assert.equal(greeting.type, 'HomeGreeting');
   assert(!summary.props.className.includes('px-'));
   assert.equal(summary.props.children[0].type, 'HomeTodaySection');
