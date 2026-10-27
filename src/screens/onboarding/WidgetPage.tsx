@@ -23,7 +23,7 @@ export function WidgetPage({ imageWidth }: { imageWidth: number }) {
       >
         <Image
           source={widgetPreview}
-          accessibilityLabel="포포툭 거리두기 홈 화면 위젯 예시"
+          accessibilityLabel="거리두기 타이머 홈 화면 위젯 예시"
           resizeMode="contain"
           className="h-36 self-center"
           style={{ width: imageWidth }}
