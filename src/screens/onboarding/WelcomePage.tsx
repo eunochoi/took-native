@@ -40,7 +40,7 @@ export function WelcomePage({ imageWidth }: { imageWidth: number }) {
           accessibilityRole="header"
           className="text-center text-[21px] leading-[28px] font-semibold tracking-tight"
         >
-          안녕, 나는 블루야!
+          안녕, 나는 '블루'야!
         </Text>
         <Text className="text-center text-[14px] leading-[21px] text-theme-text-secondary">
           나는 마음에 따라 털색이 달라지는{'\n'}조금 특별한 고양이야.

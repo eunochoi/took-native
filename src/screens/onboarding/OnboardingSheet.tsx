@@ -21,7 +21,7 @@ import { WelcomePage } from './WelcomePage';
 import { WidgetPage } from './WidgetPage';
 
 const titles = [
-  '안녕, 나는 블루야!',
+  `안녕, 나는 '블루'야!`,
   '나에게 맞게 설정해요',
   '편리하게 사용해요',
   '달력 기록을 읽어요',
