@@ -69,7 +69,7 @@ export function DayInfoDiarySection({
               아직 작성한 일기가 없어요.
             </Text>
             <Text className="mt-1 text-sm text-theme-text-tertiary">
-              하루의 이야기를 간단히 툭 남겨보세요.
+              하루의 이야기를 가볍게 남겨보세요.
             </Text>
             <Pressable
               accessibilityRole="button"
