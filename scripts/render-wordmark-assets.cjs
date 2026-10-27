@@ -19,7 +19,7 @@ const out = path.resolve(__dirname, '../assets/ui');
   try {
     const page = await browser.newPage();
     const images = await page.evaluate(
-      async ({ wordmark, character, foreground, palettes }) => {
+      async ({ wordmark, foreground, palettes }) => {
         const load = async (source) => {
           const image = new Image();
           image.src = 'data:image/png;base64,' + source;
@@ -84,19 +84,8 @@ const out = path.resolve(__dirname, '../assets/ui');
           }
         }
         darkContext.putImageData(pixels, 0, 0);
-        const cat = trim(await load(character));
-        const logoHeight = Math.round((cat.width * logo.height) / logo.width);
-        const gap = Math.round(cat.height * 0.14);
-        const composition = canvas(cat.width, cat.height + gap + logoHeight);
-        const compositionContext = composition.getContext('2d');
-        compositionContext.drawImage(cat, 0, 0);
-        compositionContext.drawImage(logo, 0, cat.height + gap, cat.width, logoHeight);
         const encode = (image) => image.toDataURL('image/png').split(',')[1];
-        const results = {
-          'wordmark.png': encode(logo),
-          'wordmark-dark.png': encode(dark),
-          'splash-source.png': encode(composition),
-        };
+        const results = {};
         // Derive one face mask from the approved blue source, retaining its antialiasing.
         const original = logo.getContext('2d').getImageData(0, 0, logo.width, logo.height);
         const samples = { body: [0, 0, 0, 0], face: [0, 0, 0, 0] };
@@ -153,51 +142,10 @@ const out = path.resolve(__dirname, '../assets/ui');
             results[`wordmark-${accent}-${mode}.png`] = encode(themed);
           }
         }
-        const data = compositionContext.getImageData(
-          0,
-          0,
-          composition.width,
-          composition.height,
-        ).data;
-        const centerX = (composition.width - 1) / 2;
-        const centerY = (composition.height - 1) / 2;
-        let radius = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          if (!data[i + 3]) continue;
-          const x = (i / 4) % composition.width;
-          const y = Math.floor(i / 4 / composition.width);
-          radius = Math.max(radius, Math.hypot(x - centerX, y - centerY));
-        }
-        for (const [filename, maxSize, safeRadius] of [
-          ['splash.png', 864, Infinity],
-          // At imageWidth 228, radius 400 occupies 91.2dp of Android's 96dp safe radius.
-          ['splash-android.png', 720, 400],
-        ]) {
-          const output = canvas(1000, 1000);
-          const context = output.getContext('2d');
-          context.fillStyle = '#FFFFFF';
-          context.fillRect(0, 0, output.width, output.height);
-          const scale = Math.min(
-            maxSize / composition.width,
-            maxSize / composition.height,
-            safeRadius / radius,
-          );
-          const width = composition.width * scale;
-          const height = composition.height * scale;
-          context.drawImage(
-            composition,
-            (output.width - width) / 2,
-            (output.height - height) / 2,
-            width,
-            height,
-          );
-          results[filename] = encode(output);
-        }
         return results;
       },
       {
         wordmark: fs.readFileSync(path.join(out, 'wordmark-source.png')).toString('base64'),
-        character: fs.readFileSync(path.join(out, 'splash-character.png')).toString('base64'),
         foreground: tokens.colorValues[tokens.colors.dark.textPrimary],
         palettes: Object.fromEntries(
           Object.entries(tokens.colors.accents).map(([name, palette]) => [

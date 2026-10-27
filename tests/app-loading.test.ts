@@ -228,7 +228,7 @@ test('loading logo failure reaches retry UI without reporting readiness', () => 
 });
 
 test('wordmark follows accent and mode changes, preserves its ratio and forwards image events', () => {
-  const reference = readFileSync(new URL('../assets/ui/wordmark.png', import.meta.url));
+  const reference = readFileSync(new URL('../assets/ui/wordmark-blue-light.png', import.meta.url));
   const dimensions = { width: reference.readUInt32BE(16), height: reference.readUInt32BE(20) };
   const settings = { themeAccent: 'blue' };
   const theme = { mode: 'light' };
