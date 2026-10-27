@@ -62,7 +62,7 @@ export function HabitTodayProgress({
               accessible
               accessibilityRole="image"
               accessibilityLabel={`${date}${date === today ? ', 오늘' : ''}, ${total ? `${total}개 중 ${completed}개 완료, ${Math.round(percent ?? 0)}%` : '시작한 습관 없음'}`}
-              className="flex-1 min-w-0 items-center gap-1 px-1"
+              className="flex-1 min-w-0 items-center gap-1"
             >
               <Text
                 className={twMerge(
@@ -72,7 +72,7 @@ export function HabitTodayProgress({
               >
                 {date === today ? '오늘' : format(parseISO(date), 'eee', { locale: ko })}
               </Text>
-              <View className={`h-12 w-[70%] justify-end rounded-lg ${PROGRESS_TRACK_CLASS_NAME}`}>
+              <View className={`h-12 w-5 justify-end rounded-lg ${PROGRESS_TRACK_CLASS_NAME}`}>
                 {total ? (
                   <View
                     className={`w-full ${PROGRESS_FILL_CLASS_NAME}`}
