@@ -5,7 +5,10 @@
     "version": "2.1.9",
     "scheme": "took-local",
     "orientation": "portrait",
-    "platforms": ["android", "ios"],
+    "platforms": [
+      "android",
+      "ios"
+    ],
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
     "ios": {
@@ -13,7 +16,9 @@
       "buildNumber": "5",
       "supportsTablet": false,
       "entitlements": {
-        "com.apple.security.application-groups": ["group.com.took.widgets"]
+        "com.apple.security.application-groups": [
+          "group.com.took.widgets"
+        ]
       },
       "infoPlist": {
         "TookWidgetAppGroup": "group.com.took.widgets",
