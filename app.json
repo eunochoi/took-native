@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "포포툭",
-    "slug": "pawpaw-took-native",
+    "slug": "took-native",
     "version": "2.1.9",
     "scheme": ["pawpaw-took", "took-local"],
     "orientation": "portrait",
