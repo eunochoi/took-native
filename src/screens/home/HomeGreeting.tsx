@@ -33,7 +33,7 @@ export function HomeGreeting() {
   return (
     <View className="shrink-0 gap-2">
       <View className="flex-row items-center gap-2">
-        <Text className="font-bold text-3xl">어떤 하루든</Text>
+        <Text className="tracking-tighter font-bold text-3xl">어떤 하루든</Text>
         <Animated.View
           key={focused && !reducedMotion ? 'moving' : 'idle'}
           className="h-10 w-10 mb-1 shrink-0 items-center justify-center"
@@ -47,7 +47,7 @@ export function HomeGreeting() {
           <EmotionImage emotion={1} size={appRem * 2.25} iconStyle="basic" />
         </Animated.View>
       </View>
-      <Text className="font-bold text-3xl">모두 나의 기록으로</Text>
+      <Text className="tracking-tighter font-bold text-3xl">모두 나의 기록으로</Text>
       <View className="flex-row flex-wrap items-center gap-1 px-0.5">
         {navigationItems.map(({ label, href, a11y }) => (
           <Pressable

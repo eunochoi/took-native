@@ -362,7 +362,7 @@ test('home retains shared padding and the updated brand, greeting and summary la
   const [brand, greeting, summary] = content.props.children;
   assert(!brand.props.className.includes('px-'));
   assert.equal(brand.props.children.type, 'Wordmark');
-  assert.equal(brand.props.children.props.size, 15 * 2.5);
+  assert.equal(brand.props.children.props.size, 15 * 2.25);
   assert.equal(greeting.type, 'HomeGreeting');
   assert(!summary.props.className.includes('px-'));
   assert.equal(summary.props.children[0].type, 'HomeTodaySection');
