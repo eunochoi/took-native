@@ -112,7 +112,7 @@
     "updates": {
       "enabled": true,
       "fallbackToCacheTimeout": 2000,
-      "url": "https://u.expo.dev/61638f98-2897-44cf-9d58-ba4336a243e8",
+      "url": "https://u.expo.dev/b859b201-9bc7-42a0-889b-9b48bae5da45",
       "requestHeaders": {
         "expo-channel-name": "production"
       }
@@ -126,9 +126,8 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "61638f98-2897-44cf-9d58-ba4336a243e8"
+        "projectId": "b859b201-9bc7-42a0-889b-9b48bae5da45"
       }
-    },
-    "owner": "eooooostudio"
+    }
   }
 }
