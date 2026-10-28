@@ -66,6 +66,11 @@ function harness(values = new Map<string, string>(), platform = 'android') {
   let cursor = 0;
   let effects: (() => void)[] = [];
   let closes = 0;
+  let closing = false;
+  let afterClose: (() => void) | undefined;
+  const openedUrls: string[] = [];
+  const notices: any[] = [];
+  let openURL = async (_url: string) => {};
   const storage = load('../src/onboarding/storage.ts', {
     'expo-sqlite/kv-store': {
       __esModule: true,
@@ -112,7 +117,10 @@ function harness(values = new Map<string, string>(), platform = 'android') {
     'react/jsx-runtime': { jsx, jsxs: jsx },
     'react-native': {
       Platform: { OS: platform },
-      Linking: { openURL: async () => { } },
+      Linking: { openURL: async (url: string) => {
+        openedUrls.push(url);
+        await openURL(url);
+      } },
       Pressable: 'Pressable',
       View: 'View',
       ScrollView: 'ScrollView',
@@ -149,6 +157,7 @@ function harness(values = new Map<string, string>(), platform = 'android') {
   };
   const components = load('../src/screens/onboarding/OnboardingSheet.tsx', {
     ...dependencies,
+    '../../components/NoticeProvider': { useNotice: () => ({ showNotice: (notice: any) => notices.push(notice) }) },
     './WelcomePage': { WelcomePage: 'WelcomePage' },
     './ThemePage': { ThemePage: 'ThemePage' },
     './UsagePage': { UsagePage: 'UsagePage' },
@@ -165,8 +174,10 @@ function harness(values = new Map<string, string>(), platform = 'android') {
         closes++;
       },
     });
-    const close = () => {
-      if (!sheet.props.onBeforeClose()) return false;
+    const close = (action?: () => void) => {
+      if (closing || !sheet.props.onBeforeClose()) return false;
+      closing = true;
+      afterClose = action;
       closes++;
       return true;
     };
@@ -191,6 +202,14 @@ function harness(values = new Map<string, string>(), platform = 'android') {
       language = value;
     },
     closes: () => closes,
+    openedUrls,
+    notices,
+    finishClose: () => {
+      const action = afterClose;
+      afterClose = undefined;
+      action?.();
+    },
+    setOpenURL: (fn: typeof openURL) => { openURL = fn; },
     setPersist: (fn: typeof persist) => {
       persist = fn;
     },
@@ -721,4 +740,64 @@ test('switching onboarding language preserves the current step and English compl
   await last.buttons.at(-1).props.onPress();
   assert.equal(await h.storage.hasCompletedOnboarding(), true);
   assert.equal(h.closes(), 1);
+});
+
+
+test('first-run web navigation saves completion and waits until the sheet closes before opening the browser', async () => {
+  for (const platform of ['ios', 'android']) {
+    const h = harness(new Map(), platform);
+    let finish!: () => void;
+    h.setPersist(() => new Promise<void>((resolve) => { finish = resolve; }));
+    const last = await lastPage(h);
+    const web = nodes(last.body, 'BackupPage')[0].props.onOpenWeb;
+    const pending = web();
+    await web();
+    assert.equal(h.closes(), 0);
+    assert.deepEqual(h.openedUrls, []);
+    assert.deepEqual(h.writes, ['true']);
+    finish();
+    await pending;
+    assert.equal(await h.storage.hasCompletedOnboarding(), true);
+    assert.equal(h.closes(), 1);
+    assert.deepEqual(h.openedUrls, []);
+    await web();
+    h.finishClose();
+    h.finishClose();
+    assert.deepEqual(h.openedUrls, ['https://to-ok.me']);
+    assert.deepEqual(h.writes, ['true']);
+  }
+});
+
+test('web navigation stays on onboarding if completion cannot be saved and allows retry', async () => {
+  const h = harness();
+  h.setPersist(async () => { throw new Error('disk full'); });
+  const last = await lastPage(h);
+  await nodes(last.body, 'BackupPage')[0].props.onOpenWeb();
+  assert.equal(h.closes(), 0);
+  assert.deepEqual(h.openedUrls, []);
+  assert.equal(await h.storage.hasCompletedOnboarding(), false);
+  assert(nodes(h.renderSheet().footer, 'Text').some((node) => node.props.accessibilityRole === 'alert'));
+  h.setPersist(async () => {});
+  await nodes(h.renderSheet().body, 'BackupPage')[0].props.onOpenWeb();
+  assert.equal(h.closes(), 1);
+  h.finishClose();
+  assert.deepEqual(h.openedUrls, ['https://to-ok.me']);
+});
+
+test('replayed onboarding closes before web navigation without changing completion and reports browser failure outside the sheet', async () => {
+  const h = harness();
+  h.setOpenURL(async () => { throw new Error('browser unavailable'); });
+  const last = await lastPage(h, false);
+  const web = nodes(last.body, 'BackupPage')[0].props.onOpenWeb;
+  await web();
+  await web();
+  assert.equal(h.closes(), 1);
+  assert.deepEqual(h.writes, []);
+  assert.deepEqual(h.openedUrls, []);
+  h.finishClose();
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  assert.deepEqual(h.openedUrls, ['https://to-ok.me']);
+  assert.equal(h.notices.length, 1);
+  assert.equal(h.notices[0].tone, 'error');
+  assert.equal(await h.storage.hasCompletedOnboarding(), false);
 });

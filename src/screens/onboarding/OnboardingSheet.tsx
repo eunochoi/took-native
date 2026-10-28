@@ -7,6 +7,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { AnimatedScrollView } from '../../components/AnimatedScrollView';
 import { BottomSheetModal } from '../../components/BottomSheetModal';
 import { Button } from '../../components/Button';
+import { useNotice } from '../../components/NoticeProvider';
 import { Text } from '../../components/Text';
 import type { CloseBottomSheet } from '../../hooks/useBottomSheetLifecycle';
 import { completeOnboarding, hasCompletedOnboarding } from '../../onboarding/storage';
@@ -58,6 +59,7 @@ export function OnboardingSheet({
     t('onboarding.backupTitle'),
   ];
   const { settings, updateSettings } = useSettings();
+  const { showNotice } = useNotice();
   const { rem, reducedMotion } = useAppTheme();
   const [step, setStep] = useState(0);
   const [width, setWidth] = useState(0);
@@ -135,11 +137,11 @@ export function OnboardingSheet({
       setBusy(false);
     }
   };
-  const confirm = async (close: CloseBottomSheet) => {
+  const confirm = async (close: CloseBottomSheet, afterClose?: () => void) => {
     if (saving.current || step !== titles.length - 1 || (firstRun && allowClose.current)) return;
     setError('');
     if (!firstRun) {
-      close();
+      close(afterClose);
       return;
     }
     saving.current = true;
@@ -148,7 +150,7 @@ export function OnboardingSheet({
       await completeOnboarding();
       allowClose.current = true;
       saving.current = false;
-      close();
+      close(afterClose);
     } catch {
       setError(t('onboarding.completeFailed'));
     } finally {
@@ -156,11 +158,12 @@ export function OnboardingSheet({
       setBusy(false);
     }
   };
-  const openWeb = () => {
-    void Linking.openURL('https://to-ok.me').catch(() => {
-      setError(t('onboarding.webFailed'));
+  const openWeb = (close: CloseBottomSheet) =>
+    confirm(close, () => {
+      void Linking.openURL('https://to-ok.me').catch(() => {
+        showNotice({ tone: 'error', title: t('onboarding.webFailed') });
+      });
     });
-  };
   return (
     <BottomSheetModal
       visible
@@ -244,7 +247,7 @@ export function OnboardingSheet({
           </View>
         </View>
       )}
-      renderBody={(_close, motion) => (
+      renderBody={(close, motion) => (
         <GestureDetector gesture={pageGesture}>
           <ScrollView
             ref={carousel}
@@ -291,7 +294,7 @@ export function OnboardingSheet({
               ...(Platform.OS === 'android'
                 ? [<WidgetPage key="widget" imageWidth={imageWidth} />]
                 : []),
-              <BackupPage key="backup" onOpenWeb={openWeb} />,
+              <BackupPage key="backup" onOpenWeb={() => openWeb(close)} />,
             ].map((content, index) => (
               <View
                 key={content.key}
