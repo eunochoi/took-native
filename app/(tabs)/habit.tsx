@@ -140,7 +140,7 @@ export default function HabitList() {
     />
   );
   return (
-    <ColorView className={PAGE_CLASS_NAME}>
+    <ColorView background="surface" className={PAGE_CLASS_NAME}>
       <ScrollView
         ref={scroll}
         onScroll={fade.onScroll}

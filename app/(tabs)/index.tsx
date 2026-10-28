@@ -38,7 +38,7 @@ export default function Home() {
   }, [viewportHeight, overflowing]);
 
   return (
-    <ColorView className="flex-1 min-h-0 overflow-hidden bg-theme-accent-light">
+    <ColorView background="accentLight" className="flex-1 min-h-0 overflow-hidden bg-theme-accent-light">
       <ScrollView
         ref={scrollRef}
         className="flex-1 min-h-0"

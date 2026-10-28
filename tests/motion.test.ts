@@ -8,6 +8,15 @@ import tokens from '../src/theme/tokens.json';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
+const normalizeColor = require(
+  require.resolve('@react-native/normalize-colors', { paths: [require.resolve('react-native/package.json')] }),
+);
+// Match React Native's RGBA-to-ARGB conversion, including numeric input.
+function nativeColor(color: unknown) {
+  const value = normalizeColor(color);
+  return ((value << 24) | (value >>> 8)) >>> 0;
+}
+
 const jsx = (type: unknown, props: any, key?: string) => ({ type, props, key });
 function load(
   file: string,
@@ -17,6 +26,7 @@ function load(
   geometry = { rem: 15, bottom: 24 },
 ) {
   let stateIndex = 0;
+  const backgroundColors = { surface: { value: '#FFFFFF' }, accentLight: { value: '#F0F7FF' } };
   const exports: Record<string, any> = {};
   runInNewContext(
     ts.transpileModule(readFileSync(new URL(file, import.meta.url), 'utf8'), {
@@ -39,6 +49,7 @@ function load(
           return { Pressable: (props: any) => jsx('GesturePressable', props) };
         if (name === './ColorTransition')
           return load('../src/components/ColorTransition.tsx', reducedMotion);
+        if (name === 'expo') return { requireNativeView: () => 'NativeGradient' };
         if (name === 'nativewind') return { cssInterop: (component: unknown) => component };
         if (name === 'expo-sqlite') return { useSQLiteContext: () => ({}) };
         if (name === '@tanstack/react-query') return { useQuery: () => ({ data: null }) };
@@ -56,6 +67,7 @@ function load(
               navigationBottom: 24,
               navigationHeight: 64,
               colors: { surface: '#FFFFFF', accentLight: '#F0F7FF' },
+              backgroundColors,
             }),
           };
         if (name === 'react-native-safe-area-context')
@@ -63,6 +75,10 @@ function load(
         if (name === 'react-native-reanimated')
           return {
             __esModule: true,
+            useAnimatedStyle: (build: Function) => build(),
+            useAnimatedProps: (build: Function) => build(),
+            processColor: nativeColor,
+            convertToRGBA: (color: string) => [1, 3, 5].map((offset) => parseInt(color.slice(offset, offset + 2), 16) / 255),
             default: {
               View: 'AnimatedView',
               Text: 'AnimatedText',
@@ -99,6 +115,7 @@ function load(
       },
     },
   );
+  exports.backgroundColors = backgroundColors;
   return exports;
 }
 
@@ -113,7 +130,7 @@ test('fade visibility animates the gradient while retaining the bottom surface a
     assert.equal(fade.props.style.opacity, visible ? 1 : 0);
     assert.equal(fade.props.style.transitionProperty, 'opacity');
     assert.equal(fade.props.style.transitionDuration, `${tokens.motion.scrollFade}ms`);
-    assert.equal(fade.props.children.type, 'LinearGradient');
+    assert.equal(fade.props.children.type.name, 'SurfaceGradient');
     assert.equal(fade.props.children.props.colors[0], '#FFFFFF');
     assert.equal(surface.props.style.height, 72);
     assert.match(surface.props.className, /bg-theme-surface/);
@@ -124,7 +141,7 @@ test('top and bottom fades share a viewport overlay without a native scroll wrap
   const { ScrollEdgeFade } = load('../src/components/ScrollEdgeFade.tsx', false);
   for (const edge of ['top', 'bottom']) {
     const tree = ScrollEdgeFade({ edge, visible: true });
-    assert.equal(tree.props.children[0].props.children.type, 'LinearGradient');
+    assert.equal(tree.props.children[0].props.children.type.name, 'SurfaceGradient');
     assert.equal(tree.props.pointerEvents, 'none');
   }
 });
@@ -136,7 +153,8 @@ test('reduced motion disables fade and the page background transition', () => {
     '0ms',
   );
   const { ColorView } = load('../src/components/ColorTransition.tsx', true);
-  assert.equal(ColorView({}).props.style[1].transitionDuration, '0ms');
+  assert.equal(ColorView({ background: 'surface' }).props.style[1].backgroundColor, '#FFFFFF');
+  assert.equal(ColorView({}).props.style[1].transitionDuration, undefined);
 });
 
 test('home focus remounts the greeting and reduced motion retains the resting rotation', () => {
@@ -230,11 +248,12 @@ test('the page background transition preserves native view props and refs', () =
   const { ColorView } = load('../src/components/ColorTransition.tsx', false);
   const ref = { current: null };
   const style = { flex: 1 };
-  const tree = ColorView({ ref, style, pointerEvents: 'none' });
+  const tree = ColorView({ ref, style, background: 'surface', pointerEvents: 'none' });
   assert.equal(tree.props.ref, ref);
   assert.equal(tree.props.pointerEvents, 'none');
   assert.equal(tree.props.style[0], style);
-  assert.equal(tree.props.style[1].transitionProperty, 'backgroundColor');
+  assert.equal(tree.props.style[1].backgroundColor, '#FFFFFF');
+  assert.equal(tree.props.style[1].transitionProperty, undefined);
 });
 
 test('gesture pressable preserves pressed style callbacks, props and refs without color animation', () => {
@@ -329,7 +348,7 @@ test('sticky toolbar overlaps its always-visible h-8 gradient by one pixel', () 
     const [surface, gradient] = toolbar.props.children;
     assert.match(surface.props.className, /bg-theme-surface/);
     assert.equal(surface.props.children.props.children, 'buttons');
-    assert.equal(gradient.type, 'LinearGradient');
+    assert.equal(gradient.type.name, 'SurfaceGradient');
     assert.match(gradient.props.className, /h-8/);
     assert(gradient.props.className.split(' ').includes('-mt-px'));
     assert.equal(gradient.props.colors[0], '#FFFFFF');
@@ -355,4 +374,44 @@ test('viewport fades stay inside their edges', () => {
   for (const fade of [top, bottom]) {
     assert.equal(fade.props.pointerEvents, 'none');
   }
+});
+
+
+test('surface gradients use the same animated background color at every alpha stop', () => {
+  const { SurfaceGradient, ColorView, backgroundColors } = load('../src/components/ColorTransition.tsx', false);
+  // Sample light, an in-flight shade, and dark from the same shared value.
+  for (const color of ['#FFFFFF', '#888888', '#121212']) {
+    backgroundColors.surface.value = color;
+    const surface = ColorView({ background: 'surface' });
+    const tree = SurfaceGradient({ colors: ['#000000', '#00000000'] });
+    const stops = tree.props.animatedProps.colors;
+    const channel = parseInt(color.slice(1, 3), 16);
+    assert.equal(surface.props.style[1].backgroundColor, color);
+    assert.equal(stops[0] >>> 24, 255);
+    assert.equal(stops.at(-1) >>> 24, 0);
+    for (const stop of stops) {
+      assert.equal((stop >>> 16) & 255, channel);
+      assert.equal((stop >>> 8) & 255, channel);
+      assert.equal(stop & 255, channel);
+    }
+    assert.equal(tree.type, 'NativeGradient');
+    assert.equal(stops.length, 11);
+  }
+});
+
+
+test('transparent white is passed as native ARGB once instead of opaque cyan', () => {
+  const { SurfaceGradient } = load('../src/components/ColorTransition.tsx', false);
+  const tree = SurfaceGradient({
+    colors: ['#FFFFFF', '#FFFFFF00'],
+    start: { x: 0, y: 0 },
+    end: { x: 0, y: 1 },
+  });
+  const transparentWhite = 0x00ffffff;
+  assert.equal(tree.type, 'NativeGradient');
+  assert.equal(tree.props.colors.at(-1), transparentWhite);
+  assert.equal(tree.props.animatedProps.colors.at(-1), transparentWhite);
+  assert.equal(nativeColor(transparentWhite), 0xff00ffff, 'a second conversion reproduces opaque cyan');
+  assert.deepEqual(Array.from(tree.props.startPoint), [0, 0]);
+  assert.deepEqual(Array.from(tree.props.endPoint), [0, 1]);
 });

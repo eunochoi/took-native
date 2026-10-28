@@ -1,3 +1,4 @@
+import { ColorView } from './ColorTransition';
 import { useI18n } from '../i18n/react';
 import type { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
@@ -48,7 +49,7 @@ export function BottomNav({ state, navigation }: BottomNavProps) {
         className="self-center flex-row items-center"
         style={{ gap: navigationMetrics.groupGap * navigationScale }}
       >
-        <View className={surfaceClassName} style={shadowStyle}>
+        <ColorView background="surface" className={surfaceClassName} style={shadowStyle}>
           <View
             className="flex-row items-center"
             style={{
@@ -103,9 +104,10 @@ export function BottomNav({ state, navigation }: BottomNavProps) {
               );
             })}
           </View>
-        </View>
+        </ColorView>
         {settingRoute && (
-          <View
+          <ColorView
+            background="surface"
             className={surfaceClassName}
             style={[shadowStyle, { width: navigationHeight, height: navigationHeight }]}
           >
@@ -139,7 +141,7 @@ export function BottomNav({ state, navigation }: BottomNavProps) {
                 />
               </Pressable>
             </View>
-          </View>
+          </ColorView>
         )}
       </View>
     </View>

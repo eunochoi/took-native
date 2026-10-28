@@ -104,7 +104,7 @@ export default function SoberList() {
         showNotice({ tone: 'error', title: t('settings.saveFailed'), message: error.message }),
       );
   return (
-    <ColorView className={PAGE_CLASS_NAME}>
+    <ColorView background="surface" className={PAGE_CLASS_NAME}>
       <FlatList
         ref={scroll}
         data={rows}

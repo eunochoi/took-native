@@ -41,7 +41,7 @@ export default function CalendarScreen() {
     [habits.data, completions.data, habits.isError, completions.isError, month, today],
   );
   return (
-    <ColorView className={PAGE_CLASS_NAME}>
+    <ColorView background="surface" className={PAGE_CLASS_NAME}>
       <ScrollView
         ref={scrollRef}
         className="flex-1 min-h-0"

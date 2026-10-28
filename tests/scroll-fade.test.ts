@@ -22,7 +22,8 @@ test('sheet fades leave the last content unobstructed while page fades retain to
         if (name === 'react-native') return { View: 'View', StyleSheet: { absoluteFill: {} } };
         if (name === 'react-native-reanimated')
           return { __esModule: true, default: { View: 'AnimatedView' } };
-        if (name === 'expo-linear-gradient') return { LinearGradient: 'LinearGradient' };
+        if (name === './ColorTransition')
+          return { ColorView: 'View', SurfaceGradient: 'LinearGradient' };
         if (name === 'react-native-safe-area-context')
           return { useSafeAreaInsets: () => ({ bottom: 30 }) };
         if (name.endsWith('AppThemeProvider'))

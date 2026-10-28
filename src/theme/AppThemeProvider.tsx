@@ -1,3 +1,4 @@
+import { Easing, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 import { createContext, useContext, useLayoutEffect, useMemo, type ReactNode } from 'react';
 import { Platform, View, useColorScheme } from 'react-native';
 import { rem, vars } from 'nativewind';
@@ -9,6 +10,7 @@ import { resolveThemeMode, themeColors } from './colors';
 
 interface AppTheme {
   colors: ReturnType<typeof themeColors>;
+  backgroundColors: { surface: SharedValue<string>; accentLight: SharedValue<string> };
   rem: number;
   navigationHeight: number;
   navigationBottom: number;
@@ -29,6 +31,17 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
     () => themeColors(settings.themeAccent, mode),
     [settings.themeAccent, mode],
   );
+  const surface = useSharedValue(colors.surface);
+  const accentLight = useSharedValue(colors.accentLight);
+  const backgroundColors = useMemo(() => ({ surface, accentLight }), [surface, accentLight]);
+  useLayoutEffect(() => {
+    const config = {
+      duration: tokens.motion.colorTransition,
+      easing: Easing.out(Easing.ease),
+    };
+    surface.value = reducedMotion ? colors.surface : withTiming(colors.surface, config);
+    accentLight.value = reducedMotion ? colors.accentLight : withTiming(colors.accentLight, config);
+  }, [colors.surface, colors.accentLight, reducedMotion, surface, accentLight]);
   const navigationHeight =
     Platform.OS === 'android'
       ? tokens.metrics.navigation.androidHeight
@@ -42,6 +55,7 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
   const theme = useMemo(
     () => ({
       colors,
+      backgroundColors,
       rem: rootSize,
       navigationHeight,
       navigationBottom,
@@ -55,7 +69,7 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
         lg: rootSize * tokens.metrics.iconSizes.lg,
       },
     }),
-    [colors, rootSize, mode, reducedMotion, navigationHeight, navigationBottom],
+    [colors, backgroundColors, rootSize, mode, reducedMotion, navigationHeight, navigationBottom],
   );
   const variables = useMemo(
     () =>

@@ -118,6 +118,8 @@ test('tab footer clears the floating navigation for every font size and bottom s
               if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
               if (name === 'react-native')
                 return { View: 'View', Platform: { OS: platform }, useColorScheme: () => 'light' };
+              if (name === 'react-native-reanimated')
+                return { useSharedValue: (value: unknown) => ({ value }) };
               if (name === 'nativewind')
                 return { vars: (values: unknown) => values, rem: { set: () => undefined } };
               if (name === 'react-native-safe-area-context')

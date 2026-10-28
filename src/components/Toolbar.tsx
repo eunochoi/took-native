@@ -1,20 +1,16 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { cssInterop } from 'nativewind';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { useAppTheme } from '../theme/AppThemeProvider';
-import { ColorView } from './ColorTransition';
-
-const ToolbarGradient = cssInterop(LinearGradient, { className: 'style' });
+import { ColorView, SurfaceGradient } from './ColorTransition';
 
 export function Toolbar({ children }: { children: ReactNode }) {
   const { colors } = useAppTheme();
   return (
     <View className="w-full shrink-0">
-      <ColorView className="h-10 w-full shrink-0 bg-theme-surface px-[5%]">
+      <ColorView background="surface" className="h-10 w-full shrink-0 bg-theme-surface px-[5%]">
         <View className="min-w-0 flex-1 flex-row items-stretch gap-6 px-0.5">{children}</View>
       </ColorView>
-      <ToolbarGradient
+      <SurfaceGradient
         pointerEvents="none"
         accessible={false}
         accessibilityElementsHidden

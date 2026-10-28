@@ -106,7 +106,7 @@ export default function DiaryList() {
           ? t('diary.allPeriod')
           : t('diary.yearAll', { count: year });
   return (
-    <ColorView className={PAGE_CLASS_NAME}>
+    <ColorView background="surface" className={PAGE_CLASS_NAME}>
       <FlatList
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}

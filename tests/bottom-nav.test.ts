@@ -40,6 +40,7 @@ function loadAppIcon() {
     {
       exports,
       require: (name: string) => {
+        if (name === './ColorTransition') return { ColorView: 'View' };
         if (name.endsWith('/i18n/react')) return mockI18n();
         if (name === 'react/jsx-runtime')
           return {
@@ -78,6 +79,7 @@ function render(os: 'ios' | 'android', index: number, rem = 15) {
     {
       exports,
       require: (name: string) => {
+        if (name === './ColorTransition') return { ColorView: 'View' };
         if (name.endsWith('/i18n/react')) return mockI18n();
         if (name === 'react/jsx-runtime') {
           const jsx = (type: any, props: any) =>

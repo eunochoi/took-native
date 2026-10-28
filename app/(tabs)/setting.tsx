@@ -179,7 +179,7 @@ export default function SettingsScreen() {
   };
   const disabled = activity !== null;
   return (
-    <ColorView className={PAGE_CLASS_NAME}>
+    <ColorView background="surface" className={PAGE_CLASS_NAME}>
       <ScrollView
         ref={scroll}
         showsVerticalScrollIndicator={false}

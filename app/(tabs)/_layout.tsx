@@ -1,6 +1,7 @@
+import { ColorView } from '../../src/components/ColorTransition';
 import { useI18n } from '../../src/i18n/react';
 import { Tabs } from 'expo-router';
-import { Easing, View } from 'react-native';
+import { Easing } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomNav } from '../../src/components/BottomNav';
 import { useAppTheme } from '../../src/theme/AppThemeProvider';
@@ -14,12 +15,13 @@ export default function TabLayout() {
     <Tabs
       safeAreaInsets={{ bottom: 0 }}
       screenLayout={({ route, children }) => (
-        <View
+        <ColorView
+          background={route.name === 'index' ? 'accentLight' : 'surface'}
           className={`flex-1 ${route.name === 'index' ? 'bg-theme-accent-light' : 'bg-theme-surface'}`}
           style={{ paddingTop: insets.top }}
         >
           {children}
-        </View>
+        </ColorView>
       )}
       tabBar={(props) => <BottomNav {...props} />}
       screenOptions={{

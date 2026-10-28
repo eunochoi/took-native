@@ -1,3 +1,4 @@
+import { ColorView } from '../src/components/ColorTransition';
 // @refresh reset
 import { useI18n } from '../src/i18n/react';
 import { translateErrorMessage } from '../src/i18n/errors';
@@ -94,7 +95,7 @@ function Navigation({ onReady }: { onReady: () => void }) {
       }}
     >
       <ModalNavigationProvider>
-        <View className="flex-1 bg-theme-surface" onLayout={onReady}>
+        <ColorView background="surface" className="flex-1 bg-theme-surface" onLayout={onReady}>
           <NotificationController />
           <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
           <Stack
@@ -120,7 +121,7 @@ function Navigation({ onReady }: { onReady: () => void }) {
             ))}
           </Stack>
           <FirstRunOnboarding ready={ready} />
-        </View>
+        </ColorView>
       </ModalNavigationProvider>
     </ThemeProvider>
   );

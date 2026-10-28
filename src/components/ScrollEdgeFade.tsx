@@ -1,4 +1,4 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import { ColorView, SurfaceGradient } from './ColorTransition';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -46,7 +46,7 @@ export function ScrollEdgeFade({
           transitionTimingFunction: 'linear',
         }}
       >
-        <LinearGradient
+        <SurfaceGradient
           colors={[
             colors.surface,
             `${colors.surface}F8`,
@@ -68,7 +68,8 @@ export function ScrollEdgeFade({
       </Animated.View>
 
       {solidHeight > 0 && (
-        <View
+        <ColorView
+          background="surface"
           className="absolute inset-x-0 bottom-0 bg-theme-surface"
           style={{ height: solidHeight }}
         />
