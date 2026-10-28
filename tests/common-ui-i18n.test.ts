@@ -188,11 +188,11 @@ test('common default actions switch language and caller-provided labels remain i
       .accessibilityLabel,
     'Back',
   );
-  assert.equal(h.component('Wordmark')({}).props.accessibilityLabel, 'BlooLog logo');
+  assert.equal(h.component('Wordmark')({}).props.accessibilityLabel, "'BlooLog' logo");
   assert.equal(
     h.component('AppLoadingScreen')({ onReady: () => {}, onError: () => {} }).props
       .accessibilityLabel,
-    'BlooLog launch screen',
+    "'BlooLog' launch screen",
   );
   assert.equal(
     nodes(h.component('QueryState')({ query: { isPending: true, error: null } }), 'Spinner')[0]

@@ -4,7 +4,13 @@ import { errorsKo } from './locales/ko/errors';
 // Match only app-owned messages at the display boundary. Keep validation and errors unchanged.
 const messages = Object.entries(errorsKo);
 const fixed = new Map<string, string>(
-  messages.filter(([, message]) => !message.includes('%{')).map(([key, message]) => [message, key]),
+  messages
+    .filter(([, message]) => !message.includes('%{'))
+    .flatMap(([key, message]) => [
+      [message, key],
+      // Existing domain errors retain their original text; quote names at the display boundary.
+      [message.replaceAll("'BlooLog'", 'BlooLog'), key],
+    ]),
 );
 const patterns = messages
   .filter(([, message]) => message.includes('%{'))
@@ -22,9 +28,9 @@ const patterns = messages
   }));
 
 export function translateErrorMessage(message: string, language: Language): string {
-  if (language === 'ko') return message;
   const key = fixed.get(message);
   if (key) return t(`errors.${key as keyof typeof errorsKo}`, { locale: language });
+  if (language === 'ko') return message;
   for (const { key, names, pattern } of patterns) {
     const match = pattern.exec(message);
     if (!match) continue;

@@ -616,11 +616,11 @@ test('permission and invalid-time errors display in English while leaving denied
     (error: Error) => {
       assert.equal(
         translateErrorMessage(error.message, 'en'),
-        'Allow notifications for BlooLog in your device settings.',
+        "Allow notifications for 'BlooLog' in your device settings.",
       );
       assert.equal(
         translateErrorMessage(error.message, 'ko'),
-        '기기 설정에서 BlooLog의 알림을 허용해주세요.',
+        "기기 설정에서 'BlooLog'의 알림을 허용해주세요.",
       );
       return true;
     },

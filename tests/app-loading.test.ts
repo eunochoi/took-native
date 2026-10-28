@@ -277,7 +277,7 @@ test('wordmark follows accent and mode changes, preserves its ratio and forwards
       assert.equal(tree.props.style.width, 45 * (dimensions.width / dimensions.height));
       assert.equal(tree.props.onLoad, onLoad);
       assert.equal(tree.props.onError, onError);
-      assert.equal(tree.props.accessibilityLabel, 'BlooLog 로고');
+      assert.equal(tree.props.accessibilityLabel, "'BlooLog' 로고");
     }
   }
   assert.equal(
