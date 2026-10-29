@@ -1,6 +1,5 @@
 import { requireOptionalNativeModule } from 'expo';
 import { Directory, File, Paths } from 'expo-file-system';
-import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils.js';
@@ -10,8 +9,13 @@ import { createEncryptedBackup } from './index';
 import { backupDay, expiredBackups, parseAutomaticBackup } from './policy';
 import { backupBusy, withBackupOperation } from './operation';
 
+const SecureStore: typeof import('expo-secure-store') | null = requireOptionalNativeModule(
+  'ExpoSecureStore',
+)
+  ? require('expo-secure-store')
+  : null;
 const KEY = 'bloolog.auto-backup.v1';
-const OPTIONS = { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY };
+const OPTIONS = { keychainAccessible: SecureStore?.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY };
 interface AutoConfig {
   version: 1;
   enabled: boolean;
@@ -75,7 +79,7 @@ async function ensureInstallation() {
       const marker = new File(Paths.document, 'bloo-installation-v1');
       if (!marker.exists) {
         // iOS Keychain can survive uninstall. Never enable a fresh empty installation from stale keys.
-        await SecureStore.deleteItemAsync(KEY, OPTIONS);
+        await SecureStore!.deleteItemAsync(KEY, OPTIONS);
         marker.write('1');
       }
     })().catch((error) => {
@@ -85,8 +89,9 @@ async function ensureInstallation() {
   await installation;
 }
 async function readConfig(): Promise<AutoConfig | null> {
+  if (!SecureStore) return null;
   await ensureInstallation();
-  const value = await SecureStore.getItemAsync(KEY, OPTIONS);
+  const value = await SecureStore!.getItemAsync(KEY, OPTIONS);
   if (!value) return null;
   const config = JSON.parse(value) as AutoConfig;
   if (
@@ -99,7 +104,8 @@ async function readConfig(): Promise<AutoConfig | null> {
   return config;
 }
 async function saveConfig(config: AutoConfig) {
-  await SecureStore.setItemAsync(KEY, JSON.stringify(config), OPTIONS);
+  if (!SecureStore) throw new Error('BLOO_NATIVE_REQUIRED');
+  await SecureStore!.setItemAsync(KEY, JSON.stringify(config), OPTIONS);
   publishStatus(config);
 }
 export async function refreshAutoBackupStatus() {
@@ -240,6 +246,7 @@ export async function configureAutomaticBackup(
   oldPassword?: string,
 ) {
   return withBackupOperation(async () => {
+    if (!SecureStore) throw new Error('BLOO_NATIVE_REQUIRED');
     validatePassword(password);
     const old = await readConfig();
     if (old) {
@@ -286,7 +293,7 @@ export async function configureAutomaticBackup(
       // Keep credentials if iCloud is already uploading a new backup.
       if (config.pending || config.lastName !== old?.lastName) await saveConfig(config);
       else if (old) await saveConfig(old);
-      else await SecureStore.deleteItemAsync(KEY, OPTIONS);
+      else await SecureStore!.deleteItemAsync(KEY, OPTIONS);
       publishStatus(
         config.pending || config.lastName !== old?.lastName ? config : old,
         error instanceof Error ? error.message : String(error),

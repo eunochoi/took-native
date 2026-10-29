@@ -10,7 +10,7 @@ const ts = require('typescript');
 const device = 'a'.repeat(16);
 const filename = (day: string, time: number) =>
   `bloolog-${device}-${day}-${time}-${'b'.repeat(16)}.bloo`;
-function harness(platform: 'android' | 'ios' = 'android') {
+function harness(platform: 'android' | 'ios' = 'android', secureStoreAvailable = true) {
   const now = new Date(2026, 9, 28, 12);
   class Clock extends Date {
     constructor(...args: any[]) {
@@ -81,22 +81,27 @@ function harness(platform: 'android' | 'ios' = 'android') {
         if (name === 'expo')
           return {
             requireOptionalNativeModule: (name: string) =>
-              name === 'BlooCloud'
-                ? {
-                    location: async () => ({ uri: 'folder', identity }),
-                    names: async () => [...files],
-                    publish,
-                    uploaded: async () => uploaded,
-                    remove,
-                  }
-                : {
-                    names: async () => [...files],
-                    publish: async (source: string, _folder: string, name: string) =>
-                      publish(source, name),
-                    remove: async (_folder: string, name: string) => remove(name),
-                  },
+              name === 'ExpoSecureStore'
+                ? secureStoreAvailable
+                  ? {}
+                  : null
+                : name === 'BlooCloud'
+                  ? {
+                      location: async () => ({ uri: 'folder', identity }),
+                      names: async () => [...files],
+                      publish,
+                      uploaded: async () => uploaded,
+                      remove,
+                    }
+                  : {
+                      names: async () => [...files],
+                      publish: async (source: string, _folder: string, name: string) =>
+                        publish(source, name),
+                      remove: async (_folder: string, name: string) => remove(name),
+                    },
           };
-        if (name === 'expo-secure-store')
+        if (name === 'expo-secure-store') {
+          assert(secureStoreAvailable, 'unavailable SecureStore must not be imported');
           return {
             getItemAsync: async () => (config ? JSON.stringify(config) : null),
             setItemAsync: async (_key: string, value: string) => {
@@ -107,6 +112,7 @@ function harness(platform: 'android' | 'ios' = 'android') {
               config = null;
             },
           };
+        }
         if (name === 'expo-file-system') return { File, Paths: { document: 'document' } };
         if (name === 'react-native') return { Platform: { OS: platform } };
         if (name === '@noble/hashes/utils.js') return { bytesToHex, hexToBytes };
@@ -257,4 +263,17 @@ test('a manually removed current backup is recreated, and stale partial files ne
   assert.equal(h.creates(), 2);
   assert(h.files.has(h.config().lastName));
   assert(!h.files.has(partial));
+});
+
+test('startup and foreground checks tolerate a build without SecureStore', async () => {
+  const h = harness('android', false);
+  await h.exports.refreshAutoBackupStatus();
+  assert.equal(h.exports.autoBackupStatus().enabled, false);
+  assert.equal(h.exports.autoBackupStatus().error, undefined);
+  await h.exports.runAutomaticBackup({});
+  assert.equal(h.creates(), 0);
+  await assert.rejects(
+    h.exports.configureAutomaticBackup({}, 'password123'),
+    /BLOO_NATIVE_REQUIRED/,
+  );
 });
