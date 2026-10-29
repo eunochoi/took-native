@@ -62,7 +62,7 @@ export const onboardingKo = {
   webFailed: '웹 서비스를 열지 못했어요. 다시 시도해주세요.',
   steps: '앱 안내 단계',
   stepTitle: '%{count}단계, %{title}',
-  start: "'BlooLog' 시작하기",
+  start: "시작하기",
   stepStatus: '앱 안내, %{value}단계 중 %{count}단계',
   nextGuide: '다음 안내',
   previousGuide: '이전 안내',
