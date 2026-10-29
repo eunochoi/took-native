@@ -997,7 +997,6 @@ test('widget bootstrap does not import enforcing Android modules on iOS, web or 
     const configure = () => {};
     const mocks: any = {
       './global.css': {},
-      './src/backup/background': {},
       'react-native': {
         Platform: { OS: platform },
         TurboModuleRegistry: {

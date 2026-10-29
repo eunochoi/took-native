@@ -8,14 +8,12 @@ import {
   refreshAutoBackupStatus,
   runAutomaticBackup,
 } from './automatic';
-import { registerBackupTask } from './background';
 
 export function AutoBackupController() {
   const db = useSQLiteContext();
   useEffect(() => {
     cleanBackupCache();
     void refreshAutoBackupStatus();
-    void registerBackupTask();
     let timer: ReturnType<typeof setTimeout> | undefined;
     const schedule = (delay: number) => {
       clearTimeout(timer);

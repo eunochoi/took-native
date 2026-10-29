@@ -353,8 +353,3 @@ export function cleanBackupCache() {
     }
   }
 }
-
-export async function shouldRunBackgroundBackup() {
-  const config = await readConfig();
-  return !!config?.enabled && !config.pausedAfterRestore;
-}

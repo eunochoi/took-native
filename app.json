@@ -131,8 +131,7 @@
           "supportedLocales": ["en", "ko"]
         }
       ],
-      "expo-secure-store",
-      "expo-background-task"
+      "expo-secure-store"
     ],
     "updates": {
       "enabled": true,
