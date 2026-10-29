@@ -61,7 +61,6 @@ export default function Home() {
             <Wordmark size={appRem * 2.25} mode={mode} />
           </View>
           <HomeGreeting />
-
           <View className="gap-3 shrink-0">
             <HomeTodaySection today={today} />
             <HomeAnalysisCard today={today} />

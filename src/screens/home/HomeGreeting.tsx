@@ -50,7 +50,7 @@ export function HomeGreeting() {
         </Animated.View>
       </View>
       <Text className="tracking-tighter font-bold text-3xl">{t('home.greetingSecond')}</Text>
-      <View className="flex-row flex-wrap items-center gap-1 px-0.5">
+      <View className="mt-1 flex-row flex-wrap items-center gap-1 px-0.5">
         {navigationItems.map(({ label, href, a11y }) => (
           <Pressable
             key={href}
