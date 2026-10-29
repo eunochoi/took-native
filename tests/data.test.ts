@@ -320,7 +320,7 @@ test('diary aggregates isolate years and preserve monthly and emotion totals', a
   raw.close();
 });
 
-test('monthly diary average follows the selected year and excludes future months this year', async () => {
+test('monthly diary average starts at the first recorded month of each selected year', async () => {
   const { db, raw } = await database();
   const currentYear = Number(today.slice(0, 4));
   assert.equal((await getDiaryStats(db, currentYear)).monthlyAverage, 0);
@@ -331,11 +331,16 @@ test('monthly diary average follows the selected year and excludes future months
     `${currentYear - 1}-01-03`,
   ])
     await saveDiary(db, { date, emotion: 0, text: '월평균 집계', files: [] });
-  assert.equal(
-    (await getDiaryStats(db, currentYear)).monthlyAverage,
-    1 / Number(today.slice(5, 7)),
-  );
+  assert.equal((await getDiaryStats(db, currentYear)).monthlyAverage, 1);
   assert.equal((await getDiaryStats(db, currentYear - 1)).monthlyAverage, 3 / 12);
+  const pastYear = currentYear - 2;
+  for (const date of [`${pastYear}-08-01`, `${pastYear}-10-01`, `${pastYear}-10-02`]) {
+    await saveDiary(db, { date, emotion: 0, text: '빈 달 포함', files: [] });
+  }
+  assert.equal((await getDiaryStats(db, pastYear)).monthlyAverage, 3 / 5);
+  await saveDiary(db, { date: `${pastYear}-03-01`, emotion: 0, text: '이전 기록 추가', files: [] });
+  assert.equal((await getDiaryStats(db, pastYear)).monthlyAverage, 4 / 10);
+  assert.equal((await getDiaryStats(db, currentYear - 3)).monthlyAverage, 0);
   raw.close();
 });
 

@@ -109,6 +109,7 @@ test('every catalog entry resolves with supplied variables in both languages wit
           time: '9:00',
           date: '2026-10-28 09:00',
           period: 'AM',
+          end: 'December',
         });
         assert(result.trim().length > 0, `${locale}:${namespace}.${key}`);
         assert(!/\[missing|%\{[^}]+\}/.test(result), `${locale}:${namespace}.${key}: ${result}`);

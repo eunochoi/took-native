@@ -15,6 +15,7 @@ export function DiaryAnalysis({
   year: number;
 }) {
   const { t } = useI18n();
+  const currentYear = year === new Date().getFullYear();
   const { rem } = useAppTheme();
 
   const max = Math.max(...stats.monthly, 1);
@@ -52,7 +53,11 @@ export function DiaryAnalysis({
       </View>
       <View className="gap-2">
         <InfoNotice>{t('stats.streakNotice')}</InfoNotice>
-        <InfoNotice>{t('stats.averageNotice')}</InfoNotice>
+        <InfoNotice numberOfLines={0} adjustsFontSizeToFit={false}>
+          {t('stats.averageNotice', {
+            end: t(currentYear ? 'stats.averageCurrentMonth' : 'stats.averageDecember'),
+          })}
+        </InfoNotice>
       </View>
     </View>
   );

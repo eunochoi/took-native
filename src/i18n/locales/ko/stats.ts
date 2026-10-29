@@ -5,7 +5,10 @@ export const statsKo = {
   monthlyAverage: '월평균 일기',
   daysUnit: '일',
   streakNotice: '연속·최고 기록은 전체 기간 기준이에요.',
-  averageNotice: '월평균은 선택 연도 기준, 올해는 현재 월까지예요.',
+  averageNotice:
+    '월평균: 해당 연도 첫 기록 월부터 %{end}까지 계산해요. 기록 없는 달·진행 중인 달도 1개월로 포함해요.',
+  averageCurrentMonth: '이번 달',
+  averageDecember: '12월',
   emotionTitle: '감정 기록',
   all: '전체',
   firstHalf: '전반기',
