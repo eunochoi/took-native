@@ -1,7 +1,7 @@
-import { useI18n } from '../../i18n/react';
 import { Pressable, View } from 'react-native';
 import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
+import { useI18n } from '../../i18n/react';
 import { useModalNavigation } from '../../navigation/ModalNavigationProvider';
 import { useAppTheme } from '../../theme/AppThemeProvider';
 
@@ -19,7 +19,7 @@ export function HomeAnalysisCard({ today }: { today: string }) {
       }
       className="overflow-hidden rounded-2xl border border-theme-accent-border bg-theme-accent-soft active:opacity-70 ios:curve-continuous"
     >
-      <View className="flex-row items-center gap-2 px-4 py-5">
+      <View className="flex-row items-center gap-2 px-4 py-4">
         <AppIcon
           name="statistics"
           size={appRem * 2}

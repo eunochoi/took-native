@@ -194,10 +194,10 @@ test('home today items retain separate navigation and loading states', () => {
     assert.equal(actions[1].props.disabled, undefined);
     if (result.isPending) {
       assert(
-        nodes(pending).some((node) => node.props.accessibilityLabel === '오늘의 일기 확인 중'),
+        nodes(pending).some((node) => node.props.accessibilityLabel === '일기 확인 중'),
       );
       assert(
-        nodes(pending).some((node) => node.props.accessibilityLabel === '오늘의 습관 확인 중'),
+        nodes(pending).some((node) => node.props.accessibilityLabel === '습관 확인 중'),
       );
     } else {
       assert(text(actions[0]).includes('불러오기 실패'));
@@ -627,15 +627,19 @@ test('home sober card selects by current record using all restarts', () => {
   assert.deepEqual(routes, ['/sober/8']);
 });
 
-test('home shows three fixed items without a card heading, date or horizontal scrolling', () => {
+test('home uses three equal-width columns with compact summary titles', () => {
   const tree = render('HomeTodaySection', { today: '2026-10-05' });
   assert(!nodes(tree).some((node) => node.type === 'ScrollView'));
   assert(!text(tree).includes('오늘의 조각'));
-  assert(!text(tree).includes('10월 5일'));
+  assert.equal(tree.props.children.length, 3);
+  for (const column of tree.props.children) {
+    assert(column.props.className.includes('w-1/3'));
+    assert(!column.props.className.includes('flex-1'));
+  }
   const buttons = nodes(tree).filter((node) => node.type === 'Pressable');
   assert.deepEqual(
     buttons.map((node) => text(node.props.children[0])),
-    ['오늘의 일기', '오늘의 습관', '거리두기'],
+    ['일기', '습관', '거리두기'],
   );
 });
 
@@ -751,7 +755,7 @@ test('English home cards translate emotions, counts and empty states while prese
     results: { diary: { data: { id: 42, emotion: 1 } } },
   });
   const buttons = nodes(tree).filter((node) => node.type === 'Pressable');
-  assert(text(buttons[0]).includes("Today's diary"));
+  assert(text(buttons[0]).includes('Diary'));
   assert(text(buttons[0]).includes('Joyful · Logged'));
   assert(text(buttons[1]).includes('Add a habit'));
   assert(text(buttons[2]).includes('No record'));
@@ -762,7 +766,7 @@ test('English home cards translate emotions, counts and empty states while prese
     language: 'en',
     results: { diary: { isPending: true } },
   });
-  assert(nodes(pending).some((node) => node.props.accessibilityLabel === "Checking Today's diary"));
+  assert(nodes(pending).some((node) => node.props.accessibilityLabel === 'Checking Diary'));
 });
 
 test('English Cut Back card translates the day count and preserves a user-authored Korean name', () => {
