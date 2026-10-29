@@ -14,7 +14,7 @@ export function EmptyState({ title, description }: { title: string; description:
         accessible={false}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
-        className="w-36 max-w-full shrink-0"
+        className="mt-20 w-36 max-w-full shrink-0"
         style={{ height: 'auto', aspectRatio: standingCatSize.width / standingCatSize.height }}
       />
       <View className="gap-1.5">
