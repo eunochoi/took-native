@@ -1,4 +1,3 @@
-import { useI18n } from '../../../src/i18n/react';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -13,6 +12,7 @@ import type { SoberRestart } from '../../../src/db/types';
 import { isDate } from '../../../src/domain/date';
 import { getSoberAchievements, getSoberSummary } from '../../../src/domain/sober';
 import { useCurrentMinute } from '../../../src/hooks/useCurrentMinute';
+import { useI18n } from '../../../src/i18n/react';
 import { useModalNavigation } from '../../../src/navigation/ModalNavigationProvider';
 import { soberQueries } from '../../../src/queries';
 import { SoberLongRecords } from '../../../src/screens/sober/SoberLongRecords';
@@ -78,25 +78,30 @@ export default function SoberDetail() {
             iconKey={sober.icon_key}
             iconColor={sober.icon_color}
           />
-          <SoberStatisticsSummary summary={summary} initialStartedAt={sober.initial_started_at} />
-          <View className="w-full gap-3">
-            <Button
-              labelWeight="normal"
-              className="w-full"
-              label={t('sober.restart')}
-              onPress={() =>
-                openModal({ pathname: '/sober/[id]/restart/new', params: { id: String(soberId) } })
-              }
-            />
-            <Button
-              subtle
-              labelWeight="normal"
-              className="w-full"
-              label={t('sober.viewNotes')}
-              onPress={() =>
-                openModal({ pathname: '/sober/[id]/memos', params: { id: String(soberId) } })
-              }
-            />
+          <View className="w-full gap-4">
+            <SoberStatisticsSummary summary={summary} initialStartedAt={sober.initial_started_at} />
+            <View className="w-full flex-row gap-3">
+              <Button
+                labelWeight="normal"
+                className="min-w-0 flex-1"
+                label={t('sober.restart')}
+                onPress={() =>
+                  openModal({
+                    pathname: '/sober/[id]/restart/new',
+                    params: { id: String(soberId) },
+                  })
+                }
+              />
+              <Button
+                subtle
+                labelWeight="normal"
+                className="min-w-0 flex-1"
+                label={t('sober.viewNotes')}
+                onPress={() =>
+                  openModal({ pathname: '/sober/[id]/memos', params: { id: String(soberId) } })
+                }
+              />
+            </View>
           </View>
         </View>
         {!!sober.description && (
