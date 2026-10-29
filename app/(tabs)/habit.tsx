@@ -134,7 +134,6 @@ export default function HabitList() {
     <HabitListSkeleton />
   ) : (
     <EmptyState
-      icon={<AppIcon name="habit" size={appRem * 1.875} color={colors.accent} />}
       title={hasFilter ? t('habit.filteredEmpty') : t('habit.empty')}
       description={hasFilter ? t('habit.filterHint') : t('habit.emptyHint')}
     />

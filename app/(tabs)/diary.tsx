@@ -14,7 +14,6 @@ import { ActivityIndicator, FlatList, View } from 'react-native';
 import { PageTopSection } from '../../src/components/PageTopSection';
 import { QueryError } from '../../src/components/QueryError';
 import { useNotice } from '../../src/components/NoticeProvider';
-import { AppIcon } from '../../src/components/AppIcon';
 import { ColorView } from '../../src/components/ColorTransition';
 import { EmptyState } from '../../src/components/EmptyState';
 import { RecordSortPicker } from '../../src/components/RecordSortPicker';
@@ -46,7 +45,7 @@ export default function DiaryList() {
   const { t, language } = useI18n();
 
   const { showNotice } = useNotice();
-  const { colors, rem: appRem } = useAppTheme();
+  const { colors } = useAppTheme();
   const db = useSQLiteContext();
   const fade = useScrollFade();
   const today = useToday();
@@ -89,7 +88,6 @@ export default function DiaryList() {
     <DiaryListSkeleton />
   ) : (
     <EmptyState
-      icon={<AppIcon name="diary" size={appRem * 1.875} color={colors.accent} />}
       title={hasFilter ? t('diary.filteredEmpty') : t('diary.empty')}
       description={hasFilter ? t('diary.filteredHint') : t('diary.emptyHint')}
     />

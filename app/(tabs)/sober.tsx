@@ -195,7 +195,6 @@ export default function SoberList() {
                 </View>
               ) : (
                 <EmptyState
-                  icon={<AppIcon name="sober" size={appRem * 1.875} color={colors.accent} />}
                   title={hasFilter ? t('sober.filteredEmpty') : t('sober.empty')}
                   description={hasFilter ? t('habit.filterHint') : t('sober.emptyHint')}
                 />
