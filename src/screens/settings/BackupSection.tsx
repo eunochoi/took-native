@@ -1,5 +1,4 @@
 import { ActivityIndicator, Pressable, View } from 'react-native';
-import { AppIcon } from '../../components/AppIcon';
 import { Text } from '../../components/Text';
 import { useI18n } from '../../i18n/react';
 import { useAppTheme } from '../../theme/AppThemeProvider';
@@ -15,7 +14,7 @@ export function BackupSection({
   onExport: () => void;
   onRestore: () => void;
 }) {
-  const { colors, iconSizes } = useAppTheme();
+  const { colors } = useAppTheme();
   const { t } = useI18n();
   return (
     <View className="gap-3">
@@ -36,24 +35,18 @@ export function BackupSection({
               onPress={action === 'export' ? onExport : onRestore}
               className={`min-h-16 flex-row items-center gap-4 p-4 active:opacity-70 border-t border-theme-border/50 ${activity !== null ? 'opacity-40' : 'opacity-100'}`}
             >
-              <View className="shrink-0 items-center" style={{ width: iconSizes.lg }}>
-                {activity === action ? (
-                  <ActivityIndicator color={colors.accent} />
-                ) : (
-                  <AppIcon
-                    name={action === 'export' ? 'save-alt' : 'undo'}
-                    size={iconSizes.lg}
-                    color={colors.accent}
-                  />
-                )}
-              </View>
               <View className="min-w-0 flex-1 gap-1">
                 <Text className="text-base font-semibold">
                   {t(
                     action === 'export' ? 'settings.backupMenuTitle' : 'settings.restoreMenuTitle',
                   )}
                 </Text>
-                <Text className="text-sm text-theme-text-secondary">
+                <Text
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.8}
+                  className="text-sm text-theme-text-secondary"
+                >
                   {t(
                     action === 'export'
                       ? 'settings.backupMenuDescription'
@@ -61,7 +54,7 @@ export function BackupSection({
                   )}
                 </Text>
               </View>
-              <AppIcon name="chevron-right" size={iconSizes.md} color={colors.textTertiary} />
+              {activity === action && <ActivityIndicator color={colors.accent} />}
             </Pressable>
           ))}
         </View>

@@ -18,7 +18,7 @@ export const settingsKo = {
   autoBackup: '자동 백업',
   autoBackupPolicy:
     '기록 저장 후 1초 뒤, 또는 앱을 열거나 돌아온 뒤 30초가 지나면 백업을 확인해요. 하루 한 번 백업하며, 최근 백업에 성공한 날짜 3개의 파일을 보관해요. 앱을 사용하지 않는 동안에는 백업이 지연될 수 있어요.',
-  autoBackupAndroid: '선택한 기기 폴더 · bloolog',
+  autoBackupAndroid: '기기 · bloolog',
   autoBackupICloud: 'iCloud Drive · BlooLog',
   autoBackupOn: '자동 백업 켜짐',
   autoBackupOff: '자동 백업 꺼짐',
