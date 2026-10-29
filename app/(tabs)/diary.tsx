@@ -143,16 +143,16 @@ export default function DiaryList() {
                     [
                       year === null
                         ? null
-                        : year === Number(today.slice(0, 4))
+                        : language === 'ko' && year === Number(today.slice(0, 4))
                           ? t('diary.thisYear')
                           : t('diary.shortYear', { value: String(year % 100).padStart(2, '0') }),
                       selectionSummary(
-                        seasons.map((season) => t(`diary.${season}`)),
+                        seasons.map((season) => t(`diary.${season}Short`)),
                         4,
                         '',
                       ) || null,
                       selectionSummary(
-                        emotionGroups.map((group) => t(`diary.${group}`)),
+                        emotionGroups.map((group) => t(`diary.${group}Short`)),
                         3,
                         '',
                       ) || null,

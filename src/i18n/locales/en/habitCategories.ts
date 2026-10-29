@@ -1,10 +1,10 @@
 export const habitCategoriesEn = {
   basic: 'Basics',
   basicDescription: 'Any goal is welcome.\nChoose an icon that fits.',
-  care: 'Small care',
+  care: 'Self-care',
   careDescription: 'On days when caring for yourself feels hard,\nstart with something small.',
   daily: 'Daily life',
-  dailyDescription: 'Tidying one corner can be\na first step in caring for your day.',
+  dailyDescription: 'Tidying one small space can make\nyour day feel a little calmer.',
   movement: 'Movement',
   movementDescription: 'Even a little movement\nis time spent caring for yourself.',
   connection: 'Mind and connection',

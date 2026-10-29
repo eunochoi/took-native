@@ -1,10 +1,10 @@
 export const notificationsEn = {
   diaryTitle: 'Diary reminder',
-  diaryBody: 'Leave today’s feelings in your diary.',
+  diaryBody: 'Capture today’s emotions in your diary.',
   habitTitle: 'Habit reminder',
-  habitBody: 'Practice today’s habits and record your progress.',
+  habitBody: 'Take a moment for your habits today.',
   soberTitle: 'Cut Back reminder',
-  soberBody: 'Check your ongoing Cut Back progress.',
+  soberBody: 'Check in on your Cut Back progress.',
   channelName: 'Diary, Habit and Cut Back reminders',
   syncFailed: 'Could not schedule reminders',
   syncRetry: 'Save your reminder times again in Settings.',

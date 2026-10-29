@@ -105,7 +105,7 @@ export const soberKo = {
   minimumPeriodHint: '현재 기록이 선택한 기간 이상인 항목만 보여요.',
   filterSummary: '거리두기 필터, %{title}, 현재 기록 %{value}',
   maxItems: '거리두기는 최대 %{count}개까지 만들 수 있어요.',
-  achievement: '%{count}일 달성!',
+  achievement: { other: '%{count}일 달성!' },
   monthLabel: '%{value} 거리두기 기록 달력',
   itemInfo: '%{value} 거리두기 정보',
   itemSummary: '%{title}, %{value}, 목표 %{setting}',
@@ -114,7 +114,7 @@ export const soberKo = {
   deleteWarning:
     '‘%{value}’의 거리두기와 모든 다시 시작 기록이 삭제돼요. 삭제한 뒤에는 되돌릴 수 없어요.',
   selectedGoal: '선택한 목표: %{value}',
-  selectedDays: '선택한 목표: %{count}일',
+  selectedDays: { other: '선택한 목표: %{count}일' },
   goalRange: '1~%{count}일로 입력해주세요.',
   notesName: '%{value} 메모',
   notesSortLabel: '메모 기록 정렬, %{value}',

@@ -151,7 +151,9 @@ export function DiaryForm({
       titleAction={
         id !== undefined || allowDateChange
           ? {
-              accessibilityLabel: t('diary.dateChoice', { title }),
+              accessibilityLabel: date
+                ? t('diary.dateChoice', { title })
+                : t('diary.chooseDate'),
               disabled: busy || dragging || picker !== null,
               onPress: () => {
                 Keyboard.dismiss();

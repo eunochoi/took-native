@@ -425,7 +425,7 @@ test('home greeting and insights title follow language changes without changing 
     .flat()
     .join('');
   assert(labels.includes('Every kind of day'));
-  assert(labels.includes('A page in my story'));
+  assert(labels.includes('Belongs in my story'));
   assert(!/[가-힣]/.test(labels));
   for (const button of view.nodes.filter((node) => node.type === 'Pressable'))
     button.props.onPress();
@@ -437,6 +437,6 @@ test('home greeting and insights title follow language changes without changing 
   stats.setLanguage('en');
   assert.equal(
     stats.render().nodes.find((node) => node.type === 'BottomSheetPage').props.title,
-    'Record insights',
+    'My insights',
   );
 });

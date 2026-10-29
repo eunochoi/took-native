@@ -741,3 +741,35 @@ test('iOS reminders switch language without calling Android channel APIs', async
   assert.equal(h.scheduled.get('took-diaryReminderTime').content.title, 'Diary reminder');
   assert.equal(h.scheduled.get('took-diaryReminderTime').trigger.hour, 8);
 });
+
+test('legacy Korean reservations without reminder metadata are migrated in place while restored disabled choices stay off', async () => {
+  const h = harness();
+  const restored = { ...DEFAULT_SETTINGS, diaryReminderTime: '08:15', soberReminderTime: '23:59' };
+  for (const [key, url, title, body] of [
+    ['diaryReminderTime', '/diary', '일기 작성 알림', '오늘의 감정을 일기에 남겨보세요.'],
+    ['habitReminderTime', '/habit', '습관 실천 알림', '오늘의 습관을 실천하고 기록해보세요.'],
+    ['soberReminderTime', '/sober', '거리두기 확인 알림', '이어온 거리두기를 확인해보세요.'],
+  ])
+    h.scheduled.set(`took-${key}`, {
+      identifier: `took-${key}`,
+      content: { title, body, data: { url } },
+      trigger: { hour: 21, minute: 0 },
+    });
+  h.scheduled.set('other', { identifier: 'other' });
+  h.setLanguage('en');
+  await h.service.syncReminders(restored);
+  assert.deepEqual([...h.scheduled.keys()].sort(), [
+    'other',
+    'took-diaryReminderTime',
+    'took-soberReminderTime',
+  ]);
+  assert.equal(h.scheduled.get('took-diaryReminderTime').trigger.hour, 8);
+  assert.equal(h.scheduled.get('took-diaryReminderTime').trigger.minute, 15);
+  assert.equal(h.scheduled.get('took-soberReminderTime').trigger.hour, 23);
+  assert.equal(h.scheduled.get('took-soberReminderTime').content.data.reminderTime, '23:59');
+  assert.equal(h.scheduled.get('took-diaryReminderTime').content.title, 'Diary reminder');
+  assert(!h.events.includes('permission'));
+  h.events.length = 0;
+  await h.service.syncReminders(restored);
+  assert.deepEqual(h.events, []);
+});

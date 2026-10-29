@@ -37,11 +37,11 @@ function load(file: string, dependencies: Record<string, unknown>) {
 function harness(values = new Map<string, string>(), platform = 'android') {
   let language: 'ko' | 'en' = 'ko';
   let failRead = false;
-  let persist: () => Promise<void> = async () => { };
-  let updateSettings: () => Promise<void> = async () => { };
+  let persist: () => Promise<void> = async () => {};
+  let updateSettings: () => Promise<void> = async () => {};
   const writes: string[] = [];
   const slots: any[] = [];
-  const bodyMotion = { panGesture: { kind: 'sheetPan' }, scrollRef: {}, onScroll: () => { } };
+  const bodyMotion = { panGesture: { kind: 'sheetPan' }, scrollRef: {}, onScroll: () => {} };
   const gesture = () => {
     const result: any = { handlers: {}, config: {} };
     for (const key of [
@@ -117,10 +117,12 @@ function harness(values = new Map<string, string>(), platform = 'android') {
     'react/jsx-runtime': { jsx, jsxs: jsx },
     'react-native': {
       Platform: { OS: platform },
-      Linking: { openURL: async (url: string) => {
-        openedUrls.push(url);
-        await openURL(url);
-      } },
+      Linking: {
+        openURL: async (url: string) => {
+          openedUrls.push(url);
+          await openURL(url);
+        },
+      },
       Pressable: 'Pressable',
       View: 'View',
       ScrollView: 'ScrollView',
@@ -157,7 +159,9 @@ function harness(values = new Map<string, string>(), platform = 'android') {
   };
   const components = load('../src/screens/onboarding/OnboardingSheet.tsx', {
     ...dependencies,
-    '../../components/NoticeProvider': { useNotice: () => ({ showNotice: (notice: any) => notices.push(notice) }) },
+    '../../components/NoticeProvider': {
+      useNotice: () => ({ showNotice: (notice: any) => notices.push(notice) }),
+    },
     './WelcomePage': { WelcomePage: 'WelcomePage' },
     './ThemePage': { ThemePage: 'ThemePage' },
     './UsagePage': { UsagePage: 'UsagePage' },
@@ -209,7 +213,9 @@ function harness(values = new Map<string, string>(), platform = 'android') {
       afterClose = undefined;
       action?.();
     },
-    setOpenURL: (fn: typeof openURL) => { openURL = fn; },
+    setOpenURL: (fn: typeof openURL) => {
+      openURL = fn;
+    },
     setPersist: (fn: typeof persist) => {
       persist = fn;
     },
@@ -327,7 +333,7 @@ test('failed completion stays on the last page and can be retried', async () => 
   assert.equal(failed.body.props.accessibilityLabel, '앱 안내, 6단계 중 6단계');
   assert(nodes(failed.footer, 'Text').some((node) => node.props.accessibilityRole === 'alert'));
   assert.equal(failed.buttons.at(-1).props.disabled, false);
-  h.setPersist(async () => { });
+  h.setPersist(async () => {});
   await failed.buttons.at(-1).props.onPress();
   assert.equal(await h.storage.hasCompletedOnboarding(), true);
   assert.equal(h.closes(), 1);
@@ -425,7 +431,7 @@ test('a failed settings save allows retry and does not complete onboarding', asy
   const failed = h.renderSheet();
   assert(nodes(failed.footer, 'Text').some((node) => node.props.accessibilityRole === 'alert'));
   assert(failed.buttons.every((button) => !button.props.disabled));
-  h.setUpdateSettings(async () => { });
+  h.setUpdateSettings(async () => {});
   await nodes(failed.body, 'ThemePage')[0].props.onChange({ themeMode: 'dark' });
   assert.equal(
     nodes(h.renderSheet().footer, 'Text').filter((node) => node.props.accessibilityRole === 'alert')
@@ -523,7 +529,7 @@ test('onboarding pages translate in both languages and keep typography across al
   )) {
     const dependencies: Record<string, unknown> = {
       '../../i18n/react': mockI18n(language),
-      react: { useState: (initial: unknown) => [initial, () => { }] },
+      react: { useState: (initial: unknown) => [initial, () => {}] },
       'react/jsx-runtime': { jsx, jsxs: jsx },
       'react-native': {
         View: 'View',
@@ -582,8 +588,8 @@ test('onboarding pages translate in both languages and keep typography across al
         imageWidth: 280,
         settings: { fontSize: { 14: 'small', 15: 'normal', 16: 'large' }[rem] },
         busy: false,
-        onChange: async () => { },
-        onOpenWeb: () => { },
+        onChange: async () => {},
+        onOpenWeb: () => {},
       });
       const texts = nodes(tree, 'Text');
       if (language === 'en') {
@@ -732,22 +738,26 @@ test('switching onboarding language preserves the current step and English compl
   assert.equal(h.closes(), 0);
   assert(
     nodes(h.renderSheet().footer, 'Text').some(
-      (node) => node.props.children === 'Could not save completion. Tap Get started again.',
+      (node) => node.props.children === 'Could not finish setup. Tap Start to try again.',
     ),
   );
-  h.setPersist(async () => { });
+  h.setPersist(async () => {});
   last = h.renderSheet();
   await last.buttons.at(-1).props.onPress();
   assert.equal(await h.storage.hasCompletedOnboarding(), true);
   assert.equal(h.closes(), 1);
 });
 
-
 test('first-run web navigation saves completion and waits until the sheet closes before opening the browser', async () => {
   for (const platform of ['ios', 'android']) {
     const h = harness(new Map(), platform);
     let finish!: () => void;
-    h.setPersist(() => new Promise<void>((resolve) => { finish = resolve; }));
+    h.setPersist(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    );
     const last = await lastPage(h);
     const web = nodes(last.body, 'BackupPage')[0].props.onOpenWeb;
     const pending = web();
@@ -770,13 +780,17 @@ test('first-run web navigation saves completion and waits until the sheet closes
 
 test('web navigation stays on onboarding if completion cannot be saved and allows retry', async () => {
   const h = harness();
-  h.setPersist(async () => { throw new Error('disk full'); });
+  h.setPersist(async () => {
+    throw new Error('disk full');
+  });
   const last = await lastPage(h);
   await nodes(last.body, 'BackupPage')[0].props.onOpenWeb();
   assert.equal(h.closes(), 0);
   assert.deepEqual(h.openedUrls, []);
   assert.equal(await h.storage.hasCompletedOnboarding(), false);
-  assert(nodes(h.renderSheet().footer, 'Text').some((node) => node.props.accessibilityRole === 'alert'));
+  assert(
+    nodes(h.renderSheet().footer, 'Text').some((node) => node.props.accessibilityRole === 'alert'),
+  );
   h.setPersist(async () => {});
   await nodes(h.renderSheet().body, 'BackupPage')[0].props.onOpenWeb();
   assert.equal(h.closes(), 1);
@@ -786,7 +800,9 @@ test('web navigation stays on onboarding if completion cannot be saved and allow
 
 test('replayed onboarding closes before web navigation without changing completion and reports browser failure outside the sheet', async () => {
   const h = harness();
-  h.setOpenURL(async () => { throw new Error('browser unavailable'); });
+  h.setOpenURL(async () => {
+    throw new Error('browser unavailable');
+  });
   const last = await lastPage(h, false);
   const web = nodes(last.body, 'BackupPage')[0].props.onOpenWeb;
   await web();

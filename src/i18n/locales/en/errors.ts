@@ -52,7 +52,7 @@ export const errorsEn = {
   backupPathsInvalid: 'The backup contains invalid paths or duplicate files.',
   backupTooManyFiles: 'The backup contains too many files.',
   backupDatabaseLimit: 'The backup exceeds the size limit (1 GB total, 64 MB database).',
-  backupDatabaseMissing: 'Could not find the database to back up.',
+  backupDatabaseMissing: 'Could not find the database for the backup.',
   backupSizeLimit: 'The backup exceeds the size limit.',
   backupCompressionUnsupported: 'This ZIP compression method is not supported.',
   backupRestoreSizeLimit: 'The backup exceeds the size limit.',

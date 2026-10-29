@@ -439,7 +439,7 @@ test('English date picker keeps duplicate and future-date guards and applies the
     dates: { '2026-10-14': { data: { id: 2 } } },
   });
   ui.setLanguage('en');
-  assert.equal(ui.render().props.title, 'Choose diary date');
+  assert.equal(ui.render().props.title, 'Choose a diary date');
   assert.equal(ui.render().props.footer.props.disabled, true);
   assert(
     nodes(ui.render()).some(

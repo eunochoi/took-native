@@ -78,6 +78,45 @@ test('system language uses Korean or English only, while manual choice takes pri
   assert.equal(resolveLocale('system', 'fr-FR').formatLocale, 'en-US');
 });
 
+test('non-Korean scripts use English UI and date locale while explicit choices take priority', () => {
+  for (const tag of [
+    'zh-Hans-CN',
+    'zh-Hant-TW',
+    'ar-SA',
+    'he-IL',
+    'hi-IN',
+    'th-TH',
+    'ru-RU',
+    'es-MX',
+    'pt-BR',
+    'vi-VN',
+    'id-ID',
+    'tr-TR',
+    'kok-IN',
+    'und',
+    '',
+    null,
+  ]) {
+    assert.deepEqual(resolveLocale('system', tag), { language: 'en', formatLocale: 'en-US' });
+    const device = localeHarness(true, 'ko-KR');
+    const stop = device.subscribeLocale(() => {});
+    device.setDevice(tag);
+    device.foreground();
+    assert.deepEqual(device.getLocale(), { language: 'en', formatLocale: 'en-US' });
+    assert.equal(t('common.save'), 'Save');
+    device.setLanguagePreference('ko');
+    assert.equal(t('common.save'), '저장');
+    device.setLanguagePreference('system');
+    assert.equal(t('common.save'), 'Save');
+    stop();
+    assert.equal(resolveLocale('ko', tag).language, 'ko');
+    assert.equal(resolveLocale('en', tag).language, 'en');
+  }
+  for (const tag of ['ko-KR', 'ko-KP', 'ko-Kore-KR', 'KO_kr']) {
+    assert.deepEqual(resolveLocale('system', tag), { language: 'ko', formatLocale: 'ko-KR' });
+  }
+});
+
 test('legacy settings default to system and invalid manual language is rejected', () => {
   const { language: _oldLanguage, ...legacy } = DEFAULT_SETTINGS;
   assert.equal(parseSettings(legacy).language, 'system');

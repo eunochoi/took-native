@@ -869,8 +869,21 @@ test('monthly toolbar starts at zero and distinguishes query errors from empty r
       .filter((node) => node.type === 'Text')
       .map((node) => node.props.children);
   assert.deepEqual(values(null), ['0개', '0일', '0일', '0일']);
-  assert.deepEqual(values({ low: 2, medium: 3, high: 4 }), ['0개', '2일', '3일', '4일']);
+  assert.deepEqual(values({ low: 2, medium: 3, high: 4 }), ['0개', '4일', '3일', '2일']);
   assert.deepEqual(values(null, true), ['0개', '–', '–', '–']);
+  const bands = nodes(
+    CalendarRecordCounts({ diaryCount: 0, counts: { high: 4, medium: 3, low: 2 } }),
+  ).filter(
+    (node) => node.props.accessible && node.props.accessibilityLabel?.startsWith('습관 완료율'),
+  );
+  assert.deepEqual(
+    bands.map((node) => node.props.accessibilityLabel),
+    [
+      '습관 완료율 75% 이상, 4일',
+      '습관 완료율 25% 이상 75% 미만, 3일',
+      '습관 완료율 25% 미만, 2일',
+    ],
+  );
 });
 
 test('irregular monthly summary shows record count and rounded interval without achievement stats', () => {

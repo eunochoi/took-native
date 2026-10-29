@@ -4,7 +4,7 @@ export const homeKo = {
   emotionTag: '감정기록',
   habitTag: '습관관리',
   soberTag: '거리두기',
-  emotionLink: '감정기록 달력로 이동',
+  emotionLink: '감정기록 달력으로 이동',
   habitLink: '습관관리 페이지로 이동',
   soberLink: '거리두기 페이지로 이동',
   analysisLink: '기록 분석 보기, 이번 달 감정과 습관, 거리두기 기록 분석',

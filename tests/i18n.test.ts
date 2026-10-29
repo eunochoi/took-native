@@ -69,6 +69,31 @@ test('count substitution and pluralization respect each language including zero 
   }
 });
 
+test('habit and Cut Back counts use singular only for one and preserve Korean counters', () => {
+  for (const count of [0, 1, 2, 1.5]) {
+    const days = count === 1 ? 'day' : 'days';
+    const stars = count === 1 ? 'star' : 'stars';
+    assert.equal(t('habit.daysUnit', { locale: 'en', count }), days);
+    assert.equal(t('habit.timesUnit', { locale: 'en', count }), count === 1 ? 'time' : 'times');
+    assert.equal(t('habit.daysAgo', { locale: 'en', count }), `${count} ${days} ago`);
+    for (const key of ['habit.stars', 'habit.starCount'] as const) {
+      assert.equal(t(key, { locale: 'en', count }), `${count} ${stars}`);
+    }
+    assert.equal(t('sober.achievement', { locale: 'en', count }), `${count} ${days} achieved!`);
+    assert.equal(
+      t('sober.selectedDays', { locale: 'en', count }),
+      `Selected goal: ${count} ${days}`,
+    );
+    assert.equal(t('habit.daysUnit', { locale: 'ko', count }), '일');
+    assert.equal(t('habit.timesUnit', { locale: 'ko', count }), '회');
+    assert.equal(t('habit.daysAgo', { locale: 'ko', count }), `${count}일 전`);
+    assert.equal(t('habit.stars', { locale: 'ko', count }), `별 ${count}개`);
+    assert.equal(t('habit.starCount', { locale: 'ko', count }), `별표 ${count}개`);
+    assert.equal(t('sober.achievement', { locale: 'ko', count }), `${count}일 달성!`);
+    assert.equal(t('sober.selectedDays', { locale: 'ko', count }), `선택한 목표: ${count}일`);
+  }
+});
+
 test('every catalog entry resolves with supplied variables in both languages without mutating resources', () => {
   const original = JSON.stringify({ en, ko });
   for (const locale of ['en', 'ko'] as const) {
@@ -82,6 +107,7 @@ test('every catalog entry resolves with supplied variables in both languages wit
           color: 'Blue',
           title: 'Diary',
           time: '9:00',
+          date: '2026-10-28 09:00',
           period: 'AM',
         });
         assert(result.trim().length > 0, `${locale}:${namespace}.${key}`);

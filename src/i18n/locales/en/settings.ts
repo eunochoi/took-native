@@ -1,7 +1,7 @@
 export const settingsEn = {
   backupShareTitle: 'Share backup to Google Drive or another app',
   title: 'Settings',
-  hashtags: '#Customize #Preferences',
+  hashtags: '#MyWay #Style',
   about: 'About',
   privacy: 'Privacy policy',
   webOpen: 'Open web service',

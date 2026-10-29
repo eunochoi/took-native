@@ -72,7 +72,21 @@ test('every display style supports supported year boundaries, leap days and Engl
     'shortDateTime',
   ] as const;
   for (const date of ['1900-01-01', '2024-02-29', '2026-12-31', '2100-12-31']) {
-    for (const device of ['ko-KR', 'en-US', 'en-GB', 'ja-JP', 'fr-FR']) {
+    for (const device of [
+      'ko-KR',
+      'en-US',
+      'en-GB',
+      'ja-JP',
+      'fr-FR',
+      'zh-Hans-CN',
+      'ar-SA',
+      'he-IL',
+      'hi-IN',
+      'th-TH',
+      'ru-RU',
+      'es-MX',
+      'pt-BR',
+    ]) {
       const locale = resolveLocale('system', device);
       for (const style of styles) {
         const result = formatDisplayDate(date, locale.formatLocale, style);

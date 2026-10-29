@@ -261,6 +261,6 @@ test('English sort choices and summaries preserve custom-order priority exclusio
     accessibilityLabel: 'Sort records',
     onPress: () => {},
   });
-  assert.equal(toolbar.props.label, 'Priority · Short streak · Oldest');
+  assert.equal(toolbar.props.label, 'Top · Short · Oldest');
   assert(!/[가-힣]/.test(toolbar.props.accessibilityLabel));
 });

@@ -59,13 +59,13 @@ test('privacy policy switches all ten sections without remounting and preserves 
     'does not use external SDKs',
     'without deleting the original photo',
     'does not automatically upload',
-    'all files belong to the same set',
-    'current records are not replaced',
-    'not separately encrypted',
+    'one .bloo file',
+    'integrity checks precede replacement',
+    'Forgotten passwords cannot be recovered',
     'no separate button to delete all data',
     'Android automatic cloud backup is disabled',
     'eooooostudio@gmail.com',
-    'October 4, 2026',
+    'October 28, 2026',
   ])
     assert(content.includes(statement), statement);
   language = 'ko';

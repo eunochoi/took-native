@@ -36,13 +36,13 @@ export function HabitYearStatistics({
             label: t('habit.completionCount'),
             icon: 'check',
             value: yearly.completed,
-            unit: t('habit.timesUnit'),
+            unit: t('habit.timesUnit', { count: yearly.completed }),
           },
           {
             label: t('habit.missedCount'),
             icon: 'close',
             value: yearly.missed,
-            unit: t('habit.timesUnit'),
+            unit: t('habit.timesUnit', { count: yearly.missed }),
           },
           { label: t('habit.rate'), icon: 'habit-rate', value: yearly.rate ?? '—', unit: '%' },
         ]}

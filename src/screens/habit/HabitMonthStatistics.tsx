@@ -52,7 +52,7 @@ export function HabitMonthStatistics({
                   label: t('habit.recordCount'),
                   icon: 'check',
                   value: summary.completed,
-                  unit: t('habit.timesUnit'),
+                  unit: t('habit.timesUnit', { count: summary.completed }),
                 },
                 {
                   label: t('habit.averageInterval'),
@@ -61,7 +61,10 @@ export function HabitMonthStatistics({
                     summary.averageInterval === null
                       ? '—'
                       : Number(summary.averageInterval.toFixed(1)),
-                  unit: unavailable || summary.averageInterval === null ? '' : t('habit.daysUnit'),
+                  unit:
+                    unavailable || summary.averageInterval === null
+                      ? ''
+                      : t('habit.daysUnit', { count: Number(summary.averageInterval.toFixed(1)) }),
                 },
               ]
             : [
@@ -69,13 +72,13 @@ export function HabitMonthStatistics({
                   label: t('habit.completionCount'),
                   icon: 'check',
                   value: summary.completed,
-                  unit: t('habit.timesUnit'),
+                  unit: t('habit.timesUnit', { count: summary.completed }),
                 },
                 {
                   label: t('habit.missedCount'),
                   icon: 'close',
                   value: summary.missed,
-                  unit: t('habit.timesUnit'),
+                  unit: t('habit.timesUnit', { count: summary.missed }),
                 },
                 {
                   label: t('habit.rate'),
