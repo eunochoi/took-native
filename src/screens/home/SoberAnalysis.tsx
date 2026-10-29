@@ -135,7 +135,9 @@ export function SoberAnalysis({ sobers, restarts }: { sobers: Sober[]; restarts:
           </Text>
         )}
       </View>
-      <InfoNotice>{t('stats.soberNotice')}</InfoNotice>
+      <InfoNotice numberOfLines={0} adjustsFontSizeToFit={false}>
+        {t('stats.soberNotice')}
+      </InfoNotice>
     </View>
   );
 }

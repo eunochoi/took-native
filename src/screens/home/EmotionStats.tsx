@@ -141,7 +141,7 @@ export function EmotionStats({
 
       <View className="gap-2 px-[5%]">
         {groups.map((group) => (
-          <InfoNotice key={group.key}>
+          <InfoNotice key={group.key} numberOfLines={0} adjustsFontSizeToFit={false}>
             {`${group.label}: ${t(`diary.${group.key}Names`).replace(/\n/g, ', ')}`}
           </InfoNotice>
         ))}

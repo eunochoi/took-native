@@ -52,7 +52,9 @@ export function DiaryAnalysis({
         ))}
       </View>
       <View className="gap-2">
-        <InfoNotice>{t('stats.streakNotice')}</InfoNotice>
+        <InfoNotice numberOfLines={0} adjustsFontSizeToFit={false}>
+          {t('stats.streakNotice')}
+        </InfoNotice>
         <InfoNotice numberOfLines={0} adjustsFontSizeToFit={false}>
           {t('stats.averageNotice', {
             end: t(currentYear ? 'stats.averageCurrentMonth' : 'stats.averageDecember'),

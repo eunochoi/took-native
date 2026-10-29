@@ -28,7 +28,7 @@ export function InfoNotice({
         numberOfLines={numberOfLines}
         adjustsFontSizeToFit={adjustsFontSizeToFit}
         className={twMerge(
-          'flex-1 text-xs leading-5 text-theme-accent-deep tracking-tighter',
+          'flex-1 text-sm leading-5 text-theme-accent-deep tracking-tighter',
           textClassName,
         )}
       >

@@ -618,7 +618,7 @@ test('onboarding pages translate in both languages and keep typography across al
     assert.match(nodes(Button({ label: '기존 버튼' }), 'Text')[0].props.className, /text-base/);
     const { InfoNotice } = dependencies['../../components/InfoNotice'] as any;
     const notice = nodes(InfoNotice({ children: '기존 안내' }), 'Text')[0];
-    assert.match(notice.props.className, /text-xs leading-5/);
+    assert.match(notice.props.className, /text-sm leading-5/);
     assert.equal(notice.props.adjustsFontSizeToFit, true);
   }
 });

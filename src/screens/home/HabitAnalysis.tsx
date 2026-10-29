@@ -92,7 +92,9 @@ export function HabitAnalysis({
           </Text>
         )}
       </View>
-      <InfoNotice>{t('stats.freeNotice')}</InfoNotice>
+      <InfoNotice numberOfLines={0} adjustsFontSizeToFit={false}>
+        {t('stats.freeNotice')}
+      </InfoNotice>
     </View>
   );
 }

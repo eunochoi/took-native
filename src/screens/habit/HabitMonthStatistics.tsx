@@ -90,7 +90,11 @@ export function HabitMonthStatistics({
         }
         unavailable={unavailable}
       />
-      {habit.priority === 0 && <InfoNotice>{t('habit.intervalNotice')}</InfoNotice>}
+      {habit.priority === 0 && (
+        <InfoNotice numberOfLines={0} adjustsFontSizeToFit={false}>
+          {t('habit.intervalNotice')}
+        </InfoNotice>
+      )}
       <View className="px-1">
         <CalendarHeader month={month} today={today} navigation={navigation} />
         <CalendarGrid

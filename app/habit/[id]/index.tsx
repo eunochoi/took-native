@@ -66,8 +66,12 @@ export default function HabitDetail() {
               />
               {habit.priority > 0 && (
                 <View className="gap-2">
-                  <InfoNotice>{t('habit.eligibleNotice')}</InfoNotice>
-                  <InfoNotice>{t('habit.rateNotice')}</InfoNotice>
+                  <InfoNotice numberOfLines={0} adjustsFontSizeToFit={false}>
+                    {t('habit.eligibleNotice')}
+                  </InfoNotice>
+                  <InfoNotice numberOfLines={0} adjustsFontSizeToFit={false}>
+                    {t('habit.rateNotice')}
+                  </InfoNotice>
                 </View>
               )}
             </>
