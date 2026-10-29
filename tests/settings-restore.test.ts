@@ -13,7 +13,7 @@ function harness() {
   const slots: any[] = [];
   let cursor = 0;
   const effects: (() => void)[] = [];
-  let choose: () => Promise<string[] | null> = async () => ['cache/a.zip'];
+  let choose: () => Promise<string[] | null> = async () => ['cache/a.bloo'];
   let restore: () => Promise<void> = async () => {};
   let reload: () => Promise<void> = async () => {};
   let cancel: () => Promise<void> = async () => {};
@@ -35,6 +35,8 @@ function harness() {
     'ScrollEdgeFade',
     'Text',
     'BackupDestinationPicker',
+    'BackupPasswordSheet',
+    'AutomaticBackupSection',
     'AppearanceSettingsSection',
     'LanguageSettingsSection',
     'BackupSection',
@@ -60,8 +62,25 @@ function harness() {
           return { refreshSoberWidgets: () => events.push('widget') };
         if (name === 'tailwind-merge') return require('tailwind-merge');
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
+        if (name.endsWith('/backup/operation'))
+          return {
+            backupBusy: () => false,
+            subscribeBackupActivity: () => () => {},
+            withBackupOperation: (work: () => unknown) => work(),
+          };
+        if (name.endsWith('/backup/automatic'))
+          return { pauseAutomaticBackupAfterRestore: async () => {} };
+        if (name.endsWith('/backup/errors'))
+          return { backupErrorMessage: (error: Error) => error.message };
+        if (name === 'expo-file-system')
+          return {
+            File: class {
+              constructor(public uri: string) {}
+            },
+          };
         if (name === 'react')
           return {
+            useSyncExternalStore: (_subscribe: any, snapshot: any) => snapshot(),
             useRef: (value: any) => {
               const i = cursor++;
               return slots[i] ?? (slots[i] = { current: value });
@@ -90,7 +109,8 @@ function harness() {
           return {
             chooseBackup: () => choose(),
             discardBackupSelection: (uris: string[]) => discarded.push(uris),
-            restoreBackup: async (_db: any, _uris: string[]) => {
+            verifyEncryptedBackup: async () => {},
+            restoreEncryptedBackup: async (_db: any, _uris: string[]) => {
               events.push('restore');
               await restore();
             },
@@ -178,6 +198,14 @@ function harness() {
     onboarding: () => find(tree, 'OnboardingSheet'),
     backup: () => find(tree, 'BackupSection').props,
     confirm: () => find(tree, 'ConfirmModal').props,
+    password: () => find(tree, 'BackupPasswordSheet')?.props,
+    async unlock() {
+      const sheet = find(tree, 'BackupPasswordSheet')?.props;
+      if (!sheet) return;
+      await sheet.onSubmit('password123');
+      sheet.onClose();
+      render();
+    },
     notice: () => notices.at(-1),
     appearance: () => find(tree, 'AppearanceSettingsSection').props,
     language: () => find(tree, 'LanguageSettingsSection').props,
@@ -254,6 +282,9 @@ test('file selection waits for confirmation; cancel cleans cache without changin
   h.backup().onRestore();
   await tick();
   h.render();
+  assert.equal(h.confirm().visible, false);
+  assert(h.password());
+  await h.unlock();
   assert.equal(h.confirm().visible, true);
   assert.deepEqual(h.events, []);
   const onCancel = h.confirm().onCancel;
@@ -262,7 +293,7 @@ test('file selection waits for confirmation; cancel cleans cache without changin
   h.render();
   assert.equal(h.confirm().visible, false);
   assert.deepEqual(h.events, []);
-  assert.deepEqual(h.discarded, [['cache/a.zip']]);
+  assert.deepEqual(h.discarded, [['cache/a.bloo']]);
   assert.equal(h.backup().activity, null);
 });
 
@@ -278,6 +309,7 @@ test('confirmation consumes selection once, restores then refreshes; stale cance
   h.backup().onRestore();
   await tick();
   h.render();
+  await h.unlock();
   const confirm = h.confirm();
   confirm.onConfirm();
   confirm.onConfirm();
@@ -289,7 +321,7 @@ test('confirmation consumes selection once, restores then refreshes; stale cance
   await tick();
   h.render();
   assert.deepEqual(h.events, ['cancel', 'restore', 'widget', 'reload', 'reset']);
-  assert.deepEqual(h.discarded, [['cache/a.zip']]);
+  assert.deepEqual(h.discarded, [['cache/a.bloo']]);
   assert.equal(h.notice().title, '복원 완료');
   assert.equal(h.backup().activity, null);
 });
@@ -322,7 +354,7 @@ test('unmount cleans a pending selection and a late picker result without starti
   confirm();
   await tick();
   assert.deepEqual(pending.events, []);
-  assert.deepEqual(pending.discarded, [['cache/a.zip']]);
+  assert.deepEqual(pending.discarded, [['cache/a.bloo']]);
   const h = harness();
   let choose: (value: string[]) => void;
   h.setChoose(
@@ -333,10 +365,10 @@ test('unmount cleans a pending selection and a late picker result without starti
   );
   h.backup().onRestore();
   h.unmount();
-  choose!(['cache/late.zip']);
+  choose!(['cache/late.bloo']);
   await tick();
   assert.deepEqual(h.events, []);
-  assert.deepEqual(h.discarded, [['cache/late.zip']]);
+  assert.deepEqual(h.discarded, [['cache/late.bloo']]);
 });
 
 test('leaving before query cancellation completes prevents restore; failed restore and refresh both clean cache', async () => {
@@ -351,12 +383,13 @@ test('leaving before query cancellation completes prevents restore; failed resto
   h.backup().onRestore();
   await tick();
   h.render();
+  await h.unlock();
   h.confirm().onConfirm();
   h.unmount();
   finish!();
   await tick();
   assert.deepEqual(h.events, ['cancel']);
-  assert.deepEqual(h.discarded, [['cache/a.zip']]);
+  assert.deepEqual(h.discarded, [['cache/a.bloo']]);
   for (const afterRestore of [false, true]) {
     const failed = harness();
     const fail = async () => {
@@ -367,11 +400,12 @@ test('leaving before query cancellation completes prevents restore; failed resto
     failed.backup().onRestore();
     await tick();
     failed.render();
+    await failed.unlock();
     failed.confirm().onConfirm();
     await tick();
     failed.render();
     assert.equal(failed.notice().title, afterRestore ? '기록은 복원됐어요' : '복원하지 못했어요');
-    assert.deepEqual(failed.discarded, [['cache/a.zip']]);
+    assert.deepEqual(failed.discarded, [['cache/a.bloo']]);
     assert.equal(failed.backup().activity, null);
   }
 });
@@ -388,6 +422,7 @@ test('an in-flight restore keeps its files through unmount and refreshes shared 
   h.backup().onRestore();
   await tick();
   h.render();
+  await h.unlock();
   h.confirm().onConfirm();
   await tick();
   h.unmount();
@@ -395,7 +430,7 @@ test('an in-flight restore keeps its files through unmount and refreshes shared 
   finish!();
   await tick();
   assert.deepEqual(h.events, ['cancel', 'restore', 'widget', 'reload', 'reset']);
-  assert.deepEqual(h.discarded, [['cache/a.zip']]);
+  assert.deepEqual(h.discarded, [['cache/a.bloo']]);
 });
 
 test('settings restores the three actions to a sticky toolbar below the shared title', async () => {
@@ -488,8 +523,22 @@ test('switching the selected language translates settings copy and restore confi
   assert.equal(h.confirm().title, 'Restore this backup?');
   assert.equal(h.confirm().cancelLabel, 'Cancel');
   assert.equal(h.confirm().confirmLabel, 'Restore');
-  assert.match(h.confirm().message, /will be replaced/);
+  assert.match(h.confirm().message, /replaces your records, photos, and settings/);
   h.setLanguage('ko');
   assert.equal(h.pageTitle().title, '앱 설정');
   assert.equal(h.confirm().cancelLabel, '취소');
+});
+
+test('restore cannot start before password verification and password cancellation removes the selected cache file', async () => {
+  const h = harness();
+  h.backup().onRestore();
+  await tick();
+  h.render();
+  h.confirm().onConfirm();
+  await tick();
+  assert.deepEqual(h.events, []);
+  h.password().onClose();
+  h.render();
+  assert.deepEqual(h.discarded, [['cache/a.bloo']]);
+  assert.equal(h.backup().activity, null);
 });

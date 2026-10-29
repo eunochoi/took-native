@@ -24,3 +24,16 @@ export function withReadLock<T>(work: () => Promise<T>): Promise<T> {
   pending = result.catch(() => undefined);
   return result;
 }
+
+const recordListeners = new Set<() => void>();
+export function subscribeRecordWrites(listener: () => void) {
+  recordListeners.add(listener);
+  return () => {
+    recordListeners.delete(listener);
+  };
+}
+export async function withRecordWriteLock<T>(work: () => Promise<T>): Promise<T> {
+  const result = await withWriteLock(work);
+  for (const listener of recordListeners) listener();
+  return result;
+}

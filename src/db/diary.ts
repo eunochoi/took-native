@@ -7,7 +7,7 @@ import {
   PAGE_SIZE,
 } from '../domain/constants';
 import { assertDate, assertYear, todayString } from '../domain/date';
-import { withWriteLock } from './index';
+import { withRecordWriteLock } from './index';
 import type { Diary, DiaryDetail, DiaryFilters, DiaryImage, Habit } from './types';
 
 export async function getDiaryYears(db: SQLiteDatabase): Promise<number[]> {
@@ -139,7 +139,7 @@ export function validateDiary(input: DiaryInput, today = todayString()) {
 
 // Caller owns local files. Removed filenames are returned for cleanup after commit.
 export function saveDiary(db: SQLiteDatabase, input: DiaryInput) {
-  return withWriteLock(async () => {
+  return withRecordWriteLock(async () => {
     validateDiary(input);
     let id = input.id ?? 0;
     let removed: string[] = [];
@@ -199,7 +199,7 @@ export function saveDiary(db: SQLiteDatabase, input: DiaryInput) {
   });
 }
 export function deleteDiary(db: SQLiteDatabase, id: number) {
-  return withWriteLock(async () => {
+  return withRecordWriteLock(async () => {
     let files: string[] = [];
     await db.withTransactionAsync(async () => {
       const tx = db;

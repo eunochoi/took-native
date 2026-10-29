@@ -180,7 +180,12 @@ test('tab footer clears the floating navigation for every font size and bottom s
   }
   for (const route of ['diary', 'habit', 'sober', 'setting']) {
     const screen = readFileSync(new URL(`../app/(tabs)/${route}.tsx`, import.meta.url), 'utf8');
-    assert.equal((screen.match(/<TabBottomSpacer\s*\/>/g) ?? []).length, 1, `${route}: one footer`);
+    if (route === 'setting') {
+      assert.equal((screen.match(/<TabBottomSpacer\s*\/>/g) ?? []).length, 0);
+      assert(screen.includes('contentContainerStyle={{ paddingBottom: tabContentBottom }}'));
+    } else {
+      assert.equal((screen.match(/<TabBottomSpacer\s*\/>/g) ?? []).length, 1, `${route}: one footer`);
+    }
     assert(!screen.includes('pb-tab-content-bottom'), `${route}: no duplicate bottom padding`);
   }
 });

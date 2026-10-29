@@ -8,7 +8,7 @@ import {
 } from '../domain/constants';
 import { assertDate, assertDateTime, canCheckHabit, localDate } from '../domain/date';
 import type { Settings } from '../settings/model';
-import { withWriteLock } from './index';
+import { withRecordWriteLock } from './index';
 import type { Completion, Habit } from './types';
 
 export const getHabitList = (db: SQLiteDatabase) =>
@@ -64,7 +64,7 @@ export function validateHabit(input: HabitInput, now = Date.now()) {
   if (input.initial_started_at !== undefined) assertDateTime(input.initial_started_at, now);
 }
 export function saveHabit(db: SQLiteDatabase, input: HabitInput, now = Date.now()) {
-  return withWriteLock(async () => {
+  return withRecordWriteLock(async () => {
     validateHabit(input, now);
     let id = input.id ?? 0;
     await db.withTransactionAsync(async () => {
@@ -120,7 +120,7 @@ export function setHabitCompletion(
   date: string,
   completed: boolean,
 ) {
-  return withWriteLock(async () => {
+  return withRecordWriteLock(async () => {
     assertDate(date);
     await db.withTransactionAsync(async () => {
       const tx = db;
@@ -145,4 +145,4 @@ export function setHabitCompletion(
   });
 }
 export const deleteHabit = (db: SQLiteDatabase, id: number) =>
-  withWriteLock(() => db.runAsync('DELETE FROM habits WHERE id = ?', id));
+  withRecordWriteLock(() => db.runAsync('DELETE FROM habits WHERE id = ?', id));

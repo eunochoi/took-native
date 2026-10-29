@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { runInNewContext } from 'node:vm';
 import test from 'node:test';
+import * as container from '../src/backup/container';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
@@ -14,9 +15,11 @@ function selection(
     wait?: Promise<void>;
     failAt?: number;
     platform?: 'android' | 'ios';
+    name?: string;
+    header?: Uint8Array;
   } = {},
 ) {
-  const originals = (options.sizes ?? [100, 200]).map((size, index) => ({
+  const originals = (options.sizes ?? [100]).map((size, index) => ({
     uri: `content://downloads/${index}`,
     size,
   }));
@@ -35,6 +38,13 @@ function selection(
     }
     get size() {
       return files.get(this.uri) ?? 0;
+    }
+    open() {
+      return {
+        readBytes: () =>
+          options.header ?? new Uint8Array([...container.BLOO_MAGIC, ...new Uint8Array(48)]),
+        close: () => {},
+      };
     }
     async copy(destination: File) {
       copies.push(destination.uri);
@@ -55,6 +65,8 @@ function selection(
     {
       exports,
       require: (name: string) => {
+        if (name === './operation') return { withBackupOperation: (work: () => unknown) => work() };
+        if (name === './container') return { ...container, BLOO_MAX_BYTES: 1000 };
         if (name === 'react-native') return { Platform: { OS: options.platform ?? 'android' } };
         if (name === 'expo-file-system')
           return {
@@ -75,6 +87,7 @@ function selection(
                 canceled: options.canceled ?? false,
                 assets: originals.map((file, index) => ({
                   uri: file.uri,
+                  name: options.name ?? 'backup.bloo',
                   size: options.reportedSizes?.[index] ?? file.size,
                 })),
               };
@@ -110,7 +123,7 @@ test('backup export preserves the Android Documents hint and lets iOS choose its
   }
 });
 
-test('backup selection waits for all copies in the project cache and preserves original ZIPs', async () => {
+test('backup selection waits for its cache copy and preserves the original encrypted backup', async () => {
   let finish!: () => void;
   const value = selection({
     wait: new Promise<void>((resolve) => {
@@ -125,18 +138,18 @@ test('backup selection waits for all copies in the project cache and preserves o
   await new Promise(setImmediate);
   assert.equal(settled, false);
   assert.equal(value.pickerOptions().copyToCacheDirectory, false);
-  assert.equal(value.pickerOptions().multiple, true);
+  assert.equal(value.pickerOptions().multiple, false);
   finish();
   const uris = await pending;
-  assert.equal(uris.length, 2);
-  for (const uri of uris) assert.match(uri, /^file:\/\/project\/cache\/took-import-.*\.zip$/);
+  assert.equal(uris.length, 1);
+  for (const uri of uris) assert.match(uri, /^file:\/\/project\/cache\/took-import-.*\.bloo$/);
   value.exports.discardBackupSelection([...uris, ...value.originals.map((file) => file.uri)]);
   assert.deepEqual(value.deleted, Array.from(uris));
   assert(value.originals.every((file) => value.files.has(file.uri)));
 });
 
 test('failed selection removes completed and partial copies while preserving originals', async () => {
-  const value = selection({ failAt: 1 });
+  const value = selection({ failAt: 0 });
   await assert.rejects(value.exports.chooseBackup(), /copy failed/);
   assert.deepEqual(value.deleted, value.copies);
   assert(value.originals.every((file) => value.files.has(file.uri)));
@@ -146,9 +159,9 @@ test('iOS backup selection downloads provider documents before reading and copyi
   const value = selection({ platform: 'ios' });
   const uris = await value.exports.chooseBackup();
   assert.equal(value.pickerOptions().copyToCacheDirectory, true);
-  assert.equal(value.pickerOptions().multiple, true);
-  assert.equal(uris.length, 2);
-  assert.equal(value.copies.length, 2);
+  assert.equal(value.pickerOptions().multiple, false);
+  assert.equal(uris.length, 1);
+  assert.equal(value.copies.length, 1);
 });
 
 test('backup selection rejects excessive counts and sizes without deleting originals', async () => {
@@ -158,7 +171,7 @@ test('backup selection rejects excessive counts and sizes without deleting origi
     { sizes: [1001], reportedSizes: [0] },
   ]) {
     const value = selection(options);
-    await assert.rejects(value.exports.chooseBackup(), /제한을 초과/);
+    await assert.rejects(value.exports.chooseBackup(), /BLOO_SELECT_ONE|BLOO_TOO_LARGE/);
     assert.equal(value.copies.length, 0);
     assert.equal(value.deleted.length, 0);
   }
@@ -169,4 +182,15 @@ test('canceled backup selection does not copy or delete files', async () => {
   assert.equal(await value.exports.chooseBackup(), null);
   assert.equal(value.copies.length, 0);
   assert.equal(value.deleted.length, 0);
+});
+
+test('selection rejects images, ZIPs and renamed files with invalid magic', async () => {
+  for (const name of ['photo.jpg', 'backup.zip']) {
+    const value = selection({ name });
+    await assert.rejects(value.exports.chooseBackup(), /BLOO_SELECT_ONE/);
+    assert.equal(value.copies.length, 0);
+  }
+  const value = selection({ header: new Uint8Array(56) });
+  await assert.rejects(value.exports.chooseBackup(), /BLOO_INVALID/);
+  assert.deepEqual(value.deleted, value.copies);
 });

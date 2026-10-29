@@ -8,7 +8,7 @@ import { i18n, t } from '../src/i18n/core';
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
 
-test('single ZIP backup share reads the active language for each export and keeps file options and cache retention', async () => {
+test('single encrypted backup share reads the active language for each export and keeps file options and cache retention', async () => {
   const shares: any[] = [];
   const files: any[] = [];
   let validations = 0;
@@ -16,11 +16,12 @@ test('single ZIP backup share reads the active language for each export and keep
     uri: string;
     size = 8;
     exists = true;
-    constructor(...parts: string[]) {
-      this.uri = parts.join('/');
+    constructor(...parts: any[]) {
+      this.uri = parts.map((part) => part.uri ?? part).join('/');
       files.push(this);
     }
     create() {}
+    write() {}
     open() {
       let offset = 0;
       return {
@@ -40,6 +41,12 @@ test('single ZIP backup share reads the active language for each export and keep
     }
   }
   class Directory {
+    uri: string;
+    constructor(...parts: string[]) {
+      this.uri = parts.join('/');
+    }
+    create() {}
+    delete() {}
     list() {
       return [];
     }
@@ -62,7 +69,21 @@ test('single ZIP backup share reads the active language for each export and keep
             isAvailableAsync: async () => true,
             shareAsync: async (uri: string, options: unknown) => shares.push({ uri, options }),
           };
-        if (name === '../db') return { withMaintenance: (callback: () => unknown) => callback() };
+        if (name === '../db') return { withReadLock: (callback: () => unknown) => callback() };
+        if (name === './operation')
+          return { withBackupOperation: (callback: () => unknown) => callback() };
+        if (name === './crypto')
+          return {
+            backupCipher: { random: async () => new Uint8Array(16) },
+            deriveNativeBackupKey: async () => new Uint8Array(32),
+          };
+        if (name === './container')
+          return {
+            validatePassword: () => {},
+            deriveBackupKey: async () => new Uint8Array(32),
+            encryptBloo: async () => {},
+            decryptBloo: async function* () {},
+          };
         if (name === './stream')
           return {
             MAX_DATABASE_BYTES: 1024,
@@ -94,15 +115,15 @@ test('single ZIP backup share reads the active language for each export and keep
   try {
     for (const [language, title] of [
       ['ko', 'Google Drive 등으로 백업 공유'],
-      ['en', 'Share backup to Google Drive or another app'],
+      ['en', 'Share backup'],
     ]) {
       i18n.locale = language;
-      assert.equal(await exports.exportBackup(db, 'share'), 1);
+      assert.equal(await exports.exportBackup(db, 'share', 'password123'), 1);
       const share = shares.at(-1);
       assert.equal(share.options.dialogTitle, title);
-      assert.equal(share.options.mimeType, 'application/zip');
-      assert.equal(share.options.UTI, 'public.zip-archive');
-      assert.match(share.uri, /^file:\/\/cache\/took-backup-\d+\.zip$/);
+      assert.equal(share.options.mimeType, 'application/octet-stream');
+      assert.equal(share.options.UTI, 'com.took.bloo');
+      assert.match(share.uri, /^file:\/\/cache\/bloolog-\d+-[a-z0-9]+\.bloo$/);
     }
   } finally {
     i18n.locale = initial;

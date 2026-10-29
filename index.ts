@@ -1,3 +1,4 @@
+import './src/backup/background';
 import './global.css';
 import { Platform, TurboModuleRegistry } from 'react-native';
 

@@ -1,12 +1,13 @@
+import { withBackupOperation } from './operation';
 import { t } from '../i18n/core';
 import { Directory, File, Paths } from 'expo-file-system';
 import { deserializeDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { Platform } from 'react-native';
-import { withMaintenance } from '../db';
+import { withMaintenance, withReadLock } from '../db';
 import { mediaFile } from '../media';
-import { MAX_BACKUP_BYTES, MAX_BACKUP_FILES } from './format';
+import { MAX_BACKUP_BYTES } from './format';
 import {
   BACKUP_CHUNK_BYTES,
   MAX_DATABASE_BYTES,
@@ -14,8 +15,17 @@ import {
   extractBackupArchive,
   type BackupSource,
 } from './stream';
-import { inventoryDigest, planBackupParts, validateBackupSet } from './parts';
-import { shareBackupSet } from './share';
+import { validateBackupSet } from './parts';
+import {
+  encryptBloo,
+  decryptBloo,
+  validatePassword,
+  validateBlooHeader,
+  BLOO_HEADER_BYTES,
+  BLOO_MAX_BYTES,
+  type BackupCredential,
+} from './container';
+import { backupCipher, deriveNativeBackupKey } from './crypto';
 import { readBackupDatabase, replaceRecords } from './database';
 
 async function* fileChunks(file: File) {
@@ -30,7 +40,96 @@ async function* fileChunks(file: File) {
   }
 }
 
-export async function exportBackup(db: SQLiteDatabase, destination: 'device' | 'share') {
+// A bounded snapshot is copied under the DB queue; ZIP/encryption/I/O run after releasing it.
+export async function createEncryptedBackup(
+  db: SQLiteDatabase,
+  credential: BackupCredential,
+  snapshotAlreadyLocked = false,
+) {
+  const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const staging = new Directory(Paths.cache, `bloo-stage-${id}`);
+  const archive = new File(staging, 'records.zip');
+  const output = new File(Paths.cache, `bloolog-${id}.bloo`);
+  staging.create();
+  try {
+    const snapshot = async () => {
+      const pageCount = await db.getFirstAsync<{ page_count: number }>('PRAGMA page_count');
+      const pageSize = await db.getFirstAsync<{ page_size: number }>('PRAGMA page_size');
+      if ((pageCount?.page_count ?? 0) * (pageSize?.page_size ?? 0) > MAX_DATABASE_BYTES)
+        throw new Error('기록 DB는 최대 64MB까지 지원합니다.');
+      const database = await db.serializeAsync();
+      if (database.length > MAX_DATABASE_BYTES) throw new Error('BLOO_TOO_LARGE');
+      const images = await db.getAllAsync<{ file_name: string }>(
+        'SELECT file_name FROM diary_images',
+      );
+      let total = database.length;
+      for (const image of images) {
+        const file = mediaFile(image.file_name);
+        if (!file.exists) throw new Error('사진 파일이 없어 완전한 백업을 만들 수 없습니다.');
+        total += file.size;
+      }
+      if (total + 8 * 1024 * 1024 > MAX_BACKUP_BYTES) throw new Error('BLOO_TOO_LARGE');
+      if (Paths.availableDiskSpace < total * 4 + 16 * 1024 * 1024) throw new Error('BLOO_NO_SPACE');
+      new File(staging, 'took.db').write(database);
+      for (const image of images)
+        await mediaFile(image.file_name).copy(new File(staging, image.file_name));
+    };
+    await (snapshotAlreadyLocked ? snapshot() : withReadLock(snapshot));
+    async function* sources(): AsyncGenerator<BackupSource> {
+      for (const file of staging.list()) {
+        if (!(file instanceof File) || file.name === 'records.zip') continue;
+        yield {
+          name: file.name === 'took.db' ? 'took.db' : `media/${file.name}`,
+          chunks: fileChunks(file),
+        };
+      }
+    }
+    archive.create();
+    const zipHandle = archive.open();
+    try {
+      await writeBackupArchive(sources(), (bytes) => zipHandle.writeBytes(bytes));
+    } finally {
+      zipHandle.close();
+    }
+    output.create();
+    const handle = output.open();
+    try {
+      await encryptBloo(fileChunks(archive), credential, backupCipher, (bytes) =>
+        handle.writeBytes(bytes),
+      );
+    } finally {
+      handle.close();
+    }
+    await verifyEncryptedBackup(output, credential);
+    return output;
+  } catch (error) {
+    if (output.exists) output.delete();
+    throw error;
+  } finally {
+    try {
+      staging.delete();
+    } catch {
+      /* Retry disposable snapshot cleanup on launch. */
+    }
+  }
+}
+export async function verifyEncryptedBackup(file: File, credential: BackupCredential | string) {
+  const handle = file.open();
+  try {
+    const verified = await extractBackupArchive(
+      decryptBloo((size) => handle.readBytes(size), credential, backupCipher),
+      () => ({ write: () => {}, close: () => {} }),
+    );
+    validateBackupSet([verified]);
+  } finally {
+    handle.close();
+  }
+}
+async function exportBackupInternal(
+  db: SQLiteDatabase,
+  destination: 'device' | 'share',
+  password: string,
+) {
   let directory: Directory | null = null;
   if (destination === 'device') {
     try {
@@ -40,124 +139,36 @@ export async function exportBackup(db: SQLiteDatabase, destination: 'device' | '
           : undefined,
       );
     } catch (error) {
-      if (String(error).includes('cancel') || String(error).includes('dismiss')) return false;
+      if (/cancel|dismiss/i.test(String(error))) return false;
       throw error;
     }
   }
-  if (destination === 'share' && !(await Sharing.isAvailableAsync()))
-    throw new Error('이 기기에서는 파일 공유를 사용할 수 없습니다.');
-  for (const item of new Directory(Paths.cache).list()) {
-    const match =
-      item instanceof File
-        ? /^took-backup-(\d+)(?:-[a-z0-9]+-\d{3,5})?\.zip$/.exec(item.name)
-        : /^took-restore-(\d+)$/.exec(item.name);
-    if (match && Date.now() - Number(match[1]) > 24 * 60 * 60 * 1000) {
-      try {
-        item.delete();
-      } catch {
-        /* OS cache cleanup. */
-      }
-    }
-  }
-  const outputs: File[] = [];
-  const targets: File[] = [];
+  validatePassword(password);
+  const salt = await backupCipher.random(16);
+  const credential = { salt, key: await deriveNativeBackupKey(password, salt) };
+  let output: File | undefined;
+  let target: File | undefined;
   try {
-    await withMaintenance(async () => {
-      const pageCount = await db.getFirstAsync<{ page_count: number }>('PRAGMA page_count');
-      const pageSize = await db.getFirstAsync<{ page_size: number }>('PRAGMA page_size');
-      if ((pageCount?.page_count ?? 0) * (pageSize?.page_size ?? 0) > MAX_DATABASE_BYTES)
-        throw new Error('기록 DB는 최대 64MB까지 지원합니다.');
-      const database = await db.serializeAsync();
-      if (database.length > MAX_DATABASE_BYTES)
-        throw new Error('기록 DB는 최대 64MB까지 지원합니다.');
-      const images = await db.getAllAsync<{ file_name: string }>(
-        'SELECT file_name FROM diary_images',
-      );
-      const entries = [
-        { name: 'took.db', size: database.length },
-        ...images.map((image) => {
-          const file = mediaFile(image.file_name);
-          if (!file.exists) throw new Error('사진 파일이 없어 완전한 백업을 만들 수 없습니다.');
-          return { name: `media/${image.file_name}`, size: file.size };
-        }),
-      ];
-      const parts = planBackupParts(entries);
-      const total = entries.reduce((size, entry) => size + entry.size, 0);
-      const required = total * (directory ? 2 : 1) + (parts.length * 4 + 8) * 1024 * 1024;
-      if (Paths.availableDiskSpace < required)
-        throw new Error(
-          `백업할 기기 저장 공간이 부족합니다. 약 ${Math.ceil(required / 1024 / 1024)}MB의 여유 공간이 필요합니다.`,
-        );
-      const timestamp = Date.now();
-      const id = `${timestamp}-${Math.random().toString(36).slice(2)}`;
-      const inventorySha256 = inventoryDigest(entries);
-      for (const [index, part] of parts.entries()) {
-        const set =
-          parts.length === 1
-            ? undefined
-            : { id, index: index + 1, count: parts.length, inventorySha256 };
-        const name = set
-          ? `took-backup-${id}-${String(index + 1).padStart(3, '0')}.zip`
-          : `took-backup-${timestamp}.zip`;
-        const output = new File(Paths.cache, name);
-        outputs.push(output);
-        async function* sources(): AsyncGenerator<BackupSource> {
-          for (const entry of part) {
-            if (entry.name === 'took.db')
-              yield {
-                name: entry.name,
-                chunks: (async function* () {
-                  for (let i = 0; i < database.length; i += BACKUP_CHUNK_BYTES)
-                    yield database.subarray(i, i + BACKUP_CHUNK_BYTES);
-                })(),
-              };
-            else yield { name: entry.name, chunks: fileChunks(mediaFile(entry.name.slice(6))) };
-          }
-        }
-        output.create();
-        const handle = output.open();
-        try {
-          await writeBackupArchive(sources(), (bytes) => handle.writeBytes(bytes), set);
-        } finally {
-          handle.close();
-        }
-      }
-    });
-    const verified = [];
-    for (const output of outputs)
-      verified.push(
-        await extractBackupArchive(fileChunks(output), () => ({
-          write: () => {},
-          close: () => {},
-        })),
-      );
-    validateBackupSet(verified);
+    output = await createEncryptedBackup(db, credential);
     if (directory) {
-      for (const output of outputs) {
-        const target = directory.createFile(output.name, 'application/zip');
-        targets.push(target);
-        for await (const bytes of fileChunks(output)) target.write(bytes, { append: true });
-        if (target.size !== output.size) throw new Error('백업 파일이 완전히 저장되지 않았습니다.');
-      }
-      for (const output of outputs) output.delete();
-    } else if (outputs.length > 1) await shareBackupSet(outputs.map((file) => file.uri));
-    else
-      await Sharing.shareAsync(outputs[0].uri, {
-        mimeType: 'application/zip',
-        UTI: 'public.zip-archive',
+      target = directory.createFile(output.name, 'application/octet-stream');
+      for await (const bytes of fileChunks(output)) target.write(bytes, { append: true });
+      await verifyEncryptedBackup(target, credential);
+      output.delete();
+    } else {
+      await Sharing.shareAsync(output.uri, {
+        mimeType: 'application/octet-stream',
+        UTI: 'com.took.bloo',
         dialogTitle: t('settings.backupShareTitle'),
       });
-    // Share targets may still be reading the files. Retain recent cache archives for 24 hours.
-    return outputs.length;
-  } catch (error) {
-    for (const file of [...outputs, ...targets]) {
-      try {
-        if (file.exists) file.delete();
-      } catch {
-        /* OS cache / provider cleanup. */
-      }
     }
+    return 1;
+  } catch (error) {
+    if (target?.exists) target.delete();
+    if (output?.exists) output.delete();
     throw error;
+  } finally {
+    credential.key.fill(0);
   }
 }
 
@@ -176,39 +187,103 @@ export function discardBackupSelection(uris: string[]) {
 
 export async function chooseBackup(): Promise<string[] | null> {
   const result = await DocumentPicker.getDocumentAsync({
-    type: ['application/zip', 'application/octet-stream', 'application/x-zip-compressed'],
-    // iCloud documents must finish downloading into readable app storage on iOS.
-    // Android's picker cache is outside the project's scoped cache in Expo Go.
+    // Android providers generally report unknown extensions as octet-stream.
+    // Validate the extension AND magic below; never accept images or renamed ZIPs.
+    type:
+      Platform.OS === 'ios'
+        ? 'application/x-bloolog-backup'
+        : ['application/x-bloolog-backup', 'application/octet-stream'],
     copyToCacheDirectory: Platform.OS === 'ios',
-    multiple: true,
+    multiple: false,
   });
   if (result.canceled) return null;
-  if (
-    result.assets.length > MAX_BACKUP_FILES ||
-    result.assets.some((asset) => (asset.size ?? 0) > MAX_BACKUP_BYTES)
-  )
-    throw new Error('선택한 백업의 파일 수나 크기 제한을 초과했습니다.');
-  const uris: string[] = [];
-  const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  if (result.assets.length !== 1 || !/\.bloo$/i.test(result.assets[0].name))
+    throw new Error('BLOO_SELECT_ONE');
+  const asset = result.assets[0];
+  if ((asset.size ?? 0) > BLOO_MAX_BYTES) throw new Error('BLOO_TOO_LARGE');
+  const source = new File(asset.uri);
+  if (source.size > BLOO_MAX_BYTES) throw new Error('BLOO_TOO_LARGE');
+  const copy = new File(
+    Paths.cache,
+    `took-import-${Date.now()}-${Math.random().toString(36).slice(2)}.bloo`,
+  );
   try {
-    for (const [index, asset] of result.assets.entries()) {
-      const source = new File(asset.uri);
-      if (source.size > MAX_BACKUP_BYTES)
-        throw new Error('선택한 백업의 파일 수나 크기 제한을 초과했습니다.');
-      const copy = new File(Paths.cache, `took-import-${id}-${index}.zip`);
-      uris.push(copy.uri);
-      await source.copy(copy);
-      if (copy.size > MAX_BACKUP_BYTES)
-        throw new Error('선택한 백업의 파일 수나 크기 제한을 초과했습니다.');
+    await source.copy(copy);
+    if (copy.size > BLOO_MAX_BYTES) throw new Error('BLOO_TOO_LARGE');
+    const handle = copy.open();
+    try {
+      validateBlooHeader(handle.readBytes(BLOO_HEADER_BYTES));
+    } finally {
+      handle.close();
     }
-    return uris;
+    return [copy.uri];
   } catch (error) {
-    discardBackupSelection(uris);
+    discardBackupSelection([copy.uri]);
     throw error;
   }
 }
 
-export function restoreBackup(db: SQLiteDatabase, uris: string[]) {
+async function restoreEncryptedBackupInternal(
+  db: SQLiteDatabase,
+  uris: string[],
+  password: string,
+) {
+  if (uris.length !== 1) throw new Error('BLOO_SELECT_ONE');
+  const source = new File(uris[0]);
+  if (source.size > BLOO_MAX_BYTES) throw new Error('BLOO_TOO_LARGE');
+  const plain = new File(
+    Paths.cache,
+    `took-import-${Date.now()}-${Math.random().toString(36).slice(2)}.zip`,
+  );
+  const input = source.open();
+  let output: ReturnType<File['open']> | undefined;
+  try {
+    plain.create();
+    output = plain.open();
+    for await (const bytes of decryptBloo(
+      (size) => input.readBytes(size),
+      password,
+      backupCipher,
+    )) {
+      if (Paths.availableDiskSpace < bytes.length + 8 * 1024 * 1024)
+        throw new Error('BLOO_NO_SPACE');
+      output.writeBytes(bytes);
+    }
+    output.close();
+    output = undefined;
+    // The restore lock also protects the safety snapshot from intervening user writes.
+    await restoreBackup(db, [plain.uri], async () => {
+      const salt = await backupCipher.random(16);
+      const credential = { salt, key: await deriveNativeBackupKey(password, salt) };
+      try {
+        const safety = await createEncryptedBackup(db, credential, true);
+        const saved = new File(Paths.document, `bloo-safety-pending-${Date.now()}`);
+        let committed = false;
+        try {
+          await safety.copy(saved);
+          await verifyEncryptedBackup(saved, credential);
+          saved.rename(`bloolog-before-restore-${Date.now()}.bloo`);
+          committed = true;
+        } finally {
+          if (safety.exists) safety.delete();
+          if (!committed && saved.exists) saved.delete();
+        }
+      } finally {
+        credential.key.fill(0);
+      }
+    });
+  } finally {
+    input.close();
+    output?.close();
+    discardBackupSelection([plain.uri, ...uris]);
+  }
+}
+
+export function restoreBackup(
+  db: SQLiteDatabase,
+  uris: string[],
+  beforeReplace?: () => Promise<void>,
+) {
   return withMaintenance(async () => {
     const created: string[] = [];
     const staging = new Directory(Paths.cache, `took-restore-${Date.now()}`);
@@ -272,6 +347,7 @@ export function restoreBackup(db: SQLiteDatabase, uris: string[]) {
         await new File(staging, `media/${image.file_name}`).copy(destination);
         names.set(image.file_name, name);
       }
+      await beforeReplace?.();
       await replaceRecords(db, records, names);
       committed = true;
       for (const image of oldFiles) {
@@ -299,5 +375,34 @@ export function restoreBackup(db: SQLiteDatabase, uris: string[]) {
         }
       discardBackupSelection(uris);
     }
+  });
+}
+
+export const exportBackup = (
+  db: SQLiteDatabase,
+  destination: 'device' | 'share',
+  password: string,
+) => withBackupOperation(() => exportBackupInternal(db, destination, password));
+export const restoreEncryptedBackup = (db: SQLiteDatabase, uris: string[], password: string) =>
+  withBackupOperation(() => restoreEncryptedBackupInternal(db, uris, password));
+
+export function latestSafetyBackup() {
+  return new Directory(Paths.document)
+    .list()
+    .filter(
+      (file): file is File =>
+        file instanceof File && /^bloolog-before-restore-\d+\.bloo$/.test(file.name),
+    )
+    .sort((a, b) => b.name.localeCompare(a.name))[0];
+}
+export async function shareSafetyBackup() {
+  return withBackupOperation(async () => {
+    const file = latestSafetyBackup();
+    if (!file) return;
+    await Sharing.shareAsync(file.uri, {
+      mimeType: 'application/octet-stream',
+      UTI: 'com.took.bloo',
+      dialogTitle: t('settings.backupShareTitle'),
+    });
   });
 }

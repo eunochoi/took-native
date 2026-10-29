@@ -1,3 +1,4 @@
+import { AutoBackupController } from '../src/backup/AutoBackupController';
 import { ColorView } from '../src/components/ColorTransition';
 // @refresh reset
 import { useI18n } from '../src/i18n/react';
@@ -97,6 +98,7 @@ function Navigation({ onReady }: { onReady: () => void }) {
       <ModalNavigationProvider>
         <ColorView background="surface" className="flex-1 bg-theme-surface" onLayout={onReady}>
           <NotificationController />
+          <AutoBackupController />
           <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
           <Stack
             screenOptions={{

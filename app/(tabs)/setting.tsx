@@ -1,13 +1,23 @@
+import { File } from 'expo-file-system';
+import {
+  backupBusy,
+  subscribeBackupActivity,
+  withBackupOperation,
+} from '../../src/backup/operation';
+import { pauseAutomaticBackupAfterRestore } from '../../src/backup/automatic';
+import { backupErrorMessage } from '../../src/backup/errors';
+import { BackupPasswordSheet } from '../../src/screens/settings/BackupPasswordSheet';
 import { useQueryClient } from '@tanstack/react-query';
 import { useScrollToTop } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Linking, Pressable, ScrollView, View } from 'react-native';
 import {
   chooseBackup,
   discardBackupSelection,
   exportBackup,
-  restoreBackup,
+  restoreEncryptedBackup,
+  verifyEncryptedBackup,
 } from '../../src/backup';
 import { AppIcon } from '../../src/components/AppIcon';
 import { ColorView } from '../../src/components/ColorTransition';
@@ -15,7 +25,6 @@ import { ConfirmModal } from '../../src/components/ConfirmModal';
 import { useNotice } from '../../src/components/NoticeProvider';
 import { PageTopSection } from '../../src/components/PageTopSection';
 import { ScrollEdgeFade } from '../../src/components/ScrollEdgeFade';
-import { TabBottomSpacer } from '../../src/components/TabBottomSpacer';
 import { Text } from '../../src/components/Text';
 import { Toolbar } from '../../src/components/Toolbar';
 import { useScrollFade } from '../../src/hooks/useScrollFade';
@@ -36,7 +45,7 @@ import { refreshSoberWidgets } from '../../src/widgets/sober';
 export default function SettingsScreen() {
   const { t } = useI18n();
   const { showNotice } = useNotice();
-  const { colors, rem: appRem, iconSizes } = useAppTheme();
+  const { colors, rem: appRem, iconSizes, tabContentBottom } = useAppTheme();
   const fade = useScrollFade();
   const scroll = useRef<ScrollView>(null);
   useScrollToTop(scroll);
@@ -46,6 +55,10 @@ export default function SettingsScreen() {
   const { settings, updateSettings, reloadSettings } = useSettings();
   const [activity, setActivity] = useState<'export' | 'restore' | 'settings' | null>(null);
   const active = useRef(false);
+  const globalBackupBusy = useSyncExternalStore(subscribeBackupActivity, backupBusy);
+  const [exportDestination, setExportDestination] = useState<'device' | 'share' | null>(null);
+  const [restorePasswordPrompt, setRestorePasswordPrompt] = useState(false);
+  const restorePassword = useRef<string | null>(null);
   const [backupPicker, setBackupPicker] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<string[] | null>(null);
@@ -58,12 +71,15 @@ export default function SettingsScreen() {
       mounted.current = false;
       if (restoreSelection.current) discardBackupSelection(restoreSelection.current);
       restoreSelection.current = null;
+      restorePassword.current = null;
     };
   }, []);
   const cancelRestore = () => {
     const uris = restoreSelection.current;
     if (!uris) return;
     restoreSelection.current = null;
+    restorePassword.current = null;
+    setRestorePasswordPrompt(false);
     discardBackupSelection(uris);
     setPendingRestore(null);
     active.current = false;
@@ -81,19 +97,19 @@ export default function SettingsScreen() {
       showNotice({
         tone: 'error',
         title: t('settings.saveFailed'),
-        message: error instanceof Error ? error.message : t('common.retryMessage'),
+        message: backupErrorMessage(error),
       });
     } finally {
       active.current = false;
       setActivity(null);
     }
   };
-  const exportRecords = async (destination: 'device' | 'share') => {
+  const exportRecords = async (destination: 'device' | 'share', password: string) => {
     if (active.current) return;
     active.current = true;
     setActivity('export');
     try {
-      const exported = await exportBackup(db, destination);
+      const exported = await exportBackup(db, destination, password);
       if (exported && destination === 'device')
         showNotice({
           tone: 'success',
@@ -107,7 +123,7 @@ export default function SettingsScreen() {
       showNotice({
         tone: 'error',
         title: t('settings.backupFailed'),
-        message: error instanceof Error ? error.message : t('common.retryMessage'),
+        message: backupErrorMessage(error),
       });
     } finally {
       active.current = false;
@@ -127,12 +143,13 @@ export default function SettingsScreen() {
       }
       restoreSelection.current = uris;
       setPendingRestore(uris);
+      setRestorePasswordPrompt(true);
     } catch (error) {
       if (mounted.current)
         showNotice({
           tone: 'error',
           title: t('settings.restoreFailed'),
-          message: error instanceof Error ? error.message : t('settings.checkFile'),
+          message: backupErrorMessage(error),
         });
     } finally {
       if (!restoreSelection.current) {
@@ -143,14 +160,21 @@ export default function SettingsScreen() {
   };
   const restoreSelected = async () => {
     const uris = restoreSelection.current;
-    if (!uris || !mounted.current) return;
+    if (!uris || !mounted.current || !restorePassword.current) return;
     restoreSelection.current = null;
     setPendingRestore(null);
+    const password = restorePassword.current;
+    restorePassword.current = null;
+    if (!password) {
+      cancelRestore();
+      return;
+    }
     let restored = false;
     try {
       await client.cancelQueries();
       if (!mounted.current) return;
-      await restoreBackup(db, uris);
+      await pauseAutomaticBackupAfterRestore();
+      await restoreEncryptedBackup(db, uris, password);
       restored = true;
       refreshSoberWidgets();
       await Promise.all([reloadSettings(), client.resetQueries()]);
@@ -165,11 +189,7 @@ export default function SettingsScreen() {
         showNotice({
           tone: 'error',
           title: restored ? t('settings.restoredButReloadFailed') : t('settings.restoreFailed'),
-          message: restored
-            ? t('settings.restartAfterRestore')
-            : error instanceof Error
-              ? error.message
-              : t('settings.checkFile'),
+          message: restored ? t('settings.restartAfterRestore') : backupErrorMessage(error),
         });
     } finally {
       discardBackupSelection(uris);
@@ -177,7 +197,7 @@ export default function SettingsScreen() {
       if (mounted.current) setActivity(null);
     }
   };
-  const disabled = activity !== null;
+  const disabled = activity !== null || globalBackupBusy;
   return (
     <ColorView background="surface" className={PAGE_CLASS_NAME}>
       <ScrollView
@@ -189,6 +209,7 @@ export default function SettingsScreen() {
         onContentSizeChange={fade.onContentSizeChange}
         scrollEventThrottle={16}
         stickyHeaderIndices={[0, 2]}
+        contentContainerStyle={{ paddingBottom: tabContentBottom }}
         className="flex-1 bg-transparent"
       >
         <View collapsable={false} pointerEvents="none" className="h-0 overflow-visible">
@@ -271,14 +292,13 @@ export default function SettingsScreen() {
             onChange={(language) => change({ language })}
           />
           <BackupSection
-            activity={activity}
+            activity={globalBackupBusy && activity === null ? 'export' : activity}
             onExport={() => setBackupPicker(true)}
             onRestore={() => {
               void restore();
             }}
           />
         </View>
-        <TabBottomSpacer />
       </ScrollView>
       <ScrollEdgeFade edge="bottom" visible={fade.bottomVisible} />
 
@@ -287,13 +307,37 @@ export default function SettingsScreen() {
         <BackupDestinationPicker
           onClose={() => setBackupPicker(false)}
           onSelect={(destination) => {
-            void exportRecords(destination);
+            setExportDestination(destination);
+          }}
+        />
+      )}
+      {exportDestination && (
+        <BackupPasswordSheet
+          title={t('settings.createBackup')}
+          creating
+          onClose={() => setExportDestination(null)}
+          onSubmit={(password) => exportRecords(exportDestination, password)}
+        />
+      )}
+      {restorePasswordPrompt && (
+        <BackupPasswordSheet
+          title={t('settings.restoreBackup')}
+          creating={false}
+          onClose={() => {
+            setRestorePasswordPrompt(false);
+            if (!restorePassword.current) cancelRestore();
+          }}
+          onSubmit={async (password) => {
+            const uris = restoreSelection.current;
+            if (!uris) return;
+            await withBackupOperation(() => verifyEncryptedBackup(new File(uris[0]), password));
+            if (mounted.current) restorePassword.current = password;
           }}
         />
       )}
       <ConfirmModal
         danger
-        visible={pendingRestore !== null}
+        visible={pendingRestore !== null && !restorePasswordPrompt}
         title={t('settings.restoreConfirm')}
         message={t('settings.restoreWarning')}
         confirmLabel={t('settings.restore')}

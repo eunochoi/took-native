@@ -21,10 +21,13 @@ function harness(file: string, dependencies: Record<string, unknown> = {}) {
   const modules = {
     'react/jsx-runtime': { jsx, jsxs: jsx },
     'react-native': { View: 'View', Pressable: 'Pressable', ActivityIndicator: 'Spinner' },
+    '../../components/InfoNotice': { InfoNotice: 'InfoNotice' },
+    '../../components/AppIcon': { AppIcon: 'Icon' },
+    './AutomaticBackupSection': { AutomaticBackupSection: 'AutoBackup' },
     '../../components/Text': { Text: 'Text' },
     '../../i18n/react': mockI18n(() => language),
     '../../i18n/errors': { translateErrorMessage },
-    '../../theme/AppThemeProvider': { useAppTheme: () => ({ rem: 15, colors: {} }) },
+    '../../theme/AppThemeProvider': { useAppTheme: () => ({ rem: 15, colors: {}, iconSizes: {} }) },
     '../../theme/classes': {},
     ...dependencies,
   };
@@ -65,9 +68,9 @@ test('backup guidance and destination choices switch languages while preserving 
     .map((node) => node.props.children)
     .join(' ');
   assert(text.includes('Backup / Restore'));
-  assert(text.includes('not encrypted'));
-  assert(text.includes('every ZIP file from the same set'));
-  assert(text.includes('current data will be replaced'));
+  assert(text.includes('Back up now'));
+  assert(text.includes('Restore from file'));
+
   assert(!/[가-힣]/.test(text));
   nodes(english, 'Pressable')[0].props.onPress();
   nodes(english, 'Pressable')[1].props.onPress();
@@ -77,7 +80,7 @@ test('backup guidance and destination choices switch languages while preserving 
     assert(nodes(render(activity), 'Pressable').every((node) => node.props.disabled));
     assert(
       nodes(render(activity), 'Text').some((node) =>
-        String(node.props.children).startsWith('Preparing'),
+        String(node.props.children).includes('Back up'),
       ),
     );
   }
@@ -94,14 +97,14 @@ test('backup guidance and destination choices switch languages while preserving 
     onClose: () => {},
     onSelect: (value: string) => selected.push(value),
   });
-  assert.equal(modal.props.title, 'Where would you like to save your backup?');
+  assert.equal(modal.props.title, 'Where to save your backup?');
   const choices = nodes(
     modal.props.children((afterClose: () => void) => afterClose()),
     'Action',
   );
   assert.deepEqual(
     choices.map((node) => node.props.title),
-    ['Save to device', 'Share to Google Drive or another app'],
+    ['Save to device', 'Share to another app'],
   );
   for (const choice of choices) choice.props.onPress();
   assert.deepEqual(selected, ['device', 'share']);
@@ -257,4 +260,62 @@ test('reminder clock labels distinguish midnight, noon and the last minute witho
       assert.equal(settings.diaryReminderTime, time);
     }
   }
+});
+
+test('automatic backup switch follows configured, paused and busy states and opens password setup before activation', () => {
+  let status = {
+    enabled: false,
+    configured: false,
+    paused: false,
+    pending: false,
+    lastSuccess: undefined as string | undefined,
+  };
+  let busy = false;
+  let disabled = 0;
+  const stateChanges: unknown[] = [];
+  const ui = harness('AutomaticBackupSection', {
+    react: {
+      useEffect: () => {},
+      useState: (initial: unknown) => [initial, (value: unknown) => stateChanges.push(value)],
+      useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),
+    },
+    'react-native': {
+      View: 'View',
+      Pressable: 'Pressable',
+      Switch: 'Switch',
+      Platform: { OS: 'ios' },
+    },
+    'expo-sqlite': { useSQLiteContext: () => ({}) },
+    '../../backup': { latestSafetyBackup: () => null, shareSafetyBackup: async () => {} },
+    '../../backup/automatic': {
+      autoBackupStatus: () => status,
+      subscribeAutoBackup: () => {},
+      refreshAutoBackupStatus: async () => {},
+      configureAutomaticBackup: async () => {},
+      disableAutomaticBackup: async () => {
+        disabled++;
+      },
+      resumeAutomaticBackup: async () => {},
+      runAutomaticBackup: async () => {},
+    },
+    '../../backup/operation': { backupBusy: () => busy, subscribeBackupActivity: () => {} },
+    '../../backup/errors': { backupErrorMessage: String },
+    '../../components/Button': { Button: 'Button' },
+    '../../components/BottomSheetModal': { BottomSheetModal: 'Modal' },
+    './BackupPasswordSheet': { BackupPasswordSheet: 'Password' },
+  });
+  const render = () => ui.component({ disabled: false });
+  nodes(render(), 'Switch')[0].props.onValueChange(true);
+  assert(stateChanges.includes(true));
+  assert.equal(disabled, 0);
+  status = { ...status, enabled: true, configured: true, lastSuccess: '2026-10-28T12:00:00Z' };
+  assert.equal(nodes(render(), 'Switch')[0].props.value, true);
+  nodes(render(), 'Switch')[0].props.onValueChange(false);
+  assert.equal(disabled, 1);
+  status = { ...status, enabled: false };
+  assert(nodes(render(), 'Text').some((node) => String(node.props.children).includes('2026')));
+  status = { ...status, enabled: true, paused: true };
+  assert.equal(nodes(render(), 'Switch')[0].props.value, false);
+  busy = true;
+  assert.equal(nodes(render(), 'Switch')[0].props.disabled, true);
 });

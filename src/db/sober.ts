@@ -1,5 +1,5 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
-import { withWriteLock } from './index';
+import { withRecordWriteLock } from './index';
 import type { Sober, SoberRestart } from './types';
 import type { Settings } from '../settings/model';
 import { MAX_SOBER_COUNT } from '../domain/limits';
@@ -85,7 +85,7 @@ export function sortSobers(
   });
 }
 export function saveSober(db: SQLiteDatabase, input: SoberInput, now = Date.now()) {
-  return withWriteLock(async () => {
+  return withRecordWriteLock(async () => {
     validateSober(input, now);
     if (input.id !== undefined && (!Number.isSafeInteger(input.id) || input.id <= 0))
       throw new Error('거리두기 항목을 확인해주세요.');
@@ -136,9 +136,9 @@ export function saveSober(db: SQLiteDatabase, input: SoberInput, now = Date.now(
   });
 }
 export const deleteSober = (db: SQLiteDatabase, id: number) =>
-  withWriteLock(() => db.runAsync('DELETE FROM sobers WHERE id = ?', id));
+  withRecordWriteLock(() => db.runAsync('DELETE FROM sobers WHERE id = ?', id));
 export function saveSoberRestart(db: SQLiteDatabase, input: SoberRestartInput, now = Date.now()) {
-  return withWriteLock(async () => {
+  return withRecordWriteLock(async () => {
     if (input.id !== undefined && (!Number.isSafeInteger(input.id) || input.id <= 0))
       throw new Error('다시 시작 기록을 확인해주세요.');
     let id = input.id ?? 0;
@@ -173,6 +173,6 @@ export function saveSoberRestart(db: SQLiteDatabase, input: SoberRestartInput, n
   });
 }
 export const deleteSoberRestart = (db: SQLiteDatabase, id: number, soberId: number) =>
-  withWriteLock(() =>
+  withRecordWriteLock(() =>
     db.runAsync('DELETE FROM sober_restarts WHERE id = ? AND sober_id = ?', id, soberId),
   );
