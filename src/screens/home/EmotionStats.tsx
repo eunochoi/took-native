@@ -45,7 +45,7 @@ export function EmotionStats({
     <View className="gap-4">
       <View className="gap-4 px-[5%]">
         <AnalysisHeader title={t('stats.emotionTitle')}>
-          {t('stats.emotionPeriod', { title: year, value: halves[half], count: total })}
+          {t('stats.yearCount', { title: year, count: total })}
         </AnalysisHeader>
         <View accessibilityRole="tablist" className={UNDERLINE_TAB_LIST_CLASS_NAME}>
           {halves.map((label, index) => (
@@ -106,35 +106,37 @@ export function EmotionStats({
         contentContainerClassName="flex-row items-center gap-3"
         contentContainerStyle={{ paddingHorizontal: width * 0.05 }}
       >
-        {EMOTIONS.map((emotion, index) => (
-          <View
-            key={emotion.key}
-            accessible
-            accessibilityLabel={t('stats.emotionCount', {
-              title: t(`emotions.${emotion.key}`),
-              count: counts[index],
-            })}
-            className="shrink-0 items-center justify-center p-3 border ios:curve-continuous rounded-theme"
-            style={{
-              width: width * 0.35,
-              backgroundColor: `${emotion.color}${mode === 'dark' ? '33' : '26'}`,
-              borderColor: `${emotion.color}${mode === 'dark' ? '59' : '40'}`,
-            }}
-          >
-            <View className="items-center gap-1">
-              <EmotionImage emotion={index} size={appRem * 4} />
-              <Text className="text-sm text-theme-text-secondary">
-                {t(`emotions.${emotion.key}`)}
-              </Text>
-              <View className="flex-row items-baseline gap-1">
-                <Text className="text-2xl font-semibold">{counts[index]}</Text>
-                <Text className="text-base text-theme-text-secondary">
-                  {t('stats.timesUnit', { count: counts[index] })}
+        {EMOTIONS.map((emotion, index) => ({ emotion, index }))
+          .sort((a, b) => counts[b.index] - counts[a.index] || a.index - b.index)
+          .map(({ emotion, index }) => (
+            <View
+              key={emotion.key}
+              accessible
+              accessibilityLabel={t('stats.emotionCount', {
+                title: t(`emotions.${emotion.key}`),
+                count: counts[index],
+              })}
+              className="shrink-0 items-center justify-center p-3 border ios:curve-continuous rounded-theme"
+              style={{
+                width: width * 0.35,
+                backgroundColor: `${emotion.color}${mode === 'dark' ? '33' : '26'}`,
+                borderColor: `${emotion.color}${mode === 'dark' ? '59' : '40'}`,
+              }}
+            >
+              <View className="items-center gap-1">
+                <EmotionImage emotion={index} size={appRem * 4} />
+                <Text className="text-sm text-theme-text-secondary">
+                  {t(`emotions.${emotion.key}`)}
                 </Text>
+                <View className="flex-row items-baseline gap-1">
+                  <Text className="text-2xl font-semibold">{counts[index]}</Text>
+                  <Text className="text-base text-theme-text-secondary">
+                    {t('stats.timesUnit', { count: counts[index] })}
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
-        ))}
+          ))}
       </ScrollView>
 
       <View className="gap-2 px-[5%]">

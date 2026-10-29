@@ -1,5 +1,5 @@
 export const diaryEn = {
-  listTitle: 'Diary',
+  listTitle: 'Diaries',
   listTags: '#Moods #Notes',
   listFailed: 'Could not load your diary.',
   filteredEmpty: 'No entries match your filters.',

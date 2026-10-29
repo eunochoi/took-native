@@ -36,9 +36,6 @@ export const statsKo = {
   yearCount: {
     other: '%{title}년 %{count}개',
   },
-  emotionPeriod: {
-    other: '%{title}년 %{value} %{count}개',
-  },
   emotionCount: {
     other: '%{title} %{count}회',
   },

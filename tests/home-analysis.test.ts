@@ -361,7 +361,12 @@ test('emotion counts follow period filtering without individual percentages or r
   assert.equal(text(cells[1]), `${EMOTIONS[1].name}2회`);
   assert(cells.every((cell) => !text(cell).includes('%') && !text(cell).includes('1등')));
   const firstHalf = render('EmotionStats', { stats, year: 2024 }, 1);
-  assert(text(firstHalf).includes('전반기 1개'));
+  assert(text(firstHalf).includes('2024년 1개'));
+  assert(
+    nodes(firstHalf).some(
+      (node) => node.type === 'UnderlineTab' && node.props.selected && text(node) === '전반기',
+    ),
+  );
   const firstHalfCells = nodes(firstHalf).filter(
     (node) => node.props?.children?.[0]?.type === 'EmotionImage',
   );
@@ -414,18 +419,19 @@ test('emotion statistics retain all emotions and counts in one horizontal album 
   const images = nodes(tree).filter((node) => node.type === 'EmotionImage');
   assert.deepEqual(
     Array.from(images, (node) => node.props.emotion),
-    EMOTIONS.map((_, id) => id),
+    [10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
   );
   const cells = nodes(tree).filter((node) => node.props?.children?.[0]?.type === 'EmotionImage');
-  assert.equal(text(cells[10]), '피곤함1회');
-  assert.equal(text(cells[11]), '싱숭생숭1회');
+  assert.equal(text(cells[0]), '피곤함1회');
+  assert.equal(text(cells[1]), '싱숭생숭1회');
   const bar = nodes(tree).find((node) => node.props.accessibilityLabel?.startsWith('감정 비율'))!;
   assert(bar.props.accessibilityLabel.includes('중립 2회 100%'));
   assert(text(tree).includes('중립: 놀람, 무덤덤, 피곤함, 싱숭생숭'));
   const strip = nodes(tree).find((node) => node.type === 'ScrollView');
   assert.equal(strip.props.horizontal, true);
   assert.equal(strip.props.children.length, EMOTIONS.length);
-  for (const [index, card] of strip.props.children.entries()) {
+  for (const card of strip.props.children) {
+    const index = nodes(card).find((node) => node.type === 'EmotionImage').props.emotion;
     assert.equal(
       card.props.accessibilityLabel,
       `${EMOTIONS[index].name} ${stats.emotions[index]}회`,
@@ -746,7 +752,7 @@ test('English home cards translate emotions, counts and empty states while prese
   });
   const buttons = nodes(tree).filter((node) => node.type === 'Pressable');
   assert(text(buttons[0]).includes("Today's diary"));
-  assert(text(buttons[0]).includes("Recorded 'Joyful'"));
+  assert(text(buttons[0]).includes('Joyful · Logged'));
   assert(text(buttons[1]).includes('Add a habit'));
   assert(text(buttons[2]).includes('No record'));
   assert(!/[가-힣]/.test(text(tree)));
@@ -805,7 +811,7 @@ test('English diary analysis preserves totals, streaks and monthly bar heights',
     '2024 · 3 logs',
     'Current streak',
     'Longest streak',
-    'Monthly average',
+    'Monthly avg.',
     '4d',
     '8d',
     '1.5logs',
@@ -828,19 +834,29 @@ test('English emotion statistics retain half-year counts, all emotion cards and 
   stats.emotions = stats.halves[0].map((count, index) => count + stats.halves[1][index]);
   const snapshot = JSON.stringify(stats);
   const english = render('EmotionStats', { stats, year: 2024 }, 1, { language: 'en' });
-  assert(text(english).includes('First half · 3 logs'));
+  assert(text(english).includes('2024 · 3 logs'));
+  assert(
+    nodes(english).some(
+      (node) => node.type === 'UnderlineTab' && node.props.selected && text(node) === 'First half',
+    ),
+  );
   assert(!/[가-힣]/.test(text(english)));
   const cells = nodes(english).filter((node) => node.props?.children?.[0]?.type === 'EmotionImage');
   assert.equal(cells.length, 12);
-  assert.equal(text(cells[0]), 'Happy1time');
-  assert.equal(text(cells[10]), 'Tired2times');
+  assert.equal(text(cells[1]), 'Happy1time');
+  assert.equal(text(cells[0]), 'Tired2times');
   const proportions = nodes(english).find((node) =>
     node.props.accessibilityLabel?.startsWith('Emotion proportions'),
   );
   assert(proportions.props.accessibilityLabel.includes('Positive 1 time 33%'));
   assert(proportions.props.accessibilityLabel.includes('Neutral 2 times 67%'));
   const second = render('EmotionStats', { stats, year: 2024 }, 2, { language: 'en' });
-  assert(text(second).includes('Second half · 4 logs'));
+  assert(text(second).includes('2024 · 4 logs'));
+  assert(
+    nodes(second).some(
+      (node) => node.type === 'UnderlineTab' && node.props.selected && text(node) === 'Second half',
+    ),
+  );
   assert.equal(JSON.stringify(stats), snapshot);
 });
 

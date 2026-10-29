@@ -6,6 +6,7 @@ import { View } from 'react-native';
 import { Text } from '../../components/Text';
 import type { getDiaryStats } from '../../db/stats';
 import { InfoNotice } from '../../components/InfoNotice';
+import { useAppTheme } from '../../theme/AppThemeProvider';
 export function DiaryAnalysis({
   stats,
   year,
@@ -14,6 +15,7 @@ export function DiaryAnalysis({
   year: number;
 }) {
   const { t } = useI18n();
+  const { rem } = useAppTheme();
 
   const max = Math.max(...stats.monthly, 1);
   return (
@@ -31,7 +33,7 @@ export function DiaryAnalysis({
       >
         {stats.monthly.map((count, index) => (
           <View key={index} className="flex-1 items-center gap-1.5">
-            <View className="h-32 justify-end items-center gap-1">
+            <View className="h-40 justify-end items-center gap-1">
               {count > 0 && (
                 <Text className="text-theme-text-secondary text-sm font-medium leading-none">
                   {count}
@@ -39,7 +41,7 @@ export function DiaryAnalysis({
               )}
               <View
                 style={{
-                  height: count > 0 ? Math.max((count / max) * 112, 8) : 4,
+                  height: count > 0 ? Math.max((count / max) * rem * 7.5, rem * 0.5) : rem * 0.25,
                 }}
                 className={`w-3 ios:curve-continuous rounded-[3px] ${count > 0 ? 'bg-theme-accent' : 'bg-theme-text-primary/15'}`}
               />
