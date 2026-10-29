@@ -9,7 +9,7 @@ import { CalendarRecordCounts } from '../calendar/CalendarRecordCounts';
 export function CalendarGuidePage() {
   const { t } = useI18n();
   return (
-    <View className="w-full grow justify-between gap-6">
+    <View className="w-full grow justify-evenly gap-6">
       <View className="gap-2">
         <Text
           accessibilityRole="header"

@@ -11,7 +11,7 @@ export function UsagePage({ imageWidth }: { imageWidth: number }) {
   const { t } = useI18n();
   const { rem, iconSizes } = useAppTheme();
   return (
-    <View className="w-full grow justify-between gap-6">
+    <View className="w-full grow justify-evenly gap-6">
       <View className="gap-2">
         <Text
           accessibilityRole="header"
