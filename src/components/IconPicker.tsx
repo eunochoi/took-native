@@ -144,7 +144,7 @@ export function IconPicker<Key extends string>({
           </View>
         ))}
       </ScrollView>
-      <View className="flex-row items-center gap-3 rounded-2xl border border-theme-accent/10 bg-theme-accent-light/20 p-4">
+      <View className="flex-row items-center gap-3 rounded-2xl border border-theme-accent-border bg-theme-accent-soft/70 p-4">
         <View className="h-12 w-12 shrink-0 items-center justify-center rounded-full bg-theme-surface">
           {renderIcon(category.keys[0])}
         </View>
