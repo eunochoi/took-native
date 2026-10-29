@@ -13,9 +13,9 @@ const tailwind = require('tailwindcss');
 const { cssToReactNativeRuntime } = require('react-native-css-interop/dist/css-to-rn');
 const config = require('../tailwind.config.js');
 
-test('web 14/15/16px runtime root scales typography, spacing and dimensions consistently', async () => {
+test('app 13.5/14.5/15.5px presets scale typography, spacing and dimensions consistently', async () => {
   const globalCss = readFileSync(new URL('../global.css', import.meta.url), 'utf8');
-  assert.equal(metrics.rem, 15);
+  assert.equal(metrics.rem, 14.5);
 
   const expected = {
     'text-xs': { fontSize: 11.25, lineHeight: 15 },
@@ -45,7 +45,7 @@ test('web 14/15/16px runtime root scales typography, spacing and dimensions cons
     const rule = native.rules[className];
     assert(rule, `${className} is missing`);
     assert(!rule.warnings?.length, `${className} is unsupported on native`);
-    for (const root of [14, 15, 16]) {
+    for (const root of [13.5, 14.5, 15.5]) {
       const actual: Record<string, unknown> = {};
       for (const declaration of rule.n.flatMap((item: { d: unknown[][] }) => item.d)) {
         if (declaration.length === 1) Object.assign(actual, declaration[0]);
