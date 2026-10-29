@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { Image, View } from 'react-native';
 import { Text } from './Text';
 import { EMPTY_STATE_CLASS_NAME } from '../theme/classes';
+
+const standingCat = require('../../assets/cats/cat-blue-standing.png');
+const standingCatSize = Image.resolveAssetSource(standingCat);
 
 export function EmptyState({
   icon,
@@ -23,6 +26,15 @@ export function EmptyState({
           {description}
         </Text>
       </View>
+      <Image
+        source={standingCat}
+        resizeMode="contain"
+        accessible={false}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        className="mt-3 w-36 max-w-full shrink-0"
+        style={{ height: 'auto', aspectRatio: standingCatSize.width / standingCatSize.height }}
+      />
     </View>
   );
 }
