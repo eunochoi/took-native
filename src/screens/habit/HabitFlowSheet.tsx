@@ -110,16 +110,18 @@ export function HabitFlowSheet({
                       style={{ height: `${day.percent ?? 0}%` }}
                     />
                   </View>
-                  <View className="items-center gap-1">
+                  <View className="w-full min-w-0 items-center gap-1">
                     <Text
                       numberOfLines={1}
                       adjustsFontSizeToFit
-                      className={`mx-1 text-sm ${day.date === today ? 'text-theme-accent font-semibold' : 'text-theme-text-secondary'}`}
+                      className={`w-full text-center text-sm ${day.date === today ? 'text-theme-accent font-semibold' : 'text-theme-text-secondary'}`}
                     >
                       {formatDisplayDate(day.date, formatLocale, 'compactDay')}
                     </Text>
                     <Text
-                      className={`text-sm ${day.date === today ? 'text-theme-accent font-semibold' : 'text-theme-text-secondary'}`}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      className={`w-full text-center text-sm ${day.date === today ? 'text-theme-accent font-semibold' : 'text-theme-text-secondary'}`}
                     >
                       {day.date === today
                         ? t('calendar.today')

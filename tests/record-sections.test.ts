@@ -580,7 +580,7 @@ test('yearly habit summary uses monthly label order and refreshes missed counts 
   const view = ui.render().nodes;
   assert.deepEqual(
     view
-      .filter((node) => node.props.className === 'text-theme-text-secondary text-sm')
+      .filter((node) => node.props.className === 'w-full px-1 text-center text-theme-text-secondary text-sm')
       .map((node) => node.props.children),
     ['실천 횟수', '놓친 횟수', '실천율'],
   );

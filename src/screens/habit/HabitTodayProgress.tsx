@@ -76,9 +76,12 @@ export function HabitTodayProgress({
               className="flex-1 min-w-0 items-center gap-1"
             >
               <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
                 className={twMerge(
                   date === today ? 'text-theme-accent' : 'text-theme-text-secondary',
-                  'h-5 text-sm leading-5',
+                  'h-5 w-full text-center text-sm leading-5',
                 )}
               >
                 {date === today
@@ -86,13 +89,11 @@ export function HabitTodayProgress({
                   : formatDisplayDate(date, formatLocale, 'weekdayShort')}
               </Text>
               <View className={`h-12 w-5 justify-end rounded-lg ${PROGRESS_TRACK_CLASS_NAME}`}>
-                {total ? (
+                {total > 0 && (percent ?? 0) > 0 && (
                   <View
                     className={`w-full ${PROGRESS_FILL_CLASS_NAME}`}
                     style={{ height: `${percent ?? 0}%` }}
                   />
-                ) : (
-                  <Text className="text-sm text-center text-theme-text-disabled">–</Text>
                 )}
               </View>
             </View>
