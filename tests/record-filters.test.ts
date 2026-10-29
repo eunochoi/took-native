@@ -48,6 +48,7 @@ function harness(file: string, results: Record<string, any> = {}, language: 'ko'
       {
         exports,
         require: (name: string) => {
+          if (name.endsWith('/navigation/useWidgetDetail')) return { useWidgetDetail: () => {} };
           if (name.endsWith('/i18n/sober')) return soberI18n;
           if (name.endsWith('/i18n/react')) return mockI18n(language);
           if (name.endsWith('/i18n/format')) return { formatDisplayDate };

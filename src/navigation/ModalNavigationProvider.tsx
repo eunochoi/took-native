@@ -4,6 +4,7 @@ import { useNavigation } from 'expo-router/react-navigation';
 
 type Transition = { token: number; owner: string | null; phase: 'opening' | 'closing' };
 interface ModalNavigation {
+  resetTransitions: () => void;
   openModal: (href: Href) => boolean;
   beginOpening: (owner: string) => number;
   beginClosing: (owner: string) => number | null;
@@ -17,6 +18,9 @@ export function ModalNavigationProvider({ children }: { children: ReactNode }) {
   const sequence = useRef(0);
   const value = useMemo<ModalNavigation>(
     () => ({
+      resetTransitions: () => {
+        transition.current = null;
+      },
       openModal: (href) => {
         if (transition.current) return false;
         const pending = { token: ++sequence.current, owner: null, phase: 'opening' as const };

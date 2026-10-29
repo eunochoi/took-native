@@ -410,3 +410,15 @@ for (const path of [
     assert.equal(h.hooks().openModal('/sober/2'), true);
   });
 }
+
+test('widget resets abandon old locks without letting stale sheet cleanup unlock a new modal', () => {
+  const h = harness();
+  const old = h.controller.beginOpening('old-sheet');
+  h.controller.resetTransitions();
+  assert.equal(h.controller.openModal('/sober/42'), true);
+  const current = h.controller.beginOpening('widget-sheet');
+  h.controller.finishTransition('old-sheet', old);
+  assert.equal(h.controller.openModal('/habit/1'), false);
+  h.controller.finishTransition('widget-sheet', current);
+  assert.equal(h.controller.openModal('/habit/1'), true);
+});

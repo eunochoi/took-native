@@ -1,3 +1,4 @@
+import { useWidgetDetail } from '../../src/navigation/useWidgetDetail';
 import { useI18n } from '../../src/i18n/react';
 import { PageTopSection } from '../../src/components/PageTopSection';
 import { EmptyState } from '../../src/components/EmptyState';
@@ -44,6 +45,7 @@ type Row =
   | { kind: 'state' }
   | { kind: 'sober'; sober: Sober; first: boolean };
 export default function SoberList() {
+  useWidgetDetail();
   const { t } = useI18n();
 
   const db = useSQLiteContext();
