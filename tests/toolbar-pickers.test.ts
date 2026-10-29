@@ -1136,7 +1136,7 @@ test('English Cut Back filter preserves priority and the 90-day minimum value', 
   assert.equal(ui.render().shell.props.title, 'Cut Back filters');
   ui.press('Show important items only');
   ui.press('Choose minimum duration');
-  ui.press('Current streak 3 months or more');
+  ui.press('Streak 3 months or more');
   ui.press('Apply');
   ui.finish();
   assert.deepEqual(ui.applied, [[{ priorityOnly: true, minimumDays: 90 }]]);

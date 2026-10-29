@@ -1,7 +1,7 @@
 export const statsEn = {
   diaryTitle: 'Diary records',
-  currentStreak: 'Current streak',
-  longestStreak: 'Longest streak',
+  currentStreak: 'Streak',
+  longestStreak: 'Best streak',
   monthlyAverage: 'Monthly avg.',
   daysUnit: 'd',
   streakNotice: 'Streaks include all dates.',
