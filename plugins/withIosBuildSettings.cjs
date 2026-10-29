@@ -1,6 +1,11 @@
-const { withXcodeProject } = require('expo/config-plugins');
+const { withXcodeProject, withPodfileProperties } = require('expo/config-plugins');
 
 module.exports = function withIosBuildSettings(config) {
+  // Expo Dev Launcher requires dev-support symbols absent from prebuilt React Core.
+  config = withPodfileProperties(config, (mod) => {
+    mod.modResults['ios.buildReactNativeFromSource'] = 'true';
+    return mod;
+  });
   const widgetGroup = config.ios?.infoPlist?.TookWidgetAppGroup;
   if (
     widgetGroup &&

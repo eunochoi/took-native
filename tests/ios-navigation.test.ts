@@ -14,6 +14,7 @@ test('iOS widget builds resolve the App Group from the host configuration', () =
     {
       module,
       require: () => ({
+        withPodfileProperties: (config: any) => config,
         withXcodeProject: (config: any, callback: any) => {
           action = callback;
           return config;
@@ -70,6 +71,7 @@ test('iOS bundle script executes a native script whose path contains spaces afte
     {
       module,
       require: () => ({
+        withPodfileProperties: (config: any) => config,
         withXcodeProject: (config: any, callback: any) => {
           action = callback;
           return config;
@@ -124,6 +126,7 @@ test('iOS scene plugin preserves app setup and linking while moving window start
     {
       module,
       require: () => ({
+        withPodfileProperties: (config: any) => config,
         withInfoPlist: (config: any, action: any) => {
           info = action;
           return config;
@@ -163,4 +166,28 @@ test('iOS scene plugin preserves app setup and linking while moving window start
     () => delegate({ modResults: { language: 'swift', contents: 'unexpected template' } }),
     /Cannot apply/,
   );
+});
+
+test('iOS builds retain source React Native across prebuilds for Dev Launcher symbols', () => {
+  const module: any = { exports: {} };
+  let properties: any;
+  runInNewContext(
+    readFileSync(new URL('../plugins/withIosBuildSettings.cjs', import.meta.url), 'utf8'),
+    {
+      module,
+      require: () => ({
+        withXcodeProject: (config: any) => config,
+        withPodfileProperties: (config: any, callback: any) => {
+          properties = callback;
+          return config;
+        },
+      }),
+    },
+  );
+  module.exports({});
+  const mod = { modResults: { 'expo.jsEngine': 'hermes' } };
+  properties(mod);
+  properties(mod);
+  assert.equal((mod.modResults as any)['ios.buildReactNativeFromSource'], 'true');
+  assert.equal(mod.modResults['expo.jsEngine'], 'hermes');
 });
