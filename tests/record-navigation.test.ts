@@ -143,9 +143,14 @@ function form(kind: string, router: unknown, isNew = false) {
               return { isPending: pending };
             },
           };
+        if (dependency === '../theme/colors') return require('../src/theme/colors');
         if (dependency === '../theme/AppThemeProvider')
           return {
-            useAppTheme: () => ({ colors: {}, rem: 15, iconSizes: {} }),
+            useAppTheme: () => ({
+              colors: require('../src/theme/colors').themeColors('blue', 'light'),
+              rem: 15,
+              iconSizes: {},
+            }),
           };
         if (dependency === '../domain/constants')
           return {

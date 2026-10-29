@@ -185,7 +185,13 @@ function renderRecordMenu(kind: 'diary' | 'habit' | 'sober') {
     afterClose = action;
     return true;
   };
-  const [edit, remove] = shell.props.children(close).props.children;
+  const actions = [shell.props.children(close).props.children]
+    .flat()
+    .filter((child: any) => child?.type === 'PickerAction');
+  const edit = actions.find((action: any) => action.props.icon === 'edit');
+  const remove = actions.find((action: any) => action.props.icon === 'delete-outline');
+  assert.equal(typeof edit?.props.onPress, 'function');
+  assert.equal(typeof remove?.props.onPress, 'function');
   return {
     edit,
     remove,
