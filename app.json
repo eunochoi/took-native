@@ -2,21 +2,32 @@
   "expo": {
     "name": "BlooLog",
     "slug": "took-native",
-    "version": "2.2.0",
+    "version": "2.2.1",
     "scheme": "took-local",
     "orientation": "portrait",
-    "platforms": ["android", "ios"],
+    "platforms": [
+      "android",
+      "ios"
+    ],
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
     "ios": {
       "bundleIdentifier": "com.took",
-      "buildNumber": "6",
+      "buildNumber": "7",
       "supportsTablet": false,
       "entitlements": {
-        "com.apple.security.application-groups": ["group.com.took.widgets"],
-        "com.apple.developer.icloud-container-identifiers": ["iCloud.com.took"],
-        "com.apple.developer.ubiquity-container-identifiers": ["iCloud.com.took"],
-        "com.apple.developer.icloud-services": ["CloudDocuments"]
+        "com.apple.security.application-groups": [
+          "group.com.took.widgets"
+        ],
+        "com.apple.developer.icloud-container-identifiers": [
+          "iCloud.com.took"
+        ],
+        "com.apple.developer.ubiquity-container-identifiers": [
+          "iCloud.com.took"
+        ],
+        "com.apple.developer.icloud-services": [
+          "CloudDocuments"
+        ]
       },
       "infoPlist": {
         "TookWidgetAppGroup": "group.com.took.widgets",
@@ -25,10 +36,16 @@
           {
             "UTTypeIdentifier": "com.took.bloo",
             "UTTypeDescription": "BlooLog encrypted backup",
-            "UTTypeConformsTo": ["public.data"],
+            "UTTypeConformsTo": [
+              "public.data"
+            ],
             "UTTypeTagSpecification": {
-              "public.filename-extension": ["bloo"],
-              "public.mime-type": ["application/x-bloolog-backup"]
+              "public.filename-extension": [
+                "bloo"
+              ],
+              "public.mime-type": [
+                "application/x-bloolog-backup"
+              ]
             }
           }
         ],
@@ -53,7 +70,7 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
-      "versionCode": 30
+      "versionCode": 31
     },
     "plugins": [
       "@bacons/apple-targets",
@@ -128,7 +145,10 @@
       [
         "expo-localization",
         {
-          "supportedLocales": ["en", "ko"]
+          "supportedLocales": [
+            "en",
+            "ko"
+          ]
         }
       ],
       "expo-secure-store"
