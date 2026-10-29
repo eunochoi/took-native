@@ -11,16 +11,17 @@ struct SoberWidgetEntry: TimelineEntry {
 
 struct SoberWidgetProvider: AppIntentTimelineProvider {
   func placeholder(in context: Context) -> SoberWidgetEntry {
-    SoberWidgetEntry(
+    let stored = SoberWidgetSnapshot.load()
+    return SoberWidgetEntry(
       date: .now,
       configuration: SoberWidgetIntent(),
       snapshot: SoberWidgetSnapshot(
         version: 1, goals: [3, 7, 14, 30], accents: [:],
         records: [SoberWidgetRecord(
-          id: 1, name: "야식 줄이기", startedAt: Date.now.addingTimeInterval(-450000).timeIntervalSince1970,
+          id: 1, name: stored.resolvedLanguage.text("Less late-night snacking"), startedAt: Date.now.addingTimeInterval(-450000).timeIntervalSince1970,
           goalMode: "MANUAL", goalDays: 30, iconGlyph: "♥", iconFont: "TmoneyRoundWind-ExtraBold", iconKey: "food",
           iconColor: nil
-        )]
+        )], language: stored.language
       )
     )
   }
@@ -85,7 +86,7 @@ struct SoberWidgetView: View {
   var body: some View {
     Group {
       if let record = entry.record {
-        let summary = record.summary(at: entry.date, goals: entry.snapshot.goals)
+        let summary = record.summary(at: entry.date, goals: entry.snapshot.goals, language: entry.snapshot.resolvedLanguage)
         VStack(spacing: 8) {
           heading(record)
           Spacer(minLength: 0)
@@ -96,11 +97,11 @@ struct SoberWidgetView: View {
           Image(systemName: "clock.badge.checkmark")
             .font(.system(size: 30))
             .foregroundStyle(accent)
-          Text("거리두기")
+          Text(entry.snapshot.resolvedLanguage.text("Cut Back"))
             .font(.custom("TmoneyRoundWind-Regular", size: 16))
-          Text(entry.configuration.sober == nil
-            ? "앱에서 거리두기를 만든 뒤\n위젯을 길게 눌러 선택해주세요."
-            : "선택한 거리두기가 없어요.\n위젯 편집에서 다시 선택해주세요.")
+          Text(entry.snapshot.resolvedLanguage.text(entry.configuration.sober == nil
+            ? "Create a Cut Back item in the app,\nthen long-press the widget to select it."
+            : "The selected Cut Back item is missing.\nChoose another in Edit Widget."))
             .font(.custom("TmoneyRoundWind-Regular", size: 12))
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
@@ -148,12 +149,12 @@ struct SoberWidgetView: View {
         }
       }
       .frame(height: 8)
-      .accessibilityLabel("진행률")
-      .accessibilityValue("\(summary.progress, specifier: "%.1f")퍼센트")
+      .accessibilityLabel(summary.language.text("Progress"))
+      .accessibilityValue(summary.language.text("%.1f percent", summary.progress))
       HStack(spacing: 4) {
-        Text("목표 \(summary.goalText)")
+        Text(summary.language.text("Goal %@", summary.goalText))
         Spacer(minLength: 0)
-        Text("\(summary.progress, specifier: "%.1f")%")
+        Text(summary.language.text("%.1f%%", summary.progress))
       }
       .font(.custom("TmoneyRoundWind-Regular", size: 11))
       .lineLimit(1)
@@ -169,8 +170,8 @@ struct TookSoberWidget: Widget {
     AppIntentConfiguration(kind: kind, intent: SoberWidgetIntent.self, provider: SoberWidgetProvider()) { entry in
       SoberWidgetView(entry: entry)
     }
-    .configurationDisplayName("거리두기 타이머")
-    .description("선택한 거리두기의 경과 시간과 목표를 확인해요.")
+    .configurationDisplayName("Cut Back Timer")
+    .description("Check elapsed time and goals for your selected Cut Back item.")
     .supportedFamilies([.systemSmall])
   }
 }

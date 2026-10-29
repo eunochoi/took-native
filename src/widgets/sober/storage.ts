@@ -74,6 +74,7 @@ export function loadWidgetRecord(id?: number) {
 export async function loadWidgetDisplaySettings(db: SQLiteDatabase): Promise<{
   themeAccent: Settings['themeAccent'];
   language: Language;
+  languagePreference: Settings['language'];
 }> {
   let themeAccent = DEFAULT_SETTINGS.themeAccent;
   let preference = DEFAULT_SETTINGS.language;
@@ -88,9 +89,9 @@ export async function loadWidgetDisplaySettings(db: SQLiteDatabase): Promise<{
   } catch {
     // Missing or unreadable preferences use the device language and default accent.
   }
-  return { themeAccent, language: resolveLocale(preference, readDeviceLocale()).language };
-}
-
-export async function loadWidgetThemeAccent(db: SQLiteDatabase): Promise<Settings['themeAccent']> {
-  return (await loadWidgetDisplaySettings(db)).themeAccent;
+  return {
+    themeAccent,
+    language: resolveLocale(preference, readDeviceLocale()).language,
+    languagePreference: preference,
+  };
 }

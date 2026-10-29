@@ -3,7 +3,7 @@ import { openDatabaseAsync } from 'expo-sqlite';
 import { withReadLock } from '../../../db';
 import { getSoberList, getSoberRestarts } from '../../../db/sober';
 import { buildIosSoberWidgetSnapshot } from './snapshot';
-import { loadWidgetThemeAccent } from '../storage';
+import { loadWidgetDisplaySettings } from '../storage';
 
 export async function syncIosSoberWidgets() {
   const bridge = requireOptionalNativeModule<{ syncAsync: (snapshot: string) => Promise<void> }>(
@@ -14,13 +14,21 @@ export async function syncIosSoberWidgets() {
   await withReadLock(async () => {
     const db = await openDatabaseAsync('took.db', { useNewConnection: true });
     try {
-      const [sobers, restarts, themeAccent] = await Promise.all([
+      const [sobers, restarts, display] = await Promise.all([
         getSoberList(db),
         getSoberRestarts(db),
-        loadWidgetThemeAccent(db),
+        loadWidgetDisplaySettings(db),
       ]);
       await bridge.syncAsync(
-        JSON.stringify(buildIosSoberWidgetSnapshot(sobers, restarts, themeAccent)),
+        JSON.stringify(
+          buildIosSoberWidgetSnapshot(
+            sobers,
+            restarts,
+            display.themeAccent,
+            display.languagePreference,
+            display.language,
+          ),
+        ),
       );
     } finally {
       await db.closeAsync();

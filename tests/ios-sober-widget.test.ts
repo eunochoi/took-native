@@ -1,6 +1,7 @@
+import * as soberI18n from '../src/i18n/sober';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -121,12 +122,19 @@ test(
         fonts: fontFiles.map((name) => realpathSync(join(root, 'targets/sober-widget', name))),
       };
       writeFileSync(join(temp, 'fixture.json'), JSON.stringify(fixture));
+      for (const language of ['en', 'ko'])
+        cpSync(
+          join(root, `targets/sober-widget/${language}.lproj`),
+          join(temp, `${language}.lproj`),
+          { recursive: true },
+        );
       execFileSync(
         'xcrun',
         [
           'swiftc',
           '-module-cache-path',
           join(temp, 'cache'),
+          join(root, 'targets/sober-widget/SoberWidgetLocalization.swift'),
           join(root, 'targets/sober-widget/SoberWidgetData.swift'),
           join(root, 'targets/sober-widget/SoberWidgetIcons.swift'),
           join(root, 'tests/native/SoberWidgetDataProbe.swift'),
@@ -155,6 +163,35 @@ test(
         }),
       );
       assert.deepEqual(result.summaries, expected);
+      const englishExpected = sobers.flatMap((sober) =>
+        dates.map((date) => {
+          const summary = getSoberSummary(
+            sober,
+            restarts.filter((item) => item.sober_id === sober.id),
+            date * 1000,
+          );
+          return {
+            id: sober.id,
+            date,
+            elapsed: soberI18n.formatSoberDuration(summary.duration, 'en'),
+            goal: soberI18n.formatSoberGoal(summary.goalDays, 'en'),
+            progress: summary.progress,
+          };
+        }),
+      );
+      assert.deepEqual(result.englishSummaries, englishExpected);
+      assert.equal(result.oldDecoderAccepted, true);
+      assert.equal(result.legacyLanguageMissing, true);
+      assert.deepEqual(result.languageResults, ['ko', 'en', 'ko', 'en', 'en', 'ko', 'en', 'en']);
+      const goals = [1, 2, 14, 30, 90, 180, 365, 730, 1095, 1234];
+      assert.deepEqual(result.goalLabels, [
+        goals.map(formatSoberGoal),
+        goals.map((days) => soberI18n.formatSoberGoal(days, 'en')),
+      ]);
+      assert.deepEqual(result.labels, [
+        ['거리두기 타이머', '진행률', '33.3퍼센트', '33.3%', '목표 test'],
+        ['Cut Back Timer', 'Progress', '33.3 percent', '33.3%', 'Goal test'],
+      ]);
       assert.deepEqual(result.assetNames, assetNames);
       assert.deepEqual(result.iconColors, [
         ACCENT_PALETTES.pink.accent,
@@ -233,5 +270,89 @@ test(
     } finally {
       rmSync(temp, { recursive: true, force: true });
     }
+  },
+);
+
+test('iOS snapshot language metadata is additive and invalidates system-language cache without changing records', () => {
+  const records = [
+    {
+      id: 1,
+      name: '나의 기록',
+      icon_key: 'coffee',
+      initial_started_at: '2026-10-01T00:00:00Z',
+      goal_mode: 'MANUAL',
+      goal_days: 30,
+    },
+  ] as Sober[];
+  const manual = buildIosSoberWidgetSnapshot(records, [], 'pink', 'ko', 'en');
+  assert.equal(manual.version, 1);
+  assert.equal(manual.language, 'ko');
+  assert.equal('systemLanguage' in manual, false);
+  const english = buildIosSoberWidgetSnapshot(records, [], 'pink', 'system', 'en');
+  const korean = buildIosSoberWidgetSnapshot(records, [], 'pink', 'system', 'ko');
+  assert.notEqual(JSON.stringify(english), JSON.stringify(korean));
+  assert.equal(english.language, 'system');
+  assert.deepEqual(english.records, korean.records);
+  assert.deepEqual(english.records, manual.records);
+  assert.equal(manual.records[0].name, '나의 기록');
+});
+
+test(
+  'iOS native localization resources have matching format arguments and English fallback metadata',
+  { skip: process.platform !== 'darwin' },
+  () => {
+    const catalogs = ['en', 'ko'].map((language) =>
+      JSON.parse(
+        execFileSync(
+          'plutil',
+          [
+            '-convert',
+            'json',
+            '-o',
+            '-',
+            join(root, `targets/sober-widget/${language}.lproj/Localizable.strings`),
+          ],
+          { encoding: 'utf8' },
+        ),
+      ),
+    );
+    const [english, korean] = catalogs;
+    assert.deepEqual(Object.keys(english).sort(), Object.keys(korean).sort());
+    for (const key of Object.keys(english)) {
+      assert.equal(typeof korean[key], 'string');
+      assert(korean[key].length > 0);
+      assert.deepEqual(
+        english[key].match(/%(?:\.\d+)?(?:ld|@|f|%)/g) ?? [],
+        korean[key].match(/%(?:\.\d+)?(?:ld|@|f|%)/g) ?? [],
+        key,
+      );
+    }
+    for (const label of [
+      'Cut Back Timer',
+      'Cut Back widget',
+      'Cut Back',
+      'Background',
+      'Text color',
+      'System',
+      'Automatic',
+      'White',
+      'Black',
+    ])
+      assert(label in english, label);
+    const target = createRequire(import.meta.url)('../targets/sober-widget/expo-target.config.js')({
+      ios: {
+        entitlements: { 'com.apple.security.application-groups': ['group.com.took.widgets'] },
+      },
+    });
+    assert.equal(target.displayName, 'Cut Back Timer');
+    const info = JSON.parse(
+      execFileSync(
+        'plutil',
+        ['-convert', 'json', '-o', '-', join(root, 'targets/sober-widget/Info.plist')],
+        { encoding: 'utf8' },
+      ),
+    );
+    assert.equal(info.CFBundleDevelopmentRegion, 'en');
+    assert.deepEqual(info.CFBundleLocalizations, ['en', 'ko']);
   },
 );

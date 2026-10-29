@@ -2,7 +2,7 @@
 module.exports = (config) => ({
   type: 'widget',
   name: 'TookSoberWidget',
-  displayName: '거리두기 타이머',
+  displayName: 'Cut Back Timer',
   bundleIdentifier: '.sober-widget',
   deploymentTarget: '17.0',
   entitlements: {

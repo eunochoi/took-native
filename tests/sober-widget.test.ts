@@ -1,3 +1,8 @@
+import { database, rows } from './database';
+import { saveSober, saveSoberRestart, getSoberById, getSoberRestarts } from '../src/db/sober';
+import { readBackupDatabase, replaceRecords } from '../src/backup/database';
+import { DEFAULT_SETTINGS } from '../src/settings/model';
+import { createArchive, readArchive } from './backup-format';
 import { t, resolveLocale, i18n } from '../src/i18n/core';
 import * as soberI18n from '../src/i18n/sober';
 import { mockI18n } from './helpers/i18n';
@@ -132,7 +137,13 @@ test('iOS bridge skips old binaries, clears deleted records and closes database 
     },
     '../../../db': { withReadLock: (work: any) => work() },
     '../../../db/sober': { getSoberList: async () => sobers, getSoberRestarts: async () => [] },
-    '../storage': { loadWidgetThemeAccent: async () => 'pink' },
+    '../storage': {
+      loadWidgetDisplaySettings: async () => ({
+        themeAccent: 'pink',
+        language: 'en',
+        languagePreference: 'en',
+      }),
+    },
     './snapshot': { buildIosSoberWidgetSnapshot },
   });
   await syncIosSoberWidgets();
@@ -156,6 +167,7 @@ test('iOS bridge skips old binaries, clears deleted records and closes database 
   sobers = [];
   await syncIosSoberWidgets();
   assert.equal(JSON.parse(writes[0]).records.length, 1);
+  assert.equal(JSON.parse(writes[0]).language, 'en');
   assert.equal(JSON.parse(writes[0]).records[0].iconColor, ACCENT_PALETTES.pink.accent);
   assert.deepEqual(JSON.parse(writes[1]).records, []);
   native = {
@@ -314,7 +326,7 @@ test('independent widget instances persist while app records are restored', asyn
 });
 
 test('widget theme loading uses blue for missing, malformed, invalid, or unreadable preferences', async () => {
-  const { loadWidgetThemeAccent, loadWidgetRecord } = load('../src/widgets/sober/storage.ts', {
+  const { loadWidgetDisplaySettings, loadWidgetRecord } = load('../src/widgets/sober/storage.ts', {
     'expo-sqlite': { openDatabaseAsync: async () => db },
     '../../db': { withReadLock: (work: any) => work(), withWriteLock: (work: any) => work() },
     '../../db/sober': {
@@ -334,12 +346,12 @@ test('widget theme loading uses blue for missing, malformed, invalid, or unreada
   };
   for (const themeAccent of ACCENT_KEYS) {
     row = { value: JSON.stringify({ themeAccent }) };
-    assert.equal(await loadWidgetThemeAccent(db), themeAccent);
+    assert.equal((await loadWidgetDisplaySettings(db)).themeAccent, themeAccent);
     assert.equal((await loadWidgetRecord(1)).themeAccent, themeAccent);
   }
   for (const value of [null, '{broken', 'null', '{}', '{"themeAccent":"invalid"}']) {
     row = value === null ? null : { value };
-    assert.equal(await loadWidgetThemeAccent(db), 'blue');
+    assert.equal((await loadWidgetDisplaySettings(db)).themeAccent, 'blue');
   }
   failure = true;
   const record = await loadWidgetRecord(1);
@@ -696,6 +708,10 @@ test('headless widgets resolve saved manual and system languages without changin
     ['system', 'en-GB', 'en'],
     ['system', 'ja-JP', 'en'],
     ['system', 'fr-FR', 'en'],
+    ...['zh-Hans-CN', 'ar-SA', 'he-IL', 'hi-IN', 'th-TH', 'ru-RU', 'es-MX', 'pt-BR', 'kok-IN'].map(
+      (tag) => ['system', tag, 'en'],
+    ),
+    ['system', 'ko-Kore-KR', 'ko'],
     ['invalid', 'ko-KR', 'ko'],
   ]) {
     device = tag;
@@ -820,4 +836,222 @@ test('Android launcher resources provide English fallback and Korean labels with
   } finally {
     fs.rmSync(project, { recursive: true, force: true });
   }
+});
+
+test('real backup restores retain independent legacy widget selections and refresh records, language and deleted states', async () => {
+  const app = await database();
+  const source = await database();
+  const widget = await database(new Uint8Array());
+  let device = 'ko-KR';
+  const opened: string[] = [];
+  const closed: string[] = [];
+  const storage = load('../src/widgets/sober/storage.ts', {
+    '../../i18n/locale': { readDeviceLocale: () => device },
+    'expo-sqlite': {
+      openDatabaseAsync: async (name: string) => {
+        assert(['took.db', 'took-widgets.db'].includes(name));
+        opened.push(name);
+        return {
+          ...(name === 'took.db' ? app.db : widget.db),
+          closeAsync: async () => {
+            closed.push(name);
+          },
+        };
+      },
+    },
+    '../../db': { withReadLock: (work: any) => work(), withWriteLock: (work: any) => work() },
+    '../../db/sober': { getSoberById, getSoberRestarts },
+  });
+  const widgetRenderer = load('../src/widgets/sober/SoberWidget.tsx', {
+    'react-native-android-widget': {
+      FlexWidget: 'FlexWidget',
+      OverlapWidget: 'OverlapWidget',
+      SvgWidget: 'SvgWidget',
+      TextWidget: 'TextWidget',
+    },
+  });
+  const task = load('../src/widgets/sober/task.tsx', {
+    './storage': storage,
+    './model': { SOBER_WIDGET_NAME: 'Sober' },
+    './SoberWidget': widgetRenderer,
+  });
+  const values = (tree: any): any[] =>
+    !tree || typeof tree !== 'object'
+      ? []
+      : Array.isArray(tree)
+        ? tree.flatMap(values)
+        : [tree, ...values(tree.props?.children)];
+  const now = Date.parse('2024-02-04T00:00:00Z');
+  try {
+    const input = {
+      description: null,
+      icon_key: 'coffee' as const,
+      icon_color: 'theme' as const,
+      is_priority: 0 as const,
+      initial_started_at: '2024-01-01T00:00:00.000Z',
+      goal_mode: 'MANUAL' as const,
+      goal_days: 30,
+    };
+    await saveSober(app.db, { ...input, name: '교체 전 1' });
+    await saveSober(app.db, { ...input, name: '교체 전 2' });
+    await app.db.runAsync(
+      'INSERT INTO settings VALUES (?,?)',
+      'preferences',
+      JSON.stringify({ ...DEFAULT_SETTINGS, language: 'ko' }),
+    );
+    await storage.saveWidgetSettings(10, { soberId: 1, background: 'black', textColor: 'white' });
+    await widget.db.runAsync(
+      'UPDATE widget_settings SET value=? WHERE widget_id=?',
+      JSON.stringify({ soberId: 1, background: 'black', textColor: 'white', accent: 'pink' }),
+      10,
+    );
+    await storage.saveWidgetSettings(11, { soberId: 2, background: 'white', textColor: 'black' });
+    const stored = rows(
+      widget.raw,
+      'SELECT widget_id,value FROM widget_settings ORDER BY widget_id',
+    );
+    const id = await saveSober(source.db, {
+      ...input,
+      name: '복원된 기록',
+      initial_started_at: '2024-02-01T00:00:00.000Z',
+    });
+    await saveSoberRestart(source.db, {
+      sober_id: id,
+      restarted_at: '2024-02-03T00:00:00.000Z',
+      memo: '원문 메모',
+    });
+    for (const legacy of [false, true]) {
+      const preferences: any = {
+        ...DEFAULT_SETTINGS,
+        language: 'en',
+        themeAccent: 'purple',
+        diaryReminderTime: '08:15',
+      };
+      if (legacy) delete preferences.language;
+      await source.db.runAsync(
+        'INSERT OR REPLACE INTO settings VALUES (?,?)',
+        'preferences',
+        JSON.stringify(preferences),
+      );
+      const archive = readArchive(createArchive({ 'took.db': source.raw.export() }));
+      const snapshot = await database(archive.files['took.db']);
+      try {
+        const records = await readBackupDatabase(snapshot.db, archive.files);
+        await replaceRecords(app.db, records, new Map());
+      } finally {
+        snapshot.raw.close();
+      }
+      const first = await task.renderSoberWidget({ widgetId: 10, width: 180, height: 180 });
+      assert.equal(first.props.language, legacy ? 'ko' : 'en');
+      assert.equal(first.props.themeAccent, 'purple');
+      assert.equal(first.props.settings.soberId, 1);
+      assert.equal(first.props.settings.background, 'black');
+      assert.equal(first.props.settings.textColor, 'white');
+      assert.equal(first.props.sober.name, '복원된 기록');
+      assert.equal(first.props.restarts[0].memo, '원문 메모');
+      const tree = widgetRenderer.SoberWidget({ ...first.props, now });
+      assert(
+        values(tree).some((node) => node.props?.text === (legacy ? '1일 0시간 0분' : '1d 0h 0m')),
+      );
+      assert.equal(tree.props.clickActionData.uri, 'took-local://sober/1');
+      const second = await task.renderSoberWidget({ widgetId: 11, width: 180, height: 180 });
+      assert.equal(second.props.sober, null);
+      assert.equal(second.props.settings.soberId, 2);
+      const missing = widgetRenderer.SoberWidget({ ...second.props, now });
+      assert(
+        values(missing).some(
+          (node) =>
+            node.props?.text ===
+            (legacy
+              ? '선택한 거리두기 항목이 없어요. 위젯 설정에서 다시 선택해주세요.'
+              : 'The selected Cut Back item is missing. Choose another in widget settings.'),
+        ),
+      );
+      assert.deepEqual(
+        rows(widget.raw, 'SELECT widget_id,value FROM widget_settings ORDER BY widget_id'),
+        stored,
+      );
+    }
+    device = 'fr-FR';
+    assert.equal((await storage.loadWidgetRecord(1)).language, 'en');
+    assert.deepEqual(closed, opened);
+  } finally {
+    app.raw.close();
+    source.raw.close();
+    widget.raw.close();
+  }
+});
+
+test('widget bootstrap does not import enforcing Android modules on iOS, web or old Android binaries', () => {
+  for (const [platform, native, expected] of [
+    ['ios', null, false],
+    ['web', null, false],
+    ['android', null, false],
+    ['android', {}, true],
+  ] as const) {
+    let widgetImports = 0;
+    let routerImports = 0;
+    let moduleChecks = 0;
+    const registrations: unknown[] = [];
+    const task = () => {};
+    const configure = () => {};
+    const mocks: any = {
+      './global.css': {},
+      './src/backup/background': {},
+      'react-native': {
+        Platform: { OS: platform },
+        TurboModuleRegistry: {
+          get: (name: string) => {
+            moduleChecks++;
+            assert.equal(name, 'AndroidWidget');
+            return native;
+          },
+        },
+      },
+      './src/widgets/sober/task': { soberWidgetTask: task },
+      './src/widgets/sober/ConfigurationScreen': { SoberWidgetConfiguration: configure },
+    };
+    Object.defineProperty(mocks, 'react-native-android-widget', {
+      get: () => {
+        widgetImports++;
+        return {
+          registerWidgetTaskHandler: (callback: unknown) => registrations.push(callback),
+          registerWidgetConfigurationScreen: (callback: unknown) => registrations.push(callback),
+        };
+      },
+    });
+    Object.defineProperty(mocks, 'expo-router/entry', {
+      get: () => {
+        routerImports++;
+        return {};
+      },
+    });
+    load('../index.ts', mocks);
+    assert.equal(widgetImports, expected ? 1 : 0);
+    assert.deepEqual(registrations, expected ? [task, configure] : []);
+    assert.equal(routerImports, 1);
+    assert.equal(moduleChecks, platform === 'android' ? 1 : 0);
+  }
+});
+
+test('one stale Android widget failure does not prevent other existing instances from being refreshed', async () => {
+  const updates: number[] = [];
+  const bridge = load('../src/widgets/sober.ts', {
+    'react-native': { Platform: { OS: 'android' }, TurboModuleRegistry: { get: () => ({}) } },
+    './sober/model': { SOBER_WIDGET_NAME: 'Sober' },
+    './sober/task': { renderSoberWidget: () => null },
+    'react-native-android-widget': {
+      getWidgetInfo: async (name: string) => {
+        assert.equal(name, 'Sober');
+        return [{ widgetId: 10 }, { widgetId: 11 }];
+      },
+      requestWidgetUpdateById: async (value: any) => {
+        updates.push(value.widgetId);
+        if (value.widgetId === 10) throw new Error('stale native instance');
+      },
+    },
+  });
+  assert.doesNotThrow(() => bridge.refreshSoberWidgets());
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  assert.deepEqual(updates, [10, 11]);
 });

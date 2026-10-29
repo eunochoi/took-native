@@ -1,3 +1,4 @@
+import type { Language, LanguagePreference } from '../../../i18n/core';
 import Ionicons from '@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Ionicons.json';
 import MaterialCommunityIcons from '@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/MaterialCommunityIcons.json';
 import type { Sober, SoberRestart } from '../../../db/types';
@@ -10,9 +11,14 @@ export function buildIosSoberWidgetSnapshot(
   sobers: Sober[],
   restarts: SoberRestart[],
   themeAccent: Settings['themeAccent'] = 'blue',
+  language: LanguagePreference = 'system',
+  systemLanguage: Language = 'en',
 ) {
   return {
     version: 1,
+    language,
+    // Also invalidate the bridge cache on a system-language change; native views resolve it live.
+    ...(language === 'system' ? { systemLanguage } : {}),
     goals: SOBER_GOALS,
     accents: Object.fromEntries(
       Object.entries(ACCENT_PALETTES).map(([key, palette]) => [key, palette.accent]),
