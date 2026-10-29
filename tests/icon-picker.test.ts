@@ -31,7 +31,7 @@ function picker(kind: 'habit' | 'sober', value: string, colorKey = 'pink') {
   const chipScrolls: any[] = [];
   const sizes: number[][] = [];
   const dimensions = { width: 393, height: 900, fontScale: 1 };
-  const theme = { rem: 15 };
+  const theme = { rem: 15, reducedMotion: false };
   const vertical = {
     scrollTo: (position: any) => scrolls.push(JSON.parse(JSON.stringify(position))),
   };
@@ -361,6 +361,35 @@ test('category chips reveal the active category even when layout arrives after c
   assert.deepEqual(h.chipScrolls.at(-1), { x: 350, animated: false });
 });
 
+for (const kind of ['habit', 'sober'] as const) {
+  for (const reducedMotion of [false, true]) {
+    test(`${kind} category changes animate after opening unless reduced motion is enabled (${reducedMotion})`, () => {
+      const categories = kind === 'habit' ? HABIT_ICON_CATEGORIES : SOBER_ICON_CATEGORIES;
+      const h = picker(kind, categories[0].keys[0]);
+      h.theme.reducedMotion = reducedMotion;
+      h.chipScroll.props.onContentSizeChange(900, 48);
+      h.chipScroll.props.onLayout({ nativeEvent: { layout: { width: 300 } } });
+      h.chipRow(categories[0].id).props.onLayout({
+        nativeEvent: { layout: { x: 0, width: 100 } },
+      });
+      h.chipRow(categories[1].id).props.onLayout({
+        nativeEvent: { layout: { x: 500, width: 100 } },
+      });
+      h.render();
+      assert.deepEqual(h.chipScrolls.at(-1), { x: 0, animated: false });
+
+      h.shell.props.onOpened();
+      h.press(`${categories[1].label} 카테고리`);
+      assert.deepEqual(h.chipScrolls.at(-1), { x: 400, animated: !reducedMotion });
+      const calls = h.chipScrolls.length;
+      h.press(`${categories[1].label} 카테고리`);
+      assert.equal(h.chipScrolls.length, calls);
+      h.press(`${categories[0].label} 카테고리`);
+      assert.deepEqual(h.chipScrolls.at(-1), { x: 0, animated: !reducedMotion });
+    });
+  }
+}
+
 test('short screens and large fonts move top content into the one vertical viewport while keeping the footer fixed', () => {
   const h = picker('habit', 'goal');
   h.shell.props.fixedContent.props.onLayout({ nativeEvent: { layout: { height: 80 } } });
@@ -438,7 +467,7 @@ test('habit icon labels and categories switch language without changing the sele
   ui.setLanguage('en');
   assert.equal(ui.shell.props.title, 'Habit icon');
   assert(ui.option('Water'));
-  assert(ui.option('Small care category'));
+  assert(ui.option('Self-care category'));
   ui.press('Water');
   ui.press('Done');
   assert.deepEqual(ui.applied, []);

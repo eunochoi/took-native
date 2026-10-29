@@ -36,7 +36,7 @@ export function IconPicker<Key extends string>({
 }) {
   const { t } = useI18n();
 
-  const { rem: appRem } = useAppTheme();
+  const { rem: appRem, reducedMotion } = useAppTheme();
   const { width, height, fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState(value);
@@ -73,10 +73,10 @@ export function IconPicker<Key extends string>({
           Math.max(0, chipContentWidth - chipViewportWidth),
           Math.max(0, layout.x - (chipViewportWidth - layout.width) / 2),
         ),
-        animated: false,
+        animated: opened.current && !reducedMotion,
       });
     }
-  }, [categoryId, chipLayouts, chipViewportWidth, chipContentWidth, pinTop]);
+  }, [categoryId, chipLayouts, chipViewportWidth, chipContentWidth, pinTop, reducedMotion]);
 
   function revealInitialSelection() {
     if (
