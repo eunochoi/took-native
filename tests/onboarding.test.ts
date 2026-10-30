@@ -529,6 +529,7 @@ test('onboarding pages translate in both languages and keep typography across al
   )) {
     const dependencies: Record<string, unknown> = {
       '../../i18n/react': mockI18n(language),
+      '../../i18n/sober': require('../src/i18n/sober'),
       react: { useState: (initial: unknown) => [initial, () => {}] },
       'react/jsx-runtime': { jsx, jsxs: jsx },
       'react-native': {
