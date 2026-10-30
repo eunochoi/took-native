@@ -2,7 +2,7 @@
   "expo": {
     "name": "BlooLog",
     "slug": "took-native",
-    "version": "2.2.1",
+    "version": "2.2.2",
     "scheme": "took-local",
     "orientation": "portrait",
     "platforms": [
@@ -13,7 +13,7 @@
     "icon": "./assets/icon.png",
     "ios": {
       "bundleIdentifier": "com.took",
-      "buildNumber": "7",
+      "buildNumber": "8",
       "supportsTablet": false,
       "entitlements": {
         "com.apple.security.application-groups": [
@@ -70,7 +70,7 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
-      "versionCode": 31
+      "versionCode": 32
     },
     "plugins": [
       "@bacons/apple-targets",
