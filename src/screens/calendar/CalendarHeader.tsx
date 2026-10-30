@@ -11,11 +11,13 @@ export function CalendarHeader({
   today,
   navigation,
   centerTitle = false,
+  detail = false,
 }: {
   month: string;
   today: string;
   navigation: ReturnType<typeof useCalendarNavigation>;
   centerTitle?: boolean;
+  detail?: boolean;
 }) {
   const { t, formatLocale } = useI18n();
 
@@ -50,7 +52,10 @@ export function CalendarHeader({
         onPress={() => navigation.changeToMonth(today.slice(0, 7))}
         className={`flex-1 justify-center ${centerTitle ? 'items-center' : 'items-start'}`}
       >
-        <Text accessibilityRole="header" className="text-lg font-semibold">
+        <Text
+          accessibilityRole="header"
+          className={detail ? 'text-base font-medium' : 'text-lg font-semibold'}
+        >
           {formatDisplayDate(`${month}-01`, formatLocale, 'month')}
         </Text>
       </Pressable>

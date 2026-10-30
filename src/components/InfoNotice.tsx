@@ -1,3 +1,4 @@
+import type { itemAccentColors } from '../theme/colors';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { twMerge } from 'tailwind-merge';
@@ -7,12 +8,14 @@ import { Text } from './Text';
 
 export function InfoNotice({
   children,
+  accent,
   className,
   textClassName,
   adjustsFontSizeToFit = true,
   numberOfLines = 1,
 }: {
   children: ReactNode;
+  accent?: ReturnType<typeof itemAccentColors>;
   className?: string;
   textClassName?: string;
   adjustsFontSizeToFit?: boolean;
@@ -22,9 +25,15 @@ export function InfoNotice({
   return (
     <View className={twMerge('w-full flex-row items-start gap-2 px-2', className)}>
       <View className="h-5 w-4 shrink-0 items-center justify-center">
-        <AppIcon name="info-outline" size={appRem} color={colors.accent} accessible={false} />
+        <AppIcon
+          name="info-outline"
+          size={appRem}
+          color={accent?.color ?? colors.accent}
+          accessible={false}
+        />
       </View>
       <Text
+        style={accent ? { color: accent.text } : undefined}
         numberOfLines={numberOfLines}
         adjustsFontSizeToFit={adjustsFontSizeToFit}
         className={twMerge(

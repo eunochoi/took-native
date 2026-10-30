@@ -1,3 +1,4 @@
+import type { itemAccentColors } from '../../theme/colors';
 import { ACCENT_CARD_BORDER_CLASS_NAME } from '../../theme/classes';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
@@ -8,6 +9,7 @@ import { useAppTheme } from '../../theme/AppThemeProvider';
 export function HabitStatisticsSummary({
   stats,
   unavailable,
+  accent,
 }: {
   stats: {
     label: string;
@@ -16,18 +18,22 @@ export function HabitStatisticsSummary({
     unit: string;
   }[];
   unavailable: boolean;
+  accent?: ReturnType<typeof itemAccentColors>;
 }) {
   const { colors, iconSizes } = useAppTheme();
   return (
     <View
-      className={`${ACCENT_CARD_BORDER_CLASS_NAME} flex-row py-2 mx-1 bg-theme-accent-light/50 ios:curve-continuous rounded-theme`}
+      style={
+        accent ? { backgroundColor: accent.background, borderColor: accent.border } : undefined
+      }
+      className={`${ACCENT_CARD_BORDER_CLASS_NAME} flex-row py-2 bg-theme-accent-light/50 ios:curve-continuous rounded-theme`}
     >
       {stats.map((stat, index) => (
         <View
           key={stat.label}
           className={`flex-1 items-center gap-2.5 py-2 border-theme-border/50 ${index > 0 ? 'border-l' : 'border-l-0'}`}
         >
-          <AppIcon name={stat.icon} size={iconSizes.lg} color={colors.accent} />
+          <AppIcon name={stat.icon} size={iconSizes.lg} color={accent?.color ?? colors.accent} />
           <Text
             numberOfLines={1}
             adjustsFontSizeToFit

@@ -24,10 +24,15 @@ export function HabitRecentRecord({
   const daysAgo = latest ? differenceInCalendarDays(parseISO(today), parseISO(latest)) : null;
   return (
     <View className="gap-3">
-      <Text accessibilityRole="header" className="text-xl font-semibold">
-        {t('habit.recentRecord')}
-      </Text>
-      <Text className="text-base text-theme-text-secondary">
+      <View className="flex-row items-center gap-2">
+        <Text
+          accessibilityRole="header"
+          className="text-lg leading-6 font-semibold text-theme-text-primary"
+        >
+          {t('habit.recentRecord')}
+        </Text>
+      </View>
+      <Text className="px-1 text-base text-theme-text-secondary">
         {unavailable
           ? '—'
           : latest

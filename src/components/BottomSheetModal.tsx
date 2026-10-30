@@ -25,6 +25,7 @@ import { NoticeHost } from './NoticeProvider';
 export function BottomSheetModal({
   visible,
   title,
+  handleColor,
   titleIcon,
   titleAction,
   headerAction,
@@ -54,6 +55,7 @@ export function BottomSheetModal({
 }: {
   visible: boolean;
   title?: string;
+  handleColor?: string;
   titleIcon?: ReactNode;
   titleAction?: ComponentProps<typeof BottomSheetHeader>['titleAction'];
   headerAction?: ReactNode;
@@ -116,6 +118,7 @@ export function BottomSheetModal({
     });
   const headerContent = (
     <BottomSheetHeader
+      handleColor={handleColor}
       title={title}
       titleIcon={titleIcon}
       titleAction={titleAction}

@@ -43,14 +43,14 @@ export function HabitYearHeader({
     );
   });
   return (
-    <View className="h-10 flex-row items-start justify-between">
+    <View className="h-10 flex-row items-center justify-between">
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('habit.goCurrentYear', { count: year })}
         onPress={() => onYearChange(maxYear)}
         className="flex-1 items-start justify-center"
       >
-        <Text accessibilityRole="header" className="text-lg font-semibold">
+        <Text accessibilityRole="header" className="text-base font-medium">
           {t('home.year', { count: year })}
         </Text>
       </Pressable>

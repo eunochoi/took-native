@@ -1,3 +1,4 @@
+import type { itemAccentColors } from '../../theme/colors';
 import { useI18n } from '../../i18n/react';
 import { useMemo } from 'react';
 import { View } from 'react-native';
@@ -23,6 +24,7 @@ export function HabitMonthStatistics({
   today,
   summary,
   unavailable,
+  accent,
 }: {
   habit: Habit;
   dates: string[];
@@ -31,6 +33,7 @@ export function HabitMonthStatistics({
   today: string;
   summary: ReturnType<typeof getHabitMonthSummary>;
   unavailable: boolean;
+  accent?: ReturnType<typeof itemAccentColors>;
 }) {
   const { t } = useI18n();
 
@@ -40,93 +43,103 @@ export function HabitMonthStatistics({
   const swipe = useMonthSwipe(navigation.changeMonth);
   const completedDates = useMemo(() => new Set(dates), [dates]);
   return (
-    <View className="gap-6">
-      <Text accessibilityRole="header" className="text-xl font-semibold">
-        {t('habit.monthly')}
-      </Text>
-      <HabitStatisticsSummary
-        stats={
-          habit.priority === 0
-            ? [
-                {
-                  label: t('habit.recordCount'),
-                  icon: 'check',
-                  value: summary.completed,
-                  unit: t('habit.timesUnit', { count: summary.completed }),
-                },
-                {
-                  label: t('habit.averageInterval'),
-                  icon: 'date',
-                  value:
-                    summary.averageInterval === null
-                      ? '—'
-                      : Number(summary.averageInterval.toFixed(1)),
-                  unit:
-                    unavailable || summary.averageInterval === null
-                      ? ''
-                      : t('habit.daysUnit', { count: Number(summary.averageInterval.toFixed(1)) }),
-                },
-              ]
-            : [
-                {
-                  label: t('habit.completionCount'),
-                  icon: 'check',
-                  value: summary.completed,
-                  unit: t('habit.timesUnit', { count: summary.completed }),
-                },
-                {
-                  label: t('habit.missedCount'),
-                  icon: 'close',
-                  value: summary.missed,
-                  unit: t('habit.timesUnit', { count: summary.missed }),
-                },
-                {
-                  label: t('habit.rate'),
-                  icon: 'habit-rate',
-                  value: summary.rate ?? '—',
-                  unit: '%',
-                },
-              ]
-        }
-        unavailable={unavailable}
-      />
-      {habit.priority === 0 && (
-        <InfoNotice numberOfLines={0} adjustsFontSizeToFit={false}>
-          {t('habit.intervalNotice')}
-        </InfoNotice>
-      )}
-      <View className="px-1">
-        <CalendarHeader month={month} today={today} navigation={navigation} />
-        <CalendarGrid
-          {...swipe.panHandlers}
-          accessibilityLabel={t('habit.calendar', { value: month })}
+    <View className="gap-4">
+      <View className="flex-row items-center gap-2">
+        <Text
+          accessibilityRole="header"
+          className="text-lg leading-6 font-semibold text-theme-text-primary"
         >
-          {days.map((date) => {
-            const outside = date.slice(0, 7) !== month;
-            const available = navigation.isDateAvailable(date);
-            const completed = !unavailable && !outside && available && completedDates.has(date);
-            const empty = !unavailable && !outside && available && !completed;
-            return (
-              <CalendarDay
-                key={date}
-                date={date}
-                month={month}
-                today={today}
-                onMonthChange={navigation.changeToMonth}
-                disabled={!outside || !available}
-                dimmed={!available}
-                label={`${date}${completed ? t('habit.hasRecord') : ''}${empty ? t('habit.noRecord') : ''}`}
-                textClassName="font-medium"
-              >
-                {completed ? (
-                  <View className="w-3/5 aspect-square items-center justify-center">
-                    <HabitIcon name={habit.icon_key} colorKey={habit.icon_color} />
-                  </View>
-                ) : undefined}
-              </CalendarDay>
-            );
-          })}
-        </CalendarGrid>
+          {t('habit.monthly')}
+        </Text>
+      </View>
+      <View className="px-1 gap-4">
+        <CalendarHeader detail month={month} today={today} navigation={navigation} />
+        <HabitStatisticsSummary
+          accent={accent}
+          stats={
+            habit.priority === 0
+              ? [
+                  {
+                    label: t('habit.recordCount'),
+                    icon: 'check',
+                    value: summary.completed,
+                    unit: t('habit.timesUnit', { count: summary.completed }),
+                  },
+                  {
+                    label: t('habit.averageInterval'),
+                    icon: 'date',
+                    value:
+                      summary.averageInterval === null
+                        ? '—'
+                        : Number(summary.averageInterval.toFixed(1)),
+                    unit:
+                      unavailable || summary.averageInterval === null
+                        ? ''
+                        : t('habit.daysUnit', {
+                            count: Number(summary.averageInterval.toFixed(1)),
+                          }),
+                  },
+                ]
+              : [
+                  {
+                    label: t('habit.completionCount'),
+                    icon: 'check',
+                    value: summary.completed,
+                    unit: t('habit.timesUnit', { count: summary.completed }),
+                  },
+                  {
+                    label: t('habit.missedCount'),
+                    icon: 'close',
+                    value: summary.missed,
+                    unit: t('habit.timesUnit', { count: summary.missed }),
+                  },
+                  {
+                    label: t('habit.rate'),
+                    icon: 'habit-rate',
+                    value: summary.rate ?? '—',
+                    unit: '%',
+                  },
+                ]
+          }
+          unavailable={unavailable}
+        />
+        {habit.priority === 0 && (
+          <InfoNotice accent={accent} numberOfLines={0} adjustsFontSizeToFit={false}>
+            {t('habit.intervalNotice')}
+          </InfoNotice>
+        )}
+        <View>
+          <CalendarGrid
+            {...swipe.panHandlers}
+            accessibilityLabel={t('habit.calendar', { value: month })}
+          >
+            {days.map((date) => {
+              const outside = date.slice(0, 7) !== month;
+              const available = navigation.isDateAvailable(date);
+              const completed = !unavailable && !outside && available && completedDates.has(date);
+              const empty = !unavailable && !outside && available && !completed;
+              return (
+                <CalendarDay
+                  key={date}
+                  date={date}
+                  month={month}
+                  today={today}
+                  onMonthChange={navigation.changeToMonth}
+                  disabled={!outside || !available}
+                  dimmed={!available}
+                  label={`${date}${completed ? t('habit.hasRecord') : ''}${empty ? t('habit.noRecord') : ''}`}
+                  textClassName="font-medium"
+                >
+                  {completed ? (
+                    <View className="w-3/5 aspect-square items-center justify-center">
+                      <HabitIcon name={habit.icon_key} colorKey={habit.icon_color} />
+                    </View>
+                  ) : undefined}
+                </CalendarDay>
+              );
+            })}
+          </CalendarGrid>
+        </View>
       </View>
     </View>
   );

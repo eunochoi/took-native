@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import { Text } from '../../components/Text';
 
-export function HabitYearChart({ monthly }: { monthly: number[] }) {
+export function HabitYearChart({ monthly, color }: { monthly: number[]; color?: string }) {
   const max = Math.max(...monthly, 1);
   return (
     <View className="py-4">
@@ -14,7 +14,10 @@ export function HabitYearChart({ monthly }: { monthly: number[] }) {
               </Text>
               <View
                 className={`w-3/5 max-w-5 ios:curve-continuous rounded-[3px] ${count > 0 ? 'bg-theme-accent' : 'bg-theme-text-primary/15'}`}
-                style={{ height: count ? Math.max((count / max) * 160, 8) : 4 }}
+                style={{
+                  ...(count && color ? { backgroundColor: color } : {}),
+                  height: count ? Math.max((count / max) * 160, 8) : 4,
+                }}
               />
             </View>
             <Text className="text-sm text-theme-text-tertiary">{index + 1}</Text>

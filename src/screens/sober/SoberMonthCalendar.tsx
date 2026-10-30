@@ -54,12 +54,17 @@ export function SoberMonthCalendar({
   const navigation = useCalendarNavigation(month, onMonthChange, firstDate, today);
   const swipe = useMonthSwipe(navigation.changeMonth);
   return (
-    <View className="gap-4">
-      <Text accessibilityRole="header" className="text-xl font-semibold">
-        {t('sober.monthly')}
-      </Text>
+    <View className="gap-4 border-t border-theme-border pt-8">
+      <View className="flex-row items-center gap-2">
+        <Text
+          accessibilityRole="header"
+          className="text-lg leading-6 font-semibold text-theme-text-primary"
+        >
+          {t('sober.monthly')}
+        </Text>
+      </View>
       <View className="px-1 gap-4">
-        <CalendarHeader month={month} today={today} navigation={navigation} />
+        <CalendarHeader detail month={month} today={today} navigation={navigation} />
         <CalendarGrid
           {...swipe.panHandlers}
           accessibilityLabel={t('sober.monthLabel', { value: month })}

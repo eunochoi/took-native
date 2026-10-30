@@ -57,6 +57,7 @@ function scenario(file = '../app/sober/[id]/index.tsx') {
             };
           if (name.endsWith('/NoticeProvider'))
             return { useNotice: () => ({ showNotice: (notice: unknown) => notices.push(notice) }) };
+          if (name.endsWith('theme/colors')) return require('../src/theme/colors');
           if (name.endsWith('theme/classes')) return require('../src/theme/classes');
           if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx, Fragment: 'Fragment' };
           if (name === 'react')
@@ -68,7 +69,8 @@ function scenario(file = '../app/sober/[id]/index.tsx') {
                 return [
                   slots[index].value,
                   (value: unknown) => {
-                    slots[index].value = value;
+                    slots[index].value =
+                      typeof value === 'function' ? value(slots[index].value) : value;
                   },
                 ];
               },
@@ -78,7 +80,9 @@ function scenario(file = '../app/sober/[id]/index.tsx') {
               },
               useMemo: (factory: Function) => factory(),
             };
-          if (name === 'react-native') return { View: 'View', ScrollView: 'ScrollView' };
+          if (name === 'react-native')
+            return { View: 'View', ScrollView: 'ScrollView', Pressable: 'Pressable' };
+          if (name.endsWith('/domain/constants')) return require('../src/domain/constants');
           if (name === 'expo-router')
             return {
               useLocalSearchParams: () => ({ id: '1', date: '2026-10-04' }),
@@ -138,7 +142,14 @@ function scenario(file = '../app/sober/[id]/index.tsx') {
             return { useCurrentMinute: () => Date.parse('2026-10-05T12:00:00Z') };
           if (name.endsWith('/useScrollFade')) return { useScrollFade: () => ({}) };
           if (name.endsWith('/AppThemeProvider'))
-            return { useAppTheme: () => ({ rem: 15, colors: {}, iconSizes: { sm: 18 } }) };
+            return {
+              useAppTheme: () => ({
+                rem: 15,
+                colors: { accent: '#88aadd', surface: '#ffffff' },
+                mode: 'light',
+                iconSizes: { sm: 18 },
+              }),
+            };
           if (name === 'date-fns' || name === 'date-fns/locale') return require(name);
           if (name.startsWith('@expo/')) return { __esModule: true, default: 'Icon' };
           const component = name.split('/').at(-1)!;
@@ -152,7 +163,7 @@ function scenario(file = '../app/sober/[id]/index.tsx') {
     if (!node || typeof node !== 'object') return [];
     if (Array.isArray(node)) return node.flatMap(nodes);
     if (typeof node.type === 'function') return nodes(node.type(node.props));
-    return [node, ...nodes(node.props?.children)];
+    return [node, ...nodes(node.props?.pages), ...nodes(node.props?.children)];
   }
   function render() {
     cursor = 0;
@@ -377,4 +388,15 @@ test('day sheet hides achievements on restart dates while preserving achievement
   assert.equal(info.props.achievements.length, 0);
   assert.equal(info.props.records[0].id, day.record.id);
   assert.equal(day.writes.length, 0);
+});
+
+test('detail elapsed time toggles total hours and returns to the default day format', () => {
+  const ui = scenario();
+  const current = () =>
+    ui.render().find((node) => node.type === 'Pressable' && node.props.accessibilityHint);
+  assert.equal(current().props.accessibilityValue.text, '1일 12시간 0분');
+  current().props.onPress();
+  assert.equal(current().props.accessibilityValue.text, '36시간 0분');
+  current().props.onPress();
+  assert.equal(current().props.accessibilityValue.text, '1일 12시간 0분');
 });
